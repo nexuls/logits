@@ -13,7 +13,7 @@ import {
   SquarePen,
 } from "lucide-react";
 
-import type { PageMeta } from "@/types/types";
+import type { T_Page_Meta } from "@/types/types";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import {
@@ -25,10 +25,10 @@ import {
 } from "../ui/dropdown-menu";
 
 type Props = {
-  pages: PageMeta[];
+  pages: T_Page_Meta[];
   currentPageId: string;
   onCurrentPageIdChange?: (pageId: string) => void;
-  onPagesChange?: (pages: PageMeta[]) => void;
+  onPagesChange?: (pages: T_Page_Meta[]) => void;
 };
 
 const pageTypeIcons = {
@@ -36,7 +36,7 @@ const pageTypeIcons = {
   gallery: LayoutGrid,
 } as const;
 
-function reorderPages(pages: PageMeta[], fromId: string, toId: string) {
+function reorderPages(pages: T_Page_Meta[], fromId: string, toId: string) {
   const fromIndex = pages.findIndex((page) => page.id === fromId);
   const toIndex = pages.findIndex((page) => page.id === toId);
 
@@ -58,7 +58,7 @@ export default function PageDropdown({
   onPagesChange,
 }: Props) {
   const [isSorting, setIsSorting] = useState(false);
-  const [orderedPages, setOrderedPages] = useState<PageMeta[]>(pages);
+  const [orderedPages, setOrderedPages] = useState<T_Page_Meta[]>(pages);
   const [draggingPageId, setDraggingPageId] = useState<string | null>(null);
   const [dropTargetPageId, setDropTargetPageId] = useState<string | null>(null);
   const currentPage =

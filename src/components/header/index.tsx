@@ -2,7 +2,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { PageMeta } from "@/types/types";
+import type { T_Page_Meta } from "@/types/types";
 import PageDropdown from "./page-dropdown";
 import HeaderMenu from "./header-menu";
 import ProjectNameEditor from "./project-name-editor";
@@ -15,8 +15,8 @@ type Props = {
   projectName: string;
   onProjectNameChange?: (newName: string) => void;
   onCurrentPageIdChange?: (pageId: string) => void;
-  onPagesChange?: (pages: PageMeta[]) => void;
-  pages: PageMeta[];
+  onPagesChange?: (pages: T_Page_Meta[]) => void;
+  pages: T_Page_Meta[];
   currentPageId: string;
 };
 
