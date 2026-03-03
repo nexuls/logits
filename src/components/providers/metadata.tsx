@@ -1,0 +1,191 @@
+"use client";
+
+/**
+ * Global metadata provider for client-side app state backed by the local data layer.
+ *
+ * Responsibility:
+ * - Hydrate project metadata from IndexedDB.
+ * - Expose optimistic mutation actions that keep UI in sync.
+ * - Trigger on-demand content retrieval for selected pages.
+ * - Listen to sync events and refresh shared metadata state.
+ */
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import type { T_Page_Meta, T_Project } from "@/types/types";
+import {
+  createProjectMetadata,
+  loadGlobalMetadata,
+  loadPageContentOnDemand,
+  renameProjectMetadata,
+  updateProjectPagesMetadata,
+} from "@/functions";
+import { startLocalSync } from "@/functions/sync";
+
+type MetadataContextValue = {
+  projects: T_Project[];
+  isHydrating: boolean;
+  createProject: (name?: string) => Promise<T_Project | null>;
+  renameProject: (projectId: string, newName: string) => Promise<void>;
+  updateProjectPages: (projectId: string, pages: T_Page_Meta[]) => Promise<void>;
+  getPageContent: (page: T_Page_Meta) => Promise<string>;
+};
+
+const MetadataContext = createContext<MetadataContextValue | null>(null);
+
+/**
+ * Provides globally shared metadata state and data-layer actions.
+ */
+export function MetadataProvider({ children }: { children: ReactNode }) {
+  const [projects, setProjects] = useState<T_Project[]>([]);
+  const [isHydrating, setIsHydrating] = useState(true);
+
+  const hydrate = useCallback(async () => {
+    const snapshot = await loadGlobalMetadata();
+    setProjects(snapshot.projects);
+    setIsHydrating(false);
+  }, []);
+
+  useEffect(() => {
+    void hydrate();
+
+    const stopSync = startLocalSync({
+      onSynced: () => {
+        void hydrate();
+      },
+    });
+
+    return () => {
+      stopSync();
+    };
+  }, [hydrate]);
+
+  const renameProject = useCallback(
+    async (projectId: string, newName: string) => {
+      const currentProjects = projects;
+      const optimisticProjects = currentProjects.map((project) =>
+        project.id === projectId
+          ? { ...project, name: newName, updatedAt: new Date().toISOString() }
+          : project,
+      );
+
+      setProjects(optimisticProjects);
+
+      try {
+        const snapshot = await renameProjectMetadata(projectId, newName);
+
+        if (snapshot) {
+          setProjects(snapshot.projects);
+        }
+      } catch {
+        setProjects(currentProjects);
+      }
+    },
+    [projects],
+  );
+
+  const createProject = useCallback(
+    async (name?: string) => {
+      const currentProjects = projects;
+      const optimisticProject: T_Project = {
+        id:
+          typeof crypto !== "undefined" && "randomUUID" in crypto
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+        name: name?.trim() || "Untitled project",
+        updatedAt: new Date().toISOString(),
+        pages: [],
+      };
+
+      setProjects([optimisticProject, ...currentProjects]);
+
+      try {
+        const snapshot = await createProjectMetadata(name);
+
+        if (snapshot) {
+          setProjects(snapshot.projects);
+          return snapshot.projects[0] ?? null;
+        }
+
+        setProjects(currentProjects);
+        return null;
+      } catch {
+        setProjects(currentProjects);
+        return null;
+      }
+    },
+    [projects],
+  );
+
+  const updateProjectPages = useCallback(
+    async (projectId: string, pages: T_Page_Meta[]) => {
+      const currentProjects = projects;
+      const optimisticProjects = currentProjects.map((project) =>
+        project.id === projectId
+          ? { ...project, pages, updatedAt: new Date().toISOString() }
+          : project,
+      );
+
+      setProjects(optimisticProjects);
+
+      try {
+        const snapshot = await updateProjectPagesMetadata(projectId, pages);
+
+        if (snapshot) {
+          setProjects(snapshot.projects);
+        }
+      } catch {
+        setProjects(currentProjects);
+      }
+    },
+    [projects],
+  );
+
+  const getPageContent = useCallback(async (page: T_Page_Meta) => {
+    const content = await loadPageContentOnDemand(page);
+    return content.content;
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      projects,
+      isHydrating,
+      createProject,
+      renameProject,
+      updateProjectPages,
+      getPageContent,
+    }),
+    [
+      projects,
+      isHydrating,
+      createProject,
+      renameProject,
+      updateProjectPages,
+      getPageContent,
+    ],
+  );
+
+  return (
+    <MetadataContext.Provider value={value}>{children}</MetadataContext.Provider>
+  );
+}
+
+/**
+ * Accessor hook for metadata state and mutations.
+ */
+export function useMetadata() {
+  const context = useContext(MetadataContext);
+
+  if (!context) {
+    throw new Error("useMetadata must be used inside MetadataProvider");
+  }
+
+  return context;
+}

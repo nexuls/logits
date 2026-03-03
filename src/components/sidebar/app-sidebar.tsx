@@ -1,15 +1,17 @@
 "use client";
 
 import { Sidebar, SidebarContent } from "@/components/ui/sidebar";
-import { dummyProjects } from "../../../data/dummy";
 import { AppSidebarFooter } from "./sidebar-footer";
 import { AppSidebarHeader } from "./sidebar-header";
 import { ProjectGroup } from "./project-group";
+import { useMetadata } from "@/components/providers/metadata";
 
 const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 export function AppSidebar() {
-  const sortedProjects = [...dummyProjects].sort((first, second) => {
+  const { projects } = useMetadata();
+
+  const sortedProjects = [...projects].sort((first, second) => {
     return (
       new Date(second.updatedAt).getTime() - new Date(first.updatedAt).getTime()
     );
