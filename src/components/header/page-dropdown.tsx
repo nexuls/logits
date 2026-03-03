@@ -1,7 +1,7 @@
 /* biome-ignore-all lint/a11y: sortable drag rows intentionally use draggable div interactions */
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   BoxIcon,
   Check,
@@ -80,6 +80,7 @@ export default function PageDropdown({
   onPagesChange,
   renameCurrentPageSignal,
 }: Props) {
+  const lastHandledRenameSignalRef = useRef<number | undefined>(undefined);
   const [isSorting, setIsSorting] = useState(false);
   const [orderedPages, setOrderedPages] = useState<T_Page_Meta[]>(pages);
   const [draggingPageId, setDraggingPageId] = useState<string | null>(null);
@@ -103,9 +104,19 @@ export default function PageDropdown({
   }, [pages]);
 
   useEffect(() => {
-    if (!renameCurrentPageSignal || !currentPage) {
+    if (renameCurrentPageSignal == null) {
       return;
     }
+
+    if (lastHandledRenameSignalRef.current === renameCurrentPageSignal) {
+      return;
+    }
+
+    if (!currentPage) {
+      return;
+    }
+
+    lastHandledRenameSignalRef.current = renameCurrentPageSignal;
 
     setRenamePageId(currentPage.id);
     setRenameValue(currentPage.name);
