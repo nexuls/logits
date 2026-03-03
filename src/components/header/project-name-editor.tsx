@@ -9,7 +9,7 @@ import { buttonVariants } from "../ui/button";
 type Props = {
   projectName: string;
   onProjectNameChange?: (newName: string) => void;
-  focusSignal?: number;
+  focusSignal: number | null;
 };
 
 export default function ProjectNameEditor({

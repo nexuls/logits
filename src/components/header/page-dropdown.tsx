@@ -50,7 +50,7 @@ type Props = {
   currentPageId: string;
   onCurrentPageIdChange?: (pageId: string) => void;
   onPagesChange?: (pages: T_Page_Meta[]) => void;
-  renameCurrentPageSignal?: number;
+  renameCurrentPageSignal: number | null;
 };
 
 const pageTypeIcons = {

@@ -42,8 +42,10 @@ export default function Header({
   onPagesChange,
 }: Props) {
   const { toggleSidebar } = useSidebar();
-  const [projectRenameSignal, setProjectRenameSignal] = useState(0);
-  const [pageRenameSignal, setPageRenameSignal] = useState(0);
+  const [projectRenameSignal, setProjectRenameSignal] = useState<number | null>(
+    null,
+  );
+  const [pageRenameSignal, setPageRenameSignal] = useState<number | null>(null);
 
   return (
     <div
@@ -62,9 +64,7 @@ export default function Header({
 
         {placeholder ? (
           <div className="flex items-center gap-2">
-            <div className="flex items-center justify-center rounded">
-
-            </div>
+            <div className="flex items-center justify-center rounded"></div>
           </div>
         ) : (
           <>
@@ -86,10 +86,10 @@ export default function Header({
 
             <HeaderMenu
               onRenameProjectRequest={() => {
-                setProjectRenameSignal((value) => value + 1);
+                setProjectRenameSignal((value) => (value ?? 0) + 1);
               }}
               onRenameCurrentPageRequest={() => {
-                setPageRenameSignal((value) => value + 1);
+                setPageRenameSignal((value) => (value ?? 0) + 1);
               }}
             />
           </>
