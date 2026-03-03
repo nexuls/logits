@@ -1,9 +1,22 @@
 "use client";
 
-import { CableIcon, Pencil, PanelsTopLeft } from "lucide-react";
+import { CableIcon, PanelsTopLeft, PlusIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useMetadata } from "@/components/providers/metadata";
 import { SidebarHeader } from "@/components/ui/sidebar";
 
 export function AppSidebarHeader() {
+  const router = useRouter();
+  const { createProject } = useMetadata();
+
+  const onCreateProject = async () => {
+    const createdProject = await createProject();
+
+    if (createdProject) {
+      router.push(`/p/${createdProject.id}`);
+    }
+  };
+
   return (
     <SidebarHeader className="px-3 py-3">
       <div className="flex items-center justify-between">
@@ -17,11 +30,13 @@ export function AppSidebarHeader() {
         <div className="flex items-center gap-1">
           <button
             type="button"
-            onClick={() => console.info("[placeholder] edit workspace")}
+            onClick={() => {
+              void onCreateProject();
+            }}
             className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-            aria-label="Edit workspace"
+            aria-label="Create project"
           >
-            <Pencil className="size-4" />
+            <PlusIcon className="size-4" />
           </button>
           <button
             type="button"
