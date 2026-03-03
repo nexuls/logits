@@ -14,29 +14,13 @@ export default function Holder({ slug }: { slug: string }) {
     updateProjectPages,
     getPageContent,
   } = useMetadata();
-  const [selectedProjectId, setSelectedProjectId] = useState<string>(slug);
   const [currentPageId, setCurrentPageId] = useState("");
 
   const selectedProject = useMemo(
-    () => projects.find((project) => project.id === selectedProjectId) ?? null,
-    [projects, selectedProjectId],
+    () => projects.find((project) => project.id === slug) ?? null,
+    [projects, slug],
   );
   const pages = selectedProject?.pages ?? [];
-
-  useEffect(() => {
-    if (!projects.length) {
-      return;
-    }
-
-    const matchedProject = projects.find((project) => project.id === slug);
-    const fallbackProject = matchedProject ?? projects[0];
-
-    if (!fallbackProject) {
-      return;
-    }
-
-    setSelectedProjectId(fallbackProject.id);
-  }, [projects, slug]);
 
   useEffect(() => {
     if (!pages.length) {
@@ -78,6 +62,7 @@ export default function Holder({ slug }: { slug: string }) {
   if (!selectedProject) {
     return (
       <div className="relative w-full h-dvh bg-background">
+        <Header placeholder />
         <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-muted-foreground">
           Project not found
         </p>
@@ -88,6 +73,7 @@ export default function Holder({ slug }: { slug: string }) {
   return (
     <div className="relative w-full h-dvh bg-background">
       <Header
+        placeholder={false}
         projectName={selectedProject.name}
         pages={pages}
         currentPageId={currentPageId}
