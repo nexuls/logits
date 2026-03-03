@@ -16,7 +16,15 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 
-export default function HeaderMenu() {
+type Props = {
+  onRenameProjectRequest?: () => void;
+  onRenameCurrentPageRequest?: () => void;
+};
+
+export default function HeaderMenu({
+  onRenameProjectRequest,
+  onRenameCurrentPageRequest,
+}: Props) {
   const [language, setLanguage] = useState("English");
 
   return (
@@ -40,8 +48,12 @@ export default function HeaderMenu() {
               <DropdownMenuShortcut>Ctrl+Y</DropdownMenuShortcut>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Rename Project</DropdownMenuItem>
-            <DropdownMenuItem>Rename Current Page</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => onRenameProjectRequest?.()}>
+              Rename Project
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => onRenameCurrentPageRequest?.()}>
+              Rename Current Page
+            </DropdownMenuItem>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
 

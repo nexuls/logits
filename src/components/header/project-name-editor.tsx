@@ -1,7 +1,7 @@
 /* biome-ignore-all lint/a11y: contentEditable is intentionally used for project-name editing */
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "../ui/button";
@@ -9,13 +9,34 @@ import { buttonVariants } from "../ui/button";
 type Props = {
   projectName: string;
   onProjectNameChange?: (newName: string) => void;
+  focusSignal?: number;
 };
 
 export default function ProjectNameEditor({
   projectName,
   onProjectNameChange,
+  focusSignal,
 }: Props) {
   const projectNameEditableRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!focusSignal) {
+      return;
+    }
+
+    const editable = projectNameEditableRef.current;
+
+    if (!editable) {
+      return;
+    }
+
+    editable.focus();
+    const range = document.createRange();
+    range.selectNodeContents(editable);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+  }, [focusSignal]);
 
   const commitProjectName = (value: string) => {
     const nextValue = value.trim() || projectName;
