@@ -11,9 +11,12 @@ import { indexedDbBootstrapAdapter } from "./adapters";
 import type { MetadataSnapshot } from "./contracts";
 import {
   createProject,
+  deleteProject,
+  duplicateProject,
   ensureMetadataSnapshot,
   getMetadataSnapshot,
   getPageContent,
+  pinProject,
   renameProject,
   setMetadataSnapshot,
   updateProjectPages,
@@ -46,6 +49,18 @@ export async function renameProjectMetadata(projectId: string, newName: string) 
 
 export async function createProjectMetadata(name?: string) {
   return createProject(name);
+}
+
+export async function duplicateProjectMetadata(projectId: string) {
+  return duplicateProject(projectId);
+}
+
+export async function deleteProjectMetadata(projectId: string) {
+  return deleteProject(projectId);
+}
+
+export async function pinProjectMetadata(projectId: string) {
+  return pinProject(projectId);
 }
 
 export async function updateProjectPagesMetadata(

@@ -161,6 +161,129 @@ export async function createProject(name?: string) {
   return snapshot;
 }
 
+export async function duplicateProject(projectId: string) {
+  const currentSnapshot = await getMetadataSnapshot();
+
+  if (!currentSnapshot) {
+    return null;
+  }
+
+  const sourceProject = currentSnapshot.projects.find(
+    (project) => project.id === projectId,
+  );
+
+  if (!sourceProject) {
+    return null;
+  }
+
+  const nextProject = {
+    ...sourceProject,
+    id:
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : createMutationId(),
+    name: `${sourceProject.name} (copy)`,
+    updatedAt: nowIso(),
+    pages: sourceProject.pages.map((page) => ({ ...page })),
+  };
+
+  const mutation: MutationRecord = mutationSchema.parse({
+    id: createMutationId(),
+    type: "project.duplicate",
+    payload: { projectId, duplicateProjectId: nextProject.id },
+    createdAt: Date.now(),
+  });
+
+  const db = await getDb();
+  await db.put("mutations", mutation);
+
+  const { snapshot } = await writeMetadataSnapshot({
+    ...currentSnapshot,
+    projects: [nextProject, ...currentSnapshot.projects],
+    version: currentSnapshot.version + 1,
+    updatedAt: nowIso(),
+  });
+
+  await db.delete("mutations", mutation.id);
+
+  return snapshot;
+}
+
+export async function deleteProject(projectId: string) {
+  const currentSnapshot = await getMetadataSnapshot();
+
+  if (!currentSnapshot) {
+    return null;
+  }
+
+  const nextProjects = currentSnapshot.projects.filter(
+    (project) => project.id !== projectId,
+  );
+
+  if (nextProjects.length === currentSnapshot.projects.length) {
+    return currentSnapshot;
+  }
+
+  const mutation: MutationRecord = mutationSchema.parse({
+    id: createMutationId(),
+    type: "project.delete",
+    payload: { projectId },
+    createdAt: Date.now(),
+  });
+
+  const db = await getDb();
+  await db.put("mutations", mutation);
+
+  const { snapshot } = await writeMetadataSnapshot({
+    ...currentSnapshot,
+    projects: nextProjects,
+    version: currentSnapshot.version + 1,
+    updatedAt: nowIso(),
+  });
+
+  await db.delete("mutations", mutation.id);
+
+  return snapshot;
+}
+
+export async function pinProject(projectId: string) {
+  const currentSnapshot = await getMetadataSnapshot();
+
+  if (!currentSnapshot) {
+    return null;
+  }
+
+  const nextProjects = currentSnapshot.projects.map((project) =>
+    project.id === projectId
+      ? {
+          ...project,
+          updatedAt: nowIso(),
+        }
+      : project,
+  );
+
+  const mutation: MutationRecord = mutationSchema.parse({
+    id: createMutationId(),
+    type: "project.pin",
+    payload: { projectId },
+    createdAt: Date.now(),
+  });
+
+  const db = await getDb();
+  await db.put("mutations", mutation);
+
+  const { snapshot } = await writeMetadataSnapshot({
+    ...currentSnapshot,
+    projects: nextProjects,
+    version: currentSnapshot.version + 1,
+    updatedAt: nowIso(),
+  });
+
+  await db.delete("mutations", mutation.id);
+
+  return snapshot;
+}
+
 export async function updateProjectPages(
   projectId: string,
   pages: T_Page_Meta[],

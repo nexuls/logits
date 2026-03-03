@@ -22,8 +22,11 @@ import {
 import type { T_Page_Meta, T_Project } from "@/types/types";
 import {
   createProjectMetadata,
+  deleteProjectMetadata,
+  duplicateProjectMetadata,
   loadGlobalMetadata,
   loadPageContentOnDemand,
+  pinProjectMetadata,
   renameProjectMetadata,
   updateProjectPagesMetadata,
 } from "@/functions";
@@ -33,6 +36,9 @@ type MetadataContextValue = {
   projects: T_Project[];
   isHydrating: boolean;
   createProject: (name?: string) => Promise<T_Project | null>;
+  duplicateProject: (projectId: string) => Promise<T_Project | null>;
+  deleteProject: (projectId: string) => Promise<T_Project | null>;
+  pinProject: (projectId: string) => Promise<void>;
   renameProject: (projectId: string, newName: string) => Promise<void>;
   updateProjectPages: (projectId: string, pages: T_Page_Meta[]) => Promise<void>;
   getPageContent: (page: T_Page_Meta) => Promise<string>;
@@ -124,6 +130,81 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     [projects],
   );
 
+  const duplicateProject = useCallback(
+    async (projectId: string) => {
+      const currentProjects = projects;
+
+      try {
+        const snapshot = await duplicateProjectMetadata(projectId);
+
+        if (snapshot) {
+          setProjects(snapshot.projects);
+          return snapshot.projects[0] ?? null;
+        }
+
+        return null;
+      } catch {
+        setProjects(currentProjects);
+        return null;
+      }
+    },
+    [projects],
+  );
+
+  const deleteProject = useCallback(
+    async (projectId: string) => {
+      const currentProjects = projects;
+      const optimisticProjects = currentProjects.filter(
+        (project) => project.id !== projectId,
+      );
+
+      setProjects(optimisticProjects);
+
+      try {
+        const snapshot = await deleteProjectMetadata(projectId);
+
+        if (snapshot) {
+          setProjects(snapshot.projects);
+          return snapshot.projects[0] ?? null;
+        }
+
+        setProjects(currentProjects);
+        return null;
+      } catch {
+        setProjects(currentProjects);
+        return null;
+      }
+    },
+    [projects],
+  );
+
+  const pinProject = useCallback(
+    async (projectId: string) => {
+      const currentProjects = projects;
+      const optimisticProjects = currentProjects.map((project) =>
+        project.id === projectId
+          ? { ...project, updatedAt: new Date().toISOString() }
+          : project,
+      );
+
+      setProjects(optimisticProjects);
+
+      try {
+        const snapshot = await pinProjectMetadata(projectId);
+
+        if (snapshot) {
+          setProjects(snapshot.projects);
+          return;
+        }
+
+        setProjects(currentProjects);
+      } catch {
+        setProjects(currentProjects);
+      }
+    },
+    [projects],
+  );
+
   const updateProjectPages = useCallback(
     async (projectId: string, pages: T_Page_Meta[]) => {
       const currentProjects = projects;
@@ -158,6 +239,9 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       projects,
       isHydrating,
       createProject,
+      duplicateProject,
+      deleteProject,
+      pinProject,
       renameProject,
       updateProjectPages,
       getPageContent,
@@ -166,6 +250,9 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       projects,
       isHydrating,
       createProject,
+      duplicateProject,
+      deleteProject,
+      pinProject,
       renameProject,
       updateProjectPages,
       getPageContent,

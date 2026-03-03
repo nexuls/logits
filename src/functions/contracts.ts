@@ -37,6 +37,9 @@ export const mutationSchema = z.object({
   id: z.string().min(1),
   type: z.enum([
     "project.create",
+    "project.duplicate",
+    "project.delete",
+    "project.pin",
     "project.rename",
     "project.pages.update",
     "content.upsert",
