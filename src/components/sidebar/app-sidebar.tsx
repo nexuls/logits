@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { Sidebar, SidebarContent } from "@/components/ui/sidebar";
 import { AppSidebarFooter } from "./sidebar-footer";
 import { AppSidebarHeader } from "./sidebar-header";
@@ -10,6 +11,7 @@ const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 export function AppSidebar() {
   const { projects } = useMetadata();
+  const pathname = usePathname();
 
   const sortedProjects = [...projects].sort((first, second) => {
     return (
@@ -24,7 +26,10 @@ export function AppSidebar() {
   const olderProjects = sortedProjects.filter((project) => {
     return now - new Date(project.updatedAt).getTime() > ONE_WEEK_MS;
   });
-  const activeProjectId = thisWeekProjects[0]?.id ?? olderProjects[0]?.id;
+  const activeProjectIdFromUrl = pathname.startsWith("/p/")
+    ? decodeURIComponent(pathname.split("/")[2] ?? "")
+    : "";
+  const activeProjectId = activeProjectIdFromUrl;
 
   return (
     <Sidebar className="border-r border-sidebar-border">
