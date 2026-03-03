@@ -34,8 +34,9 @@ export default function Header({
   return (
     <div
       className={cn(
+        "absolute z-50 top-0 -left-px right-0",
         "w-fit flex items-center justify-between p-2",
-        "bg-muted/50 backdrop-blur-sm rounded-br-lg",
+        "bg-sidebar backdrop-blur-sm rounded-br-lg border-b border-r border-sidebar-border",
         className,
       )}
     >

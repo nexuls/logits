@@ -2,7 +2,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, EllipsisVertical, GripVertical, PenLine, Plus } from "lucide-react";
+import {
+  BoxIcon,
+  Check,
+  EllipsisVertical,
+  GripVertical,
+  LayoutGrid,
+  PenLine,
+  Plus,
+  SquarePen,
+} from "lucide-react";
 
 import type { PageMeta } from "@/types/types";
 import { cn } from "@/lib/utils";
@@ -21,6 +30,11 @@ type Props = {
   onCurrentPageIdChange?: (pageId: string) => void;
   onPagesChange?: (pages: PageMeta[]) => void;
 };
+
+const pageTypeIcons = {
+  canvas: BoxIcon,
+  gallery: LayoutGrid,
+} as const;
 
 function reorderPages(pages: PageMeta[], fromId: string, toId: string) {
   const fromIndex = pages.findIndex((page) => page.id === fromId);
@@ -47,11 +61,12 @@ export default function PageDropdown({
   const [orderedPages, setOrderedPages] = useState<PageMeta[]>(pages);
   const [draggingPageId, setDraggingPageId] = useState<string | null>(null);
   const [dropTargetPageId, setDropTargetPageId] = useState<string | null>(null);
+  const currentPage =
+    orderedPages.find((page) => page.id === currentPageId) || orderedPages[0];
+  const CurrentPageIcon = currentPage ? pageTypeIcons[currentPage.type] : SquarePen;
 
   const currentPageName =
-    orderedPages.find((page) => page.id === currentPageId)?.name ||
-    orderedPages[0]?.name ||
-    "Page";
+    currentPage?.name || "Page";
 
   useEffect(() => {
     setOrderedPages(pages);
@@ -70,6 +85,7 @@ export default function PageDropdown({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="px-2">
+          <CurrentPageIcon className="size-4 text-muted-foreground" />
           {currentPageName}
         </Button>
       </DropdownMenuTrigger>
@@ -97,6 +113,7 @@ export default function PageDropdown({
             {orderedPages.map((page) => {
               const isCurrentPage = page.id === currentPageId;
               const isDropTarget = page.id === dropTargetPageId;
+              const PageTypeIcon = pageTypeIcons[page.type];
 
               return (
                 <div
@@ -132,6 +149,7 @@ export default function PageDropdown({
                 >
                   <div className="flex items-center gap-2">
                     <GripVertical className="size-3.5 text-muted-foreground" />
+                    <PageTypeIcon className="size-3.5 text-muted-foreground" />
                     <span>{page.name}</span>
                   </div>
                   {isCurrentPage ? (
@@ -145,6 +163,7 @@ export default function PageDropdown({
           <div className="p-1">
             {orderedPages.map((page) => {
               const isCurrentPage = page.id === currentPageId;
+              const PageTypeIcon = pageTypeIcons[page.type];
 
               return (
                 <DropdownMenuItem
@@ -163,6 +182,7 @@ export default function PageDropdown({
                           isCurrentPage ? "opacity-100" : "opacity-0",
                         )}
                       />
+                      <PageTypeIcon className="size-3.5 text-muted-foreground" />
                       <span>{page.name}</span>
                     </div>
                     {isCurrentPage ? (

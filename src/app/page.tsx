@@ -3,11 +3,12 @@
 import { useState } from "react";
 
 import Header from "@/components/header";
+import type { PageMeta } from "@/types/types";
 
-const dummyPages = [
-  { id: "1", name: "Basic Gates" },
-  { id: "2", name: "Page 2" },
-  { id: "3", name: "Page 3" },
+const dummyPages: PageMeta[] = [
+  { id: "1", name: "Basic Gates", type: "gallery" },
+  { id: "2", name: "Page 2", type: "canvas" },
+  { id: "3", name: "Page 3", type: "canvas" },
 ];
 
 export default function Home() {
@@ -16,7 +17,7 @@ export default function Home() {
   const [currentPageId, setCurrentPageId] = useState(dummyPages[0].id);
 
   return (
-    <div className="w-full h-dvh bg-background">
+    <div className="relative w-full h-dvh bg-background">
       <Header
         projectName={projectName}
         pages={pages}
