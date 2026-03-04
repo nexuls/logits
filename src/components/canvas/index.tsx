@@ -17,12 +17,33 @@ type Props = {
   onContentChange?: (newContent: string) => void;
 };
 
-const GRID_SIZE = 24;
+const GRID_SIZE = 10;
 const MIN_SCALE = 0.05;
 const MAX_SCALE = 8;
+const GRID_STEPS = [
+  { min: -1, mid: 0.15, step: 64 },
+  { min: 0.05, mid: 0.375, step: 16 },
+  { min: 0.15, mid: 1, step: 4 },
+  { min: 0.7, mid: 2.5, step: 1 },
+] as const;
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
+}
+
+function modulate(
+  value: number,
+  inMin: number,
+  inMax: number,
+  outMin: number,
+  outMax: number,
+) {
+  if (inMax === inMin) {
+    return outMax;
+  }
+
+  const t = clamp((value - inMin) / (inMax - inMin), 0, 1);
+  return outMin + (outMax - outMin) * t;
 }
 
 export default function Canvas({ content }: Props) {
@@ -83,64 +104,28 @@ export default function Canvas({ content }: Props) {
   );
 
   const gridPatterns = useMemo(() => {
-    const unit = Math.max((GRID_SIZE * scale) / 8, 0.125);
-    const grid1 = unit;
-    const grid4 = unit * 4;
-    const grid16 = unit * 16;
-    const grid64 = unit * 64;
+    const z = scale;
+    const x = offset.x / z;
+    const y = offset.y / z;
 
-    const zoomMin = Math.log2(MIN_SCALE);
-    const zoomMax = Math.log2(MAX_SCALE);
-    const zoomLevel = clamp(
-      (Math.log2(scale) - zoomMin) / (zoomMax - zoomMin),
-      0,
-      1,
-    );
+    const levels = GRID_STEPS.map(({ step, min, mid }) => {
+      const size = Math.max(step * GRID_SIZE * z, 0.001);
+      const xo = 0.5 + x * z;
+      const yo = 0.5 + y * z;
+      const cx = xo > 0 ? xo % size : size + (xo % size);
+      const cy = yo > 0 ? yo % size : size + (yo % size);
+      const opacity = z < mid ? modulate(z, min, mid, 0, 1) : 1;
 
-    const majorBaseOpacity = clamp((grid64 - 12) / 140, 0.14, 0.34);
-    const mediumBaseOpacity = clamp((grid16 - 6) / 90, 0.1, 0.26);
-    const lowBaseOpacity = clamp((grid4 - 6) / 70, 0.06, 0.18);
-    const tinyBaseOpacity = clamp((grid1 - 6) / 70, 0.02, 0.1);
+      return {
+        key: String(step),
+        size,
+        cx,
+        cy,
+        opacity: clamp(opacity, 0, 1),
+      };
+    }).filter((level) => level.opacity > 0.01 && level.size > 1.5);
 
-    const majorOpacity = clamp(
-      majorBaseOpacity * (0.8 + zoomLevel * 0.5),
-      0.12,
-      0.4,
-    );
-    const mediumOpacity = clamp(
-      mediumBaseOpacity * (0.45 + zoomLevel * 0.85),
-      0.05,
-      0.33,
-    );
-    const lowOpacity = clamp(
-      lowBaseOpacity * (0.2 + zoomLevel * 1.1),
-      0.02,
-      0.24,
-    );
-    const tinyOpacity = clamp(
-      tinyBaseOpacity * Math.max(0, (zoomLevel - 0.3) / 0.7),
-      0,
-      0.14,
-    );
-
-    const shiftX = offset.x;
-    const shiftY = offset.y;
-
-    const levels = [
-      { key: "64", size: grid64, opacity: majorOpacity, minVisibleSize: 2 },
-      { key: "16", size: grid16, opacity: mediumOpacity, minVisibleSize: 3.5 },
-      { key: "4", size: grid4, opacity: lowOpacity, minVisibleSize: 4 },
-      { key: "1", size: grid1, opacity: tinyOpacity, minVisibleSize: 12 },
-    ]
-      .filter((level) => level.size >= level.minVisibleSize)
-      .filter((level) => level.opacity > 0.005)
-      .map(({ key, size, opacity }) => ({ key, size, opacity }));
-
-    return {
-      levels,
-      shiftX,
-      shiftY,
-    };
+    return { levels };
   }, [offset.x, offset.y, scale]);
 
   const parsedContent = content.trim();
@@ -188,14 +173,12 @@ export default function Canvas({ content }: Props) {
                   width={level.size}
                   height={level.size}
                   patternUnits="userSpaceOnUse"
-                  patternTransform={`translate(${gridPatterns.shiftX} ${gridPatterns.shiftY})`}
                 >
                   <circle
-                    className="tl-grid-dot"
-                    cx={0.5}
-                    cy={0.5}
+                    cx={level.cx}
+                    cy={level.cy}
                     r={1}
-                    fill="var(--foreground)"
+                    fill="color-mix(in oklab, var(--muted-foreground) 50%, transparent)"
                     opacity={level.opacity}
                   />
                 </pattern>
@@ -224,7 +207,9 @@ export default function Canvas({ content }: Props) {
           }}
         >
           {parsedContent.length > 0 && (
-            <div className="rounded-md px-3 py-2 bg-card w-fit">{parsedContent}</div>
+            <div className="rounded-md px-3 py-2 bg-card w-fit">
+              {parsedContent}
+            </div>
           )}
         </div>
       </div>
