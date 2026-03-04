@@ -1,10 +1,19 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { LayoutGrid, TriangleAlertIcon } from "lucide-react";
 
 import Header from "@/components/header";
 import { useMetadata } from "@/components/providers/metadata";
 import { Spinner } from "@/components/ui/spinner";
+import Canvas from "@/components/canvas";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 
 export default function Holder({ slug }: { slug: string }) {
   const {
@@ -13,14 +22,20 @@ export default function Holder({ slug }: { slug: string }) {
     renameProject,
     updateProjectPages,
     getPageContent,
+    updatePageContent,
   } = useMetadata();
   const [currentPageId, setCurrentPageId] = useState("");
+  const [currentPageContent, setCurrentPageContent] = useState("");
 
   const selectedProject = useMemo(
     () => projects.find((project) => project.id === slug) ?? null,
     [projects, slug],
   );
   const pages = selectedProject?.pages ?? [];
+  const currentPage = useMemo(
+    () => pages.find((page) => page.id === currentPageId) ?? null,
+    [pages, currentPageId],
+  );
 
   useEffect(() => {
     if (!pages.length) {
@@ -36,18 +51,27 @@ export default function Holder({ slug }: { slug: string }) {
   }, [currentPageId, pages]);
 
   useEffect(() => {
-    if (!pages.length || !currentPageId) {
-      return;
-    }
-
-    const currentPage = pages.find((page) => page.id === currentPageId);
-
     if (!currentPage) {
+      setCurrentPageContent("");
       return;
     }
 
-    void getPageContent(currentPage);
-  }, [pages, currentPageId, getPageContent]);
+    let isCancelled = false;
+
+    const loadContent = async () => {
+      const content = await getPageContent(currentPage);
+
+      if (!isCancelled) {
+        setCurrentPageContent(content);
+      }
+    };
+
+    void loadContent();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [currentPage, getPageContent]);
 
   if (isHydrating) {
     return (
@@ -63,9 +87,19 @@ export default function Holder({ slug }: { slug: string }) {
     return (
       <div className="relative w-full h-dvh bg-background">
         <Header placeholder />
-        <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-muted-foreground">
-          Project not found
-        </p>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-muted-foreground">
+          <Empty className="h-full border-border">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <TriangleAlertIcon />
+              </EmptyMedia>
+              <EmptyTitle>Project not found.</EmptyTitle>
+              <EmptyDescription>
+                It may have been deleted or you may not have access to it.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        </div>
       </div>
     );
   }
@@ -85,7 +119,31 @@ export default function Holder({ slug }: { slug: string }) {
           void renameProject(selectedProject.id, newName);
         }}
       />
-      <main className=""></main>
+      <main className="w-full h-full">
+        {currentPage?.type === "canvas" ? (
+          <Canvas
+            content={currentPageContent}
+            onContentChange={(nextContent) => {
+              setCurrentPageContent(nextContent);
+              void updatePageContent(currentPage.id, nextContent);
+            }}
+          />
+        ) : (
+          <div className="h-full p-6 pt-20">
+            <Empty className="h-full border-border">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <LayoutGrid />
+                </EmptyMedia>
+                <EmptyTitle>Gallery page</EmptyTitle>
+                <EmptyDescription>
+                  Gallery rendering is not implemented yet.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          </div>
+        )}
+      </main>
     </div>
   );
 }
