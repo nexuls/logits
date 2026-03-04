@@ -83,7 +83,7 @@ export default function Canvas({ content }: Props) {
   );
 
   const gridPatterns = useMemo(() => {
-    const unit = Math.max((GRID_SIZE * scale) / 8, 1);
+    const unit = Math.max((GRID_SIZE * scale) / 8, 0.125);
     const grid1 = unit;
     const grid4 = unit * 4;
     const grid16 = unit * 16;
@@ -123,16 +123,21 @@ export default function Canvas({ content }: Props) {
       0.14,
     );
 
-    const shiftX = ((offset.x % grid64) + grid64) % grid64;
-    const shiftY = ((offset.y % grid64) + grid64) % grid64;
+    const shiftX = offset.x;
+    const shiftY = offset.y;
+
+    const levels = [
+      { key: "64", size: grid64, opacity: majorOpacity, minVisibleSize: 2 },
+      { key: "16", size: grid16, opacity: mediumOpacity, minVisibleSize: 3.5 },
+      { key: "4", size: grid4, opacity: lowOpacity, minVisibleSize: 4 },
+      { key: "1", size: grid1, opacity: tinyOpacity, minVisibleSize: 12 },
+    ]
+      .filter((level) => level.size >= level.minVisibleSize)
+      .filter((level) => level.opacity > 0.005)
+      .map(({ key, size, opacity }) => ({ key, size, opacity }));
 
     return {
-      levels: [
-        { key: "64", size: grid64, opacity: majorOpacity },
-        { key: "16", size: grid16, opacity: mediumOpacity },
-        { key: "4", size: grid4, opacity: lowOpacity },
-        { key: "1", size: grid1, opacity: tinyOpacity },
-      ],
+      levels,
       shiftX,
       shiftY,
     };
@@ -175,7 +180,6 @@ export default function Canvas({ content }: Props) {
           <defs>
             {gridPatterns.levels.map((level) => {
               const patternId = `${gridId}_grid_${level.key}`;
-              const cx = Math.max(level.size - 0.49, 0.5);
 
               return (
                 <pattern
@@ -188,8 +192,8 @@ export default function Canvas({ content }: Props) {
                 >
                   <circle
                     className="tl-grid-dot"
-                    cx={cx}
-                    cy={0.59}
+                    cx={0.5}
+                    cy={0.5}
                     r={1}
                     fill="var(--foreground)"
                     opacity={level.opacity}
