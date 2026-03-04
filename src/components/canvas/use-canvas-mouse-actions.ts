@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
   type PointerEvent,
   type RefObject,
@@ -78,6 +79,10 @@ export function useCanvasMouseActions({
     offset: initialOffset,
   });
   const [isPanning, setIsPanning] = useState(false);
+  const activeTouchesRef = useRef<Map<number, Point>>(new Map());
+  const lastPanPointRef = useRef<Point | null>(null);
+  const lastPinchCenterRef = useRef<Point | null>(null);
+  const lastPinchDistanceRef = useRef<number | null>(null);
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -194,6 +199,40 @@ export function useCanvasMouseActions({
   }, [initialOffset, initialScale]);
 
   const onPointerDown = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "touch") {
+      event.preventDefault();
+      event.currentTarget.setPointerCapture(event.pointerId);
+
+      const point = { x: event.clientX, y: event.clientY };
+      activeTouchesRef.current.set(event.pointerId, point);
+
+      const touches = Array.from(activeTouchesRef.current.values());
+
+      if (touches.length === 1) {
+        lastPanPointRef.current = touches[0];
+        lastPinchCenterRef.current = null;
+        lastPinchDistanceRef.current = null;
+      }
+
+      if (touches.length >= 2) {
+        const first = touches[0];
+        const second = touches[1];
+        const center = {
+          x: (first.x + second.x) / 2,
+          y: (first.y + second.y) / 2,
+        };
+
+        lastPinchCenterRef.current = center;
+        lastPinchDistanceRef.current = Math.hypot(
+          second.x - first.x,
+          second.y - first.y,
+        );
+      }
+
+      setIsPanning(true);
+      return;
+    }
+
     if (event.button !== 1) {
       return;
     }
@@ -205,6 +244,83 @@ export function useCanvasMouseActions({
 
   const onPointerMove = useCallback(
     (event: PointerEvent<HTMLDivElement>) => {
+      if (event.pointerType === "touch") {
+        if (!activeTouchesRef.current.has(event.pointerId)) {
+          return;
+        }
+
+        const point = { x: event.clientX, y: event.clientY };
+        activeTouchesRef.current.set(event.pointerId, point);
+
+        const touches = Array.from(activeTouchesRef.current.values());
+
+        if (touches.length === 1) {
+          const previous = lastPanPointRef.current;
+
+          if (previous) {
+            const deltaX = point.x - previous.x;
+            const deltaY = point.y - previous.y;
+
+            setViewState((prev) => ({
+              ...prev,
+              offset: {
+                x: prev.offset.x + deltaX,
+                y: prev.offset.y + deltaY,
+              },
+            }));
+          }
+
+          lastPanPointRef.current = point;
+          lastPinchCenterRef.current = null;
+          lastPinchDistanceRef.current = null;
+          return;
+        }
+
+        const first = touches[0];
+        const second = touches[1];
+        const center = {
+          x: (first.x + second.x) / 2,
+          y: (first.y + second.y) / 2,
+        };
+        const distance = Math.hypot(second.x - first.x, second.y - first.y);
+
+        const previousCenter = lastPinchCenterRef.current;
+        const previousDistance = lastPinchDistanceRef.current;
+
+        const panDeltaX = previousCenter ? center.x - previousCenter.x : 0;
+        const panDeltaY = previousCenter ? center.y - previousCenter.y : 0;
+
+        const rect = event.currentTarget.getBoundingClientRect();
+        const pointerX = center.x - rect.left;
+        const pointerY = center.y - rect.top;
+
+        setViewState((prev) => {
+          const scaleFactor =
+            previousDistance && previousDistance > 0
+              ? distance / previousDistance
+              : 1;
+          const nextScale = Math.min(
+            maxScale,
+            Math.max(minScale, prev.scale * scaleFactor),
+          );
+
+          const zoomed = getZoomedViewState(prev, pointerX, pointerY, nextScale);
+
+          return {
+            ...zoomed,
+            offset: {
+              x: zoomed.offset.x + panDeltaX,
+              y: zoomed.offset.y + panDeltaY,
+            },
+          };
+        });
+
+        lastPanPointRef.current = null;
+        lastPinchCenterRef.current = center;
+        lastPinchDistanceRef.current = distance;
+        return;
+      }
+
       if (!isPanning) {
         return;
       }
@@ -217,12 +333,34 @@ export function useCanvasMouseActions({
         },
       }));
     },
-    [isPanning],
+    [isPanning, maxScale, minScale],
   );
 
   const endPan = useCallback((event: PointerEvent<HTMLDivElement>) => {
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    if (event.pointerType === "touch") {
+      activeTouchesRef.current.delete(event.pointerId);
+
+      const touches = Array.from(activeTouchesRef.current.values());
+
+      if (touches.length === 0) {
+        setIsPanning(false);
+        lastPanPointRef.current = null;
+        lastPinchCenterRef.current = null;
+        lastPinchDistanceRef.current = null;
+        return;
+      }
+
+      if (touches.length === 1) {
+        lastPanPointRef.current = touches[0];
+        lastPinchCenterRef.current = null;
+        lastPinchDistanceRef.current = null;
+      }
+
+      return;
     }
 
     setIsPanning(false);
