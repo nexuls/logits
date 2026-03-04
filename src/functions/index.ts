@@ -80,3 +80,7 @@ export async function loadPageContentOnDemand(page: T_Page_Meta) {
   const initialContent = await indexedDbBootstrapAdapter.getInitialContent(page);
   return upsertPageContent(page.id, initialContent);
 }
+
+export async function savePageContent(pageId: string, content: string) {
+  return upsertPageContent(pageId, content);
+}

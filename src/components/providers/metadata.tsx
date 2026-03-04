@@ -28,6 +28,7 @@ import {
   loadPageContentOnDemand,
   pinProjectMetadata,
   renameProjectMetadata,
+  savePageContent,
   updateProjectPagesMetadata,
 } from "@/functions";
 import { startLocalSync } from "@/functions/sync";
@@ -42,6 +43,7 @@ type MetadataContextValue = {
   renameProject: (projectId: string, newName: string) => Promise<void>;
   updateProjectPages: (projectId: string, pages: T_Page_Meta[]) => Promise<void>;
   getPageContent: (page: T_Page_Meta) => Promise<string>;
+  updatePageContent: (pageId: string, content: string) => Promise<void>;
 };
 
 const MetadataContext = createContext<MetadataContextValue | null>(null);
@@ -234,6 +236,13 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
     return content.content;
   }, []);
 
+  const updatePageContent = useCallback(
+    async (pageId: string, content: string) => {
+      await savePageContent(pageId, content);
+    },
+    [],
+  );
+
   const value = useMemo(
     () => ({
       projects,
@@ -245,6 +254,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       renameProject,
       updateProjectPages,
       getPageContent,
+      updatePageContent,
     }),
     [
       projects,
@@ -256,6 +266,7 @@ export function MetadataProvider({ children }: { children: ReactNode }) {
       renameProject,
       updateProjectPages,
       getPageContent,
+      updatePageContent,
     ],
   );
 
