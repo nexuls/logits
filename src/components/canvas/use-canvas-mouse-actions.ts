@@ -1,0 +1,249 @@
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type PointerEvent,
+  type RefObject,
+  type WheelEvent,
+} from "react";
+
+type Point = {
+  x: number;
+  y: number;
+};
+
+type ViewState = {
+  scale: number;
+  offset: Point;
+};
+
+type UseCanvasMouseActionsParams = {
+  viewportRef: RefObject<HTMLDivElement | null>;
+  minScale: number;
+  maxScale: number;
+  zoomIntensity?: number;
+  initialScale?: number;
+  initialOffset?: Point;
+};
+
+const DEFAULT_ZOOM_INTENSITY = 0.0015;
+const TRACKPAD_ZOOM_MULTIPLIER = 3.25;
+const TRACKPAD_DELTA_THRESHOLD = 16;
+const TOOLBAR_ZOOM_FACTOR = 1.2;
+
+function isZoomGesture(
+  event: WheelEvent<HTMLDivElement> | globalThis.WheelEvent,
+) {
+  return event.ctrlKey || event.metaKey || event.deltaZ !== 0;
+}
+
+function isLikelyTrackpadZoom(event: WheelEvent<HTMLDivElement>) {
+  return (
+    event.deltaMode === 0 && Math.abs(event.deltaY) < TRACKPAD_DELTA_THRESHOLD
+  );
+}
+
+function getZoomedViewState(
+  prev: ViewState,
+  pointerX: number,
+  pointerY: number,
+  nextScale: number,
+) {
+  if (nextScale === prev.scale) {
+    return prev;
+  }
+
+  const worldX = (pointerX - prev.offset.x) / prev.scale;
+  const worldY = (pointerY - prev.offset.y) / prev.scale;
+
+  return {
+    scale: nextScale,
+    offset: {
+      x: pointerX - worldX * nextScale,
+      y: pointerY - worldY * nextScale,
+    },
+  };
+}
+
+export function useCanvasMouseActions({
+  viewportRef,
+  minScale,
+  maxScale,
+  zoomIntensity = DEFAULT_ZOOM_INTENSITY,
+  initialScale = 1,
+  initialOffset = { x: 0, y: 0 },
+}: UseCanvasMouseActionsParams) {
+  const [viewState, setViewState] = useState<ViewState>({
+    scale: initialScale,
+    offset: initialOffset,
+  });
+  const [isPanning, setIsPanning] = useState(false);
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+
+    if (!viewport) {
+      return;
+    }
+
+    const preventNativeWheel = (event: globalThis.WheelEvent) => {
+      event.preventDefault();
+    };
+
+    viewport.addEventListener("wheel", preventNativeWheel, {
+      passive: false,
+      capture: true,
+    });
+
+    return () => {
+      viewport.removeEventListener("wheel", preventNativeWheel, {
+        capture: true,
+      });
+    };
+  }, [viewportRef]);
+
+  const onWheel = useCallback(
+    (event: WheelEvent<HTMLDivElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (isPanning) return;
+
+      if (!isZoomGesture(event)) {
+        const panX =
+          event.deltaX +
+          (event.shiftKey && event.deltaX === 0 ? event.deltaY : 0);
+        const panY = event.shiftKey && event.deltaX === 0 ? 0 : event.deltaY;
+
+        setViewState((prev) => ({
+          ...prev,
+          offset: {
+            x: prev.offset.x - panX,
+            y: prev.offset.y - panY,
+          },
+        }));
+
+        return;
+      }
+
+      const viewport = viewportRef.current;
+
+      if (!viewport) {
+        return;
+      }
+
+      const rect = viewport.getBoundingClientRect();
+      const pointerX = event.clientX - rect.left;
+      const pointerY = event.clientY - rect.top;
+
+      setViewState((prev) => {
+        const effectiveZoomIntensity = isLikelyTrackpadZoom(event)
+          ? zoomIntensity * TRACKPAD_ZOOM_MULTIPLIER
+          : zoomIntensity;
+
+        const nextScale = Math.min(
+          maxScale,
+          Math.max(
+            minScale,
+            prev.scale * Math.exp(-event.deltaY * effectiveZoomIntensity),
+          ),
+        );
+
+        return getZoomedViewState(prev, pointerX, pointerY, nextScale);
+      });
+    },
+    [maxScale, minScale, viewportRef, zoomIntensity, isPanning],
+  );
+
+  const zoomByFactor = useCallback(
+    (factor: number) => {
+      const viewport = viewportRef.current;
+
+      if (!viewport) {
+        return;
+      }
+
+      const pointerX = viewport.clientWidth / 2;
+      const pointerY = viewport.clientHeight / 2;
+
+      setViewState((prev) => {
+        const nextScale = Math.min(
+          maxScale,
+          Math.max(minScale, prev.scale * factor),
+        );
+
+        return getZoomedViewState(prev, pointerX, pointerY, nextScale);
+      });
+    },
+    [maxScale, minScale, viewportRef],
+  );
+
+  const zoomIn = useCallback(() => {
+    zoomByFactor(TOOLBAR_ZOOM_FACTOR);
+  }, [zoomByFactor]);
+
+  const zoomOut = useCallback(() => {
+    zoomByFactor(1 / TOOLBAR_ZOOM_FACTOR);
+  }, [zoomByFactor]);
+
+  const resetView = useCallback(() => {
+    setViewState({
+      scale: initialScale,
+      offset: initialOffset,
+    });
+  }, [initialOffset, initialScale]);
+
+  const onPointerDown = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    if (event.button !== 1) {
+      return;
+    }
+
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setIsPanning(true);
+  }, []);
+
+  const onPointerMove = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      if (!isPanning) {
+        return;
+      }
+
+      setViewState((prev) => ({
+        ...prev,
+        offset: {
+          x: prev.offset.x + event.movementX,
+          y: prev.offset.y + event.movementY,
+        },
+      }));
+    },
+    [isPanning],
+  );
+
+  const endPan = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    setIsPanning(false);
+  }, []);
+
+  const onDoubleClick = useCallback(() => {
+    resetView();
+  }, [resetView]);
+
+  return {
+    scale: viewState.scale,
+    offset: viewState.offset,
+    isPanning,
+    onWheel,
+    onPointerDown,
+    onPointerMove,
+    onPointerUp: endPan,
+    onPointerCancel: endPan,
+    onDoubleClick,
+    zoomIn,
+    zoomOut,
+    resetView,
+  };
+}
