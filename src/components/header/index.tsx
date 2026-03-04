@@ -52,7 +52,7 @@ export default function Header({
       className={cn(
         "absolute z-50 top-0 left-0 right-0",
         "w-fit flex items-center justify-between p-2",
-        "bg-background backdrop-blur-sm rounded-br-xl",
+        "bg-background/50 backdrop-blur-sm rounded-br-xl",
         className,
       )}
     >
