@@ -54,6 +54,7 @@ export default function Canvas({ content }: Props) {
     scale,
     offset,
     isPanning,
+    isSpacePressed,
     onWheel,
     onPointerDown,
     onPointerMove,
@@ -151,7 +152,9 @@ export default function Canvas({ content }: Props) {
           overscrollBehavior: "none",
           cursor: isPanning
             ? "var(--logit-cursor-grabbing)"
-            : "var(--logit-cursor-default)",
+            : isSpacePressed
+              ? "var(--logit-cursor-grab)"
+              : "var(--logit-cursor-default)",
         }}
         role="application"
         aria-label="Canvas with pan and zoom"

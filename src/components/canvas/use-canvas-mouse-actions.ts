@@ -79,10 +79,74 @@ export function useCanvasMouseActions({
     offset: initialOffset,
   });
   const [isPanning, setIsPanning] = useState(false);
+  const [isSpacePressed, setIsSpacePressed] = useState(false);
+  const panPointerIdRef = useRef<number | null>(null);
+  const panTriggerRef = useRef<"touch" | "middle" | "space" | null>(null);
   const activeTouchesRef = useRef<Map<number, Point>>(new Map());
   const lastPanPointRef = useRef<Point | null>(null);
   const lastPinchCenterRef = useRef<Point | null>(null);
   const lastPinchDistanceRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const isEditableTarget = (target: EventTarget | null) => {
+      if (!(target instanceof HTMLElement)) {
+        return false;
+      }
+
+      const tagName = target.tagName;
+      return (
+        tagName === "INPUT" ||
+        tagName === "TEXTAREA" ||
+        tagName === "SELECT" ||
+        target.isContentEditable
+      );
+    };
+
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.code !== "Space" || isEditableTarget(event.target)) {
+        return;
+      }
+
+      if (!isSpacePressed) {
+        setIsSpacePressed(true);
+      }
+
+      event.preventDefault();
+    };
+
+    const onKeyUp = (event: globalThis.KeyboardEvent) => {
+      if (event.code !== "Space") {
+        return;
+      }
+
+      setIsSpacePressed(false);
+
+      if (panTriggerRef.current === "space") {
+        setIsPanning(false);
+        panPointerIdRef.current = null;
+        panTriggerRef.current = null;
+      }
+    };
+
+    const onWindowBlur = () => {
+      setIsSpacePressed(false);
+      if (panTriggerRef.current === "space") {
+        setIsPanning(false);
+        panPointerIdRef.current = null;
+        panTriggerRef.current = null;
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown, { passive: false });
+    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", onWindowBlur);
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", onWindowBlur);
+    };
+  }, [isSpacePressed]);
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -198,49 +262,59 @@ export function useCanvasMouseActions({
     });
   }, [initialOffset, initialScale]);
 
-  const onPointerDown = useCallback((event: PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === "touch") {
+  const onPointerDown = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      if (event.pointerType === "touch") {
+        event.preventDefault();
+        event.currentTarget.setPointerCapture(event.pointerId);
+
+        const point = { x: event.clientX, y: event.clientY };
+        activeTouchesRef.current.set(event.pointerId, point);
+
+        const touches = Array.from(activeTouchesRef.current.values());
+
+        if (touches.length === 1) {
+          lastPanPointRef.current = touches[0];
+          lastPinchCenterRef.current = null;
+          lastPinchDistanceRef.current = null;
+        }
+
+        if (touches.length >= 2) {
+          const first = touches[0];
+          const second = touches[1];
+          const center = {
+            x: (first.x + second.x) / 2,
+            y: (first.y + second.y) / 2,
+          };
+
+          lastPinchCenterRef.current = center;
+          lastPinchDistanceRef.current = Math.hypot(
+            second.x - first.x,
+            second.y - first.y,
+          );
+        }
+
+        panPointerIdRef.current = event.pointerId;
+        panTriggerRef.current = "touch";
+        setIsPanning(true);
+        return;
+      }
+
+      const isMiddleMousePan = event.button === 1;
+      const isSpaceDragPan = event.button === 0 && isSpacePressed;
+
+      if (!isMiddleMousePan && !isSpaceDragPan) {
+        return;
+      }
+
       event.preventDefault();
       event.currentTarget.setPointerCapture(event.pointerId);
-
-      const point = { x: event.clientX, y: event.clientY };
-      activeTouchesRef.current.set(event.pointerId, point);
-
-      const touches = Array.from(activeTouchesRef.current.values());
-
-      if (touches.length === 1) {
-        lastPanPointRef.current = touches[0];
-        lastPinchCenterRef.current = null;
-        lastPinchDistanceRef.current = null;
-      }
-
-      if (touches.length >= 2) {
-        const first = touches[0];
-        const second = touches[1];
-        const center = {
-          x: (first.x + second.x) / 2,
-          y: (first.y + second.y) / 2,
-        };
-
-        lastPinchCenterRef.current = center;
-        lastPinchDistanceRef.current = Math.hypot(
-          second.x - first.x,
-          second.y - first.y,
-        );
-      }
-
+      panPointerIdRef.current = event.pointerId;
+      panTriggerRef.current = isMiddleMousePan ? "middle" : "space";
       setIsPanning(true);
-      return;
-    }
-
-    if (event.button !== 1) {
-      return;
-    }
-
-    event.preventDefault();
-    event.currentTarget.setPointerCapture(event.pointerId);
-    setIsPanning(true);
-  }, []);
+    },
+    [isSpacePressed],
+  );
 
   const onPointerMove = useCallback(
     (event: PointerEvent<HTMLDivElement>) => {
@@ -363,6 +437,12 @@ export function useCanvasMouseActions({
       return;
     }
 
+    if (panPointerIdRef.current !== null && event.pointerId !== panPointerIdRef.current) {
+      return;
+    }
+
+    panPointerIdRef.current = null;
+    panTriggerRef.current = null;
     setIsPanning(false);
   }, []);
 
@@ -374,6 +454,7 @@ export function useCanvasMouseActions({
     scale: viewState.scale,
     offset: viewState.offset,
     isPanning,
+    isSpacePressed,
     onWheel,
     onPointerDown,
     onPointerMove,
