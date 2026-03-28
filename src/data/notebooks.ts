@@ -386,6 +386,76 @@ export function reorderFiles(
   });
 }
 
+export function moveFile(
+  data: T_App_Data,
+  fileId: string,
+  nextParentId: string,
+  nextIndex: number,
+) {
+  const target = data.files.find((file) => file.id === fileId);
+
+  if (!target || target.id === nextParentId) {
+    return data;
+  }
+
+  if (
+    target.metadata.type === "folder" &&
+    getDescendantIds(data.files, fileId).has(nextParentId)
+  ) {
+    return data;
+  }
+
+  const notebookId = getNotebookIdForFile(data, fileId);
+  const previousParentId = target.metadata.parentId;
+  const nextFiles = data.files.map((file) =>
+    file.id === fileId
+      ? touchFile(file, {
+          parentId: nextParentId,
+        })
+      : file,
+  );
+
+  const previousSiblingIds = getChildren(nextFiles, previousParentId).map(
+    (file) => file.id,
+  );
+  const nextSiblingIds = getChildren(nextFiles, nextParentId)
+    .map((file) => file.id)
+    .filter((id) => id !== fileId);
+  const safeIndex = Math.max(0, Math.min(nextIndex, nextSiblingIds.length));
+  nextSiblingIds.splice(safeIndex, 0, fileId);
+  const reorderedIds =
+    previousParentId === nextParentId ? nextSiblingIds : previousSiblingIds;
+
+  return nextData(data, {
+    notebooks: data.notebooks.map((notebook) =>
+      notebook.id === notebookId ? touchNotebook(notebook) : notebook,
+    ),
+    files: nextFiles.map((file) => {
+      if (file.metadata.parentId === previousParentId) {
+        return {
+          ...file,
+          metadata: {
+            ...file.metadata,
+            fileOrder: reorderedIds.indexOf(file.id),
+          },
+        };
+      }
+
+      if (previousParentId !== nextParentId && file.metadata.parentId === nextParentId) {
+        return {
+          ...file,
+          metadata: {
+            ...file.metadata,
+            fileOrder: nextSiblingIds.indexOf(file.id),
+          },
+        };
+      }
+
+      return file;
+    }),
+  });
+}
+
 export function updateFileContent(
   data: T_App_Data,
   fileId: string,
@@ -409,3 +479,4 @@ export function updateFileContent(
     ),
   });
 }
+

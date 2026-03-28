@@ -10,6 +10,7 @@ import {
   deleteNotebook,
   duplicateFile,
   getNotebookFiles,
+  moveFile,
   renameFile,
   renameNotebook,
   reorderFiles,
@@ -119,6 +120,13 @@ export function useNotebooks() {
     [updateData],
   );
 
+  const moveFileAction = useCallback(
+    async (fileId: string, parentId: string, index: number) => {
+      await updateData((currentData) => moveFile(currentData, fileId, parentId, index));
+    },
+    [updateData],
+  );
+
   const updateFileContentAction = useCallback(
     async (fileId: string, content: string) => {
       await updateData((currentData) =>
@@ -149,6 +157,7 @@ export function useNotebooks() {
       deleteFile: deleteFileAction,
       duplicateFile: duplicateFileAction,
       reorderFiles: reorderFilesAction,
+      moveFile: moveFileAction,
       updateFileContent: updateFileContentAction,
       getNotebookFiles: getNotebookFilesAction,
     }),
@@ -165,6 +174,7 @@ export function useNotebooks() {
       deleteFileAction,
       duplicateFileAction,
       reorderFilesAction,
+      moveFileAction,
       updateFileContentAction,
       getNotebookFilesAction,
     ],
