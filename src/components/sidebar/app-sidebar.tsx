@@ -1,53 +1,40 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useNotebooks } from "@/hooks/use-notebooks";
 import { Sidebar, SidebarContent } from "@/components/ui/sidebar";
+import { FileTree } from "./file-tree";
 import { AppSidebarFooter } from "./sidebar-footer";
 import { AppSidebarHeader } from "./sidebar-header";
-import { ProjectGroup } from "./project-group";
-import { useMetadata } from "@/components/providers/metadata";
-
-const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 export function AppSidebar() {
-  const { projects } = useMetadata();
   const pathname = usePathname();
-
-  const sortedProjects = [...projects].sort((first, second) => {
-    return (
-      new Date(second.updatedAt).getTime() - new Date(first.updatedAt).getTime()
-    );
-  });
-
-  const now = Date.now();
-  const thisWeekProjects = sortedProjects.filter((project) => {
-    return now - new Date(project.updatedAt).getTime() <= ONE_WEEK_MS;
-  });
-  const olderProjects = sortedProjects.filter((project) => {
-    return now - new Date(project.updatedAt).getTime() > ONE_WEEK_MS;
-  });
-  const activeProjectIdFromUrl = pathname.startsWith("/p/")
+  const searchParams = useSearchParams();
+  const { notebooks, getNotebookFiles } = useNotebooks();
+  const routeNotebookId = pathname.startsWith("/p/")
     ? decodeURIComponent(pathname.split("/")[2] ?? "")
     : "";
-  const activeProjectId = activeProjectIdFromUrl;
+  const activeNotebookId = routeNotebookId || notebooks[0]?.id || "";
+  const activeFileId = searchParams.get("file") ?? "";
+  const activeNotebook = notebooks.find(
+    (notebook) => notebook.id === activeNotebookId,
+  );
+  const notebookFiles = activeNotebook
+    ? getNotebookFiles(activeNotebook.id)
+    : [];
 
   return (
     <Sidebar className="border-r border-sidebar-border">
-      <AppSidebarHeader />
+      <AppSidebarHeader activeNotebookId={activeNotebookId} />
 
-      <SidebarContent className="px-2 py-1">
-        <ProjectGroup
-          title="This week"
-          projects={thisWeekProjects}
-          activeProjectId={activeProjectId}
-          className="p-0"
-        />
-        <ProjectGroup
-          title="Older"
-          projects={olderProjects}
-          activeProjectId={activeProjectId}
-          className="p-0 pt-2"
-        />
+      <SidebarContent className="px-2 py-3">
+        {activeNotebook ? (
+          <FileTree
+            notebookId={activeNotebook.id}
+            files={notebookFiles}
+            activeFileId={activeFileId}
+          />
+        ) : null}
       </SidebarContent>
 
       <AppSidebarFooter />

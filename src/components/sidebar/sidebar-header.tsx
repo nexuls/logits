@@ -1,44 +1,83 @@
 "use client";
 
-import { CableIcon, PlusIcon } from "lucide-react";
+import { BookOpenText, ChevronDown, PlusIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMetadata } from "@/components/providers/metadata";
+import { useNotebooks } from "@/hooks/use-notebooks";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { SidebarHeader } from "@/components/ui/sidebar";
 
-export function AppSidebarHeader() {
+type Props = {
+  activeNotebookId?: string;
+};
+
+export function AppSidebarHeader({ activeNotebookId }: Props) {
   const router = useRouter();
-  const { createProject } = useMetadata();
+  const { notebooks, createNotebook } = useNotebooks();
+  const activeNotebook =
+    notebooks.find((notebook) => notebook.id === activeNotebookId) ??
+    notebooks[0] ??
+    null;
 
-  const onCreateProject = async () => {
-    const createdProject = await createProject();
+  const onCreateNotebook = async () => {
+    const createdNotebook = await createNotebook();
 
-    if (createdProject) {
-      router.push(`/p/${createdProject.id}`);
+    if (createdNotebook) {
+      router.push(`/p/${createdNotebook.id}`);
     }
   };
 
   return (
     <SidebarHeader className="px-3 py-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="flex size-6 items-center justify-center rounded">
-            <CableIcon className="size-5" />
-          </div>
-          <span className="text-base font-semibold leading-none">Logits</span>
-        </div>
+      <div className="flex items-center justify-between gap-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              className="min-w-0 flex-1 justify-between overflow-hidden"
+            >
+              <span className="flex min-w-0 items-center gap-2">
+                <BookOpenText className="size-4 shrink-0" />
+                <span className="truncate">
+                  {activeNotebook?.name ?? "Select notebook"}
+                </span>
+              </span>
+              <ChevronDown className="size-4 shrink-0" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-64">
+            {notebooks.map((notebook) => (
+              <DropdownMenuItem
+                key={notebook.id}
+                onSelect={() => {
+                  router.push(`/p/${notebook.id}`);
+                }}
+              >
+                {notebook.name}
+              </DropdownMenuItem>
+            ))}
+            {!notebooks.length ? (
+              <DropdownMenuItem disabled>No notebooks yet</DropdownMenuItem>
+            ) : null}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => {
-              void onCreateProject();
-            }}
-            className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-            aria-label="Create project"
-          >
-            <PlusIcon className="size-4" />
-          </button>
-        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon-sm"
+          onClick={() => {
+            void onCreateNotebook();
+          }}
+          aria-label="Create notebook"
+        >
+          <PlusIcon className="size-4" />
+        </Button>
       </div>
     </SidebarHeader>
   );
