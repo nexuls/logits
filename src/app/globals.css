@@ -121,6 +121,7 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    user-select: none;
   }
   body {
     @apply bg-background text-foreground;
