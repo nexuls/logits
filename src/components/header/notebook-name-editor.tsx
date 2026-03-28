@@ -1,30 +1,31 @@
-/* biome-ignore-all lint/a11y: contentEditable is intentionally used for project-name editing */
+/* biome-ignore-all lint/a11y: contentEditable is intentionally used for inline renaming */
 "use client";
 
 import { useEffect, useRef } from "react";
-
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "../ui/button";
 
 type Props = {
-  projectName: string;
-  onProjectNameChange?: (newName: string) => void;
+  value: string;
+  onChange?: (newValue: string) => void;
   focusSignal: number | null;
+  className?: string;
 };
 
-export default function ProjectNameEditor({
-  projectName,
-  onProjectNameChange,
+export default function NotebookNameEditor({
+  value,
+  onChange,
   focusSignal,
+  className,
 }: Props) {
-  const projectNameEditableRef = useRef<HTMLDivElement>(null);
+  const editableRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!focusSignal) {
       return;
     }
 
-    const editable = projectNameEditableRef.current;
+    const editable = editableRef.current;
 
     if (!editable) {
       return;
@@ -38,17 +39,17 @@ export default function ProjectNameEditor({
     selection?.addRange(range);
   }, [focusSignal]);
 
-  const commitProjectName = (value: string) => {
-    const nextValue = value.trim() || projectName;
+  const commitValue = (nextValue: string) => {
+    const trimmedValue = nextValue.trim() || value;
 
-    if (nextValue !== projectName && onProjectNameChange) {
-      onProjectNameChange(nextValue);
+    if (trimmedValue !== value) {
+      onChange?.(trimmedValue);
     }
   };
 
   return (
     <div
-      ref={projectNameEditableRef}
+      ref={editableRef}
       contentEditable
       suppressContentEditableWarning
       role="textbox"
@@ -57,35 +58,36 @@ export default function ProjectNameEditor({
       tabIndex={0}
       className={cn(
         buttonVariants({ variant: "ghost", size: "sm" }),
-        "inline-grid place-items-center min-w-0 max-w-64 text-left ring-0 focus:ring-1 focus-visible:ring-1 transition-none",
+        "inline-grid place-items-center min-w-0 text-left ring-0 focus:ring-1 focus-visible:ring-1 transition-none",
+        className,
       )}
       onFocus={() => {
-        if (projectNameEditableRef.current) {
+        if (editableRef.current) {
           const range = document.createRange();
-          range.selectNodeContents(projectNameEditableRef.current);
+          range.selectNodeContents(editableRef.current);
           const selection = window.getSelection();
           selection?.removeAllRanges();
           selection?.addRange(range);
         }
       }}
       onBlur={(event) => {
-        commitProjectName(event.currentTarget.textContent || "");
+        commitValue(event.currentTarget.textContent || "");
       }}
       onKeyDown={(event) => {
         if (event.key === "Enter") {
           event.preventDefault();
-          commitProjectName(event.currentTarget.textContent || "");
+          commitValue(event.currentTarget.textContent || "");
           event.currentTarget.blur();
         }
 
         if (event.key === "Escape") {
           event.preventDefault();
-          event.currentTarget.textContent = projectName;
+          event.currentTarget.textContent = value;
           event.currentTarget.blur();
         }
       }}
     >
-      {projectName}
+      {value}
     </div>
   );
 }
