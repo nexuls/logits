@@ -1,9 +1,9 @@
 import type React from "react";
-import { TooltipProvider } from "../ui/tooltip";
+import { AppSidebar } from "../sidebar/app-sidebar";
+import { DataProvider } from "./data";
 import { Toaster } from "../ui/sonner";
 import { SidebarProvider } from "../ui/sidebar";
-import { AppSidebar } from "../sidebar/app-sidebar";
-import { MetadataProvider } from "./metadata";
+import { TooltipProvider } from "../ui/tooltip";
 
 type Props = {
   children?: React.ReactNode;
@@ -12,13 +12,13 @@ type Props = {
 export default function BaseProvider({ children }: Props) {
   return (
     <TooltipProvider>
-      <MetadataProvider>
+      <DataProvider>
         <SidebarProvider>
           <AppSidebar />
           {children}
           <Toaster />
         </SidebarProvider>
-      </MetadataProvider>
+      </DataProvider>
     </TooltipProvider>
   );
 }
