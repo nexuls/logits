@@ -1,37 +1,35 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import {
-  ChevronDown,
-  ChevronRight,
-  CopyPlus,
-  Download,
-  EllipsisVertical,
-  FileImage,
-  FilePenLine,
-  FileText,
-  Folder,
-  FolderPlus,
-  Link2,
-  Pencil,
-  Pin,
-  Plus,
-  Trash2,
-} from "lucide-react";
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type DragEvent,
+  type ReactNode,
+} from "react";
+import { EllipsisIcon, FolderPlus, Plus, Search, Settings2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { T_File, T_File_Type } from "@/types/types";
-import { cn } from "@/lib/utils";
 import { useNotebooks } from "@/hooks/use-notebooks";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { Input } from "../ui/input";
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { FileTreeNode } from "./file-tree-node";
+import { NotebookSettingsDialog } from "./notebook-settings-dialog";
+import {
+  getDescendantIds,
+  getTreeDropPosition,
+  type FileTreeDropPosition,
+  sortChildren,
+} from "./file-tree-utils";
 
 type Props = {
   notebookId: string;
@@ -39,50 +37,39 @@ type Props = {
   activeFileId?: string;
 };
 
-function sortChildren(files: T_File[]) {
-  return [...files].sort((first, second) => {
-    if (first.metadata.fileOrder !== second.metadata.fileOrder) {
-      return first.metadata.fileOrder - second.metadata.fileOrder;
-    }
-
-    if (first.metadata.type === "folder" && second.metadata.type !== "folder") {
-      return -1;
-    }
-
-    if (first.metadata.type !== "folder" && second.metadata.type === "folder") {
-      return 1;
-    }
-
-    return first.name.localeCompare(second.name);
-  });
-}
-
-function getFileIcon(type: T_File_Type) {
-  if (type === "folder") {
-    return Folder;
-  }
-
-  if (type === "draw") {
-    return FilePenLine;
-  }
-
-  if (type === "image") {
-    return FileImage;
-  }
-
-  return FileText;
-}
+type DropTarget = {
+  parentId: string;
+  index: number;
+  position: FileTreeDropPosition | "root";
+  targetId: string | null;
+};
 
 export function FileTree({ notebookId, files, activeFileId }: Props) {
   const router = useRouter();
-  const { createFile, renameFile, deleteFile, duplicateFile, reorderFiles } =
-    useNotebooks();
+  const {
+    notebooks,
+    createFile,
+    renameFile,
+    deleteFile,
+    duplicateFile,
+    moveFile,
+    renameNotebook,
+    deleteNotebook,
+  } = useNotebooks();
   const [collapsedFolders, setCollapsedFolders] = useState<
     Record<string, boolean>
   >({});
   const [draggingFileId, setDraggingFileId] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
   const [renameFileId, setRenameFileId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const [query, setQuery] = useState("");
+  const [isNotebookSettingsOpen, setIsNotebookSettingsOpen] = useState(false);
+  const [draftNotebookName, setDraftNotebookName] = useState("");
+  const expandTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const activeNotebook =
+    notebooks.find((notebook) => notebook.id === notebookId) ?? null;
 
   const filesByParent = useMemo(() => {
     const mapping = new Map<string, T_File[]>();
@@ -94,6 +81,10 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
     }
 
     return mapping;
+  }, [files]);
+
+  const filesById = useMemo(() => {
+    return new Map(files.map((file) => [file.id, file]));
   }, [files]);
 
   useEffect(() => {
@@ -110,12 +101,37 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
     });
   }, [files]);
 
+  useEffect(() => {
+    return () => {
+      if (expandTimeoutRef.current) {
+        clearTimeout(expandTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (activeNotebook && isNotebookSettingsOpen) {
+      setDraftNotebookName(activeNotebook.name);
+    }
+  }, [activeNotebook, isNotebookSettingsOpen]);
+
+  const clearExpandTimer = () => {
+    if (expandTimeoutRef.current) {
+      clearTimeout(expandTimeoutRef.current);
+      expandTimeoutRef.current = null;
+    }
+  };
+
+  const toggleFolder = (fileId: string) => {
+    setCollapsedFolders((currentState) => ({
+      ...currentState,
+      [fileId]: !currentState[fileId],
+    }));
+  };
+
   const openFile = (file: T_File) => {
     if (file.metadata.type === "folder") {
-      setCollapsedFolders((currentState) => ({
-        ...currentState,
-        [file.id]: !currentState[file.id],
-      }));
+      toggleFolder(file.id);
       return;
     }
 
@@ -138,6 +154,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
       setCollapsedFolders((currentState) => ({
         ...currentState,
         [createdFile.id]: false,
+        [parentId]: false,
       }));
       toast.success("Folder created");
       return;
@@ -147,9 +164,46 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
     router.push(`/p/${notebookId}?file=${createdFile.id}`);
   };
 
+  const handleRenameNotebook = async () => {
+    if (!activeNotebook) {
+      return;
+    }
+
+    const nextName = draftNotebookName.trim();
+
+    if (!nextName || nextName === activeNotebook.name) {
+      setIsNotebookSettingsOpen(false);
+      return;
+    }
+
+    await renameNotebook(activeNotebook.id, nextName);
+    setIsNotebookSettingsOpen(false);
+  };
+
+  const handleDeleteNotebook = async () => {
+    if (!activeNotebook) {
+      return;
+    }
+
+    const fallbackNotebook = await deleteNotebook(activeNotebook.id);
+    setIsNotebookSettingsOpen(false);
+
+    if (fallbackNotebook) {
+      router.push(`/p/${fallbackNotebook.id}`);
+      return;
+    }
+
+    router.push("/");
+  };
+
   const startRename = (file: T_File) => {
     setRenameFileId(file.id);
     setRenameValue(file.name);
+  };
+
+  const cancelRename = () => {
+    setRenameFileId(null);
+    setRenameValue("");
   };
 
   const commitRename = async () => {
@@ -165,8 +219,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
     }
 
     await renameFile(renameFileId, nextName);
-    setRenameFileId(null);
-    setRenameValue("");
+    cancelRename();
     toast.success("Renamed");
   };
 
@@ -204,253 +257,362 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
     toast.success("Link copied");
   };
 
-  const renderBranch = (parentId: string, depth = 0) => {
-    const children = sortChildren(filesByParent.get(parentId) ?? []);
+  const resolveDropTarget = (
+    targetFile: T_File,
+    position: FileTreeDropPosition,
+  ) => {
+    if (position === "inside" && targetFile.metadata.type === "folder") {
+      const children = sortChildren(filesByParent.get(targetFile.id) ?? []);
+      return {
+        parentId: targetFile.id,
+        index: children.length,
+      };
+    }
 
-    if (!children.length) {
+    const siblings = sortChildren(
+      filesByParent.get(targetFile.metadata.parentId) ?? [],
+    );
+    const targetIndex = siblings.findIndex(
+      (candidate) => candidate.id === targetFile.id,
+    );
+
+    return {
+      parentId: targetFile.metadata.parentId,
+      index: position === "before" ? targetIndex : targetIndex + 1,
+    };
+  };
+
+  const canDropOnTarget = (
+    targetFile: T_File,
+    position: FileTreeDropPosition,
+  ) => {
+    if (!draggingFileId || draggingFileId === targetFile.id) {
+      return false;
+    }
+
+    const draggingFile = filesById.get(draggingFileId);
+
+    if (!draggingFile) {
+      return false;
+    }
+
+    const nextTarget = resolveDropTarget(targetFile, position);
+
+    if (nextTarget.parentId === draggingFile.id) {
+      return false;
+    }
+
+    if (
+      draggingFile.metadata.type === "folder" &&
+      getDescendantIds(files, draggingFile.id).has(nextTarget.parentId)
+    ) {
+      return false;
+    }
+
+    return true;
+  };
+
+  const setFolderExpandIntent = (
+    targetFile: T_File,
+    position: FileTreeDropPosition,
+  ) => {
+    clearExpandTimer();
+
+    if (
+      targetFile.metadata.type !== "folder" ||
+      position !== "inside" ||
+      !collapsedFolders[targetFile.id]
+    ) {
+      return;
+    }
+
+    expandTimeoutRef.current = setTimeout(() => {
+      setCollapsedFolders((currentState) => ({
+        ...currentState,
+        [targetFile.id]: false,
+      }));
+    }, 700);
+  };
+
+  const handleDragStart = (fileId: string) => {
+    setDraggingFileId(fileId);
+    setDropTarget(null);
+  };
+
+  const handleDragHover = (targetFile: T_File, event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const position = getTreeDropPosition(
+      event.clientY,
+      event.currentTarget.getBoundingClientRect(),
+      targetFile.metadata.type === "folder",
+    );
+
+    if (!canDropOnTarget(targetFile, position)) {
+      clearExpandTimer();
+      setDropTarget(null);
+      return;
+    }
+
+    const nextTarget = resolveDropTarget(targetFile, position);
+
+    setDropTarget({
+      parentId: nextTarget.parentId,
+      index: nextTarget.index,
+      position,
+      targetId: targetFile.id,
+    });
+    setFolderExpandIntent(targetFile, position);
+  };
+
+  const handleDrop = async (targetFile: T_File) => {
+    if (!dropTarget || !draggingFileId || dropTarget.targetId !== targetFile.id) {
+      return;
+    }
+
+    await moveFile(draggingFileId, dropTarget.parentId, dropTarget.index);
+    clearExpandTimer();
+    setDraggingFileId(null);
+    setDropTarget(null);
+  };
+
+  const handleDragEnd = () => {
+    clearExpandTimer();
+    setDraggingFileId(null);
+    setDropTarget(null);
+  };
+
+  const handleRootDragOver = (event: DragEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!draggingFileId) {
+      return;
+    }
+
+    const rootItems = sortChildren(filesByParent.get(notebookId) ?? []);
+
+    setDropTarget({
+      parentId: notebookId,
+      index: rootItems.length,
+      position: "root",
+      targetId: null,
+    });
+  };
+
+  const handleRootDrop = async (event: DragEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!draggingFileId || !dropTarget || dropTarget.position !== "root") {
+      return;
+    }
+
+    await moveFile(draggingFileId, notebookId, dropTarget.index);
+    handleDragEnd();
+  };
+
+  const visibleFileIds = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+
+    if (!normalizedQuery) {
+      return null;
+    }
+
+    const visibleIds = new Set<string>();
+
+    for (const file of files) {
+      if (!file.name.toLowerCase().includes(normalizedQuery)) {
+        continue;
+      }
+
+      let currentFile: T_File | undefined = file;
+
+      while (currentFile) {
+        visibleIds.add(currentFile.id);
+
+        if (currentFile.metadata.parentId === notebookId) {
+          break;
+        }
+
+        currentFile = filesById.get(currentFile.metadata.parentId);
+      }
+    }
+
+    return visibleIds;
+  }, [files, filesById, notebookId, query]);
+
+  const renderBranch = (parentId: string, depth = 0): ReactNode => {
+    const children = sortChildren(filesByParent.get(parentId) ?? []);
+    const visibleChildren = visibleFileIds
+      ? children.filter((file) => visibleFileIds.has(file.id))
+      : children;
+
+    if (!visibleChildren.length) {
       return null;
     }
 
     return (
       <div className="space-y-0.5">
-        {children.map((file) => {
-          const Icon = getFileIcon(file.metadata.type);
-          const isFolder = file.metadata.type === "folder";
-          const isCollapsed = collapsedFolders[file.id];
-          const isDragging = draggingFileId === file.id;
-          const isRenaming = renameFileId === file.id;
-
-          return (
-            <div key={file.id}>
-              <div
-                draggable
-                onDragStart={() => {
-                  setDraggingFileId(file.id);
-                }}
-                onDragOver={(event) => {
-                  const draggingFile = files.find(
-                    (candidate) => candidate.id === draggingFileId,
-                  );
-
-                  if (
-                    !draggingFile ||
-                    draggingFile.metadata.parentId !== file.metadata.parentId
-                  ) {
-                    return;
-                  }
-
-                  event.preventDefault();
-                }}
-                onDrop={(event) => {
-                  event.preventDefault();
-
-                  if (!draggingFileId || draggingFileId === file.id) {
-                    return;
-                  }
-
-                  const siblings = sortChildren(
-                    filesByParent.get(file.metadata.parentId) ?? [],
-                  );
-                  const draggingFile = siblings.find(
-                    (candidate) => candidate.id === draggingFileId,
-                  );
-
-                  if (!draggingFile) {
-                    return;
-                  }
-
-                  const nextIds = siblings.map((candidate) => candidate.id);
-                  const fromIndex = nextIds.indexOf(draggingFileId);
-                  const toIndex = nextIds.indexOf(file.id);
-
-                  if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) {
-                    return;
-                  }
-
-                  nextIds.splice(fromIndex, 1);
-                  nextIds.splice(toIndex, 0, draggingFileId);
-                  void reorderFiles(file.metadata.parentId, nextIds);
-                  setDraggingFileId(null);
-                }}
-                onDragEnd={() => {
-                  setDraggingFileId(null);
-                }}
-                className={cn(
-                  "group flex items-center gap-1 rounded-md px-2 py-1 text-sm",
-                  activeFileId === file.id &&
-                    "bg-sidebar-accent text-sidebar-accent-foreground",
-                  isDragging && "opacity-50",
-                )}
-                style={{ paddingLeft: `${depth * 14 + 8}px` }}
-              >
-                <button
-                  type="button"
-                  className="inline-flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-sidebar-accent"
-                  onClick={() => {
-                    if (!isFolder) {
-                      return;
-                    }
-
-                    setCollapsedFolders((currentState) => ({
-                      ...currentState,
-                      [file.id]: !currentState[file.id],
-                    }));
-                  }}
-                >
-                  {isFolder ? (
-                    isCollapsed ? (
-                      <ChevronRight className="size-4" />
-                    ) : (
-                      <ChevronDown className="size-4" />
-                    )
-                  ) : null}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => openFile(file)}
-                  className="flex min-w-0 flex-1 items-center gap-2 rounded px-1 py-0.5 text-left hover:bg-sidebar-accent/50"
-                >
-                  <Icon className="size-4 shrink-0 text-muted-foreground" />
-                  {isRenaming ? (
-                    <Input
-                      value={renameValue}
-                      onChange={(event) =>
-                        setRenameValue(event.currentTarget.value)
-                      }
-                      onBlur={() => {
-                        void commitRename();
-                      }}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter") {
-                          event.preventDefault();
-                          void commitRename();
-                        }
-
-                        if (event.key === "Escape") {
-                          event.preventDefault();
-                          setRenameFileId(null);
-                          setRenameValue("");
-                        }
-                      }}
-                      autoFocus
-                      className="h-7"
-                    />
-                  ) : (
-                    <span className="truncate">{file.name}</span>
-                  )}
-                </button>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon-xs"
-                      className="size-6 opacity-0 group-hover:opacity-100"
-                    >
-                      <EllipsisVertical className="size-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-44">
-                    {isFolder ? (
-                      <>
-                        <DropdownMenuItem
-                          onSelect={() => {
-                            void handleCreate(file.id, "file");
-                          }}
-                        >
-                          <Plus className="size-4" />
-                          New note
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onSelect={() => {
-                            void handleCreate(file.id, "folder");
-                          }}
-                        >
-                          <FolderPlus className="size-4" />
-                          New folder
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                      </>
-                    ) : null}
-                    <DropdownMenuItem
-                      onSelect={() => {
-                        void copyLink(file);
-                      }}
-                    >
-                      <Link2 className="size-4" />
-                      Copy link
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => startRename(file)}>
-                      <Pencil className="size-4" />
-                      Rename
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onSelect={() => {
-                        void onDuplicate(file);
-                      }}
-                    >
-                      <CopyPlus className="size-4" />
-                      Duplicate
-                    </DropdownMenuItem>
-                    <DropdownMenuItem disabled>
-                      <Download className="size-4" />
-                      Download
-                    </DropdownMenuItem>
-                    <DropdownMenuItem disabled>
-                      <Pin className="size-4" />
-                      Pin file
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      variant="destructive"
-                      onSelect={() => {
-                        void onDelete(file);
-                      }}
-                    >
-                      <Trash2 className="size-4" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              {isFolder && !isCollapsed
-                ? renderBranch(file.id, depth + 1)
-                : null}
-            </div>
-          );
-        })}
+        {visibleChildren.map((file) => (
+          <FileTreeNode
+            key={file.id}
+            file={file}
+            depth={depth}
+            isActive={activeFileId === file.id}
+            isCollapsed={collapsedFolders[file.id]}
+            isDragging={draggingFileId === file.id}
+            isRenaming={renameFileId === file.id}
+            renameValue={renameValue}
+            dropPosition={
+              dropTarget?.targetId === file.id && dropTarget.position !== "root"
+                ? dropTarget.position
+                : null
+            }
+            onActivate={openFile}
+            onRenameValueChange={setRenameValue}
+            onCommitRename={() => {
+              void commitRename();
+            }}
+            onCancelRename={cancelRename}
+            onStartRename={startRename}
+            onCreate={(targetParentId, type) => {
+              void handleCreate(targetParentId, type);
+            }}
+            onCopyLink={(fileToCopy) => {
+              void copyLink(fileToCopy);
+            }}
+            onDuplicate={(fileToDuplicate) => {
+              void onDuplicate(fileToDuplicate);
+            }}
+            onDelete={(fileToDelete) => {
+              void onDelete(fileToDelete);
+            }}
+            onDragStart={handleDragStart}
+            onDragHover={handleDragHover}
+            onDrop={(targetFile) => {
+              void handleDrop(targetFile);
+            }}
+            onDragEnd={handleDragEnd}
+          >
+            {renderBranch(file.id, depth + 1)}
+          </FileTreeNode>
+        ))}
       </div>
     );
   };
 
+  const renderedTree = renderBranch(notebookId);
+
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-2 px-2">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => {
-            void handleCreate(notebookId, "file");
+    <>
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 px-2">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search files..."
+              className="h-9 rounded-xl border-sidebar-border bg-sidebar/60 pl-9"
+            />
+          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" variant="outline" className="rounded-xl">
+                <EllipsisIcon className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem
+                onSelect={() => {
+                  void handleCreate(notebookId, "file");
+                }}
+              >
+                <Plus className="size-4" />
+                Create new file
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => {
+                  void handleCreate(notebookId, "folder");
+                }}
+              >
+                <FolderPlus className="size-4" />
+                Create new folder
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                disabled={!activeNotebook}
+                onSelect={() => {
+                  if (!activeNotebook) {
+                    return;
+                  }
+
+                  setDraftNotebookName(activeNotebook.name);
+                  setIsNotebookSettingsOpen(true);
+                }}
+              >
+                <Settings2 className="size-4" />
+                Notebook settings
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <div
+          className="px-1"
+          onDragOver={handleRootDragOver}
+          onDrop={(event) => {
+            void handleRootDrop(event);
           }}
         >
-          <Plus className="size-4" />
-          New note
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => {
-            void handleCreate(notebookId, "folder");
-          }}
-        >
-          <FolderPlus className="size-4" />
-          New folder
-        </Button>
+          {renderedTree}
+
+          {query.trim() && !renderedTree ? (
+            <div className="px-3 py-6 text-sm text-muted-foreground">
+              No files found.
+            </div>
+          ) : null}
+
+          {draggingFileId ? (
+            <div
+              className={[
+                "mt-2 rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground transition-colors",
+                dropTarget?.position === "root"
+                  ? "border-primary bg-primary/5 text-foreground"
+                  : "border-sidebar-border",
+              ].join(" ")}
+            >
+              Drop here to move to notebook root
+            </div>
+          ) : null}
+        </div>
       </div>
 
-      <div className="px-1">{renderBranch(notebookId)}</div>
-    </div>
+      <NotebookSettingsDialog
+        open={isNotebookSettingsOpen}
+        notebookName={activeNotebook?.name ?? "this notebook"}
+        draftName={draftNotebookName}
+        deleteDisabled={notebooks.length <= 1}
+        onDraftNameChange={setDraftNotebookName}
+        onOpenChange={setIsNotebookSettingsOpen}
+        onDelete={() => {
+          void handleDeleteNotebook();
+        }}
+        onSave={() => {
+          void handleRenameNotebook();
+        }}
+      />
+    </>
   );
 }
