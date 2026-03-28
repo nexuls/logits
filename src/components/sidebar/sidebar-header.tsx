@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  BookOpenText,
   ChevronDown,
+  NotebookIcon,
   PlusIcon,
   Search,
   Settings2,
@@ -102,15 +102,15 @@ export function AppSidebarHeader({ activeNotebookId }: Props) {
 
   return (
     <>
-      <SidebarHeader className="border-b border-sidebar-border px-3 py-3">
+      <SidebarHeader className="px-3 pt-3 pb-1">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
-              className="h-11 w-full justify-between rounded-xl border-sidebar-border bg-sidebar/60 px-3 shadow-xs hover:bg-sidebar-accent/50"
+              className="h-11 w-full justify-between rounded-lg border-sidebar-border bg-sidebar/60 px-3 shadow-xs hover:bg-sidebar-accent/50"
             >
               <span className="flex min-w-0 items-center gap-2.5">
-                <BookOpenText className="ml-2 size-4 text-muted-foreground" />
+                <NotebookIcon className="ml-2 size-5 text-muted-foreground" />
                 <span className="truncate text-sm font-semibold">
                   {activeNotebook?.name ?? "Select notebook"}
                 </span>
@@ -152,7 +152,7 @@ export function AppSidebarHeader({ activeNotebookId }: Props) {
                       className="flex min-h-10 items-center gap-0 rounded-lg px-2 py-0 focus:bg-accent"
                     >
                       <span className="flex min-w-0 flex-1 items-center gap-2.5">
-                        <BookOpenText className="ml-2 size-4 text-muted-foreground" />
+                        <NotebookIcon className="ml-2 size-4 text-muted-foreground" />
                         <span className="truncate font-medium">
                           {notebook.name}
                           {isActive ? " (Current)" : ""}

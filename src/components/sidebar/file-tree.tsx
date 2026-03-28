@@ -516,20 +516,20 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
   return (
     <>
       <div className="space-y-3">
-        <div className="flex items-center gap-2 px-2">
+        <div className="flex items-center gap-2 px-1">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search files..."
-              className="h-9 rounded-xl border-sidebar-border bg-sidebar/60 pl-9"
+              className="h-9 rounded-lg border-sidebar-border bg-sidebar/60 pl-9"
             />
           </div>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button size="sm" variant="outline" className="rounded-xl">
+              <Button size="sm" variant="outline" className="rounded-lg h-9">
                 <EllipsisIcon className="size-4" />
               </Button>
             </DropdownMenuTrigger>

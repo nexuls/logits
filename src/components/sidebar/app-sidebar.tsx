@@ -27,7 +27,7 @@ export function AppSidebar() {
     <Sidebar className="border-r border-sidebar-border">
       <AppSidebarHeader activeNotebookId={activeNotebookId} />
 
-      <SidebarContent className="px-2 py-3">
+      <SidebarContent className="px-2 pt-1 pb-3">
         {activeNotebook ? (
           <FileTree
             notebookId={activeNotebook.id}
