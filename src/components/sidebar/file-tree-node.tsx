@@ -5,6 +5,7 @@ import {
   useEffect,
   useRef,
   type DragEvent,
+  type FocusEvent,
   type KeyboardEvent,
   type ReactNode,
 } from "react";
@@ -69,11 +70,17 @@ export function FileTreeNode({
   const isFolder = file.metadata.type === "folder";
   const Icon = getFileIcon(file.metadata.type);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const renameStartedAtRef = useRef(0);
+  const blurGuardUntilRef = useRef(0);
 
   useEffect(() => {
     if (!isRenaming || !inputRef.current) {
       return;
     }
+
+    renameStartedAtRef.current = Date.now();
+    blurGuardUntilRef.current = renameStartedAtRef.current + 250;
 
     const frame = requestAnimationFrame(() => {
       inputRef.current?.focus();
@@ -84,6 +91,44 @@ export function FileTreeNode({
       cancelAnimationFrame(frame);
     };
   }, [isRenaming]);
+
+  const scheduleBlurCommit = (event: FocusEvent<HTMLInputElement>) => {
+    if (Date.now() < blurGuardUntilRef.current) {
+      event.preventDefault();
+
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      });
+
+      return;
+    }
+
+    if (blurTimeoutRef.current) {
+      clearTimeout(blurTimeoutRef.current);
+    }
+
+    const elapsed = Date.now() - renameStartedAtRef.current;
+    const delay = Math.max(0, 150 - elapsed);
+
+    blurTimeoutRef.current = setTimeout(() => {
+      blurTimeoutRef.current = null;
+
+      if (document.activeElement === inputRef.current) {
+        return;
+      }
+
+      onCommitRename();
+    }, delay);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (blurTimeoutRef.current) {
+        clearTimeout(blurTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Enter" || event.key === " ") {
@@ -154,11 +199,22 @@ export function FileTreeNode({
                 onChange={(event) =>
                   onRenameValueChange(event.currentTarget.value)
                 }
+                onFocus={() => {
+                  if (blurTimeoutRef.current) {
+                    clearTimeout(blurTimeoutRef.current);
+                    blurTimeoutRef.current = null;
+                  }
+                }}
                 onClick={(event) => {
                   event.stopPropagation();
                 }}
-                onBlur={onCommitRename}
+                onBlur={scheduleBlurCommit}
                 onKeyDown={(event) => {
+                  if (blurTimeoutRef.current) {
+                    clearTimeout(blurTimeoutRef.current);
+                    blurTimeoutRef.current = null;
+                  }
+
                   if (event.key === "Enter") {
                     event.preventDefault();
                     onCommitRename();
