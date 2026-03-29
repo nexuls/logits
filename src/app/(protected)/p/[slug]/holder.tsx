@@ -22,6 +22,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import Footer from "@/components/footer";
+import Editor from "@/components/editor";
 
 function getNotebookTree(files: AppFile[]) {
   return [...files].sort((first, second) => {
@@ -312,27 +313,15 @@ export default function Holder({ slug }: { slug: string }) {
             </Empty>
           </div>
         ) : (
-          <div className="h-full px-6 pb-6 pt-2">
-            <div className="mx-auto flex h-full max-w-5xl flex-col rounded-2xl border border-border bg-card/40 p-4 shadow-sm">
-              <div className="border-b border-border px-2 pb-3">
-                <h1 className="text-xl font-semibold">{selectedFile.name}</h1>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Notes are saved locally as you type.
-                </p>
-              </div>
-              <div className="min-h-0 flex-1 pt-4">
-                <Textarea
-                  value={draftContent}
-                  onChange={(event) => {
-                    const nextContent = event.currentTarget.value;
-                    setDraftContent(nextContent);
-                    void updateFileContent(selectedFile.id, nextContent);
-                  }}
-                  placeholder="Start writing..."
-                  className="h-full min-h-[60dvh] resize-none border-0 bg-transparent px-2 text-base leading-7 shadow-none focus-visible:ring-0"
-                />
-              </div>
-            </div>
+          <div className="h-full">
+            <Editor
+              mode="markdown"
+              content={draftContent}
+              onContentChange={(newContent) => {
+                setDraftContent(newContent);
+                void updateFileContent(selectedFile.id, newContent);
+              }}
+            />
           </div>
         )}
       </main>
