@@ -191,6 +191,7 @@ function Sidebar({
   const isResizing = dragWidth !== null;
   const isSyncingWidth = pendingControlledWidth !== null;
   const rootRef = React.useRef<HTMLDivElement | null>(null);
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
   const activeWidth = dragWidth ?? pendingControlledWidth ?? width ?? internalWidth;
   const resolvedWidth = Math.max(minWidth, Math.min(maxWidth, activeWidth));
 
@@ -211,18 +212,24 @@ function Sidebar({
 
   const handleResizeMouseDown = React.useCallback(
     (event: React.MouseEvent<HTMLElement>) => {
-      if (!rootRef.current || state === "collapsed") {
+      if (!containerRef.current || state === "collapsed") {
         return;
       }
 
       event.preventDefault();
-      const rect = rootRef.current.getBoundingClientRect();
 
       const clampWidth = (value: number) =>
         Math.max(minWidth, Math.min(maxWidth, Math.round(value)));
 
-      const computeWidth = (clientX: number) =>
-        side === "left" ? clientX - rect.left : rect.right - clientX;
+      const computeWidth = (clientX: number) => {
+        const rect = containerRef.current?.getBoundingClientRect();
+
+        if (!rect) {
+          return width ?? internalWidth;
+        }
+
+        return side === "left" ? clientX - rect.left : rect.right - clientX;
+      };
 
       const nextInitialWidth = clampWidth(computeWidth(event.clientX));
       setPendingControlledWidth(null);
@@ -254,7 +261,16 @@ function Sidebar({
       window.addEventListener("mousemove", handleMouseMove);
       window.addEventListener("mouseup", handleMouseUp);
     },
-    [maxWidth, minWidth, onWidthChange, onWidthCommit, side, state, width],
+    [
+      internalWidth,
+      maxWidth,
+      minWidth,
+      onWidthChange,
+      onWidthCommit,
+      side,
+      state,
+      width,
+    ],
   );
 
   if (collapsible === "none") {
@@ -306,7 +322,10 @@ function Sidebar({
   return (
     <div
       ref={rootRef}
-      className="group peer hidden text-sidebar-foreground md:block"
+      className={cn(
+        "group peer hidden text-sidebar-foreground md:block",
+        side === "right" && "md:order-last",
+      )}
       data-state={state}
       data-resizing={isResizing || isSyncingWidth ? "true" : "false"}
       data-collapsible={state === "collapsed" ? collapsible : ""}
@@ -333,6 +352,7 @@ function Sidebar({
         )}
       />
       <div
+        ref={containerRef}
         data-slot="sidebar-container"
         className={cn(
           "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex",

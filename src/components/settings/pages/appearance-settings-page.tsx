@@ -17,9 +17,11 @@ type Props = {
   theme: AppearanceTheme;
   colorScheme: AppearanceColorScheme;
   fontSize: AppearanceFontSize;
+  sidebarPosition: "left" | "right";
   onThemeChange: (value: AppearanceTheme) => void;
   onColorSchemeChange: (value: AppearanceColorScheme) => void;
   onFontSizeChange: (value: AppearanceFontSize) => void;
+  onSidebarPositionChange: (value: "left" | "right") => void;
 };
 
 const fontSizes: { value: AppearanceFontSize; label: string }[] = [
@@ -46,9 +48,11 @@ export function AppearanceSettingsPage({
   theme,
   colorScheme,
   fontSize,
+  sidebarPosition,
   onThemeChange,
   onColorSchemeChange,
   onFontSizeChange,
+  onSidebarPositionChange,
 }: Props) {
   return (
     <div className="space-y-6">
@@ -151,6 +155,31 @@ export function AppearanceSettingsPage({
         </div>
 
         <div className="space-y-4">
+          <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
+            <div>
+              <Label htmlFor="sidebar-position">Sidebar position</Label>
+              <p className="text-xs text-muted-foreground">
+                Place your sidebar on the left or right side of the app.
+              </p>
+            </div>
+            <Select
+              value={sidebarPosition}
+              onValueChange={(value) =>
+                onSidebarPositionChange(value as "left" | "right")
+              }
+            >
+              <SelectTrigger id="sidebar-position" className="w-full min-w-48 sm:w-52">
+                <SelectValue placeholder="Select sidebar side" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="left">Left</SelectItem>
+                <SelectItem value="right">Right</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Separator />
+
           <div className="flex items-start justify-between gap-3">
             <div>
               <div className="text-sm font-medium">Inline title</div>

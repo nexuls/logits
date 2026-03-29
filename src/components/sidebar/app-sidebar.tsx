@@ -28,6 +28,7 @@ export function AppSidebar() {
   );
   const sidebarWidth =
     settings.appearance?.sidebarWidth ?? DEFAULT_SIDEBAR_WIDTH;
+  const sidebarPosition = settings.appearance?.sidebarPosition ?? "left";
   const notebookFiles = activeNotebook
     ? getNotebookFiles(activeNotebook.id)
     : [];
@@ -55,7 +56,12 @@ export function AppSidebar() {
 
   return (
     <Sidebar
-      className="border-r border-sidebar-border"
+      className={
+        sidebarPosition === "left"
+          ? "border-r border-sidebar-border"
+          : "border-l border-sidebar-border"
+      }
+      side={sidebarPosition}
       resizable
       width={sidebarWidth}
       minWidth={MIN_SIDEBAR_WIDTH}

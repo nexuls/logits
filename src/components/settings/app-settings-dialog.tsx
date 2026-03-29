@@ -82,6 +82,7 @@ export function AppSettingsDialog({ open, onOpenChange }: Props) {
   const theme = settings.appearance?.theme ?? "system";
   const colorScheme = settings.appearance?.colorScheme ?? DEFAULT_COLOR_SCHEME;
   const fontSize = settings.appearance?.fontSize ?? "medium";
+  const sidebarPosition = settings.appearance?.sidebarPosition ?? "left";
 
   function updateAppearanceSettings(patch: Partial<AppearanceSettings>) {
     void updateSettings((currentSettings) => ({
@@ -104,6 +105,10 @@ export function AppSettingsDialog({ open, onOpenChange }: Props) {
     updateAppearanceSettings({ fontSize: nextFontSize });
   }
 
+  function handleSidebarPositionChange(nextSidebarPosition: "left" | "right") {
+    updateAppearanceSettings({ sidebarPosition: nextSidebarPosition });
+  }
+
   function renderContent() {
     if (activeSection === "appearance") {
       return (
@@ -111,9 +116,11 @@ export function AppSettingsDialog({ open, onOpenChange }: Props) {
           theme={theme}
           colorScheme={colorScheme}
           fontSize={fontSize}
+          sidebarPosition={sidebarPosition}
           onThemeChange={handleThemeChange}
           onColorSchemeChange={handleColorSchemeChange}
           onFontSizeChange={handleFontSizeChange}
+          onSidebarPositionChange={handleSidebarPositionChange}
         />
       );
     }
