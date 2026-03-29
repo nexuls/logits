@@ -13,8 +13,17 @@ import { DEFAULT_COLOR_SCHEME } from "@/coloe-scheme";
 import type {
   AppearanceColorScheme,
   AppearanceFontSize,
+  AppearanceInterfaceFont,
+  AppearanceMonospaceFont,
+  AppearanceTextFont,
   AppearanceTheme,
   UserSettings,
+} from "@/data/schema";
+import {
+  APPEARANCE_FONT_SCALE_DEFAULT,
+  DEFAULT_INTERFACE_FONT,
+  DEFAULT_MONOSPACE_FONT,
+  DEFAULT_TEXT_FONT,
 } from "@/data/schema";
 import { useUserSettings } from "@/hooks/use-user-settings";
 import { cn } from "@/lib/utils";
@@ -81,7 +90,12 @@ export function AppSettingsDialog({ open, onOpenChange }: Props) {
 
   const theme = settings.appearance?.theme ?? "system";
   const colorScheme = settings.appearance?.colorScheme ?? DEFAULT_COLOR_SCHEME;
-  const fontSize = settings.appearance?.fontSize ?? "medium";
+  const fontSize =
+    settings.appearance?.fontSize ?? APPEARANCE_FONT_SCALE_DEFAULT;
+  const interfaceFont = settings.appearance?.interfaceFont ?? DEFAULT_INTERFACE_FONT;
+  const textFont = settings.appearance?.textFont ?? DEFAULT_TEXT_FONT;
+  const monospaceFont =
+    settings.appearance?.monospaceFont ?? DEFAULT_MONOSPACE_FONT;
   const sidebarPosition = settings.appearance?.sidebarPosition ?? "left";
 
   function updateAppearanceSettings(patch: Partial<AppearanceSettings>) {
@@ -105,6 +119,18 @@ export function AppSettingsDialog({ open, onOpenChange }: Props) {
     updateAppearanceSettings({ fontSize: nextFontSize });
   }
 
+  function handleInterfaceFontChange(nextInterfaceFont: AppearanceInterfaceFont) {
+    updateAppearanceSettings({ interfaceFont: nextInterfaceFont });
+  }
+
+  function handleTextFontChange(nextTextFont: AppearanceTextFont) {
+    updateAppearanceSettings({ textFont: nextTextFont });
+  }
+
+  function handleMonospaceFontChange(nextMonospaceFont: AppearanceMonospaceFont) {
+    updateAppearanceSettings({ monospaceFont: nextMonospaceFont });
+  }
+
   function handleSidebarPositionChange(nextSidebarPosition: "left" | "right") {
     updateAppearanceSettings({ sidebarPosition: nextSidebarPosition });
   }
@@ -116,10 +142,16 @@ export function AppSettingsDialog({ open, onOpenChange }: Props) {
           theme={theme}
           colorScheme={colorScheme}
           fontSize={fontSize}
+          interfaceFont={interfaceFont}
+          textFont={textFont}
+          monospaceFont={monospaceFont}
           sidebarPosition={sidebarPosition}
           onThemeChange={handleThemeChange}
           onColorSchemeChange={handleColorSchemeChange}
           onFontSizeChange={handleFontSizeChange}
+          onInterfaceFontChange={handleInterfaceFontChange}
+          onTextFontChange={handleTextFontChange}
+          onMonospaceFontChange={handleMonospaceFontChange}
           onSidebarPositionChange={handleSidebarPositionChange}
         />
       );

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
-import { Geist, Geist_Mono } from "next/font/google";
+import type { CSSProperties } from "react";
 import "./globals.css";
 import BaseProvider from "@/components/providers/base";
 import {
@@ -9,17 +9,18 @@ import {
   retrieveResolvedSystemThemeFromCookieValue,
   retrieveUserSettingsFromCookieValue,
 } from "@/data/settings-cookie";
+import {
+  APPEARANCE_FONT_SCALE_DEFAULT,
+  DEFAULT_INTERFACE_FONT,
+  DEFAULT_MONOSPACE_FONT,
+  DEFAULT_TEXT_FONT,
+  normalizeAppearanceFontScale,
+  resolveInterfaceFontFamily,
+  resolveMonospaceFontFamily,
+  resolveTextFontFamily,
+} from "@/data/schema";
 import { getColorSchemeClassName } from "@/coloe-scheme";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { classNamesForFontVariables } from "./fonts";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -40,18 +41,43 @@ export default async function RootLayout({
   );
   const configuredTheme = initialSettings.appearance?.theme ?? "system";
   const effectiveTheme =
-    configuredTheme === "system" ? resolvedSystemTheme ?? "light" : configuredTheme;
+    configuredTheme === "system"
+      ? (resolvedSystemTheme ?? "light")
+      : configuredTheme;
   const isDark = effectiveTheme === "dark";
   const initialColorSchemeClass = getColorSchemeClassName(
     initialSettings.appearance?.colorScheme,
     isDark ? "dark" : "light",
   );
-  const rootClassName = [isDark ? "dark" : "", initialColorSchemeClass]
+  const initialFontSize =
+    initialSettings.appearance?.fontSize ?? APPEARANCE_FONT_SCALE_DEFAULT;
+  const initialHtmlStyle = {
+    "--user-interface-font": resolveInterfaceFontFamily(
+      initialSettings.appearance?.interfaceFont ?? DEFAULT_INTERFACE_FONT,
+    ),
+    "--user-text-font": resolveTextFontFamily(
+      initialSettings.appearance?.textFont ?? DEFAULT_TEXT_FONT,
+    ),
+    "--user-monospace-font": resolveMonospaceFontFamily(
+      initialSettings.appearance?.monospaceFont ?? DEFAULT_MONOSPACE_FONT,
+    ),
+    "--user-font-scale": String(normalizeAppearanceFontScale(initialFontSize)),
+  } as CSSProperties;
+  const rootClassName = [
+    isDark ? "dark" : "",
+    initialColorSchemeClass,
+    ...classNamesForFontVariables,
+  ]
     .filter(Boolean)
     .join(" ");
 
   return (
-    <html lang="en" className={rootClassName} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={rootClassName}
+      style={initialHtmlStyle}
+      suppressHydrationWarning
+    >
       <head>
         <meta
           name="viewport"
@@ -59,9 +85,7 @@ export default async function RootLayout({
         ></meta>
       </head>
 
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} font-geist antialiased`}
-      >
+      <body className="font-geist antialiased">
         <BaseProvider initialSettings={initialSettings}>
           {children}
         </BaseProvider>
