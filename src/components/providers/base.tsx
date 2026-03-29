@@ -7,6 +7,7 @@ import {
   ALL_COLOR_SCHEME_CLASSES,
   getColorSchemeClassName,
 } from "@/coloe-scheme";
+import { writeResolvedSystemThemeToCookie } from "@/data/settings-cookie";
 import { AppSidebar } from "../sidebar/app-sidebar";
 import { DataProvider } from "./data";
 import { Toaster } from "../ui/sonner";
@@ -28,6 +29,26 @@ function SettingsThemeSync() {
   useEffect(() => {
     setTheme(theme);
   }, [setTheme, theme]);
+
+  useEffect(() => {
+    if (theme !== "system") {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+    const syncResolvedSystemTheme = () => {
+      writeResolvedSystemThemeToCookie(mediaQuery.matches ? "dark" : "light");
+    };
+
+    syncResolvedSystemTheme();
+
+    mediaQuery.addEventListener("change", syncResolvedSystemTheme);
+
+    return () => {
+      mediaQuery.removeEventListener("change", syncResolvedSystemTheme);
+    };
+  }, [theme]);
 
   useEffect(() => {
     const mode = resolvedTheme === "dark" ? "dark" : "light";

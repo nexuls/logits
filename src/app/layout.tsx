@@ -4,7 +4,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import BaseProvider from "@/components/providers/base";
 import {
+  RESOLVED_SYSTEM_THEME_COOKIE_NAME,
   USER_SETTINGS_COOKIE_NAME,
+  retrieveResolvedSystemThemeFromCookieValue,
   retrieveUserSettingsFromCookieValue,
 } from "@/data/settings-cookie";
 import { getColorSchemeClassName } from "@/coloe-scheme";
@@ -33,7 +35,13 @@ export default async function RootLayout({
   const initialSettings = retrieveUserSettingsFromCookieValue(
     cookieStore.get(USER_SETTINGS_COOKIE_NAME)?.value,
   );
-  const isDark = initialSettings.appearance?.theme === "dark";
+  const resolvedSystemTheme = retrieveResolvedSystemThemeFromCookieValue(
+    cookieStore.get(RESOLVED_SYSTEM_THEME_COOKIE_NAME)?.value,
+  );
+  const configuredTheme = initialSettings.appearance?.theme ?? "system";
+  const effectiveTheme =
+    configuredTheme === "system" ? resolvedSystemTheme ?? "light" : configuredTheme;
+  const isDark = effectiveTheme === "dark";
   const initialColorSchemeClass = getColorSchemeClassName(
     initialSettings.appearance?.colorScheme,
     isDark ? "dark" : "light",
