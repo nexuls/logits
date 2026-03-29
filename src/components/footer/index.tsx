@@ -19,20 +19,23 @@ type Props = {
 };
 
 function StatChip({
-  label,
+  pre,
+  post,
   value,
   valueId,
 }: {
-  label: string;
+  pre?: string;
+  post?: string;
   value: string | number;
   valueId?: string;
 }) {
   return (
     <div className="flex items-center gap-1 text-xs text-muted-foreground">
-      <span id={valueId} className="font-medium text-muted-foreground">
+      {pre && <span>{pre}</span>}
+      <span id={valueId} className="font-medium text-foreground/60">
         {value}
       </span>
-      <span>{label}</span>
+      {post && <span>{post}</span>}
     </div>
   );
 }
@@ -53,32 +56,33 @@ export default function Footer({ view, markdownMeta }: Props) {
     <footer className="flex h-8 items-center justify-between border-t bg-background/80 px-3 gap-3 text-xs backdrop-blur-sm">
       <div className="flex min-w-0 items-center gap-3 overflow-x-auto">
         <StatChip
-          label="lines"
+          post="lines"
           value={markdownMeta.totalLines}
           valueId="logits-footer-lines"
         />
         <StatChip
-          label="chars"
+          post="chars"
           value={markdownMeta.totalChars}
           valueId="logits-footer-chars"
         />
         <StatChip
-          label="words"
+          post="words"
           value={markdownMeta.totalWords}
           valueId="logits-footer-words"
         />
         <span className="mx-1 text-muted-foreground">|</span>
         <StatChip
-          label=""
           valueId="logits-footer-cursor"
           value={`Ln ${markdownMeta.line}, Col ${markdownMeta.col}${
-            markdownMeta.selection > 0 ? ` (${markdownMeta.selection} selected)` : ""
+            markdownMeta.selection > 0
+              ? ` (${markdownMeta.selection} selected)`
+              : ""
           }`}
         />
         <StatChip
-          label=""
+          pre="Spaces:"
           valueId="logits-footer-tabsize"
-          value={`Spaces: ${markdownMeta.tabSize}`}
+          value={`${markdownMeta.tabSize}`}
         />
       </div>
 
