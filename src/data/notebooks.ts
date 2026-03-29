@@ -1,10 +1,10 @@
 import type {
-  T_App_Data,
-  T_File,
-  T_File_Metadata,
-  T_File_Type,
-  T_Notebook,
-} from "@/types/types";
+  AppData,
+  AppFile,
+  FileMetadata,
+  FileType,
+  Notebook,
+} from "@/data/schema";
 
 function nowIso() {
   return new Date().toISOString();
@@ -20,7 +20,7 @@ function getActorId() {
   return "local-user";
 }
 
-function sortFiles(files: T_File[]) {
+function sortFiles(files: AppFile[]) {
   return [...files].sort((first, second) => {
     if (first.metadata.fileOrder !== second.metadata.fileOrder) {
       return first.metadata.fileOrder - second.metadata.fileOrder;
@@ -38,7 +38,7 @@ function sortFiles(files: T_File[]) {
   });
 }
 
-function nextData(data: T_App_Data, patch: Partial<T_App_Data>): T_App_Data {
+function nextData(data: AppData, patch: Partial<AppData>): AppData {
   return {
     ...data,
     ...patch,
@@ -47,7 +47,7 @@ function nextData(data: T_App_Data, patch: Partial<T_App_Data>): T_App_Data {
   };
 }
 
-function touchNotebook(notebook: T_Notebook) {
+function touchNotebook(notebook: Notebook) {
   return {
     ...notebook,
     updatedAt: nowIso(),
@@ -55,7 +55,7 @@ function touchNotebook(notebook: T_Notebook) {
   };
 }
 
-function touchFile(file: T_File, metadata: Partial<T_File_Metadata> = {}) {
+function touchFile(file: AppFile, metadata: Partial<FileMetadata> = {}) {
   return {
     ...file,
     metadata: {
@@ -67,11 +67,11 @@ function touchFile(file: T_File, metadata: Partial<T_File_Metadata> = {}) {
   };
 }
 
-function getChildren(files: T_File[], parentId: string) {
+function getChildren(files: AppFile[], parentId: string) {
   return sortFiles(files.filter((file) => file.metadata.parentId === parentId));
 }
 
-function getDescendantIds(files: T_File[], rootId: string) {
+function getDescendantIds(files: AppFile[], rootId: string) {
   const ids = new Set<string>();
   const stack = [rootId];
 
@@ -95,7 +95,7 @@ function getDescendantIds(files: T_File[], rootId: string) {
   return ids;
 }
 
-export function getNotebookIdForFile(data: T_App_Data, fileId: string) {
+export function getNotebookIdForFile(data: AppData, fileId: string) {
   const notebookIds = new Set(data.notebooks.map((notebook) => notebook.id));
   let current = data.files.find((file) => file.id === fileId) ?? null;
 
@@ -111,8 +111,8 @@ export function getNotebookIdForFile(data: T_App_Data, fileId: string) {
   return "";
 }
 
-export function getNotebookFiles(data: T_App_Data, notebookId: string) {
-  const visibleFiles: T_File[] = [];
+export function getNotebookFiles(data: AppData, notebookId: string) {
+  const visibleFiles: AppFile[] = [];
   const queue = getChildren(data.files, notebookId).map((file) => file.id);
 
   while (queue.length > 0) {
@@ -138,9 +138,9 @@ export function getNotebookFiles(data: T_App_Data, notebookId: string) {
   return visibleFiles;
 }
 
-export function createNotebook(data: T_App_Data, name?: string) {
+export function createNotebook(data: AppData, name?: string) {
   const timestamp = nowIso();
-  const notebook: T_Notebook = {
+  const notebook: Notebook = {
     id: createId(),
     name: name?.trim() || "Untitled notebook",
     createdAt: timestamp,
@@ -158,7 +158,7 @@ export function createNotebook(data: T_App_Data, name?: string) {
 }
 
 export function renameNotebook(
-  data: T_App_Data,
+  data: AppData,
   notebookId: string,
   name: string,
 ) {
@@ -171,7 +171,7 @@ export function renameNotebook(
   });
 }
 
-export function deleteNotebook(data: T_App_Data, notebookId: string) {
+export function deleteNotebook(data: AppData, notebookId: string) {
   const deleteIds = new Set<string>();
 
   for (const file of data.files.filter(
@@ -191,23 +191,23 @@ export function deleteNotebook(data: T_App_Data, notebookId: string) {
 }
 
 export function createFile(
-  data: T_App_Data,
+  data: AppData,
   options: {
     notebookId: string;
     parentId: string;
-    type: T_File_Type;
+    type: FileType;
     name?: string;
   },
 ) {
   const timestamp = nowIso();
   const siblingCount = getChildren(data.files, options.parentId).length;
-  const defaultNames: Record<T_File_Type, string> = {
+  const defaultNames: Record<FileType, string> = {
     folder: "Untitled folder",
     file: "Untitled note",
     draw: "Untitled drawing",
     image: "Untitled image",
   };
-  const file: T_File = {
+  const file: AppFile = {
     id: createId(),
     name: options.name?.trim() || defaultNames[options.type],
     content: "",
@@ -240,7 +240,7 @@ export function createFile(
   };
 }
 
-export function renameFile(data: T_App_Data, fileId: string, name: string) {
+export function renameFile(data: AppData, fileId: string, name: string) {
   const notebookId = getNotebookIdForFile(data, fileId);
 
   return nextData(data, {
@@ -253,7 +253,7 @@ export function renameFile(data: T_App_Data, fileId: string, name: string) {
   });
 }
 
-export function deleteFile(data: T_App_Data, fileId: string) {
+export function deleteFile(data: AppData, fileId: string) {
   const target = data.files.find((file) => file.id === fileId);
 
   if (!target) {
@@ -287,7 +287,7 @@ export function deleteFile(data: T_App_Data, fileId: string) {
   });
 }
 
-export function duplicateFile(data: T_App_Data, fileId: string) {
+export function duplicateFile(data: AppData, fileId: string) {
   const target = data.files.find((file) => file.id === fileId);
 
   if (!target) {
@@ -360,7 +360,7 @@ export function duplicateFile(data: T_App_Data, fileId: string) {
 }
 
 export function reorderFiles(
-  data: T_App_Data,
+  data: AppData,
   parentId: string,
   orderedIds: string[],
 ) {
@@ -387,7 +387,7 @@ export function reorderFiles(
 }
 
 export function moveFile(
-  data: T_App_Data,
+  data: AppData,
   fileId: string,
   nextParentId: string,
   nextIndex: number,
@@ -441,7 +441,10 @@ export function moveFile(
         };
       }
 
-      if (previousParentId !== nextParentId && file.metadata.parentId === nextParentId) {
+      if (
+        previousParentId !== nextParentId &&
+        file.metadata.parentId === nextParentId
+      ) {
         return {
           ...file,
           metadata: {
@@ -457,7 +460,7 @@ export function moveFile(
 }
 
 export function updateFileContent(
-  data: T_App_Data,
+  data: AppData,
   fileId: string,
   content: string,
 ) {
@@ -479,4 +482,3 @@ export function updateFileContent(
     ),
   });
 }
-

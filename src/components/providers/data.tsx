@@ -10,22 +10,20 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { T_App_Data } from "@/types/types";
+import type { AppData } from "@/data/schema";
 import { readAppData, writeAppData } from "@/data/store";
 
 type DataContextValue = {
-  data: T_App_Data;
+  data: AppData;
   isHydrating: boolean;
-  setData: (nextData: T_App_Data) => Promise<T_App_Data>;
-  updateData: (
-    updater: (currentData: T_App_Data) => T_App_Data,
-  ) => Promise<T_App_Data>;
+  setData: (nextData: AppData) => Promise<AppData>;
+  updateData: (updater: (currentData: AppData) => AppData) => Promise<AppData>;
   reloadData: () => Promise<void>;
 };
 
 const DataContext = createContext<DataContextValue | null>(null);
 
-const emptyData: T_App_Data = {
+const emptyData: AppData = {
   notebooks: [],
   files: [],
   settings: {},
@@ -34,9 +32,9 @@ const emptyData: T_App_Data = {
 };
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [data, setDataState] = useState<T_App_Data>(emptyData);
+  const [data, setDataState] = useState<AppData>(emptyData);
   const [isHydrating, setIsHydrating] = useState(true);
-  const dataRef = useRef<T_App_Data>(emptyData);
+  const dataRef = useRef<AppData>(emptyData);
 
   const reloadData = useCallback(async () => {
     const nextData = await readAppData();
@@ -49,7 +47,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     void reloadData();
   }, [reloadData]);
 
-  const setData = useCallback(async (nextData: T_App_Data) => {
+  const setData = useCallback(async (nextData: AppData) => {
     const savedData = await writeAppData(nextData);
     dataRef.current = savedData;
     setDataState(savedData);
@@ -57,7 +55,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateData = useCallback(
-    async (updater: (currentData: T_App_Data) => T_App_Data) => {
+    async (updater: (currentData: AppData) => AppData) => {
       const nextData = updater(dataRef.current);
       return setData(nextData);
     },

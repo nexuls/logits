@@ -8,10 +8,16 @@ import {
   type DragEvent,
   type ReactNode,
 } from "react";
-import { EllipsisIcon, FolderPlus, Plus, Search, Settings2 } from "lucide-react";
+import {
+  EllipsisIcon,
+  FolderPlus,
+  Plus,
+  Search,
+  Settings2,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import type { T_File, T_File_Type } from "@/types/types";
+import type { AppFile, FileType } from "@/data/schema";
 import { useNotebooks } from "@/hooks/use-notebooks";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,7 +40,7 @@ import {
 
 type Props = {
   notebookId: string;
-  files: T_File[];
+  files: AppFile[];
   activeFileId?: string;
 };
 
@@ -73,7 +79,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
     notebooks.find((notebook) => notebook.id === notebookId) ?? null;
 
   const filesByParent = useMemo(() => {
-    const mapping = new Map<string, T_File[]>();
+    const mapping = new Map<string, AppFile[]>();
 
     for (const file of files) {
       const current = mapping.get(file.metadata.parentId) ?? [];
@@ -130,7 +136,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
     }));
   };
 
-  const openFile = (file: T_File) => {
+  const openFile = (file: AppFile) => {
     if (file.metadata.type === "folder") {
       toggleFolder(file.id);
       return;
@@ -141,7 +147,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
 
   const handleCreate = async (
     parentId: string,
-    type: T_File_Type,
+    type: FileType,
     name?: string,
   ) => {
     const createdFile = await createFile({ notebookId, parentId, type, name });
@@ -199,7 +205,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
     router.push("/");
   };
 
-  const startRename = (file: T_File) => {
+  const startRename = (file: AppFile) => {
     setRenameFileId(file.id);
     setRenameValue(file.name);
   };
@@ -226,7 +232,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
     toast.success("Renamed");
   };
 
-  const onDuplicate = async (file: T_File) => {
+  const onDuplicate = async (file: AppFile) => {
     const duplicatedFile = await duplicateFile(file.id);
 
     if (!duplicatedFile) {
@@ -241,7 +247,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
     }
   };
 
-  const onDelete = async (file: T_File) => {
+  const onDelete = async (file: AppFile) => {
     await deleteFile(file.id);
     toast.success("Deleted");
 
@@ -250,7 +256,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
     }
   };
 
-  const copyLink = async (file: T_File) => {
+  const copyLink = async (file: AppFile) => {
     if (typeof window === "undefined") {
       return;
     }
@@ -261,7 +267,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
   };
 
   const resolveDropTarget = (
-    targetFile: T_File,
+    targetFile: AppFile,
     position: FileTreeDropPosition,
   ) => {
     if (position === "inside" && targetFile.metadata.type === "folder") {
@@ -286,7 +292,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
   };
 
   const canDropOnTarget = (
-    targetFile: T_File,
+    targetFile: AppFile,
     position: FileTreeDropPosition,
   ) => {
     if (!draggingFileId || draggingFileId === targetFile.id) {
@@ -316,7 +322,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
   };
 
   const setFolderExpandIntent = (
-    targetFile: T_File,
+    targetFile: AppFile,
     position: FileTreeDropPosition,
   ) => {
     clearExpandTimer();
@@ -342,7 +348,10 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
     setDropTarget(null);
   };
 
-  const handleDragHover = (targetFile: T_File, event: DragEvent<HTMLDivElement>) => {
+  const handleDragHover = (
+    targetFile: AppFile,
+    event: DragEvent<HTMLDivElement>,
+  ) => {
     event.preventDefault();
     event.stopPropagation();
 
@@ -369,8 +378,12 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
     setFolderExpandIntent(targetFile, position);
   };
 
-  const handleDrop = async (targetFile: T_File) => {
-    if (!dropTarget || !draggingFileId || dropTarget.targetId !== targetFile.id) {
+  const handleDrop = async (targetFile: AppFile) => {
+    if (
+      !dropTarget ||
+      !draggingFileId ||
+      dropTarget.targetId !== targetFile.id
+    ) {
       return;
     }
 
@@ -438,7 +451,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
         continue;
       }
 
-      let currentFile: T_File | undefined = file;
+      let currentFile: AppFile | undefined = file;
 
       while (currentFile) {
         visibleIds.add(currentFile.id);

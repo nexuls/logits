@@ -5,11 +5,11 @@ import {
   Folder,
   type LucideIcon,
 } from "lucide-react";
-import type { T_File, T_File_Type } from "@/types/types";
+import type { AppFile, FileType } from "@/data/schema";
 
 export type FileTreeDropPosition = "before" | "inside" | "after";
 
-export function sortChildren(files: T_File[]) {
+export function sortChildren(files: AppFile[]) {
   return [...files].sort((first, second) => {
     if (first.metadata.fileOrder !== second.metadata.fileOrder) {
       return first.metadata.fileOrder - second.metadata.fileOrder;
@@ -27,7 +27,7 @@ export function sortChildren(files: T_File[]) {
   });
 }
 
-export function getFileIcon(type: T_File_Type): LucideIcon {
+export function getFileIcon(type: FileType): LucideIcon {
   if (type === "folder") {
     return Folder;
   }
@@ -43,7 +43,7 @@ export function getFileIcon(type: T_File_Type): LucideIcon {
   return FileText;
 }
 
-export function getDescendantIds(files: T_File[], rootId: string) {
+export function getDescendantIds(files: AppFile[], rootId: string) {
   const ids = new Set<string>();
   const stack = [rootId];
 

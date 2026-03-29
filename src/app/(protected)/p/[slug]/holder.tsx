@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import Header from "@/components/header";
 import { useNotebooks } from "@/hooks/use-notebooks";
-import type { T_File } from "@/types/types";
+import type { AppFile } from "@/data/schema";
 import { Textarea } from "@/components/ui/textarea";
 import { Spinner } from "@/components/ui/spinner";
 import {
@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/empty";
 import Footer from "@/components/footer";
 
-function getNotebookTree(files: T_File[]) {
+function getNotebookTree(files: AppFile[]) {
   return [...files].sort((first, second) => {
     if (first.metadata.fileOrder !== second.metadata.fileOrder) {
       return first.metadata.fileOrder - second.metadata.fileOrder;
@@ -40,15 +40,13 @@ function getNotebookTabStorageKey(notebookId: string) {
 export default function Holder({ slug }: { slug: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const {
-    notebooks,
-    isHydrating,
-    updateFileContent,
-    getNotebookFiles,
-  } = useNotebooks();
+  const { notebooks, isHydrating, updateFileContent, getNotebookFiles } =
+    useNotebooks();
   const [draftContent, setDraftContent] = useState("");
   const [openTabIds, setOpenTabIds] = useState<string[]>([]);
-  const [loadedTabsForSlug, setLoadedTabsForSlug] = useState<string | null>(null);
+  const [loadedTabsForSlug, setLoadedTabsForSlug] = useState<string | null>(
+    null,
+  );
 
   const selectedNotebook = useMemo(
     () => notebooks.find((notebook) => notebook.id === slug) ?? null,
@@ -76,7 +74,7 @@ export default function Holder({ slug }: { slug: string }) {
 
     return openTabIds
       .map((tabId) => filesById.get(tabId))
-      .filter((file): file is T_File => Boolean(file));
+      .filter((file): file is AppFile => Boolean(file));
   }, [openTabIds, openableFiles]);
 
   useEffect(() => {
@@ -84,7 +82,9 @@ export default function Holder({ slug }: { slug: string }) {
       return;
     }
 
-    const storedTabs = window.localStorage.getItem(getNotebookTabStorageKey(slug));
+    const storedTabs = window.localStorage.getItem(
+      getNotebookTabStorageKey(slug),
+    );
 
     if (!storedTabs) {
       setOpenTabIds([]);
@@ -139,8 +139,8 @@ export default function Holder({ slug }: { slug: string }) {
     }
 
     const fallbackFileId = selectedFileId
-      ? openTabIds[openTabIds.length - 1] ?? firstOpenableFile?.id ?? ""
-      : openTabIds[openTabIds.length - 1] ?? "";
+      ? (openTabIds[openTabIds.length - 1] ?? firstOpenableFile?.id ?? "")
+      : (openTabIds[openTabIds.length - 1] ?? "");
 
     if (!fallbackFileId) {
       return;

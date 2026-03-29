@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import type { T_File, T_File_Type, T_Notebook } from "@/types/types";
+import type { AppFile, FileType, Notebook } from "@/data/schema";
 import { useData } from "@/components/providers/data";
 import {
   createFile,
@@ -24,8 +24,8 @@ export function useNotebooks() {
   const files = data.files;
 
   const createNotebookAction = useCallback(
-    async (name?: string): Promise<T_Notebook | null> => {
-      let createdNotebook: T_Notebook | null = null;
+    async (name?: string): Promise<Notebook | null> => {
+      let createdNotebook: Notebook | null = null;
 
       await updateData((currentData) => {
         const result = createNotebook(currentData, name);
@@ -48,8 +48,8 @@ export function useNotebooks() {
   );
 
   const deleteNotebookAction = useCallback(
-    async (notebookId: string): Promise<T_Notebook | null> => {
-      let fallbackNotebook: T_Notebook | null = null;
+    async (notebookId: string): Promise<Notebook | null> => {
+      let fallbackNotebook: Notebook | null = null;
 
       await updateData((currentData) => {
         const nextData = deleteNotebook(currentData, notebookId);
@@ -66,10 +66,10 @@ export function useNotebooks() {
     async (options: {
       notebookId: string;
       parentId: string;
-      type: T_File_Type;
+      type: FileType;
       name?: string;
-    }): Promise<T_File | null> => {
-      let createdFile: T_File | null = null;
+    }): Promise<AppFile | null> => {
+      let createdFile: AppFile | null = null;
 
       await updateData((currentData) => {
         const result = createFile(currentData, options);
@@ -97,8 +97,8 @@ export function useNotebooks() {
   );
 
   const duplicateFileAction = useCallback(
-    async (fileId: string): Promise<T_File | null> => {
-      let createdFile: T_File | null = null;
+    async (fileId: string): Promise<AppFile | null> => {
+      let createdFile: AppFile | null = null;
 
       await updateData((currentData) => {
         const result = duplicateFile(currentData, fileId);
@@ -122,7 +122,9 @@ export function useNotebooks() {
 
   const moveFileAction = useCallback(
     async (fileId: string, parentId: string, index: number) => {
-      await updateData((currentData) => moveFile(currentData, fileId, parentId, index));
+      await updateData((currentData) =>
+        moveFile(currentData, fileId, parentId, index),
+      );
     },
     [updateData],
   );

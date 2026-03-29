@@ -1,10 +1,10 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
-import type { T_App_Data } from "@/types/types";
+import type { AppData } from "@/data/schema";
 import { createInitialData, normalizeAppData } from "./schema";
 
 type AppStoreRecord = {
   key: "root";
-  data: T_App_Data;
+  data: AppData;
 };
 
 interface AppDbSchema extends DBSchema {
@@ -48,7 +48,7 @@ export async function readAppData() {
   return normalizeAppData(record.data);
 }
 
-export async function writeAppData(data: T_App_Data) {
+export async function writeAppData(data: AppData) {
   const db = await getDb();
   const normalized = normalizeAppData(data);
 

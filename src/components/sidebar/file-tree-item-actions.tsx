@@ -2,7 +2,7 @@
 
 import { EllipsisVertical } from "lucide-react";
 import type { ReactNode } from "react";
-import type { T_File } from "@/types/types";
+import type { AppFile } from "@/data/schema";
 import { Button } from "@/components/ui/button";
 import {
   ContextMenu,
@@ -21,12 +21,12 @@ import {
 import { FileTreeActionItems } from "./file-tree-action-items";
 
 type SharedProps = {
-  file: T_File;
+  file: AppFile;
   onCreate: (parentId: string, type: "file" | "folder") => void;
-  onCopyLink: (file: T_File) => void;
-  onRename: (file: T_File) => void;
-  onDuplicate: (file: T_File) => void;
-  onDelete: (file: T_File) => void;
+  onCopyLink: (file: AppFile) => void;
+  onRename: (file: AppFile) => void;
+  onDuplicate: (file: AppFile) => void;
+  onDelete: (file: AppFile) => void;
 };
 
 type ContextProps = SharedProps & {

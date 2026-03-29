@@ -7,7 +7,7 @@ import {
   PanelLeftIcon,
   XIcon,
 } from "lucide-react";
-import type { T_File_Type } from "@/types/types";
+import type { FileType } from "@/data/schema";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { useSidebar } from "../ui/sidebar";
@@ -15,7 +15,7 @@ import { useSidebar } from "../ui/sidebar";
 type HeaderTab = {
   id: string;
   name: string;
-  type: T_File_Type;
+  type: FileType;
   isActive: boolean;
 };
 
@@ -34,7 +34,7 @@ type Props =
       onTabClose: (tabId: string) => void;
     };
 
-function getTabIcon(type: T_File_Type) {
+function getTabIcon(type: FileType) {
   if (type === "image") {
     return FileImageIcon;
   }

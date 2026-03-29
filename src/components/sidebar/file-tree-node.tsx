@@ -9,7 +9,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
-import type { T_File } from "@/types/types";
+import type { AppFile } from "@/data/schema";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import {
@@ -19,7 +19,7 @@ import {
 import { type FileTreeDropPosition, getFileIcon } from "./file-tree-utils";
 
 type Props = {
-  file: T_File;
+  file: AppFile;
   depth: number;
   isActive: boolean;
   isCollapsed: boolean;
@@ -27,18 +27,18 @@ type Props = {
   isRenaming: boolean;
   renameValue: string;
   dropPosition: FileTreeDropPosition | null;
-  onActivate: (file: T_File) => void;
+  onActivate: (file: AppFile) => void;
   onRenameValueChange: (value: string) => void;
   onCommitRename: () => void;
   onCancelRename: () => void;
-  onStartRename: (file: T_File) => void;
+  onStartRename: (file: AppFile) => void;
   onCreate: (parentId: string, type: "file" | "folder") => void;
-  onCopyLink: (file: T_File) => void;
-  onDuplicate: (file: T_File) => void;
-  onDelete: (file: T_File) => void;
+  onCopyLink: (file: AppFile) => void;
+  onDuplicate: (file: AppFile) => void;
+  onDelete: (file: AppFile) => void;
   onDragStart: (fileId: string) => void;
-  onDragHover: (file: T_File, event: DragEvent<HTMLDivElement>) => void;
-  onDrop: (file: T_File) => void;
+  onDragHover: (file: AppFile, event: DragEvent<HTMLDivElement>) => void;
+  onDrop: (file: AppFile) => void;
   onDragEnd: () => void;
   children?: ReactNode;
 };
