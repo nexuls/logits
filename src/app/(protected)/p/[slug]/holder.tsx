@@ -21,6 +21,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import Footer from "@/components/footer";
 
 function getNotebookTree(files: T_File[]) {
   return [...files].sort((first, second) => {
@@ -32,18 +33,22 @@ function getNotebookTree(files: T_File[]) {
   });
 }
 
+function getNotebookTabStorageKey(notebookId: string) {
+  return `logits:open-tabs:${notebookId}`;
+}
+
 export default function Holder({ slug }: { slug: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const {
     notebooks,
     isHydrating,
-    renameNotebook,
-    renameFile,
     updateFileContent,
     getNotebookFiles,
   } = useNotebooks();
   const [draftContent, setDraftContent] = useState("");
+  const [openTabIds, setOpenTabIds] = useState<string[]>([]);
+  const [loadedTabsForSlug, setLoadedTabsForSlug] = useState<string | null>(null);
 
   const selectedNotebook = useMemo(
     () => notebooks.find((notebook) => notebook.id === slug) ?? null,
@@ -58,21 +63,98 @@ export default function Holder({ slug }: { slug: string }) {
     () => notebookFiles.find((file) => file.id === selectedFileId) ?? null,
     [notebookFiles, selectedFileId],
   );
-  const firstOpenableFile = useMemo(
-    () =>
-      getNotebookTree(notebookFiles).find(
-        (file) => file.metadata.type !== "folder",
-      ) ?? null,
+  const openableFiles = useMemo(
+    () => notebookFiles.filter((file) => file.metadata.type !== "folder"),
     [notebookFiles],
   );
+  const firstOpenableFile = useMemo(
+    () => getNotebookTree(openableFiles)[0] ?? null,
+    [openableFiles],
+  );
+  const openTabs = useMemo(() => {
+    const filesById = new Map(openableFiles.map((file) => [file.id, file]));
+
+    return openTabIds
+      .map((tabId) => filesById.get(tabId))
+      .filter((file): file is T_File => Boolean(file));
+  }, [openTabIds, openableFiles]);
 
   useEffect(() => {
-    if (!selectedNotebook || selectedFile || !firstOpenableFile) {
+    if (typeof window === "undefined") {
       return;
     }
 
-    router.replace(`/p/${selectedNotebook.id}?file=${firstOpenableFile.id}`);
-  }, [firstOpenableFile, router, selectedFile, selectedNotebook]);
+    const storedTabs = window.localStorage.getItem(getNotebookTabStorageKey(slug));
+
+    if (!storedTabs) {
+      setOpenTabIds([]);
+      setLoadedTabsForSlug(slug);
+      return;
+    }
+
+    try {
+      const parsedTabs = JSON.parse(storedTabs);
+      setOpenTabIds(Array.isArray(parsedTabs) ? parsedTabs : []);
+    } catch {
+      setOpenTabIds([]);
+    }
+
+    setLoadedTabsForSlug(slug);
+  }, [slug]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || loadedTabsForSlug !== slug) {
+      return;
+    }
+
+    window.localStorage.setItem(
+      getNotebookTabStorageKey(slug),
+      JSON.stringify(openTabIds),
+    );
+  }, [loadedTabsForSlug, openTabIds, slug]);
+
+  useEffect(() => {
+    const validFileIds = new Set(openableFiles.map((file) => file.id));
+
+    setOpenTabIds((currentTabs) =>
+      currentTabs.filter((tabId) => validFileIds.has(tabId)),
+    );
+  }, [openableFiles]);
+
+  useEffect(() => {
+    if (!selectedFile || selectedFile.metadata.type === "folder") {
+      return;
+    }
+
+    setOpenTabIds((currentTabs) =>
+      currentTabs.includes(selectedFile.id)
+        ? currentTabs
+        : [...currentTabs, selectedFile.id],
+    );
+  }, [selectedFile]);
+
+  useEffect(() => {
+    if (!selectedNotebook || selectedFile) {
+      return;
+    }
+
+    const fallbackFileId = selectedFileId
+      ? openTabIds[openTabIds.length - 1] ?? firstOpenableFile?.id ?? ""
+      : openTabIds[openTabIds.length - 1] ?? "";
+
+    if (!fallbackFileId) {
+      return;
+    }
+
+    router.replace(`/p/${selectedNotebook.id}?file=${fallbackFileId}`);
+  }, [
+    firstOpenableFile,
+    openTabIds,
+    router,
+    selectedFile,
+    selectedFileId,
+    selectedNotebook,
+  ]);
 
   useEffect(() => {
     setDraftContent(selectedFile?.content ?? "");
@@ -111,24 +193,52 @@ export default function Holder({ slug }: { slug: string }) {
 
   const hasAnyFiles = notebookFiles.length > 0;
 
+  const openTab = (fileId: string) => {
+    router.push(`/p/${selectedNotebook.id}?file=${fileId}`);
+  };
+
+  const closeTab = (fileId: string) => {
+    setOpenTabIds((currentTabs) => {
+      const currentIndex = currentTabs.indexOf(fileId);
+
+      if (currentIndex === -1) {
+        return currentTabs;
+      }
+
+      const nextTabs = currentTabs.filter((tabId) => tabId !== fileId);
+
+      if (selectedFileId === fileId) {
+        const fallbackTabId =
+          currentTabs[currentIndex + 1] ?? currentTabs[currentIndex - 1] ?? "";
+
+        if (fallbackTabId) {
+          router.push(`/p/${selectedNotebook.id}?file=${fallbackTabId}`);
+        } else {
+          router.push(`/p/${selectedNotebook.id}`);
+        }
+      }
+
+      return nextTabs;
+    });
+  };
+
   return (
-    <div className="relative h-dvh w-full bg-background">
+    <div className="relative h-dvh w-[calc(100%-18rem)] flex-1 flex flex-col bg-background">
       <Header
         placeholder={false}
         notebookName={selectedNotebook.name}
         currentFileName={selectedFile?.name}
-        onNotebookNameChange={(newName) => {
-          void renameNotebook(selectedNotebook.id, newName);
-        }}
-        onCurrentFileNameChange={(newName) => {
-          if (!selectedFile) {
-            return;
-          }
-
-          void renameFile(selectedFile.id, newName);
-        }}
+        tabs={openTabs.map((file) => ({
+          id: file.id,
+          name: file.name,
+          type: file.metadata.type,
+          isActive: file.id === selectedFileId,
+        }))}
+        onTabSelect={openTab}
+        onTabClose={closeTab}
       />
-      <main className="h-full w-full pt-16">
+
+      <main className="h-full w-full flex-1">
         {!hasAnyFiles ? (
           <div className="h-full p-6">
             <Empty className="h-full border-border">
@@ -202,7 +312,7 @@ export default function Holder({ slug }: { slug: string }) {
             </Empty>
           </div>
         ) : (
-          <div className="h-full px-6 pb-6">
+          <div className="h-full px-6 pb-6 pt-2">
             <div className="mx-auto flex h-full max-w-5xl flex-col rounded-2xl border border-border bg-card/40 p-4 shadow-sm">
               <div className="border-b border-border px-2 pb-3">
                 <h1 className="text-xl font-semibold">{selectedFile.name}</h1>
@@ -226,6 +336,8 @@ export default function Holder({ slug }: { slug: string }) {
           </div>
         )}
       </main>
+
+      <Footer />
     </div>
   );
 }
