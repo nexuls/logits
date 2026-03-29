@@ -210,6 +210,8 @@ export function FileTreeNode({
                 }}
                 onBlur={scheduleBlurCommit}
                 onKeyDown={(event) => {
+                  event.stopPropagation();
+
                   if (blurTimeoutRef.current) {
                     clearTimeout(blurTimeoutRef.current);
                     blurTimeoutRef.current = null;
