@@ -31,6 +31,9 @@ const SIDEBAR_WIDTH = "18rem";
 const SIDEBAR_WIDTH_MOBILE = "18rem";
 const SIDEBAR_WIDTH_ICON = "3rem";
 const SIDEBAR_KEYBOARD_SHORTCUT = "b";
+const SIDEBAR_WIDTH_DEFAULT_PX = 288;
+const SIDEBAR_WIDTH_MIN_PX = 220;
+const SIDEBAR_WIDTH_MAX_PX = 560;
 
 type SidebarContextProps = {
   state: "expanded" | "collapsed";
@@ -155,6 +158,13 @@ function Sidebar({
   side = "left",
   variant = "sidebar",
   collapsible = "offcanvas",
+  width,
+  defaultWidth,
+  minWidth = SIDEBAR_WIDTH_MIN_PX,
+  maxWidth = SIDEBAR_WIDTH_MAX_PX,
+  resizable = false,
+  onWidthChange,
+  onWidthCommit,
   className,
   children,
   ...props
@@ -162,13 +172,101 @@ function Sidebar({
   side?: "left" | "right";
   variant?: "sidebar" | "floating" | "inset";
   collapsible?: "offcanvas" | "icon" | "none";
+  width?: number;
+  defaultWidth?: number;
+  minWidth?: number;
+  maxWidth?: number;
+  resizable?: boolean;
+  onWidthChange?: (width: number) => void;
+  onWidthCommit?: (width: number) => void;
 }) {
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
+  const [internalWidth, setInternalWidth] = React.useState(
+    defaultWidth ?? SIDEBAR_WIDTH_DEFAULT_PX,
+  );
+  const [dragWidth, setDragWidth] = React.useState<number | null>(null);
+  const [pendingControlledWidth, setPendingControlledWidth] = React.useState<
+    number | null
+  >(null);
+  const isResizing = dragWidth !== null;
+  const isSyncingWidth = pendingControlledWidth !== null;
+  const rootRef = React.useRef<HTMLDivElement | null>(null);
+  const activeWidth = dragWidth ?? pendingControlledWidth ?? width ?? internalWidth;
+  const resolvedWidth = Math.max(minWidth, Math.min(maxWidth, activeWidth));
+
+  React.useEffect(() => {
+    if (width === undefined) {
+      setPendingControlledWidth(null);
+      return;
+    }
+
+    if (pendingControlledWidth === null) {
+      return;
+    }
+
+    if (Math.round(width) === Math.round(pendingControlledWidth)) {
+      setPendingControlledWidth(null);
+    }
+  }, [pendingControlledWidth, width]);
+
+  const handleResizeMouseDown = React.useCallback(
+    (event: React.MouseEvent<HTMLElement>) => {
+      if (!rootRef.current || state === "collapsed") {
+        return;
+      }
+
+      event.preventDefault();
+      const rect = rootRef.current.getBoundingClientRect();
+
+      const clampWidth = (value: number) =>
+        Math.max(minWidth, Math.min(maxWidth, Math.round(value)));
+
+      const computeWidth = (clientX: number) =>
+        side === "left" ? clientX - rect.left : rect.right - clientX;
+
+      const nextInitialWidth = clampWidth(computeWidth(event.clientX));
+      setPendingControlledWidth(null);
+      setDragWidth(nextInitialWidth);
+      onWidthChange?.(nextInitialWidth);
+
+      const handleMouseMove = (moveEvent: MouseEvent) => {
+        const nextWidth = clampWidth(computeWidth(moveEvent.clientX));
+        setDragWidth(nextWidth);
+        onWidthChange?.(nextWidth);
+      };
+
+      const handleMouseUp = (upEvent: MouseEvent) => {
+        const finalWidth = clampWidth(computeWidth(upEvent.clientX));
+        setDragWidth(null);
+
+        if (width === undefined) {
+          setInternalWidth(finalWidth);
+        } else {
+          setPendingControlledWidth(finalWidth);
+        }
+
+        onWidthCommit?.(finalWidth);
+
+        window.removeEventListener("mousemove", handleMouseMove);
+        window.removeEventListener("mouseup", handleMouseUp);
+      };
+
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+    },
+    [maxWidth, minWidth, onWidthChange, onWidthCommit, side, state, width],
+  );
 
   if (collapsible === "none") {
     return (
       <div
+        ref={rootRef}
         data-slot="sidebar"
+        style={
+          {
+            "--sidebar-width": `${resolvedWidth}px`,
+          } as React.CSSProperties
+        }
         className={cn(
           "flex h-full w-(--sidebar-width) flex-col bg-sidebar text-sidebar-foreground",
           className,
@@ -207,18 +305,26 @@ function Sidebar({
 
   return (
     <div
+      ref={rootRef}
       className="group peer hidden text-sidebar-foreground md:block"
       data-state={state}
+      data-resizing={isResizing || isSyncingWidth ? "true" : "false"}
       data-collapsible={state === "collapsed" ? collapsible : ""}
       data-variant={variant}
       data-side={side}
       data-slot="sidebar"
+      style={
+        {
+          "--sidebar-width": `${resolvedWidth}px`,
+        } as React.CSSProperties
+      }
     >
       {/* This is what handles the sidebar gap on desktop */}
       <div
         data-slot="sidebar-gap"
         className={cn(
           "relative w-(--sidebar-width) bg-transparent transition-[width] duration-200 ease-linear",
+          "group-data-[resizing=true]:transition-none",
           "group-data-[collapsible=offcanvas]:w-0",
           "group-data-[side=right]:rotate-180",
           variant === "floating" || variant === "inset"
@@ -230,6 +336,7 @@ function Sidebar({
         data-slot="sidebar-container"
         className={cn(
           "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex",
+          "group-data-[resizing=true]:transition-none",
           side === "left"
             ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
             : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
@@ -248,6 +355,18 @@ function Sidebar({
         >
           {children}
         </div>
+
+        {resizable && state !== "collapsed" ? (
+          <button
+            type="button"
+            aria-label="Resize sidebar"
+            onMouseDown={handleResizeMouseDown}
+            className={cn(
+              "absolute inset-y-0 z-20 w-1 cursor-col-resize select-none hover:bg-sidebar-border/70",
+              side === "left" ? "-right-0.5" : "-left-0.5",
+            )}
+          />
+        ) : null}
       </div>
     </div>
   );
