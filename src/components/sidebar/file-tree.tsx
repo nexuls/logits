@@ -22,6 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { FileTreeNode } from "./file-tree-node";
 import { NotebookSettingsDialog } from "./notebook-settings-dialog";
 import {
@@ -93,7 +94,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
 
       for (const file of files) {
         if (file.metadata.type === "folder" && nextState[file.id] == null) {
-          nextState[file.id] = false;
+          nextState[file.id] = true;
         }
       }
 
@@ -156,10 +157,12 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
         [createdFile.id]: false,
         [parentId]: false,
       }));
+      startRename(createdFile);
       toast.success("Folder created");
       return;
     }
 
+    startRename(createdFile);
     toast.success("File created");
     router.push(`/p/${notebookId}?file=${createdFile.id}`);
   };
@@ -515,7 +518,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
 
   return (
     <>
-      <div className="space-y-3">
+      <div className="flex h-full min-h-0 flex-col gap-3">
         <div className="flex items-center gap-2 px-1">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -569,34 +572,36 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
           </DropdownMenu>
         </div>
 
-        <div
-          className="px-1"
-          onDragOver={handleRootDragOver}
-          onDrop={(event) => {
-            void handleRootDrop(event);
-          }}
-        >
-          {renderedTree}
+        <ScrollArea className="min-h-0 flex-1 [&>div>div]:block!">
+          <div
+            className="min-w-0 px-1"
+            onDragOver={handleRootDragOver}
+            onDrop={(event) => {
+              void handleRootDrop(event);
+            }}
+          >
+            {renderedTree}
 
-          {query.trim() && !renderedTree ? (
-            <div className="px-3 py-6 text-sm text-muted-foreground">
-              No files found.
-            </div>
-          ) : null}
+            {query.trim() && !renderedTree ? (
+              <div className="px-3 py-6 text-sm text-muted-foreground">
+                No files found.
+              </div>
+            ) : null}
 
-          {draggingFileId ? (
-            <div
-              className={[
-                "mt-2 rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground transition-colors",
-                dropTarget?.position === "root"
-                  ? "border-primary bg-primary/5 text-foreground"
-                  : "border-sidebar-border",
-              ].join(" ")}
-            >
-              Drop here to move to notebook root
-            </div>
-          ) : null}
-        </div>
+            {draggingFileId ? (
+              <div
+                className={[
+                  "mt-2 w-full rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground transition-colors",
+                  dropTarget?.position === "root"
+                    ? "border-primary bg-primary/5 text-foreground"
+                    : "border-sidebar-border",
+                ].join(" ")}
+              >
+                Drop here to move to notebook root
+              </div>
+            ) : null}
+          </div>
+        </ScrollArea>
       </div>
 
       <NotebookSettingsDialog
