@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   FileImage,
@@ -12,7 +12,6 @@ import {
 import Header from "@/components/header";
 import { useNotebooks } from "@/hooks/use-notebooks";
 import type { AppFile } from "@/data/schema";
-import { Textarea } from "@/components/ui/textarea";
 import { Spinner } from "@/components/ui/spinner";
 import {
   Empty,
@@ -22,7 +21,9 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import Footer from "@/components/footer";
-import Editor from "@/components/editor";
+import Editor from "@/components/editor/markdown-editor";
+import NavBar from "@/components/editor/nav";
+import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 
 function getNotebookTree(files: AppFile[]) {
   return [...files].sort((first, second) => {
@@ -38,16 +39,68 @@ function getNotebookTabStorageKey(notebookId: string) {
   return `logits:open-tabs:${notebookId}`;
 }
 
+function getTextStats(content: string) {
+  const normalized = content.replace(/\r\n/g, "\n");
+  const totalLines =
+    normalized.length === 0 ? 1 : normalized.split("\n").length;
+  const totalChars = content.length;
+  const totalWords = content.trim().length
+    ? (content.trim().match(/\S+/g)?.length ?? 0)
+    : 0;
+
+  return {
+    totalLines,
+    totalChars,
+    totalWords,
+  };
+}
+
+function setFooterField(id: string, value: string) {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  const element = document.getElementById(id);
+
+  if (!element || element.textContent === value) {
+    return;
+  }
+
+  element.textContent = value;
+}
+
+function updateFooterStats(content: string) {
+  const stats = getTextStats(content);
+  setFooterField("logits-footer-lines", String(stats.totalLines));
+  setFooterField("logits-footer-chars", String(stats.totalChars));
+  setFooterField("logits-footer-words", String(stats.totalWords));
+}
+
+function updateFooterCursor(meta: {
+  line: number;
+  col: number;
+  selection: number;
+}) {
+  const cursorValue = `Ln ${meta.line}, Col ${meta.col}${
+    meta.selection > 0 ? ` (${meta.selection} selected)` : ""
+  }`;
+  setFooterField("logits-footer-cursor", cursorValue);
+}
+
 export default function Holder({ slug }: { slug: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { notebooks, isHydrating, updateFileContent, getNotebookFiles } =
     useNotebooks();
   const [draftContent, setDraftContent] = useState("");
+  const [saveStatus, setSaveStatus] = useState<"saved" | "saving">("saved");
   const [openTabIds, setOpenTabIds] = useState<string[]>([]);
   const [loadedTabsForSlug, setLoadedTabsForSlug] = useState<string | null>(
     null,
   );
+  const latestSaveRequestRef = useRef(0);
+  const currentEditingFileIdRef = useRef("");
+  const cursorMetaRef = useRef({ line: 1, col: 1, tabSize: 2, selection: 0 });
 
   const selectedNotebook = useMemo(
     () => notebooks.find((notebook) => notebook.id === slug) ?? null,
@@ -161,6 +214,55 @@ export default function Holder({ slug }: { slug: string }) {
     setDraftContent(selectedFile?.content ?? "");
   }, [selectedFile?.content]);
 
+  const { debounced: debouncedSave, flush: flushDebouncedSave } =
+    useDebouncedCallback(
+      async (fileId: string, content: string, requestId: number) => {
+        await updateFileContent(fileId, content);
+
+        if (latestSaveRequestRef.current !== requestId) return;
+
+        if (currentEditingFileIdRef.current === fileId)
+          setDraftContent(content);
+
+        setSaveStatus("saved");
+        setFooterField("logits-footer-save-status", "Saved");
+      },
+      { delayMs: 450 },
+    );
+
+  useEffect(() => {
+    currentEditingFileIdRef.current = selectedFileId;
+    cursorMetaRef.current = { line: 1, col: 1, tabSize: 2, selection: 0 };
+    setSaveStatus("saved");
+    setFooterField("logits-footer-save-status", "Saved");
+    setFooterField("logits-footer-cursor", "Ln 1, Col 1");
+    setFooterField("logits-footer-tabsize", "Spaces: 2");
+  }, [selectedFileId]);
+
+  useEffect(() => {
+    if (selectedFile?.metadata.type === "file") {
+      updateFooterStats(selectedFile.content);
+    }
+  }, [selectedFile?.content, selectedFile?.metadata.type]);
+
+  useEffect(() => {
+    if (!selectedFileId) {
+      return;
+    }
+
+    return () => {
+      flushDebouncedSave();
+    };
+  }, [flushDebouncedSave, selectedFileId]);
+
+  const markdownStats = useMemo(
+    () => getTextStats(draftContent),
+    [draftContent],
+  );
+
+  const footerView =
+    selectedFile?.metadata.type === "file" ? "markdown" : "other";
+
   if (isHydrating) {
     return (
       <div className="relative h-dvh w-full bg-background">
@@ -239,7 +341,7 @@ export default function Holder({ slug }: { slug: string }) {
         onTabClose={closeTab}
       />
 
-      <main className="h-full w-full flex-1">
+      <main className="min-h-0 w-full flex-1">
         {!hasAnyFiles ? (
           <div className="h-full p-6">
             <Empty className="h-full border-border">
@@ -313,20 +415,58 @@ export default function Holder({ slug }: { slug: string }) {
             </Empty>
           </div>
         ) : (
-          <div className="h-full">
+          <div className="h-full flex flex-col">
+            <NavBar
+              notebookId={selectedNotebook.id}
+              notebookName={selectedNotebook.name}
+              files={notebookFiles}
+              activeFileId={selectedFile.id}
+            />
+
             <Editor
               mode="markdown"
               content={draftContent}
+              onEditorMetaChange={(meta) => {
+                cursorMetaRef.current = meta;
+                setFooterField(
+                  "logits-footer-tabsize",
+                  `Spaces: ${meta.tabSize}`,
+                );
+                updateFooterCursor(meta);
+              }}
               onContentChange={(newContent) => {
-                setDraftContent(newContent);
-                void updateFileContent(selectedFile.id, newContent);
+                if (!selectedFile?.id) {
+                  return;
+                }
+
+                updateFooterStats(newContent);
+                setSaveStatus("saving");
+                setFooterField("logits-footer-save-status", "Saving");
+                const requestId = latestSaveRequestRef.current + 1;
+                latestSaveRequestRef.current = requestId;
+                debouncedSave(selectedFile.id, newContent, requestId);
               }}
             />
           </div>
         )}
       </main>
 
-      <Footer />
+      <Footer
+        view={footerView}
+        markdownMeta={
+          footerView === "markdown"
+            ? {
+                ...markdownStats,
+                line: cursorMetaRef.current.line,
+                col: cursorMetaRef.current.col,
+                tabSize: cursorMetaRef.current.tabSize,
+                selection: cursorMetaRef.current.selection,
+                version: "v0.1.0",
+                saveStatus,
+              }
+            : undefined
+        }
+      />
     </div>
   );
 }
