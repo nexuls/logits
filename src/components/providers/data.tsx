@@ -10,8 +10,19 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { AppData } from "@/data/schema";
+import type { AppData, UserSettings } from "@/data/schema";
+import {
+  createInitialUserSettings,
+  normalizeUserSettings,
+} from "@/data/schema";
+import {
+  mergeUserSettings,
+  resetUserSettings as resetStoredUserSettings,
+  setUserSettings as setStoredUserSettings,
+  updateUserSettings as updateStoredUserSettings,
+} from "@/data/settings";
 import { readAppData, writeAppData } from "@/data/store";
+import { writeUserSettingsToCookie } from "@/data/settings-cookie";
 
 type DataContextValue = {
   data: AppData;
@@ -21,35 +32,60 @@ type DataContextValue = {
   reloadData: () => Promise<void>;
 };
 
-const DataContext = createContext<DataContextValue | null>(null);
-
-const emptyData: AppData = {
-  notebooks: [],
-  files: [],
-  settings: {},
-  version: 1,
-  updatedAt: new Date().toISOString(),
+type SettingsContextValue = {
+  settings: UserSettings;
+  isHydrating: boolean;
+  setSettings: (nextSettings: UserSettings) => Promise<UserSettings>;
+  updateSettings: (
+    updater: (currentSettings: UserSettings) => Partial<UserSettings>,
+  ) => Promise<UserSettings>;
+  resetSettings: () => Promise<UserSettings>;
+  reloadSettings: () => Promise<UserSettings>;
 };
 
-export function DataProvider({ children }: { children: ReactNode }) {
-  const [data, setDataState] = useState<AppData>(emptyData);
-  const [isHydrating, setIsHydrating] = useState(true);
-  const dataRef = useRef<AppData>(emptyData);
+const DataContext = createContext<DataContextValue | null>(null);
+const SettingsContext = createContext<SettingsContextValue | null>(null);
 
-  const reloadData = useCallback(async () => {
-    const nextData = await readAppData();
-    dataRef.current = nextData;
-    setDataState(nextData);
-    setIsHydrating(false);
-  }, []);
+function createEmptyData(initialSettings: UserSettings): AppData {
+  return {
+    notebooks: [],
+    files: [],
+    settings: normalizeUserSettings(initialSettings),
+    version: 1,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function areSettingsEqual(first: UserSettings, second: UserSettings) {
+  return JSON.stringify(first) === JSON.stringify(second);
+}
+
+export function DataProvider({
+  children,
+  initialSettings = createInitialUserSettings(),
+}: {
+  children: ReactNode;
+  initialSettings?: UserSettings;
+}) {
+  const normalizedInitialSettings = useMemo(
+    () => normalizeUserSettings(initialSettings),
+    [initialSettings],
+  );
+  const [data, setDataState] = useState<AppData>(() =>
+    createEmptyData(normalizedInitialSettings),
+  );
+  const [isHydrating, setIsHydrating] = useState(true);
+  const dataRef = useRef<AppData>(createEmptyData(normalizedInitialSettings));
+  const initialSettingsRef = useRef<UserSettings>(normalizedInitialSettings);
 
   useEffect(() => {
-    void reloadData();
-  }, [reloadData]);
+    initialSettingsRef.current = normalizedInitialSettings;
+  }, [normalizedInitialSettings]);
 
   const setData = useCallback(async (nextData: AppData) => {
     const savedData = await writeAppData(nextData);
     dataRef.current = savedData;
+    initialSettingsRef.current = normalizeUserSettings(savedData.settings);
     setDataState(savedData);
     return savedData;
   }, []);
@@ -62,7 +98,75 @@ export function DataProvider({ children }: { children: ReactNode }) {
     [setData],
   );
 
-  const value = useMemo(
+  const reloadData = useCallback(async () => {
+    const storedData = await readAppData();
+    const mergedSettings = mergeUserSettings(
+      storedData.settings,
+      initialSettingsRef.current,
+    );
+    const nextData = areSettingsEqual(mergedSettings, storedData.settings)
+      ? storedData
+      : await writeAppData({
+          ...storedData,
+          settings: mergedSettings,
+        });
+
+    dataRef.current = nextData;
+    initialSettingsRef.current = normalizeUserSettings(nextData.settings);
+    setDataState(nextData);
+    writeUserSettingsToCookie(nextData.settings);
+    setIsHydrating(false);
+  }, []);
+
+  useEffect(() => {
+    void reloadData();
+  }, [reloadData]);
+
+  const setSettings = useCallback(
+    async (nextSettings: UserSettings) => {
+      const savedData = await updateData((currentData) =>
+        setStoredUserSettings(currentData, nextSettings),
+      );
+      const savedSettings = normalizeUserSettings(savedData.settings);
+      initialSettingsRef.current = savedSettings;
+      writeUserSettingsToCookie(savedSettings);
+      return savedSettings;
+    },
+    [updateData],
+  );
+
+  const updateSettings = useCallback(
+    async (updater: (currentSettings: UserSettings) => Partial<UserSettings>) => {
+      const savedData = await updateData((currentData) =>
+        updateStoredUserSettings(
+          currentData,
+          updater(normalizeUserSettings(currentData.settings)),
+        ),
+      );
+      const savedSettings = normalizeUserSettings(savedData.settings);
+      initialSettingsRef.current = savedSettings;
+      writeUserSettingsToCookie(savedSettings);
+      return savedSettings;
+    },
+    [updateData],
+  );
+
+  const resetSettings = useCallback(async () => {
+    const savedData = await updateData((currentData) =>
+      resetStoredUserSettings(currentData),
+    );
+    const savedSettings = normalizeUserSettings(savedData.settings);
+    initialSettingsRef.current = savedSettings;
+    writeUserSettingsToCookie(savedSettings);
+    return savedSettings;
+  }, [updateData]);
+
+  const reloadSettings = useCallback(async () => {
+    await reloadData();
+    return normalizeUserSettings(dataRef.current.settings);
+  }, [reloadData]);
+
+  const dataValue = useMemo(
     () => ({
       data,
       isHydrating,
@@ -73,7 +177,32 @@ export function DataProvider({ children }: { children: ReactNode }) {
     [data, isHydrating, setData, updateData, reloadData],
   );
 
-  return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
+  const settingsValue = useMemo(
+    () => ({
+      settings: normalizeUserSettings(data.settings),
+      isHydrating,
+      setSettings,
+      updateSettings,
+      resetSettings,
+      reloadSettings,
+    }),
+    [
+      data.settings,
+      isHydrating,
+      setSettings,
+      updateSettings,
+      resetSettings,
+      reloadSettings,
+    ],
+  );
+
+  return (
+    <DataContext.Provider value={dataValue}>
+      <SettingsContext.Provider value={settingsValue}>
+        {children}
+      </SettingsContext.Provider>
+    </DataContext.Provider>
+  );
 }
 
 export function useData() {
@@ -81,6 +210,16 @@ export function useData() {
 
   if (!context) {
     throw new Error("useData must be used inside DataProvider");
+  }
+
+  return context;
+}
+
+export function useSettings() {
+  const context = useContext(SettingsContext);
+
+  if (!context) {
+    throw new Error("useSettings must be used inside DataProvider");
   }
 
   return context;

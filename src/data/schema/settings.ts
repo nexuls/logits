@@ -15,3 +15,17 @@ export const userSettingsSchema = z.object({
 });
 
 export type UserSettings = z.infer<typeof userSettingsSchema>;
+
+export function createInitialUserSettings(): UserSettings {
+  return {};
+}
+
+export function normalizeUserSettings(value: unknown): UserSettings {
+  const parsed = userSettingsSchema.parse(value ?? {});
+
+  if (!parsed.appearance || Object.keys(parsed.appearance).length > 0) {
+    return parsed;
+  }
+
+  return {};
+}
