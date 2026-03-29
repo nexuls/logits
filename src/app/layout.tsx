@@ -44,10 +44,19 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className={rootClassName} suppressHydrationWarning>
+      <head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, interactive-widget=resizes-content"
+        ></meta>
+      </head>
+
       <body
         className={`${geistSans.variable} ${geistMono.variable} font-geist antialiased`}
       >
-        <BaseProvider initialSettings={initialSettings}>{children}</BaseProvider>
+        <BaseProvider initialSettings={initialSettings}>
+          {children}
+        </BaseProvider>
       </body>
     </html>
   );

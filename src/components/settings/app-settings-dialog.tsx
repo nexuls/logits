@@ -22,6 +22,8 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AdvancedSettingsPage } from "@/components/settings/pages/advanced-settings-page";
@@ -29,6 +31,7 @@ import { AppearanceSettingsPage } from "@/components/settings/pages/appearance-s
 import { NotificationsSettingsPage } from "@/components/settings/pages/notifications-settings-page";
 import { ProfileSettingsPage } from "@/components/settings/pages/profile-settings-page";
 import { WorkspaceSettingsPage } from "@/components/settings/pages/workspace-settings-page";
+import { VisuallyHidden } from "radix-ui";
 
 type SettingsSection =
   | "appearance"
@@ -72,7 +75,8 @@ const SETTINGS_SECTION_GROUPS: SettingsSectionGroup[] = [
 ];
 
 export function AppSettingsDialog({ open, onOpenChange }: Props) {
-  const [activeSection, setActiveSection] = useState<SettingsSection>("appearance");
+  const [activeSection, setActiveSection] =
+    useState<SettingsSection>("appearance");
   const { settings, updateSettings } = useUserSettings();
 
   const theme = settings.appearance?.theme ?? "system";
@@ -132,13 +136,21 @@ export function AppSettingsDialog({ open, onOpenChange }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="block h-[80vh] min-h-0 w-full max-w-6xl sm:max-w-6xl overflow-hidden border-border/60 bg-background/98 p-0"
+        className="block h-[80vh] min-h-0 w-[calc(100%-2rem)] sm:max-w-6xl overflow-hidden border-border/60 bg-background/98 p-0"
         showCloseButton
       >
+        <VisuallyHidden.Root>
+          <DialogTitle>App Settings</DialogTitle>
+          <DialogDescription>
+            Adjust your preferences and configure your account in the app
+            settings.
+          </DialogDescription>
+        </VisuallyHidden.Root>
+
         <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-[250px_minmax(0,1fr)]">
-          <aside className="h-full min-h-0 border-b border-border/70 bg-sidebar p-4 md:border-r md:border-b-0">
+          <aside className="h-full min-h-0 border-b border-border/70 bg-sidebar md:border-r md:border-b-0">
             <ScrollArea className="h-full min-h-0">
-              <nav className="flex flex-col gap-5 pr-2 pt-8">
+              <nav className="flex flex-col gap-5 p-4 pr-6 pt-12">
                 {SETTINGS_SECTION_GROUPS.map((group) => (
                   <div key={group.heading} className="space-y-px">
                     <div className="px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">
