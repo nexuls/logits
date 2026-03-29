@@ -7,6 +7,7 @@ import {
   USER_SETTINGS_COOKIE_NAME,
   retrieveUserSettingsFromCookieValue,
 } from "@/data/settings-cookie";
+import { getColorSchemeClassName } from "@/coloe-scheme";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,10 +33,17 @@ export default async function RootLayout({
   const initialSettings = retrieveUserSettingsFromCookieValue(
     cookieStore.get(USER_SETTINGS_COOKIE_NAME)?.value,
   );
-  const themeClass = initialSettings.appearance?.theme === "dark" ? "dark" : "";
+  const isDark = initialSettings.appearance?.theme === "dark";
+  const initialColorSchemeClass = getColorSchemeClassName(
+    initialSettings.appearance?.colorScheme,
+    isDark ? "dark" : "light",
+  );
+  const rootClassName = [isDark ? "dark" : "", initialColorSchemeClass]
+    .filter(Boolean)
+    .join(" ");
 
   return (
-    <html lang="en" className={themeClass} suppressHydrationWarning>
+    <html lang="en" className={rootClassName} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} font-geist antialiased`}
       >

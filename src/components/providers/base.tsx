@@ -3,6 +3,10 @@
 import { useEffect, type ReactNode } from "react";
 import { ThemeProvider, useTheme } from "next-themes";
 import type { UserSettings } from "@/data/schema";
+import {
+  ALL_COLOR_SCHEME_CLASSES,
+  getColorSchemeClassName,
+} from "@/coloe-scheme";
 import { AppSidebar } from "../sidebar/app-sidebar";
 import { DataProvider } from "./data";
 import { Toaster } from "../ui/sonner";
@@ -17,20 +21,27 @@ type Props = {
 
 function SettingsThemeSync() {
   const { settings } = useUserSettings();
-  const { setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const theme = settings.appearance?.theme ?? "system";
+  const colorScheme = settings.appearance?.colorScheme;
 
   useEffect(() => {
     setTheme(theme);
   }, [setTheme, theme]);
 
+  useEffect(() => {
+    const mode = resolvedTheme === "dark" ? "dark" : "light";
+    const colorSchemeClass = getColorSchemeClassName(colorScheme, mode);
+    const rootElement = document.documentElement;
+
+    rootElement.classList.remove(...ALL_COLOR_SCHEME_CLASSES);
+    rootElement.classList.add(colorSchemeClass);
+  }, [colorScheme, resolvedTheme]);
+
   return null;
 }
 
-export default function BaseProvider({
-  children,
-  initialSettings,
-}: Props) {
+export default function BaseProvider({ children, initialSettings }: Props) {
   const defaultTheme = initialSettings?.appearance?.theme ?? "system";
 
   return (
@@ -39,6 +50,7 @@ export default function BaseProvider({
       defaultTheme={defaultTheme}
       enableSystem
       disableTransitionOnChange
+      enableColorScheme
     >
       <TooltipProvider>
         <DataProvider initialSettings={initialSettings}>

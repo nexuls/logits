@@ -1,9 +1,18 @@
 import { z } from "zod";
+import { COLOR_SCHEMES } from "@/coloe-scheme";
+
+export const appearanceThemeValues = ["light", "dark", "system"] as const;
+export type AppearanceTheme = (typeof appearanceThemeValues)[number];
+
+export type AppearanceColorScheme = (typeof COLOR_SCHEMES)[number];
+
+export const appearanceFontSizeValues = ["small", "medium", "large"] as const;
+export type AppearanceFontSize = (typeof appearanceFontSizeValues)[number];
 
 const AppearanceSettingsSchema = z.object({
-  theme: z.enum(["light", "dark", "system"]).optional(),
-  colorScheme: z.enum(["github", "material", "catppuccin"]).optional(),
-  fontSize: z.enum(["small", "medium", "large"]).optional(),
+  theme: z.enum(appearanceThemeValues).optional(),
+  colorScheme: z.enum(COLOR_SCHEMES).optional(),
+  fontSize: z.enum(appearanceFontSizeValues).optional(),
 
   // Workspace layout
   sidebarPosition: z.enum(["left", "right"]).optional(),
