@@ -173,7 +173,7 @@ export function FileTreeNode({
             onDragEnd={onDragEnd}
             className={cn(
               "group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none transition-colors hover:transition-none hover:bg-sidebar-accent/50",
-              isActive && "bg-sidebar-accent text-sidebar-accent-foreground",
+              isActive && "bg-sidebar-accent/70 text-sidebar-accent-foreground",
               isDragging && "opacity-50",
               dropPosition === "inside" &&
                 "bg-sidebar-accent text-sidebar-accent-foreground",

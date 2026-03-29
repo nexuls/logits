@@ -81,6 +81,7 @@ export default function Header(props: Props) {
                     {/** biome-ignore lint/a11y/useSemanticElements: cannot use nested buttons */}
                     <div
                       onClick={() => props.onTabSelect(tab.id)}
+                      onMouseDown={() => props.onTabSelect(tab.id)}
                       onKeyUp={(event) => {
                         if (event.key === "Enter" || event.key === " ") {
                           props.onTabSelect(tab.id);
