@@ -1,20 +1,28 @@
-import React, { useMemo } from "react";
-import CodeMirror, { Extension } from "@uiw/react-codemirror";
+import { useMemo } from "react";
+import CodeMirror, { type Extension } from "@uiw/react-codemirror";
 import { githubDark } from "@uiw/codemirror-theme-github";
-import {
-  allPlugins,
-  draftly,
-  ThemeEnum,
-} from "draftly";
+import type { ViewUpdate } from "@codemirror/view";
+import { allPlugins, draftly, ThemeEnum } from "draftly";
 import { useTheme } from "next-themes";
 
 type Props = {
   mode: "code" | "markdown";
   content: string;
   onContentChange: (content: string) => void;
+  onEditorMetaChange?: (meta: {
+    line: number;
+    col: number;
+    tabSize: number;
+    selection: number;
+  }) => void;
 };
 
-export default function Editor({ mode, content, onContentChange }: Props) {
+export default function Editor({
+  mode,
+  content,
+  onContentChange,
+  onEditorMetaChange,
+}: Props) {
   const { resolvedTheme: theme } = useTheme();
 
   const defaultExtensions = useMemo<Extension[]>(
@@ -42,7 +50,7 @@ export default function Editor({ mode, content, onContentChange }: Props) {
   );
 
   return (
-    <div className="h-full w-full">
+    <div className="w-full min-h-0 flex-1">
       <CodeMirror
         key={`draftly-editor-${mode}`}
         id={"draftly-editor"}
@@ -54,6 +62,28 @@ export default function Editor({ mode, content, onContentChange }: Props) {
         value={content}
         placeholder={"Write something..."}
         onChange={onContentChange}
+        onUpdate={(update: ViewUpdate) => {
+          if (!onEditorMetaChange) return;
+
+          if (
+            !update.selectionSet &&
+            !update.docChanged &&
+            !update.viewportChanged
+          )
+            return;
+
+          const head = update.state.selection.main.head;
+          const line = update.state.doc.lineAt(head);
+
+          onEditorMetaChange({
+            line: line.number,
+            col: head - line.from + 1,
+            tabSize: update.state.tabSize,
+            selection: Math.abs(
+              update.state.selection.main.to - update.state.selection.main.from,
+            ),
+          });
+        }}
         theme={githubDark}
         extensions={[...defaultExtensions]}
         basicSetup={{
