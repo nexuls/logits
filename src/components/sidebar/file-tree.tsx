@@ -94,19 +94,47 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
     return new Map(files.map((file) => [file.id, file]));
   }, [files]);
 
+  const activeFolderPathIds = useMemo(() => {
+    const openFolderIds = new Set<string>();
+
+    if (!activeFileId) return openFolderIds;
+
+    let currentFile = filesById.get(activeFileId);
+
+    while (currentFile) {
+      if (currentFile.metadata.type === "folder")
+        openFolderIds.add(currentFile.id);
+
+      if (currentFile.metadata.parentId === notebookId) break;
+
+      currentFile = filesById.get(currentFile.metadata.parentId);
+    }
+
+    return openFolderIds;
+  }, [activeFileId, filesById, notebookId]);
+
   useEffect(() => {
     setCollapsedFolders((currentState) => {
-      const nextState = { ...currentState };
+      const nextState: Record<string, boolean> = {};
 
       for (const file of files) {
-        if (file.metadata.type === "folder" && nextState[file.id] == null) {
-          nextState[file.id] = true;
-        }
+        if (file.metadata.type !== "folder") continue;
+
+        nextState[file.id] = !activeFolderPathIds.has(file.id);
       }
 
-      return nextState;
+      const currentFolderIds = Object.keys(currentState);
+      const nextFolderIds = Object.keys(nextState);
+
+      if (currentFolderIds.length !== nextFolderIds.length) return nextState;
+
+      for (const folderId of nextFolderIds) {
+        if (currentState[folderId] !== nextState[folderId]) return nextState;
+      }
+
+      return currentState;
     });
-  }, [files]);
+  }, [activeFolderPathIds, files]);
 
   useEffect(() => {
     return () => {
