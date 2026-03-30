@@ -25,6 +25,30 @@ import Editor from "@/components/editor/markdown-editor";
 import NavBar from "@/components/editor/nav";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 
+type CursorMeta = {
+  line: number;
+  col: number;
+  tabSize: number;
+  selection: number;
+};
+
+const DEFAULT_CURSOR_META: CursorMeta = {
+  line: 1,
+  col: 1,
+  tabSize: 2,
+  selection: 0,
+};
+
+const FOOTER_FIELD_IDS = {
+  lines: "logits-footer-lines",
+  chars: "logits-footer-chars",
+  words: "logits-footer-words",
+  cursor: "logits-footer-cursor",
+  tabSize: "logits-footer-tabsize",
+  saveStatus: "logits-footer-save-status",
+} as const;
+
+// Keep file ordering stable and predictable in tab/open file logic.
 function getNotebookTree(files: AppFile[]) {
   return [...files].sort((first, second) => {
     if (first.metadata.fileOrder !== second.metadata.fileOrder) {
@@ -37,6 +61,23 @@ function getNotebookTree(files: AppFile[]) {
 
 function getNotebookTabStorageKey(notebookId: string) {
   return `logits:open-tabs:${notebookId}`;
+}
+
+function readStoredTabIds(notebookId: string) {
+  if (typeof window === "undefined") return [];
+
+  const storedTabs = window.localStorage.getItem(
+    getNotebookTabStorageKey(notebookId),
+  );
+
+  if (!storedTabs) return [];
+
+  try {
+    const parsedTabs = JSON.parse(storedTabs);
+    return Array.isArray(parsedTabs) ? parsedTabs : [];
+  } catch {
+    return [];
+  }
 }
 
 function getTextStats(content: string) {
@@ -56,24 +97,20 @@ function getTextStats(content: string) {
 }
 
 function setFooterField(id: string, value: string) {
-  if (typeof document === "undefined") {
-    return;
-  }
+  if (typeof document === "undefined") return;
 
   const element = document.getElementById(id);
 
-  if (!element || element.textContent === value) {
-    return;
-  }
+  if (!element || element.textContent === value) return;
 
   element.textContent = value;
 }
 
 function updateFooterStats(content: string) {
   const stats = getTextStats(content);
-  setFooterField("logits-footer-lines", String(stats.totalLines));
-  setFooterField("logits-footer-chars", String(stats.totalChars));
-  setFooterField("logits-footer-words", String(stats.totalWords));
+  setFooterField(FOOTER_FIELD_IDS.lines, String(stats.totalLines));
+  setFooterField(FOOTER_FIELD_IDS.chars, String(stats.totalChars));
+  setFooterField(FOOTER_FIELD_IDS.words, String(stats.totalWords));
 }
 
 function updateFooterCursor(meta: {
@@ -84,23 +121,78 @@ function updateFooterCursor(meta: {
   const cursorValue = `Ln ${meta.line}, Col ${meta.col}${
     meta.selection > 0 ? ` (${meta.selection} selected)` : ""
   }`;
-  setFooterField("logits-footer-cursor", cursorValue);
+  setFooterField(FOOTER_FIELD_IDS.cursor, cursorValue);
+}
+
+function getUnsupportedFileState(fileType: AppFile["metadata"]["type"]) {
+  if (fileType === "folder") {
+    return {
+      icon: <FolderClosed />,
+      title: "Folder selected",
+      description: "Pick a note inside this folder to edit its contents.",
+    };
+  }
+
+  if (fileType === "draw") {
+    return {
+      icon: <FilePenLine />,
+      title: "Drawing files are not editable yet",
+      description:
+        "The notebook architecture is ready for draw files, but the note editor currently focuses on text notes.",
+    };
+  }
+
+  if (fileType === "image") {
+    return {
+      icon: <FileImage />,
+      title: "Image files are not editable yet",
+      description:
+        "Use note files for writing today; image-specific editing can be layered onto this file system next.",
+    };
+  }
+
+  return null;
+}
+
+function NotebookEmptyState({
+  icon,
+  title,
+  description,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="h-full p-6">
+      <Empty className="h-full border-border">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">{icon}</EmptyMedia>
+          <EmptyTitle>{title}</EmptyTitle>
+          <EmptyDescription>{description}</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    </div>
+  );
 }
 
 export default function Holder({ slug }: { slug: string }) {
+  // Routing and data access.
   const router = useRouter();
   const searchParams = useSearchParams();
   const { notebooks, isHydrating, updateFileContent, getNotebookFiles } =
     useNotebooks();
+
+  // UI/editor state.
   const [draftContent, setDraftContent] = useState("");
   const [openTabIds, setOpenTabIds] = useState<string[]>([]);
-  const [loadedTabsForSlug, setLoadedTabsForSlug] = useState<string | null>(
-    null,
-  );
-  const latestSaveRequestRef = useRef(0);
-  const currentEditingFileIdRef = useRef("");
-  const cursorMetaRef = useRef({ line: 1, col: 1, tabSize: 2, selection: 0 });
+  const [loadedTabsSlug, setLoadedTabsSlug] = useState<string | null>(null);
 
+  // Guards against out-of-order async save completion.
+  const latestSaveRequestRef = useRef(0);
+  const cursorMetaRef = useRef<CursorMeta>(DEFAULT_CURSOR_META);
+
+  // Derived entities.
   const selectedNotebook = useMemo(
     () => notebooks.find((notebook) => notebook.id === slug) ?? null,
     [notebooks, slug],
@@ -130,33 +222,15 @@ export default function Holder({ slug }: { slug: string }) {
       .filter((file): file is AppFile => Boolean(file));
   }, [openTabIds, openableFiles]);
 
+  // Restore persisted tabs for notebook.
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const storedTabs = window.localStorage.getItem(
-      getNotebookTabStorageKey(slug),
-    );
-
-    if (!storedTabs) {
-      setOpenTabIds([]);
-      setLoadedTabsForSlug(slug);
-      return;
-    }
-
-    try {
-      const parsedTabs = JSON.parse(storedTabs);
-      setOpenTabIds(Array.isArray(parsedTabs) ? parsedTabs : []);
-    } catch {
-      setOpenTabIds([]);
-    }
-
-    setLoadedTabsForSlug(slug);
+    setOpenTabIds(readStoredTabIds(slug));
+    setLoadedTabsSlug(slug);
   }, [slug]);
 
+  // Persist tabs after restoring initial state for current notebook.
   useEffect(() => {
-    if (typeof window === "undefined" || loadedTabsForSlug !== slug) {
+    if (typeof window === "undefined" || loadedTabsSlug !== slug) {
       return;
     }
 
@@ -164,8 +238,9 @@ export default function Holder({ slug }: { slug: string }) {
       getNotebookTabStorageKey(slug),
       JSON.stringify(openTabIds),
     );
-  }, [loadedTabsForSlug, openTabIds, slug]);
+  }, [loadedTabsSlug, openTabIds, slug]);
 
+  // Drop stale tabs when files were deleted or moved.
   useEffect(() => {
     const validFileIds = new Set(openableFiles.map((file) => file.id));
 
@@ -174,6 +249,7 @@ export default function Holder({ slug }: { slug: string }) {
     );
   }, [openableFiles]);
 
+  // Auto-open selected non-folder file in tab strip.
   useEffect(() => {
     if (!selectedFile || selectedFile.metadata.type === "folder") {
       return;
@@ -186,6 +262,7 @@ export default function Holder({ slug }: { slug: string }) {
     );
   }, [selectedFile]);
 
+  // Redirect to a fallback file when query param points to a missing file.
   useEffect(() => {
     if (!selectedNotebook || selectedFile) {
       return;
@@ -209,6 +286,7 @@ export default function Holder({ slug }: { slug: string }) {
     selectedNotebook,
   ]);
 
+  // Sync editor content only when active file changes.
   useEffect(() => {
     if (!selectedFileId) {
       setDraftContent("");
@@ -223,22 +301,20 @@ export default function Holder({ slug }: { slug: string }) {
       async (fileId: string, content: string, requestId: number) => {
         await updateFileContent(fileId, content);
 
-        if (latestSaveRequestRef.current !== requestId) return;
+        if (latestSaveRequestRef.current !== requestId) {
+          return;
+        }
 
-        if (currentEditingFileIdRef.current === fileId)
-          setDraftContent(content);
-
-        setFooterField("logits-footer-save-status", "Saved");
+        setFooterField(FOOTER_FIELD_IDS.saveStatus, "Saved");
       },
       { delayMs: 450 },
     );
 
   useEffect(() => {
-    currentEditingFileIdRef.current = selectedFileId;
-    cursorMetaRef.current = { line: 1, col: 1, tabSize: 2, selection: 0 };
-    setFooterField("logits-footer-save-status", "Saved");
-    setFooterField("logits-footer-cursor", "Ln 1, Col 1");
-    setFooterField("logits-footer-tabsize", "Spaces: 2");
+    cursorMetaRef.current = DEFAULT_CURSOR_META;
+    setFooterField(FOOTER_FIELD_IDS.saveStatus, "Saved");
+    setFooterField(FOOTER_FIELD_IDS.cursor, "Ln 1, Col 1");
+    setFooterField(FOOTER_FIELD_IDS.tabSize, "Spaces: 2");
   }, [selectedFileId]);
 
   useEffect(() => {
@@ -252,6 +328,7 @@ export default function Holder({ slug }: { slug: string }) {
       return;
     }
 
+    // Ensure pending edits are flushed when file selection changes.
     return () => {
       flushDebouncedSave();
     };
@@ -297,6 +374,9 @@ export default function Holder({ slug }: { slug: string }) {
   }
 
   const hasAnyFiles = notebookFiles.length > 0;
+  const unsupportedState = selectedFile
+    ? getUnsupportedFileState(selectedFile.metadata.type)
+    : null;
 
   const openTab = (fileId: string) => {
     router.push(`/p/${selectedNotebook.id}?file=${fileId}`);
@@ -345,77 +425,23 @@ export default function Holder({ slug }: { slug: string }) {
 
       <main className="min-h-0 w-full flex-1">
         {!hasAnyFiles ? (
-          <div className="h-full p-6">
-            <Empty className="h-full border-border">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <NotebookText />
-                </EmptyMedia>
-                <EmptyTitle>No files yet</EmptyTitle>
-                <EmptyDescription>
-                  Create your first note or folder from the sidebar.
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          </div>
+          <NotebookEmptyState
+            icon={<NotebookText />}
+            title="No files yet"
+            description="Create your first note or folder from the sidebar."
+          />
         ) : !selectedFile ? (
-          <div className="h-full p-6">
-            <Empty className="h-full border-border">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <NotebookText />
-                </EmptyMedia>
-                <EmptyTitle>Select a file</EmptyTitle>
-                <EmptyDescription>
-                  Choose a note from the sidebar to start writing.
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          </div>
-        ) : selectedFile.metadata.type === "folder" ? (
-          <div className="h-full p-6">
-            <Empty className="h-full border-border">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <FolderClosed />
-                </EmptyMedia>
-                <EmptyTitle>Folder selected</EmptyTitle>
-                <EmptyDescription>
-                  Pick a note inside this folder to edit its contents.
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          </div>
-        ) : selectedFile.metadata.type === "draw" ? (
-          <div className="h-full p-6">
-            <Empty className="h-full border-border">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <FilePenLine />
-                </EmptyMedia>
-                <EmptyTitle>Drawing files are not editable yet</EmptyTitle>
-                <EmptyDescription>
-                  The notebook architecture is ready for draw files, but the
-                  note editor currently focuses on text notes.
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          </div>
-        ) : selectedFile.metadata.type === "image" ? (
-          <div className="h-full p-6">
-            <Empty className="h-full border-border">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <FileImage />
-                </EmptyMedia>
-                <EmptyTitle>Image files are not editable yet</EmptyTitle>
-                <EmptyDescription>
-                  Use note files for writing today; image-specific editing can
-                  be layered onto this file system next.
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          </div>
+          <NotebookEmptyState
+            icon={<NotebookText />}
+            title="Select a file"
+            description="Choose a note from the sidebar to start writing."
+          />
+        ) : unsupportedState ? (
+          <NotebookEmptyState
+            icon={unsupportedState.icon}
+            title={unsupportedState.title}
+            description={unsupportedState.description}
+          />
         ) : (
           <div className="h-full flex flex-col">
             <NavBar
@@ -431,7 +457,7 @@ export default function Holder({ slug }: { slug: string }) {
               onEditorMetaChange={(meta) => {
                 cursorMetaRef.current = meta;
                 setFooterField(
-                  "logits-footer-tabsize",
+                  FOOTER_FIELD_IDS.tabSize,
                   `Spaces: ${meta.tabSize}`,
                 );
                 updateFooterCursor(meta);
@@ -439,8 +465,9 @@ export default function Holder({ slug }: { slug: string }) {
               onContentChange={(newContent) => {
                 if (!selectedFile?.id) return;
 
+                setDraftContent(newContent);
                 updateFooterStats(newContent);
-                setFooterField("logits-footer-save-status", "Saving");
+                setFooterField(FOOTER_FIELD_IDS.saveStatus, "Saving");
                 const requestId = latestSaveRequestRef.current + 1;
                 latestSaveRequestRef.current = requestId;
                 debouncedSave(selectedFile.id, newContent, requestId);
