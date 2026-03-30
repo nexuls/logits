@@ -5,21 +5,19 @@ export const codePluginTheme = createTheme({
   default: {
     // Inline code
     ".cm-draftly-code-inline": {
-      fontFamily: "var(--font-jetbrains-mono, monospace)",
-      fontSize: "0.9rem",
-      backgroundColor: "rgba(0, 0, 0, 0.05)",
+      fontFamily: "var(--user-monospace-font)",
+      fontSize: "var(--text-sm)",
+      backgroundColor: "var(--draftly-surface-2)",
       padding: "0.1rem 0.25rem",
       border: "1px solid var(--color-border)",
-      borderRadius: "3px",
+      borderRadius: "var(--radius-sm)",
     },
 
     // Fenced code block lines
     ".cm-draftly-code-block-line": {
-      "--radius": "0.375rem",
-
-      fontFamily: "var(--font-jetbrains-mono, monospace)",
-      fontSize: "0.9rem",
-      backgroundColor: "rgba(0, 0, 0, 0.03)",
+      fontFamily: "var(--user-monospace-font)",
+      fontSize: "var(--text-sm)",
+      backgroundColor: "var(--draftly-surface-1)",
       padding: "0 1rem !important",
       lineHeight: "1.5",
       borderLeft: "1px solid var(--color-border)",
@@ -28,8 +26,8 @@ export const codePluginTheme = createTheme({
 
     // First line of code block
     ".cm-draftly-code-block-line-start": {
-      borderTopLeftRadius: "var(--radius)",
-      borderTopRightRadius: "var(--radius)",
+      borderTopLeftRadius: "var(--radius-xl)",
+      borderTopRightRadius: "var(--radius-xl)",
       position: "relative",
       overflow: "hidden",
       borderTop: "1px solid var(--color-border)",
@@ -48,9 +46,9 @@ export const codePluginTheme = createTheme({
       justifyContent: "space-between",
       alignItems: "center",
       padding: "0.25rem 1rem",
-      backgroundColor: "rgba(0, 0, 0, 0.06)",
-      fontFamily: "var(--font-jetbrains-mono, monospace)",
-      fontSize: "0.85rem",
+      backgroundColor: "var(--draftly-surface-3)",
+      fontFamily: "var(--user-monospace-font)",
+      fontSize: "var(--text-sm)",
 
       ".cm-draftly-code-header-left": {
         display: "flex",
@@ -63,7 +61,7 @@ export const codePluginTheme = createTheme({
         },
 
         ".cm-draftly-code-header-lang": {
-          color: "#6a737d",
+          color: "var(--draftly-color-muted)",
           opacity: "0.8",
         },
       },
@@ -80,54 +78,55 @@ export const codePluginTheme = createTheme({
           padding: "0.25rem",
           backgroundColor: "transparent",
           border: "none",
-          borderRadius: "4px",
+          borderRadius: "var(--radius-sm)",
           cursor: "pointer",
-          color: "#6a737d",
+          color: "var(--draftly-color-muted)",
           transition: "color 0.2s, background-color 0.2s",
 
           "&:hover": {
-            backgroundColor: "rgba(0, 0, 0, 0.1)",
+            backgroundColor: "var(--draftly-surface-hover)",
             color: "var(--color-text, inherit)",
           },
 
           "&.copied": {
-            color: "#22c55e",
+            color: "var(--draftly-color-success-strong)",
           },
         },
       },
     },
 
-    // Caption (below code block)
-    ".cm-draftly-code-block-has-caption": {
-      padding: "0 !important",
-      paddingTop: "0.5rem !important",
-    },
-
-    ".cm-draftly-code-caption": {
-      textAlign: "center",
-      fontSize: "0.85rem",
-      color: "#6a737d",
-      fontStyle: "italic",
-      padding: "0.25rem 1rem",
-      backgroundColor: "rgba(0, 0, 0, 0.06)",
-    },
-
     // Last line of code block
     ".cm-draftly-code-block-line-end": {
-      borderBottomLeftRadius: "var(--radius)",
-      borderBottomRightRadius: "var(--radius)",
+      borderBottomLeftRadius: "var(--radius-xl)",
+      borderBottomRightRadius: "var(--radius-xl)",
       borderBottom: "1px solid var(--color-border)",
-      paddingTop: "0.5rem !important",
+      paddingTop: "1rem !important",
+      overflow: "clip",
 
       "& br": {
         display: "none",
+      },
+
+      // Caption (below code block)
+      "&.cm-draftly-code-block-has-caption": {
+        padding: "0 !important",
+        paddingTop: "0.5rem !important",
+
+        ".cm-draftly-code-caption": {
+          textAlign: "center",
+          fontSize: "var(--text-sm)",
+          color: "var(--draftly-color-muted)",
+          fontStyle: "italic",
+          padding: "0.25rem 1rem",
+          backgroundColor: "var(--draftly-surface-3)",
+        },
       },
     },
 
     // Fence markers (```)
     ".cm-draftly-code-fence": {
-      color: "#6a737d",
-      fontFamily: "var(--font-jetbrains-mono, monospace)",
+      color: "var(--draftly-color-muted)",
+      fontFamily: "var(--user-monospace-font)",
     },
 
     // Line numbers
@@ -142,16 +141,17 @@ export const codePluginTheme = createTheme({
         top: "0.2rem",
         width: "var(--line-num-width, 2ch)",
         textAlign: "right",
-        color: "#6a737d",
+        color: "var(--draftly-color-muted)",
         opacity: "0.6",
-        fontFamily: "var(--font-jetbrains-mono, monospace)",
-        fontSize: "0.85rem",
+        fontFamily: "var(--user-monospace-font)",
+        fontSize: "var(--text-sm)",
         userSelect: "none",
       },
     },
 
     ".cm-draftly-code-line-numbered-diff": {
-      paddingLeft: "calc(var(--line-num-old-width, 2ch) + var(--line-num-new-width, 2ch) + 2.75rem) !important",
+      paddingLeft:
+        "calc(var(--line-num-old-width, 2ch) + var(--line-num-new-width, 2ch) + 2.75rem) !important",
       position: "relative",
 
       "&::before": {
@@ -161,10 +161,10 @@ export const codePluginTheme = createTheme({
         top: "0.2rem",
         width: "var(--line-num-old-width, 2ch)",
         textAlign: "right",
-        color: "#6a737d",
+        color: "var(--draftly-color-muted)",
         opacity: "0.6",
-        fontFamily: "var(--font-jetbrains-mono, monospace)",
-        fontSize: "0.85rem",
+        fontFamily: "var(--user-monospace-font)",
+        fontSize: "var(--text-sm)",
         userSelect: "none",
       },
 
@@ -175,10 +175,10 @@ export const codePluginTheme = createTheme({
         top: "0.2rem",
         width: "calc(var(--line-num-new-width, 2ch) + 2ch)",
         textAlign: "right",
-        color: "#6a737d",
+        color: "var(--draftly-color-muted)",
         opacity: "0.6",
-        fontFamily: "var(--font-jetbrains-mono, monospace)",
-        fontSize: "0.85rem",
+        fontFamily: "var(--user-monospace-font)",
+        fontSize: "var(--text-sm)",
         userSelect: "none",
       },
 
@@ -192,8 +192,8 @@ export const codePluginTheme = createTheme({
           top: "0.1rem",
           width: "1ch",
           textAlign: "right",
-          fontFamily: "var(--font-jetbrains-mono, monospace)",
-          fontSize: "0.85rem",
+          fontFamily: "var(--user-monospace-font)",
+          fontSize: "var(--text-sm)",
           fontWeight: "700",
           userSelect: "none",
         },
@@ -212,66 +212,66 @@ export const codePluginTheme = createTheme({
 
     // Line highlight
     ".cm-draftly-code-line-highlight": {
-      backgroundColor: "rgba(255, 220, 100, 0.2) !important",
-      borderLeft: "3px solid #f0b429 !important",
+      backgroundColor: "var(--draftly-surface-warning) !important",
+      borderLeft: "3px solid var(--draftly-color-warning-strong) !important",
     },
 
     ".cm-draftly-code-line-diff-add": {
       color: "inherit",
-      backgroundColor: "rgba(34, 197, 94, 0.12) !important",
-      borderLeft: "3px solid #22c55e !important",
+      backgroundColor: "var(--draftly-surface-success) !important",
+      borderLeft: "3px solid var(--draftly-color-success-strong) !important",
 
       "&.cm-draftly-code-line-diff-gutter::after": {
-        color: "#16a34a",
+        color: "var(--draftly-color-success)",
       },
     },
 
     ".cm-draftly-code-line-diff-del": {
       color: "inherit",
-      backgroundColor: "rgba(239, 68, 68, 0.12) !important",
-      borderLeft: "3px solid #ef4444 !important",
+      backgroundColor: "var(--draftly-surface-danger) !important",
+      borderLeft: "3px solid var(--draftly-color-danger) !important",
 
       "&.cm-draftly-code-line-diff-gutter::after": {
-        color: "#dc2626",
+        color: "var(--draftly-color-danger)",
       },
     },
 
     ".cm-draftly-code-diff-sign-add": {
-      color: "#16a34a",
+      color: "var(--draftly-color-success)",
       fontWeight: "700",
     },
 
     ".cm-draftly-code-diff-sign-del": {
-      color: "#dc2626",
+      color: "var(--draftly-color-danger)",
       fontWeight: "700",
     },
 
     ".cm-draftly-code-diff-mod-add": {
       color: "inherit",
-      backgroundColor: "rgba(34, 197, 94, 0.25)",
-      borderRadius: "2px",
+      backgroundColor: "var(--draftly-surface-success-strong)",
+      borderRadius: "var(--radius-sm)",
       padding: "0.1rem 0",
     },
 
     ".cm-draftly-code-diff-mod-del": {
       color: "inherit",
-      backgroundColor: "rgba(239, 68, 68, 0.25)",
-      borderRadius: "2px",
+      backgroundColor: "var(--draftly-surface-danger-strong)",
+      borderRadius: "var(--radius-sm)",
       padding: "0.1rem 0",
     },
 
     // Text highlight
     ".cm-draftly-code-text-highlight": {
       color: "inherit",
-      backgroundColor: "rgba(255, 220, 100, 0.4)",
-      borderRadius: "2px",
+      backgroundColor: "var(--draftly-surface-warning-strong)",
+      borderRadius: "var(--radius-sm)",
       padding: "0.1rem 0",
     },
 
     // Preview: container wrapper
     ".cm-draftly-code-container": {
       margin: "1rem 0",
-      borderRadius: "var(--radius)",
+      borderRadius: "var(--radius-xl)",
       overflow: "hidden",
       border: "1px solid var(--color-border)",
 
@@ -295,13 +295,13 @@ export const codePluginTheme = createTheme({
 
     // Preview: standalone code block (not in container)
     ".cm-draftly-code-block": {
-      fontFamily: "var(--font-jetbrains-mono, monospace)",
-      fontSize: "0.9rem",
-      backgroundColor: "rgba(0, 0, 0, 0.03)",
+      fontFamily: "var(--user-monospace-font)",
+      fontSize: "var(--text-sm)",
+      backgroundColor: "var(--draftly-surface-1)",
       padding: "1rem",
       overflow: "auto",
       position: "relative",
-      borderRadius: "var(--radius)",
+      borderRadius: "var(--radius-xl)",
       border: "1px solid var(--color-border)",
 
       "&.cm-draftly-code-block-has-header": {
@@ -318,109 +318,6 @@ export const codePluginTheme = createTheme({
         borderBottom: "none",
         paddingBottom: "0.5rem !important",
       },
-    },
-  },
-
-  dark: {
-    ".cm-draftly-code-inline": {
-      backgroundColor: "rgba(255, 255, 255, 0.1)",
-    },
-
-    ".cm-draftly-code-block-line": {
-      backgroundColor: "rgba(255, 255, 255, 0.05)",
-    },
-
-    ".cm-draftly-code-fence": {
-      color: "#8b949e",
-    },
-
-    ".cm-draftly-code-block": {
-      backgroundColor: "rgba(255, 255, 255, 0.05)",
-    },
-
-    ".cm-draftly-code-header": {
-      backgroundColor: "rgba(255, 255, 255, 0.08)",
-
-      ".cm-draftly-code-header-lang": {
-        color: "#8b949e",
-      },
-
-      ".cm-draftly-code-copy-btn": {
-        color: "#8b949e",
-
-        "&:hover": {
-          backgroundColor: "rgba(255, 255, 255, 0.1)",
-        },
-      },
-    },
-
-    ".cm-draftly-code-caption": {
-      backgroundColor: "rgba(255, 255, 255, 0.05)",
-    },
-
-    ".cm-draftly-code-line-numbered": {
-      "&::before": {
-        color: "#8b949e",
-      },
-    },
-
-    ".cm-draftly-code-line-numbered-diff": {
-      "&::before": {
-        color: "#8b949e",
-      },
-
-      "&::after": {
-        color: "#8b949e",
-      },
-    },
-
-    ".cm-draftly-code-line-diff-gutter": {
-      "&::after": {
-        color: "#8b949e",
-      },
-    },
-
-    ".cm-draftly-code-line-highlight": {
-      backgroundColor: "rgba(255, 220, 100, 0.15) !important",
-      borderLeft: "3px solid #d9a520 !important",
-    },
-
-    ".cm-draftly-code-line-diff-add": {
-      backgroundColor: "rgba(34, 197, 94, 0.15) !important",
-      borderLeft: "3px solid #22c55e !important",
-
-      "&.cm-draftly-code-line-diff-gutter::after": {
-        color: "#4ade80",
-      },
-    },
-
-    ".cm-draftly-code-line-diff-del": {
-      backgroundColor: "rgba(239, 68, 68, 0.15) !important",
-      borderLeft: "3px solid #ef4444 !important",
-
-      "&.cm-draftly-code-line-diff-gutter::after": {
-        color: "#f87171",
-      },
-    },
-
-    ".cm-draftly-code-diff-sign-add": {
-      color: "#4ade80",
-    },
-
-    ".cm-draftly-code-diff-sign-del": {
-      color: "#f87171",
-    },
-
-    ".cm-draftly-code-diff-mod-add": {
-      backgroundColor: "rgba(34, 197, 94, 0.3)",
-    },
-
-    ".cm-draftly-code-diff-mod-del": {
-      backgroundColor: "rgba(239, 68, 68, 0.3)",
-    },
-
-    ".cm-draftly-code-text-highlight": {
-      backgroundColor: "rgba(255, 220, 100, 0.3)",
     },
   },
 });

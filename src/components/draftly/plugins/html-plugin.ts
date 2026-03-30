@@ -309,21 +309,21 @@ export class HTMLPlugin extends DecorationPlugin {
 const theme = createTheme({
   default: {
     ".cm-draftly-html-tag": {
-      color: "#6a737d",
-      fontFamily: "var(--font-jetbrains-mono, monospace)",
-      fontSize: "0.85em",
+      color: "var(--draftly-color-muted)",
+      fontFamily: "var(--user-monospace-font)",
+      fontSize: "var(--text-sm)",
     },
 
     ".cm-draftly-html-comment": {
-      color: "#6a737d",
+      color: "var(--draftly-color-muted)",
       fontStyle: "italic",
-      fontFamily: "var(--font-jetbrains-mono, monospace)",
-      fontSize: "0.85em",
+      fontFamily: "var(--user-monospace-font)",
+      fontSize: "var(--text-sm)",
       opacity: 0.5,
     },
 
     ".cm-draftly-line-html-block": {
-      backgroundColor: "rgba(0, 0, 0, 0.02)",
+      backgroundColor: "var(--draftly-surface-1)",
     },
 
     ".cm-draftly-hidden-line": {

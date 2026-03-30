@@ -128,7 +128,7 @@ export class EmojiPlugin extends DecorationPlugin {
 const theme = createTheme({
   default: {
     ".cm-draftly-emoji": {
-      fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Segoe UI Symbol", sans-serif',
+      fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Segoe UI Symbol", var(--user-text-font)',
       fontVariantEmoji: "emoji",
       lineHeight: "1.2",
     },

@@ -465,7 +465,6 @@ export default function Holder({ slug }: { slug: string }) {
               onContentChange={(newContent) => {
                 if (!selectedFile?.id) return;
 
-                setDraftContent(newContent);
                 updateFooterStats(newContent);
                 setFooterField(FOOTER_FIELD_IDS.saveStatus, "Saving");
                 const requestId = latestSaveRequestRef.current + 1;

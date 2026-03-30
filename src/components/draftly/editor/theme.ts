@@ -7,9 +7,34 @@ import { EditorView } from "@codemirror/view";
 export const draftlyBaseTheme = EditorView.theme({
   // Container styles - only apply when view plugin is enabled
   "&.cm-draftly": {
-    fontSize: "16px",
+    fontFamily: "var(--user-text-font)",
+    fontSize: "var(--text-base)",
     lineHeight: "1.6",
     backgroundColor: "transparent !important",
+    
+    "--draftly-color-link": "var(--color-primary)",
+    "--draftly-color-link-hover": "color-mix(in oklch, var(--color-primary) 80%, var(--color-foreground))",
+    "--draftly-color-muted": "var(--color-muted-foreground)",
+    "--draftly-color-success": "color-mix(in oklch, var(--color-chart-2) 78%, var(--color-foreground))",
+    "--draftly-color-success-strong": "var(--color-chart-2)",
+    "--draftly-color-danger": "var(--color-destructive)",
+    "--draftly-color-danger-strong": "color-mix(in oklch, var(--color-destructive) 85%, white)",
+    "--draftly-color-warning": "var(--color-chart-5)",
+    "--draftly-color-warning-strong": "color-mix(in oklch, var(--color-chart-5) 82%, var(--color-foreground))",
+    "--draftly-color-tooltip-bg": "var(--color-popover)",
+    "--draftly-color-tooltip-fg": "var(--color-popover-foreground)",
+    "--draftly-surface-1": "color-mix(in oklch, var(--color-foreground) 3%, transparent)",
+    "--draftly-surface-2": "color-mix(in oklch, var(--color-foreground) 5%, transparent)",
+    "--draftly-surface-3": "color-mix(in oklch, var(--color-foreground) 8%, transparent)",
+    "--draftly-surface-hover": "color-mix(in oklch, var(--color-foreground) 7%, transparent)",
+    "--draftly-surface-success": "color-mix(in oklch, var(--draftly-color-success-strong) 18%, transparent)",
+    "--draftly-surface-success-strong": "color-mix(in oklch, var(--draftly-color-success-strong) 28%, transparent)",
+    "--draftly-surface-danger": "color-mix(in oklch, var(--color-destructive) 16%, transparent)",
+    "--draftly-surface-danger-strong": "color-mix(in oklch, var(--color-destructive) 24%, transparent)",
+    "--draftly-surface-warning": "color-mix(in oklch, var(--draftly-color-warning) 20%, transparent)",
+    "--draftly-surface-warning-strong": "color-mix(in oklch, var(--draftly-color-warning) 36%, transparent)",
+    "--draftly-shadow-soft": "0 10px 24px color-mix(in oklch, var(--color-foreground) 14%, transparent)",
+    "--draftly-shadow-strong": "0 12px 28px color-mix(in oklch, var(--color-foreground) 22%, transparent)",
   },
 
   "&.cm-draftly .cm-content": {
@@ -17,8 +42,8 @@ export const draftlyBaseTheme = EditorView.theme({
     maxWidth: "48rem",
     padding: "0 0.5rem",
     margin: "0 auto",
-    fontFamily: "var(--font-sans, sans-serif)",
-    fontSize: "16px",
+    fontFamily: "var(--user-text-font)",
+    fontSize: "var(--text-base)",
     lineHeight: "1.6",
   },
 

@@ -136,44 +136,44 @@ export class HeadingPlugin extends DecorationPlugin {
 const theme = createTheme({
   default: {
     ".cm-draftly-h1": {
-      fontSize: "2em",
+      fontSize: "var(--text-4xl)",
       fontWeight: "bold",
-      fontFamily: "sans-serif",
+      fontFamily: "var(--user-text-font)",
       textDecoration: "none",
     },
 
     ".cm-draftly-h2": {
-      fontSize: "1.75em",
+      fontSize: "var(--text-3xl)",
       fontWeight: "bold",
-      fontFamily: "sans-serif",
+      fontFamily: "var(--user-text-font)",
       textDecoration: "none",
     },
 
     ".cm-draftly-h3": {
-      fontSize: "1.5em",
+      fontSize: "var(--text-2xl)",
       fontWeight: "bold",
-      fontFamily: "sans-serif",
+      fontFamily: "var(--user-text-font)",
       textDecoration: "none",
     },
 
     ".cm-draftly-h4": {
-      fontSize: "1.25em",
+      fontSize: "var(--text-xl)",
       fontWeight: "bold",
-      fontFamily: "sans-serif",
+      fontFamily: "var(--user-text-font)",
       textDecoration: "none",
     },
 
     ".cm-draftly-h5": {
-      fontSize: "1em",
+      fontSize: "var(--text-lg)",
       fontWeight: "bold",
-      fontFamily: "sans-serif",
+      fontFamily: "var(--user-text-font)",
       textDecoration: "none",
     },
 
     ".cm-draftly-h6": {
-      fontSize: "0.75em",
+      fontSize: "var(--text-base)",
       fontWeight: "bold",
-      fontFamily: "sans-serif",
+      fontFamily: "var(--user-text-font)",
       textDecoration: "none",
     },
 

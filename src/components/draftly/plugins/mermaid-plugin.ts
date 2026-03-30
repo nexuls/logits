@@ -386,9 +386,9 @@ const theme = createTheme({
       "--radius": "0.375rem",
       position: "relative",
 
-      fontFamily: "var(--font-jetbrains-mono, monospace)",
-      fontSize: "0.9rem",
-      backgroundColor: "rgba(0, 0, 0, 0.03)",
+      fontFamily: "var(--user-monospace-font)",
+      fontSize: "var(--text-sm)",
+      backgroundColor: "var(--draftly-surface-2)",
       padding: "0 1rem !important",
       paddingLeft: "calc(var(--line-num-width, 2ch) + 1rem) !important",
       lineHeight: "1.5",
@@ -417,10 +417,10 @@ const theme = createTheme({
       top: "0.2rem",
       width: "var(--line-num-width, 2ch)",
       textAlign: "right",
-      color: "#6a737d",
+      color: "var(--draftly-color-muted)",
       opacity: "0.6",
-      fontFamily: "var(--font-jetbrains-mono, monospace)",
-      fontSize: "0.85rem",
+      fontFamily: "var(--user-monospace-font)",
+      fontSize: "var(--text-sm)",
       userSelect: "none",
     },
 
@@ -430,8 +430,8 @@ const theme = createTheme({
 
     // Mermaid markers (```mermaid / ```)
     ".cm-draftly-mermaid-marker": {
-      color: "#6a737d",
-      fontFamily: "var(--font-jetbrains-mono, monospace)",
+      color: "var(--draftly-color-muted)",
+      fontFamily: "var(--user-monospace-font)",
     },
 
     // Hidden mermaid syntax (when cursor is not in range)
@@ -445,7 +445,7 @@ const theme = createTheme({
       justifyContent: "center",
       alignItems: "center",
       padding: "1em 0",
-      borderRadius: "4px",
+      borderRadius: "var(--radius-sm)",
       overflow: "auto",
     },
 
@@ -460,41 +460,22 @@ const theme = createTheme({
     ".cm-draftly-mermaid-loading": {
       display: "inline-block",
       padding: "0.5em 1em",
-      color: "#6a737d",
-      fontSize: "0.875em",
+      color: "var(--draftly-color-muted)",
+      fontSize: "var(--text-sm)",
       fontStyle: "italic",
-      fontFamily: "var(--font-jetbrains-mono, monospace)",
+      fontFamily: "var(--user-monospace-font)",
     },
 
     // Error styling
     ".cm-draftly-mermaid-error": {
       display: "inline-block",
       padding: "0.25em 0.5em",
-      backgroundColor: "rgba(255, 0, 0, 0.1)",
-      color: "#d73a49",
-      borderRadius: "4px",
-      fontSize: "0.875em",
+      backgroundColor: "var(--draftly-surface-danger)",
+      color: "var(--draftly-color-danger)",
+      borderRadius: "var(--radius-sm)",
+      fontSize: "var(--text-sm)",
       fontStyle: "italic",
-      fontFamily: "var(--font-jetbrains-mono, monospace)",
-    },
-  },
-
-  dark: {
-    ".cm-draftly-mermaid-block:not(.cm-draftly-mermaid-block-rendered)": {
-      backgroundColor: "rgba(255, 255, 255, 0.03)",
-    },
-
-    ".cm-draftly-mermaid-marker": {
-      color: "#8b949e",
-    },
-
-    ".cm-draftly-mermaid-loading": {
-      color: "#8b949e",
-    },
-
-    ".cm-draftly-mermaid-error": {
-      backgroundColor: "rgba(255, 0, 0, 0.15)",
-      color: "#f85149",
+      fontFamily: "var(--user-monospace-font)",
     },
   },
 });

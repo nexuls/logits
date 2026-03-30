@@ -430,7 +430,7 @@ const theme = createTheme({
     // Task marker styling (visible when editing)
     ".cm-draftly-task-marker": {
       color: "var(--draftly-highlight, #a4a4a4)",
-      fontFamily: "monospace",
+      fontFamily: "var(--user-monospace-font)",
     },
 
     // Task checkbox container
@@ -452,7 +452,7 @@ const theme = createTheme({
       height: "1.1em",
       appearance: "none",
       border: "1px solid",
-      borderRadius: "0.25em",
+      borderRadius: "var(--radius-sm)",
       backgroundColor: "transparent",
       position: "relative",
     },

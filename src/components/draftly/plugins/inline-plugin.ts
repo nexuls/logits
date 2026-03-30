@@ -285,20 +285,20 @@ const theme = createTheme({
 
     // Subscript
     ".cm-draftly-subscript": {
-      fontSize: "0.75em",
+      fontSize: "var(--text-xs)",
       verticalAlign: "sub",
     },
 
     // Superscript
     ".cm-draftly-superscript": {
-      fontSize: "0.75em",
+      fontSize: "var(--text-xs)",
       verticalAlign: "super",
     },
 
     // Highlight
     ".cm-draftly-highlight": {
-      backgroundColor: "rgba(255, 213, 0, 0.35)",
-      borderRadius: "2px",
+      backgroundColor: "var(--draftly-surface-warning-strong)",
+      borderRadius: "var(--radius-sm)",
       padding: "1px 2px",
     },
   },

@@ -48,7 +48,7 @@ function renderMath(latex: string, displayMode: boolean): { html: string; error:
     const html = katex.renderToString(latex, {
       displayMode,
       throwOnError: false,
-      errorColor: "#d73a49",
+      errorColor: "var(--draftly-color-danger)",
       trust: false,
       strict: false,
     });
@@ -445,7 +445,7 @@ export class MathPlugin extends DecorationPlugin {
 const theme = createTheme({
   default: {
     ".cm-draftly-math-block": {
-      fontFamily: "var(--font-jetbrains-mono, monospace)",
+      fontFamily: "var(--user-monospace-font)",
     },
 
     ".cm-draftly-math-block br": {
@@ -454,14 +454,14 @@ const theme = createTheme({
 
     // Math markers ($ $$)
     ".cm-draftly-math-marker": {
-      color: "#6a737d",
-      fontFamily: "var(--font-jetbrains-mono, monospace)",
+      color: "var(--draftly-color-muted)",
+      fontFamily: "var(--user-monospace-font)",
     },
 
     // Inline math styling when editing
     ".cm-draftly-math-inline": {
-      fontFamily: "var(--font-jetbrains-mono, monospace)",
-      fontSize: "0.9em",
+      fontFamily: "var(--user-monospace-font)",
+      fontSize: "var(--text-sm)",
     },
 
     // Hidden math syntax (when cursor is not in range)
@@ -491,8 +491,8 @@ const theme = createTheme({
       justifyContent: "center",
       alignItems: "center",
       padding: "1em 0",
-      backgroundColor: "rgba(0, 0, 0, 0.02)",
-      borderRadius: "4px",
+      backgroundColor: "var(--draftly-surface-1)",
+      borderRadius: "var(--radius-sm)",
       overflow: "auto",
     },
 
@@ -500,27 +500,12 @@ const theme = createTheme({
     ".cm-draftly-math-error": {
       display: "inline-block",
       padding: "0.25em 0.5em",
-      backgroundColor: "rgba(255, 0, 0, 0.1)",
-      color: "#d73a49",
-      borderRadius: "4px",
-      fontSize: "0.875em",
+      backgroundColor: "var(--draftly-surface-danger)",
+      color: "var(--draftly-color-danger)",
+      borderRadius: "var(--radius-sm)",
+      fontSize: "var(--text-sm)",
       fontStyle: "italic",
-      fontFamily: "var(--font-jetbrains-mono, monospace)",
-    },
-  },
-
-  dark: {
-    ".cm-draftly-math-marker": {
-      color: "#8b949e",
-    },
-
-    ".cm-draftly-math-rendered-block": {
-      backgroundColor: "rgba(255, 255, 255, 0.02)",
-    },
-
-    ".cm-draftly-math-error": {
-      backgroundColor: "rgba(255, 0, 0, 0.15)",
-      color: "#f85149",
+      fontFamily: "var(--user-monospace-font)",
     },
   },
 });

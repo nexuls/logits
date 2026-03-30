@@ -3,7 +3,7 @@ import { useTheme } from "next-themes";
 
 import { allPlugins, draftly, ThemeEnum } from "@/components/draftly";
 import CodeMirror, { type Extension } from "@uiw/react-codemirror";
-import { githubDark } from "@uiw/codemirror-theme-github";
+import { githubDark, githubLight } from "@uiw/codemirror-theme-github";
 import type { ViewUpdate } from "@codemirror/view";
 
 type Props = {
@@ -85,7 +85,13 @@ export default function Editor({
             ),
           });
         }}
-        theme={githubDark}
+        theme={
+          theme && theme !== "system"
+            ? theme.includes("dark")
+              ? githubDark
+              : githubLight
+            : undefined
+        }
         extensions={[...defaultExtensions]}
         basicSetup={{
           lineNumbers: mode === "code",
