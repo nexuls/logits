@@ -1,9 +1,10 @@
 import { useMemo } from "react";
+import { useTheme } from "next-themes";
+
+import { allPlugins, draftly, ThemeEnum } from "@/components/draftly";
 import CodeMirror, { type Extension } from "@uiw/react-codemirror";
 import { githubDark } from "@uiw/codemirror-theme-github";
 import type { ViewUpdate } from "@codemirror/view";
-import { allPlugins, draftly, ThemeEnum } from "draftly";
-import { useTheme } from "next-themes";
 
 type Props = {
   mode: "code" | "markdown";
