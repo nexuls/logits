@@ -3,7 +3,7 @@
 ## 1) Overview
 
 ### Project Summary
-Logits is a Next.js + React + TypeScript notebook application focused on creating, organizing, and editing notebook content in a modern browser-first experience.
+Logits is a Next.js + React + TypeScript + bun notebook application focused on creating, organizing, and editing notebook content in a modern browser-first experience.
 
 The app provides:
 - Notebook and file organization

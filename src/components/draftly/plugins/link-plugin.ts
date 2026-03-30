@@ -1,8 +1,13 @@
-import { Decoration, EditorView, KeyBinding, WidgetType } from "@codemirror/view";
+import {
+  Decoration,
+  type EditorView,
+  type KeyBinding,
+  WidgetType,
+} from "@codemirror/view";
 import { syntaxTree } from "@codemirror/language";
-import { DecorationContext, DecorationPlugin } from "../editor/plugin";
+import { type DecorationContext, DecorationPlugin } from "../editor/plugin";
 import { createTheme } from "../editor";
-import { SyntaxNode } from "@lezer/common";
+import type { SyntaxNode } from "@lezer/common";
 
 /**
  * Mark decorations for link syntax elements
@@ -18,9 +23,13 @@ const linkMarkDecorations = {
  * Parse link markdown to extract text and URL
  * Format: [text](url) or [text](url "title")
  */
-function parseLinkMarkdown(content: string): { text: string; url: string; title?: string } | null {
+function parseLinkMarkdown(
+  content: string,
+): { text: string; url: string; title?: string } | null {
   // Regex to match: [text](url) or [text](url "title")
-  const match = content.match(/^\[([^\]]*)\]\(([^"\s)]+)(?:\s+"([^"]*)")?\s*\)$/);
+  const match = content.match(
+    /^\[([^\]]*)\]\(([^"\s)]+)(?:\s+"([^"]*)")?\s*\)$/,
+  );
   if (!match) return null;
 
   const result: { text: string; url: string; title?: string } = {
@@ -42,13 +51,15 @@ class LinkTooltipWidget extends WidgetType {
   constructor(
     readonly url: string,
     readonly from: number,
-    readonly to: number
+    readonly to: number,
   ) {
     super();
   }
 
   override eq(other: LinkTooltipWidget): boolean {
-    return other.url === this.url && other.from === this.from && other.to === this.to;
+    return (
+      other.url === this.url && other.from === this.from && other.to === this.to
+    );
   }
 
   toDOM(view: EditorView) {
@@ -95,7 +106,11 @@ class LinkTooltipWidget extends WidgetType {
 
   override ignoreEvent(event: Event): boolean {
     // Allow click and mouse events to be handled by our handlers
-    return event.type !== "click" && event.type !== "mouseenter" && event.type !== "mouseleave";
+    return (
+      event.type !== "click" &&
+      event.type !== "mouseenter" &&
+      event.type !== "mouseleave"
+    );
   }
 }
 
@@ -114,10 +129,6 @@ export class LinkPlugin extends DecorationPlugin {
   readonly version = "1.0.0";
   override decorationPriority = 22;
   override readonly requiredNodes = ["Link"] as const;
-
-  constructor() {
-    super();
-  }
 
   /**
    * Plugin theme
@@ -240,21 +251,29 @@ export class LinkPlugin extends DecorationPlugin {
           } else {
             // Cursor out of range: hide raw markdown, show styled link text
             // Hide the entire markdown syntax
-            decorations.push(linkMarkDecorations["link-hidden"].range(from, to));
+            decorations.push(
+              linkMarkDecorations["link-hidden"].range(from, to),
+            );
 
             // Add styled link text with tooltip widget after the hidden markdown
             decorations.push(
               Decoration.widget({
                 widget: new LinkTooltipWidget(parsed.url, from, to),
                 side: 1,
-              }).range(to)
+              }).range(to),
             );
 
             // Add replacement decoration to show styled link text
             decorations.push(
               Decoration.replace({
-                widget: new LinkTextWidget(parsed.text, parsed.url, from, to, parsed.title),
-              }).range(from, to)
+                widget: new LinkTextWidget(
+                  parsed.text,
+                  parsed.url,
+                  from,
+                  to,
+                  parsed.title,
+                ),
+              }).range(from, to),
             );
           }
         }
@@ -268,33 +287,47 @@ export class LinkPlugin extends DecorationPlugin {
   private decorateRawLink(
     node: SyntaxNode,
     decorations: import("@codemirror/state").Range<Decoration>[],
-    view: import("@codemirror/view").EditorView
+    view: import("@codemirror/view").EditorView,
   ): void {
     const content = view.state.sliceDoc(node.from, node.to);
 
     // Style the opening bracket [
-    decorations.push(linkMarkDecorations["link-marker"].range(node.from, node.from + 1));
+    decorations.push(
+      linkMarkDecorations["link-marker"].range(node.from, node.from + 1),
+    );
 
     // Find and style the link text and closing bracket + opening paren ](
     const bracketParen = content.indexOf("](");
     if (bracketParen !== -1) {
       // Style link text
       if (bracketParen > 1) {
-        decorations.push(linkMarkDecorations["link-text"].range(node.from + 1, node.from + bracketParen));
+        decorations.push(
+          linkMarkDecorations["link-text"].range(
+            node.from + 1,
+            node.from + bracketParen,
+          ),
+        );
       }
       // Style ]( markers
       decorations.push(
-        linkMarkDecorations["link-marker"].range(node.from + bracketParen, node.from + bracketParen + 2)
+        linkMarkDecorations["link-marker"].range(
+          node.from + bracketParen,
+          node.from + bracketParen + 2,
+        ),
       );
 
       // Find and style the URL
       const urlChild = node.getChild("URL");
       if (urlChild) {
-        decorations.push(linkMarkDecorations["link-url"].range(urlChild.from, urlChild.to));
+        decorations.push(
+          linkMarkDecorations["link-url"].range(urlChild.from, urlChild.to),
+        );
       }
 
       // Style closing )
-      decorations.push(linkMarkDecorations["link-marker"].range(node.to - 1, node.to));
+      decorations.push(
+        linkMarkDecorations["link-marker"].range(node.to - 1, node.to),
+      );
     }
   }
 
@@ -304,7 +337,10 @@ export class LinkPlugin extends DecorationPlugin {
   override renderToHTML(
     node: SyntaxNode,
     _children: string,
-    ctx: { sliceDoc(from: number, to: number): string; sanitize(html: string): string }
+    ctx: {
+      sliceDoc(from: number, to: number): string;
+      sanitize(html: string): string;
+    },
   ): string | null {
     if (node.name !== "Link") return null;
 
@@ -314,7 +350,9 @@ export class LinkPlugin extends DecorationPlugin {
 
     const textContent = ctx.sanitize(parsed.text);
     const urlAttr = ctx.sanitize(parsed.url);
-    const titleAttr = parsed.title ? ` title="${ctx.sanitize(parsed.title)}"` : "";
+    const titleAttr = parsed.title
+      ? ` title="${ctx.sanitize(parsed.title)}"`
+      : "";
 
     return `<a class="cm-draftly-link" href="${urlAttr}"${titleAttr} target="_blank" rel="noopener noreferrer">${textContent}</a>`;
   }
@@ -329,7 +367,7 @@ class LinkTextWidget extends WidgetType {
     readonly url: string,
     readonly from: number,
     readonly to: number,
-    readonly title?: string
+    readonly title?: string,
   ) {
     super();
   }
@@ -393,7 +431,11 @@ class LinkTextWidget extends WidgetType {
 
   override ignoreEvent(event: Event): boolean {
     // Allow click and mouse events to be handled by our handlers
-    return event.type !== "click" && event.type !== "mouseenter" && event.type !== "mouseleave";
+    return (
+      event.type !== "click" &&
+      event.type !== "mouseenter" &&
+      event.type !== "mouseleave"
+    );
   }
 }
 

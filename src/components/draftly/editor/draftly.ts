@@ -1,7 +1,21 @@
 import { type Extension, Prec } from "@codemirror/state";
-import { EditorView, highlightActiveLine, type KeyBinding, keymap } from "@codemirror/view";
-import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands";
-import { markdown, markdownKeymap, markdownLanguage } from "@codemirror/lang-markdown";
+import {
+  EditorView,
+  highlightActiveLine,
+  type KeyBinding,
+  keymap,
+} from "@codemirror/view";
+import {
+  defaultKeymap,
+  history,
+  historyKeymap,
+  indentWithTab,
+} from "@codemirror/commands";
+import {
+  markdown,
+  markdownKeymap,
+  markdownLanguage,
+} from "@codemirror/lang-markdown";
 import type { MarkdownConfig } from "@lezer/markdown";
 import { languages } from "@codemirror/language-data";
 import { indentOnInput } from "@codemirror/language";
@@ -166,17 +180,29 @@ export function draftly(config: DraftlyConfig = {}): Extension[] {
   const baseExtensions: Extension[] = [
     ...(defaultKeybindings ? [keymap.of(defaultKeymap)] : []),
     ...(configHistory ? [history(), keymap.of(historyKeymap)] : []),
-    ...(configIndentWithTab ? [indentOnInput(), keymap.of([indentWithTab])] : []),
-    ...(configHighlightActiveLine && disableViewPlugin ? [highlightActiveLine()] : []),
+    ...(configIndentWithTab
+      ? [indentOnInput(), keymap.of([indentWithTab])]
+      : []),
+    ...(configHighlightActiveLine && disableViewPlugin
+      ? [highlightActiveLine()]
+      : []),
   ];
 
   // draftly extensions (pass plugins for decoration support)
   const draftlyExtensions: Extension[] = [];
   if (!disableViewPlugin) {
-    draftlyExtensions.push(createDraftlyViewExtension(configTheme, baseStyles, allPlugins, configOnNodesChange));
+    draftlyExtensions.push(
+      createDraftlyViewExtension(
+        configTheme,
+        baseStyles,
+        allPlugins,
+        configOnNodesChange,
+      ),
+    );
     draftlyExtensions.push(Prec.highest(markdownResetExtension));
   }
-  if (!disableViewPlugin || configLineWrapping) draftlyExtensions.push(EditorView.lineWrapping);
+  if (!disableViewPlugin || configLineWrapping)
+    draftlyExtensions.push(EditorView.lineWrapping);
 
   // Compose all extensions together
   const composedExtensions: Extension[] = [

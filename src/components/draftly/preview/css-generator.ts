@@ -1,5 +1,5 @@
 import { ThemeEnum } from "../editor/utils";
-import { GenerateCSSConfig } from "./types";
+import type { GenerateCSSConfig } from "./types";
 import { generateSyntaxThemeCSS } from "./syntax-theme";
 
 /**
@@ -42,7 +42,9 @@ export function generateCSS(config: GenerateCSSConfig = {}): string {
   if (includeBase) {
     // Replace default wrapper class if custom one is provided
     if (wrapperClass !== "draftly-preview") {
-      cssChunks.push(baseStyles.replace(/\.draftly-preview/g, `.${wrapperClass}`));
+      cssChunks.push(
+        baseStyles.replace(/\.draftly-preview/g, `.${wrapperClass}`),
+      );
     } else {
       cssChunks.push(baseStyles);
     }
@@ -51,13 +53,14 @@ export function generateCSS(config: GenerateCSSConfig = {}): string {
   // Collect syntax highlight styles (`tok-*` classes) from CodeMirror theme/extensions
   const syntaxCSS = generateSyntaxThemeCSS(syntaxTheme, wrapperClass);
   if (syntaxCSS) {
-    cssChunks.push("/* syntax-theme */\n" + syntaxCSS);
+    cssChunks.push(`/* syntax-theme */\n${syntaxCSS}`);
   }
 
   // Collect styles from plugins
   for (const plugin of plugins) {
     const pluginCSS = plugin.getPreviewStyles(theme, wrapperClass);
-    if (pluginCSS) cssChunks.push(`/* ${plugin.name} - ${plugin.version} */\n` + pluginCSS);
+    if (pluginCSS)
+      cssChunks.push(`/* ${plugin.name} - ${plugin.version} */\n${pluginCSS}`);
   }
 
   return cssChunks.join("\n\n");

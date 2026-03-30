@@ -1,7 +1,5 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { SidebarFooter } from "@/components/ui/sidebar";
 import { NavUser } from "./nav-user";
 

@@ -1,11 +1,17 @@
-import { Decoration, EditorView, WidgetType } from "@codemirror/view";
-import { Extension } from "@codemirror/state";
+import { Decoration, type EditorView, WidgetType } from "@codemirror/view";
+import type { Extension } from "@codemirror/state";
 import { syntaxTree } from "@codemirror/language";
-import { DecorationContext, DecorationPlugin } from "../editor/plugin";
+import { type DecorationContext, DecorationPlugin } from "../editor/plugin";
 import { createTheme } from "../editor";
-import { SyntaxNode } from "@lezer/common";
+import type { SyntaxNode } from "@lezer/common";
 import { tags } from "@lezer/highlight";
-import type { MarkdownConfig, InlineParser, BlockParser, Line, BlockContext } from "@lezer/markdown";
+import type {
+  MarkdownConfig,
+  InlineParser,
+  BlockParser,
+  Line,
+  BlockContext,
+} from "@lezer/markdown";
 import katex from "katex";
 import { createWrapSelectionInputHandler } from "../lib";
 // @ts-expect-error - raw import for CSS as string
@@ -43,7 +49,10 @@ const mathMarkDecorations = {
 /**
  * Render LaTeX to HTML using KaTeX
  */
-function renderMath(latex: string, displayMode: boolean): { html: string; error: string | null } {
+function renderMath(
+  latex: string,
+  displayMode: boolean,
+): { html: string; error: string | null } {
   try {
     const html = katex.renderToString(latex, {
       displayMode,
@@ -66,13 +75,17 @@ class InlineMathWidget extends WidgetType {
   constructor(
     readonly latex: string,
     readonly from: number,
-    readonly to: number
+    readonly to: number,
   ) {
     super();
   }
 
   override eq(other: InlineMathWidget): boolean {
-    return other.latex === this.latex && other.from === this.from && other.to === this.to;
+    return (
+      other.latex === this.latex &&
+      other.from === this.from &&
+      other.to === this.to
+    );
   }
 
   toDOM(view: EditorView) {
@@ -115,13 +128,17 @@ class MathBlockWidget extends WidgetType {
   constructor(
     readonly latex: string,
     readonly from: number,
-    readonly to: number
+    readonly to: number,
   ) {
     super();
   }
 
   override eq(other: MathBlockWidget): boolean {
-    return other.latex === this.latex && other.from === this.from && other.to === this.to;
+    return (
+      other.latex === this.latex &&
+      other.from === this.from &&
+      other.to === this.to
+    );
   }
 
   toDOM(view: EditorView) {
@@ -186,7 +203,10 @@ const inlineMathParser: InlineParser = {
           // Create the element with markers
           const openMark = cx.elt("InlineMathMark", pos, pos + 1);
           const closeMark = cx.elt("InlineMathMark", end, end + 1);
-          const inlineMath = cx.elt("InlineMath", pos, end + 1, [openMark, closeMark]);
+          const inlineMath = cx.elt("InlineMath", pos, end + 1, [
+            openMark,
+            closeMark,
+          ]);
 
           return cx.addElement(inlineMath);
         }
@@ -242,9 +262,15 @@ const mathBlockParser: BlockParser = {
     }
 
     // Create the math block element
-    const openMark = cx.elt("MathBlockMark", startLine, startLine + text.indexOf("$$") + 2);
+    const openMark = cx.elt(
+      "MathBlockMark",
+      startLine,
+      startLine + text.indexOf("$$") + 2,
+    );
     const closeMark = cx.elt("MathBlockMark", endPos - 2, endPos);
-    cx.addElement(cx.elt("MathBlock", startLine, endPos, [openMark, closeMark]));
+    cx.addElement(
+      cx.elt("MathBlock", startLine, endPos, [openMark, closeMark]),
+    );
 
     return true;
   },
@@ -268,11 +294,12 @@ export class MathPlugin extends DecorationPlugin {
   readonly name = "math";
   readonly version = "1.0.0";
   override decorationPriority = 25;
-  override readonly requiredNodes = ["InlineMath", "MathBlock", "InlineMathMark", "MathBlockMark"] as const;
-
-  constructor() {
-    super();
-  }
+  override readonly requiredNodes = [
+    "InlineMath",
+    "MathBlock",
+    "InlineMathMark",
+    "MathBlockMark",
+  ] as const;
 
   /**
    * Plugin theme
@@ -288,7 +315,7 @@ export class MathPlugin extends DecorationPlugin {
    * with single dollars (selected -> $selected$).
    */
   override getExtensions(): Extension[] {
-    return [createWrapSelectionInputHandler({ "$": "$" })];
+    return [createWrapSelectionInputHandler({ $: "$" })];
   }
 
   /**
@@ -328,12 +355,23 @@ export class MathPlugin extends DecorationPlugin {
 
           if (cursorInRange) {
             // Show raw math with styled markers
-            decorations.push(mathMarkDecorations["math-inline"].range(from, to));
+            decorations.push(
+              mathMarkDecorations["math-inline"].range(from, to),
+            );
 
             // Style the $ markers
-            for (let child = node.node.firstChild; child; child = child.nextSibling) {
+            for (
+              let child = node.node.firstChild;
+              child;
+              child = child.nextSibling
+            ) {
               if (child.name === "InlineMathMark") {
-                decorations.push(mathMarkDecorations["math-marker"].range(child.from, child.to));
+                decorations.push(
+                  mathMarkDecorations["math-marker"].range(
+                    child.from,
+                    child.to,
+                  ),
+                );
               }
             }
           } else {
@@ -341,7 +379,7 @@ export class MathPlugin extends DecorationPlugin {
             decorations.push(
               Decoration.replace({
                 widget: new InlineMathWidget(latex, from, to),
-              }).range(from, to)
+              }).range(from, to),
             );
           }
         }
@@ -363,7 +401,10 @@ export class MathPlugin extends DecorationPlugin {
 
           const nodeLineStart = view.state.doc.lineAt(from);
           const nodeLineEnd = view.state.doc.lineAt(to);
-          const cursorInRange = ctx.selectionOverlapsRange(nodeLineStart.from, nodeLineEnd.to);
+          const cursorInRange = ctx.selectionOverlapsRange(
+            nodeLineStart.from,
+            nodeLineEnd.to,
+          );
 
           // Add line decoration for math block
           decorations.push(mathMarkDecorations["math-block"].range(from));
@@ -374,25 +415,38 @@ export class MathPlugin extends DecorationPlugin {
               widget: new MathBlockWidget(latexContent, from, to),
               side: 1,
               block: false,
-            }).range(to)
+            }).range(to),
           );
 
           for (let i = nodeLineStart.number; i <= nodeLineEnd.number; i++) {
             const line = view.state.doc.line(i);
-            decorations.push(mathMarkDecorations["math-block"].range(line.from));
+            decorations.push(
+              mathMarkDecorations["math-block"].range(line.from),
+            );
           }
 
           // Cursor in range: show raw LaTeX with styling
           if (cursorInRange) {
             // Style the $$ markers
-            for (let child = node.node.firstChild; child; child = child.nextSibling) {
+            for (
+              let child = node.node.firstChild;
+              child;
+              child = child.nextSibling
+            ) {
               if (child.name === "MathBlockMark") {
-                decorations.push(mathMarkDecorations["math-marker"].range(child.from, child.to));
+                decorations.push(
+                  mathMarkDecorations["math-marker"].range(
+                    child.from,
+                    child.to,
+                  ),
+                );
               }
             }
           } else {
             // Cursor out of range: hide the raw math text
-            decorations.push(mathMarkDecorations["math-hidden"].range(from, to));
+            decorations.push(
+              mathMarkDecorations["math-hidden"].range(from, to),
+            );
           }
         }
       },
@@ -405,7 +459,10 @@ export class MathPlugin extends DecorationPlugin {
   override renderToHTML(
     node: SyntaxNode,
     _children: string,
-    ctx: { sliceDoc(from: number, to: number): string; sanitize(html: string): string }
+    ctx: {
+      sliceDoc(from: number, to: number): string;
+      sanitize(html: string): string;
+    },
   ): string | null {
     if (node.name === "InlineMath") {
       const content = ctx.sliceDoc(node.from, node.to);
@@ -421,7 +478,10 @@ export class MathPlugin extends DecorationPlugin {
     if (node.name === "MathBlock") {
       const content = ctx.sliceDoc(node.from, node.to);
       const lines = content.split("\n");
-      const latex = lines.length > 1 ? lines.slice(1, -1).join("\n").trim() : content.slice(2, -2).trim();
+      const latex =
+        lines.length > 1
+          ? lines.slice(1, -1).join("\n").trim()
+          : content.slice(2, -2).trim();
       const { html, error } = renderMath(latex, true);
 
       if (error) {

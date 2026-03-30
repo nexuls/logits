@@ -1,4 +1,4 @@
-import { EditorSelection, Extension } from "@codemirror/state";
+import { EditorSelection, type Extension } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 
 /**
@@ -13,7 +13,9 @@ export type WrapSelectionMarkerMap = Record<string, string>;
  * Creates an input handler that wraps non-empty selections with markdown markers
  * when a mapped character is typed.
  */
-export function createWrapSelectionInputHandler(markersByInput: WrapSelectionMarkerMap): Extension {
+export function createWrapSelectionInputHandler(
+  markersByInput: WrapSelectionMarkerMap,
+): Extension {
   return EditorView.inputHandler.of((view, _from, _to, text) => {
     const marker = markersByInput[text];
     if (!marker) {
@@ -33,11 +35,19 @@ export function createWrapSelectionInputHandler(markersByInput: WrapSelectionMar
       }))
       .reverse();
 
-    const nextRanges = ranges.map((range) => EditorSelection.range(range.from + marker.length, range.to + marker.length));
+    const nextRanges = ranges.map((range) =>
+      EditorSelection.range(
+        range.from + marker.length,
+        range.to + marker.length,
+      ),
+    );
 
     view.dispatch({
       changes,
-      selection: EditorSelection.create(nextRanges, view.state.selection.mainIndex),
+      selection: EditorSelection.create(
+        nextRanges,
+        view.state.selection.mainIndex,
+      ),
     });
 
     return true;

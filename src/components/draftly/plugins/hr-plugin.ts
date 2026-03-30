@@ -1,8 +1,8 @@
 import { Decoration } from "@codemirror/view";
 import { syntaxTree } from "@codemirror/language";
-import { DecorationContext, DecorationPlugin } from "../editor/plugin";
+import { type DecorationContext, DecorationPlugin } from "../editor/plugin";
 import { createTheme } from "../editor";
-import { SyntaxNode } from "@lezer/common";
+import type { SyntaxNode } from "@lezer/common";
 
 /**
  * Line decoration for horizontal rule lines
@@ -26,13 +26,6 @@ export class HRPlugin extends DecorationPlugin {
   readonly version = "1.0.0";
   override decorationPriority = 10;
   override readonly requiredNodes = ["HorizontalRule"] as const;
-
-  /**
-   * Constructor - calls super constructor
-   */
-  constructor() {
-    super();
-  }
 
   /**
    * Plugin theme

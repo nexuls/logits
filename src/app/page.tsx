@@ -3,8 +3,8 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpenText } from "lucide-react";
-import Header from "@/components/header";
 import { useNotebooks } from "@/hooks/use-notebooks";
+import Header from "@/components/header/index";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -19,9 +19,7 @@ export default function Home() {
   const { notebooks, isHydrating, createNotebook } = useNotebooks();
 
   useEffect(() => {
-    if (isHydrating || !notebooks.length) {
-      return;
-    }
+    if (isHydrating || !notebooks.length) return;
 
     router.replace(`/p/${notebooks[0].id}`);
   }, [isHydrating, notebooks, router]);

@@ -5,7 +5,8 @@ export function WorkspaceSettingsPage() {
     <div className="space-y-2">
       <h2 className="text-lg font-semibold">Workspace</h2>
       <p className="text-sm text-muted-foreground">
-        Workspace settings module placeholder. Layout and project defaults will be added here.
+        Workspace settings module placeholder. Layout and project defaults will
+        be added here.
       </p>
     </div>
   );

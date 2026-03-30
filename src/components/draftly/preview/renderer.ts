@@ -1,25 +1,26 @@
-import { SyntaxNode } from "@lezer/common";
+import type { SyntaxNode } from "@lezer/common";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
-import { MarkdownConfig } from "@lezer/markdown";
+import type { MarkdownConfig } from "@lezer/markdown";
 import { languages } from "@codemirror/language-data";
 
-import { DraftlyPlugin } from "../editor/plugin";
+import type { DraftlyPlugin } from "../editor/plugin";
 import { ThemeEnum } from "../editor/utils";
 import { createPreviewContext } from "./context";
 import { defaultRenderers, escapeHtml } from "./default-renderers";
 import { resolveSyntaxHighlighters } from "./syntax-theme";
-import { NodeRendererMap, PreviewContext } from "./types";
+import type { NodeRendererMap, PreviewContext } from "./types";
 
 /**
  * Renderer class that walks the syntax tree and produces HTML
  */
 export class PreviewRenderer {
   private doc: string;
-  private theme: ThemeEnum;
   private plugins: DraftlyPlugin[];
   private markdown: MarkdownConfig[];
-  private sanitizeHtml: boolean;
-  private syntaxTheme: import("./types").SyntaxThemeInput | import("./types").SyntaxThemeInput[] | undefined;
+  private syntaxTheme:
+    | import("./types").SyntaxThemeInput
+    | import("./types").SyntaxThemeInput[]
+    | undefined;
   private renderers: NodeRendererMap;
   private ctx: PreviewContext;
   private nodeToPlugins: Map<string, DraftlyPlugin[]>;
@@ -30,7 +31,9 @@ export class PreviewRenderer {
     markdown: MarkdownConfig[],
     theme: ThemeEnum = ThemeEnum.AUTO,
     sanitize: boolean = true,
-    syntaxTheme?: import("./types").SyntaxThemeInput | import("./types").SyntaxThemeInput[]
+    syntaxTheme?:
+      | import("./types").SyntaxThemeInput
+      | import("./types").SyntaxThemeInput[],
   ) {
     this.doc = doc;
     this.theme = theme;
@@ -40,10 +43,19 @@ export class PreviewRenderer {
     this.syntaxTheme = syntaxTheme;
     this.renderers = { ...defaultRenderers };
 
-    const syntaxHighlighters = resolveSyntaxHighlighters(this.syntaxTheme, true);
+    const syntaxHighlighters = resolveSyntaxHighlighters(
+      this.syntaxTheme,
+      true,
+    );
 
     // Create context with reference to renderChildren
-    this.ctx = createPreviewContext(doc, theme, this.renderChildren.bind(this), sanitize, syntaxHighlighters);
+    this.ctx = createPreviewContext(
+      doc,
+      theme,
+      this.renderChildren.bind(this),
+      sanitize,
+      syntaxHighlighters,
+    );
 
     // Build node-to-plugin map for O(1) lookup
     this.nodeToPlugins = this.buildNodePluginMap();
@@ -73,7 +85,9 @@ export class PreviewRenderer {
     // Collect markdown extensions from plugins
     const extensions = [
       ...this.markdown,
-      ...this.plugins.map((p) => p.getMarkdownConfig()).filter((ext): ext is NonNullable<typeof ext> => ext !== null),
+      ...this.plugins
+        .map((p) => p.getMarkdownConfig())
+        .filter((ext): ext is NonNullable<typeof ext> => ext !== null),
     ];
 
     // Build parser through @codemirror/lang-markdown to match editor behavior exactly
@@ -103,7 +117,7 @@ export class PreviewRenderer {
     if (plugins) {
       for (const plugin of plugins) {
         const children = await this.renderChildren(node);
-        const result = await plugin.renderToHTML!(node, children, this.ctx);
+        const result = await plugin.renderToHTML?.(node, children, this.ctx);
         if (result !== null) {
           return result;
         }

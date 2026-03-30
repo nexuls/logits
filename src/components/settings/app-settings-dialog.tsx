@@ -92,7 +92,8 @@ export function AppSettingsDialog({ open, onOpenChange }: Props) {
   const colorScheme = settings.appearance?.colorScheme ?? DEFAULT_COLOR_SCHEME;
   const fontSize =
     settings.appearance?.fontSize ?? APPEARANCE_FONT_SCALE_DEFAULT;
-  const interfaceFont = settings.appearance?.interfaceFont ?? DEFAULT_INTERFACE_FONT;
+  const interfaceFont =
+    settings.appearance?.interfaceFont ?? DEFAULT_INTERFACE_FONT;
   const textFont = settings.appearance?.textFont ?? DEFAULT_TEXT_FONT;
   const monospaceFont =
     settings.appearance?.monospaceFont ?? DEFAULT_MONOSPACE_FONT;
@@ -119,7 +120,9 @@ export function AppSettingsDialog({ open, onOpenChange }: Props) {
     updateAppearanceSettings({ fontSize: nextFontSize });
   }
 
-  function handleInterfaceFontChange(nextInterfaceFont: AppearanceInterfaceFont) {
+  function handleInterfaceFontChange(
+    nextInterfaceFont: AppearanceInterfaceFont,
+  ) {
     updateAppearanceSettings({ interfaceFont: nextInterfaceFont });
   }
 
@@ -127,7 +130,9 @@ export function AppSettingsDialog({ open, onOpenChange }: Props) {
     updateAppearanceSettings({ textFont: nextTextFont });
   }
 
-  function handleMonospaceFontChange(nextMonospaceFont: AppearanceMonospaceFont) {
+  function handleMonospaceFontChange(
+    nextMonospaceFont: AppearanceMonospaceFont,
+  ) {
     updateAppearanceSettings({ monospaceFont: nextMonospaceFont });
   }
 

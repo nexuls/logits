@@ -1,6 +1,6 @@
 import { ThemeEnum } from "../editor/utils";
 import { PreviewRenderer } from "./renderer";
-import { PreviewConfig } from "./types";
+import type { PreviewConfig } from "./types";
 
 /**
  * Render markdown to semantic HTML
@@ -20,7 +20,10 @@ import { PreviewConfig } from "./types";
  * });
  * ```
  */
-export async function preview(markdown: string, config: PreviewConfig = {}): Promise<string> {
+export async function preview(
+  markdown: string,
+  config: PreviewConfig = {},
+): Promise<string> {
   const {
     plugins = [],
     markdown: markdownConfig = [],
@@ -32,7 +35,14 @@ export async function preview(markdown: string, config: PreviewConfig = {}): Pro
   } = config;
 
   // Create renderer and generate HTML
-  const renderer = new PreviewRenderer(markdown, plugins, markdownConfig, theme, sanitize, syntaxTheme);
+  const renderer = new PreviewRenderer(
+    markdown,
+    plugins,
+    markdownConfig,
+    theme,
+    sanitize,
+    syntaxTheme,
+  );
   const content = await renderer.render();
 
   // Wrap in container

@@ -75,7 +75,9 @@ export function dumpResolvedSystemThemeToCookie(theme: "light" | "dark") {
   ].join("; ");
 }
 
-export function retrieveResolvedSystemThemeFromCookieValue(value?: string | null) {
+export function retrieveResolvedSystemThemeFromCookieValue(
+  value?: string | null,
+) {
   if (value === "light" || value === "dark") {
     return value;
   }

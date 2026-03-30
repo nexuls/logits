@@ -1,11 +1,29 @@
-import { Annotation, EditorState, Extension, Prec, Range, RangeSet } from "@codemirror/state";
+import {
+  Annotation,
+  type EditorState,
+  type Extension,
+  Prec,
+  type Range,
+  RangeSet,
+} from "@codemirror/state";
 import { syntaxTree } from "@codemirror/language";
-import { BlockWrapper, Decoration, EditorView, KeyBinding, WidgetType, keymap } from "@codemirror/view";
-import { SyntaxNode } from "@lezer/common";
-import { MarkdownConfig, Table } from "@lezer/markdown";
+import {
+  BlockWrapper,
+  Decoration,
+  EditorView,
+  type KeyBinding,
+  WidgetType,
+  keymap,
+} from "@codemirror/view";
+import type { SyntaxNode } from "@lezer/common";
+import { type MarkdownConfig, Table } from "@lezer/markdown";
 import { createTheme } from "../editor";
-import { DraftlyConfig } from "../editor/draftly";
-import { DecorationContext, DecorationPlugin, PluginContext } from "../editor/plugin";
+import type { DraftlyConfig } from "../editor/draftly";
+import {
+  type DecorationContext,
+  DecorationPlugin,
+  type PluginContext,
+} from "../editor/plugin";
 import { ThemeEnum } from "../editor/utils";
 import { PreviewRenderer } from "../preview/renderer";
 
@@ -52,7 +70,12 @@ interface TableInfo {
 const BREAK_TAG = "<br />";
 const BREAK_TAG_REGEX = /<br\s*\/?>/gi;
 const DELIMITER_CELL_PATTERN = /^:?-{3,}:?$/;
-const TABLE_SUB_NODE_NAMES = new Set(["TableHeader", "TableDelimiter", "TableRow", "TableCell"]);
+const TABLE_SUB_NODE_NAMES = new Set([
+  "TableHeader",
+  "TableDelimiter",
+  "TableRow",
+  "TableCell",
+]);
 const TABLE_TEMPLATE: ParsedTable = {
   headers: ["Header 1", "Header 2", "Header 3"],
   alignments: ["left", "left", "left"],
@@ -93,7 +116,7 @@ class TableBreakWidget extends WidgetType {
 class TableControlsWidget extends WidgetType {
   constructor(
     private readonly onAddRow: (view: EditorView) => void,
-    private readonly onAddColumn: (view: EditorView) => void
+    private readonly onAddColumn: (view: EditorView) => void,
   ) {
     super();
   }
@@ -109,14 +132,20 @@ class TableControlsWidget extends WidgetType {
     anchor.className = "cm-draftly-table-controls-anchor";
     anchor.setAttribute("aria-hidden", "true");
 
-    const rightButton = this.createButton("Add column", "cm-draftly-table-control cm-draftly-table-control-column");
+    const rightButton = this.createButton(
+      "Add column",
+      "cm-draftly-table-control cm-draftly-table-control-column",
+    );
     rightButton.addEventListener("mousedown", (event) => {
       event.preventDefault();
       event.stopPropagation();
       this.onAddColumn(view);
     });
 
-    const bottomButton = this.createButton("Add row", "cm-draftly-table-control cm-draftly-table-control-row");
+    const bottomButton = this.createButton(
+      "Add row",
+      "cm-draftly-table-control cm-draftly-table-control-row",
+    );
     bottomButton.addEventListener("mousedown", (event) => {
       event.preventDefault();
       event.stopPropagation();
@@ -213,14 +242,20 @@ function parseAlignment(cell: string): Alignment {
 /** Parses the delimiter line and returns per-column alignments. */
 function parseDelimiterAlignments(lineText: string): Alignment[] | null {
   const cells = splitTableLine(lineText).map((cell) => cell.trim());
-  if (cells.length === 0 || !cells.every((cell) => DELIMITER_CELL_PATTERN.test(cell))) {
+  if (
+    cells.length === 0 ||
+    !cells.every((cell) => DELIMITER_CELL_PATTERN.test(cell))
+  ) {
     return null;
   }
   return cells.map(parseAlignment);
 }
 
 /** Splits a table node slice into its table lines and any trailing markdown. */
-function splitTableAndTrailingMarkdown(markdown: string): { tableMarkdown: string; trailingMarkdown: string } {
+function splitTableAndTrailingMarkdown(markdown: string): {
+  tableMarkdown: string;
+  trailingMarkdown: string;
+} {
   const lines = markdown.split("\n");
   if (lines.length < 2) {
     return { tableMarkdown: markdown, trailingMarkdown: "" };
@@ -272,7 +307,9 @@ function normalizeCellContent(text: string): string {
     return "";
   }
 
-  const parts = normalizedBreaks.split(BREAK_TAG_REGEX).map((part) => escapeUnescapedPipes(part.trim()));
+  const parts = normalizedBreaks
+    .split(BREAK_TAG_REGEX)
+    .map((part) => escapeUnescapedPipes(part.trim()));
   if (parts.length === 1) {
     return parts[0] || "";
   }
@@ -282,7 +319,9 @@ function normalizeCellContent(text: string): string {
 
 /** Measures the visible width of a cell for markdown alignment output. */
 function renderWidth(text: string): number {
-  return canonicalizeBreakTags(text).replace(BREAK_TAG, " ").replace(/\\\|/g, "|").length;
+  return canonicalizeBreakTags(text)
+    .replace(BREAK_TAG, " ")
+    .replace(/\\\|/g, "|").length;
 }
 
 /** Pads a cell according to its alignment for normalized markdown output. */
@@ -310,10 +349,10 @@ function padCell(text: string, width: number, alignment: Alignment): string {
 function delimiterCell(width: number, alignment: Alignment): string {
   const hyphenCount = Math.max(width, 3);
   if (alignment === "center") {
-    return ":" + "-".repeat(Math.max(1, hyphenCount - 2)) + ":";
+    return `:${"-".repeat(Math.max(1, hyphenCount - 2))}:`;
   }
   if (alignment === "right") {
-    return "-".repeat(Math.max(2, hyphenCount - 1)) + ":";
+    return `${"-".repeat(Math.max(2, hyphenCount - 1))}:`;
   }
   return "-".repeat(hyphenCount);
 }
@@ -346,13 +385,20 @@ function normalizeParsedTable(parsed: ParsedTable): ParsedTable {
     parsed.headers.length,
     parsed.alignments.length,
     ...parsed.rows.map((row) => row.length),
-    1
+    1,
   );
 
-  const headers = Array.from({ length: columnCount }, (_, index) => normalizeCellContent(parsed.headers[index] || ""));
-  const alignments = Array.from({ length: columnCount }, (_, index) => parsed.alignments[index] || "left");
+  const headers = Array.from({ length: columnCount }, (_, index) =>
+    normalizeCellContent(parsed.headers[index] || ""),
+  );
+  const alignments = Array.from(
+    { length: columnCount },
+    (_, index) => parsed.alignments[index] || "left",
+  );
   const rows = parsed.rows.map((row) =>
-    Array.from({ length: columnCount }, (_, index) => normalizeCellContent(row[index] || ""))
+    Array.from({ length: columnCount }, (_, index) =>
+      normalizeCellContent(row[index] || ""),
+    ),
   );
 
   return { headers, alignments, rows };
@@ -362,7 +408,11 @@ function normalizeParsedTable(parsed: ParsedTable): ParsedTable {
 function formatTableMarkdown(parsed: ParsedTable): string {
   const normalized = normalizeParsedTable(parsed);
   const widths = normalized.headers.map((header, index) =>
-    Math.max(renderWidth(header), ...normalized.rows.map((row) => renderWidth(row[index] || "")), 3)
+    Math.max(
+      renderWidth(header),
+      ...normalized.rows.map((row) => renderWidth(row[index] || "")),
+      3,
+    ),
   );
 
   const formatRow = (cells: string[]) =>
@@ -383,9 +433,20 @@ function buildEmptyRow(columnCount: number): string[] {
 }
 
 /** Creates a preview renderer that skips paragraph wrapping inside cells. */
-function createPreviewRenderer(markdown: string, config?: DraftlyConfig): PreviewRenderer {
-  const plugins = (config?.plugins || []).filter((plugin) => plugin.name !== "paragraph");
-  return new PreviewRenderer(markdown, plugins, config?.markdown || [], config?.theme || ThemeEnum.AUTO, true);
+function createPreviewRenderer(
+  markdown: string,
+  config?: DraftlyConfig,
+): PreviewRenderer {
+  const plugins = (config?.plugins || []).filter(
+    (plugin) => plugin.name !== "paragraph",
+  );
+  return new PreviewRenderer(
+    markdown,
+    plugins,
+    config?.markdown || [],
+    config?.theme || ThemeEnum.AUTO,
+    true,
+  );
 }
 
 /** Removes a single top-level paragraph wrapper from preview HTML. */
@@ -396,23 +457,36 @@ function stripSingleParagraph(html: string): string {
 }
 
 /** Renders one table cell through the preview pipeline. */
-async function renderCellToHtml(text: string, config?: DraftlyConfig): Promise<string> {
+async function renderCellToHtml(
+  text: string,
+  config?: DraftlyConfig,
+): Promise<string> {
   if (!text.trim()) {
     return "&nbsp;";
   }
 
-  return stripSingleParagraph(await createPreviewRenderer(text, config).render());
+  return stripSingleParagraph(
+    await createPreviewRenderer(text, config).render(),
+  );
 }
 
 /** Renders a parsed table into semantic preview HTML. */
-async function renderTableToHtml(parsed: ParsedTable, config?: DraftlyConfig): Promise<string> {
+async function renderTableToHtml(
+  parsed: ParsedTable,
+  config?: DraftlyConfig,
+): Promise<string> {
   const normalized = normalizeParsedTable(parsed);
-  let html = '<div class="cm-draftly-table-widget"><table class="cm-draftly-table cm-draftly-table-preview">';
-  html += '<thead><tr class="cm-draftly-table-row cm-draftly-table-header-row">';
+  let html =
+    '<div class="cm-draftly-table-widget"><table class="cm-draftly-table cm-draftly-table-preview">';
+  html +=
+    '<thead><tr class="cm-draftly-table-row cm-draftly-table-header-row">';
 
   for (let index = 0; index < normalized.headers.length; index++) {
     const alignment = normalized.alignments[index] || "left";
-    const content = await renderCellToHtml(normalized.headers[index] || "", config);
+    const content = await renderCellToHtml(
+      normalized.headers[index] || "",
+      config,
+    );
     html += `<th class="cm-draftly-table-cell cm-draftly-table-th${
       alignment === "center"
         ? " cm-draftly-table-cell-center"
@@ -450,13 +524,19 @@ async function renderTableToHtml(parsed: ParsedTable, config?: DraftlyConfig): P
 }
 
 /** Finds the visible content bounds inside a raw table cell span. */
-function getVisibleBounds(rawCellText: string): { startOffset: number; endOffset: number } {
+function getVisibleBounds(rawCellText: string): {
+  startOffset: number;
+  endOffset: number;
+} {
   const leading = rawCellText.length - rawCellText.trimStart().length;
   const trailing = rawCellText.length - rawCellText.trimEnd().length;
   const trimmedLength = rawCellText.trim().length;
 
   if (trimmedLength === 0) {
-    const placeholderOffset = Math.min(Math.floor(rawCellText.length / 2), Math.max(rawCellText.length - 1, 0));
+    const placeholderOffset = Math.min(
+      Math.floor(rawCellText.length / 2),
+      Math.max(rawCellText.length - 1, 0),
+    );
     return {
       startOffset: placeholderOffset,
       endOffset: Math.min(placeholderOffset + 1, rawCellText.length),
@@ -477,9 +557,13 @@ function isBodyRowEmpty(row: TableCellInfo[]): boolean {
 /** Converts the live editor table model into a serializable table structure. */
 function buildTableFromInfo(tableInfo: TableInfo): ParsedTable {
   return {
-    headers: tableInfo.headerCells.map((cell) => normalizeCellContent(cell.rawText)),
+    headers: tableInfo.headerCells.map((cell) =>
+      normalizeCellContent(cell.rawText),
+    ),
     alignments: [...tableInfo.alignments],
-    rows: tableInfo.bodyCells.map((row) => row.map((cell) => normalizeCellContent(cell.rawText))),
+    rows: tableInfo.bodyCells.map((row) =>
+      row.map((cell) => normalizeCellContent(cell.rawText)),
+    ),
   };
 }
 
@@ -493,7 +577,7 @@ function getCellAnchorInFormattedTable(
   formattedTable: string,
   rowIndex: number,
   columnIndex: number,
-  offset = 0
+  offset = 0,
 ): number {
   const lines = formattedTable.split("\n");
   const lineIndex = getRowLineIndex(rowIndex);
@@ -507,26 +591,42 @@ function getCellAnchorInFormattedTable(
   const rawFrom = pipes[columnIndex]! + 1;
   const rawTo = pipes[columnIndex + 1]!;
   const visible = getVisibleBounds(lineText.slice(rawFrom, rawTo));
-  const lineOffset = lines.slice(0, lineIndex).reduce((sum, line) => sum + line.length + 1, 0);
+  const lineOffset = lines
+    .slice(0, lineIndex)
+    .reduce((sum, line) => sum + line.length + 1, 0);
   return (
     lineOffset +
-    Math.min(rawFrom + visible.startOffset + offset, rawFrom + Math.max(visible.endOffset - 1, visible.startOffset))
+    Math.min(
+      rawFrom + visible.startOffset + offset,
+      rawFrom + Math.max(visible.endOffset - 1, visible.startOffset),
+    )
   );
 }
 
 /** Wraps a table replacement with the required blank spacer lines. */
-function createTableInsert(state: EditorState, from: number, to: number, tableMarkdown: string) {
+function createTableInsert(
+  state: EditorState,
+  from: number,
+  to: number,
+  tableMarkdown: string,
+) {
   let insert = tableMarkdown;
   let prefixLength = 0;
 
   const startLine = state.doc.lineAt(from);
-  if (startLine.number === 1 || state.doc.line(startLine.number - 1).text.trim() !== "") {
-    insert = "\n" + insert;
+  if (
+    startLine.number === 1 ||
+    state.doc.line(startLine.number - 1).text.trim() !== ""
+  ) {
+    insert = `\n${insert}`;
     prefixLength = 1;
   }
 
   const endLine = state.doc.lineAt(Math.max(from, to));
-  if (endLine.number === state.doc.lines || state.doc.line(endLine.number + 1).text.trim() !== "") {
+  if (
+    endLine.number === state.doc.lines ||
+    state.doc.line(endLine.number + 1).text.trim() !== ""
+  ) {
     insert += "\n";
   }
 
@@ -534,7 +634,11 @@ function createTableInsert(state: EditorState, from: number, to: number, tableMa
 }
 
 /** Builds a live table model from the current editor document. */
-function readTableInfo(state: EditorState, nodeFrom: number, nodeTo: number): TableInfo | null {
+function readTableInfo(
+  state: EditorState,
+  nodeFrom: number,
+  nodeTo: number,
+): TableInfo | null {
   const startLine = state.doc.lineAt(nodeFrom);
   const endLine = state.doc.lineAt(nodeTo);
   const delimiterLineNumber = startLine.number + 1;
@@ -549,7 +653,11 @@ function readTableInfo(state: EditorState, nodeFrom: number, nodeTo: number): Ta
   }
 
   let effectiveEndLineNumber = delimiterLineNumber;
-  for (let lineNumber = delimiterLineNumber + 1; lineNumber <= endLine.number; lineNumber++) {
+  for (
+    let lineNumber = delimiterLineNumber + 1;
+    lineNumber <= endLine.number;
+    lineNumber++
+  ) {
     const line = state.doc.line(lineNumber);
     if (!isTableRowLine(line.text)) {
       break;
@@ -558,7 +666,11 @@ function readTableInfo(state: EditorState, nodeFrom: number, nodeTo: number): Ta
   }
 
   const cellsByRow: TableCellInfo[][] = [];
-  for (let lineNumber = startLine.number; lineNumber <= effectiveEndLineNumber; lineNumber++) {
+  for (
+    let lineNumber = startLine.number;
+    lineNumber <= effectiveEndLineNumber;
+    lineNumber++
+  ) {
     if (lineNumber === delimiterLineNumber) {
       continue;
     }
@@ -576,7 +688,10 @@ function readTableInfo(state: EditorState, nodeFrom: number, nodeTo: number): Ta
     for (let columnIndex = 0; columnIndex < pipes.length - 1; columnIndex++) {
       const from = line.from + pipes[columnIndex]! + 1;
       const to = line.from + pipes[columnIndex + 1]!;
-      const rawText = line.text.slice(pipes[columnIndex]! + 1, pipes[columnIndex + 1]);
+      const rawText = line.text.slice(
+        pipes[columnIndex]! + 1,
+        pipes[columnIndex + 1],
+      );
       const visible = getVisibleBounds(rawText);
 
       cells.push({
@@ -606,8 +721,11 @@ function readTableInfo(state: EditorState, nodeFrom: number, nodeTo: number): Ta
     startLineNumber: startLine.number,
     delimiterLineNumber,
     endLineNumber: effectiveEndLineNumber,
-    columnCount: cellsByRow[0]!.length,
-    alignments: Array.from({ length: cellsByRow[0]!.length }, (_, index) => alignments[index] || "left"),
+    columnCount: cellsByRow[0]?.length,
+    alignments: Array.from(
+      { length: cellsByRow[0]?.length },
+      (_, index) => alignments[index] || "left",
+    ),
     cellsByRow,
     headerCells: cellsByRow[0]!,
     bodyCells: cellsByRow.slice(1),
@@ -615,7 +733,10 @@ function readTableInfo(state: EditorState, nodeFrom: number, nodeTo: number): Ta
 }
 
 /** Finds the table model that contains the given document position. */
-function getTableInfoAtPosition(state: EditorState, position: number): TableInfo | null {
+function getTableInfoAtPosition(
+  state: EditorState,
+  position: number,
+): TableInfo | null {
   let resolved: TableInfo | null = null;
 
   syntaxTree(state).iterate({
@@ -635,7 +756,10 @@ function getTableInfoAtPosition(state: EditorState, position: number): TableInfo
 }
 
 /** Returns the table cell containing the given cursor position. */
-function findCellAtPosition(tableInfo: TableInfo, position: number): TableCellInfo | null {
+function findCellAtPosition(
+  tableInfo: TableInfo,
+  position: number,
+): TableCellInfo | null {
   for (const row of tableInfo.cellsByRow) {
     for (const cell of row) {
       if (position >= cell.from && position <= cell.to) {
@@ -656,7 +780,10 @@ function findCellAtPosition(tableInfo: TableInfo, position: number): TableCellIn
   let nearestDistance = Number.POSITIVE_INFINITY;
   for (const row of tableInfo.cellsByRow) {
     for (const cell of row) {
-      const distance = Math.min(Math.abs(position - cell.from), Math.abs(position - cell.to));
+      const distance = Math.min(
+        Math.abs(position - cell.from),
+        Math.abs(position - cell.to),
+      );
       if (distance < nearestDistance) {
         nearestCell = cell;
         nearestDistance = distance;
@@ -674,7 +801,9 @@ function clampCellPosition(cell: TableCellInfo, position: number): number {
 }
 
 /** Collects all `<br />` token ranges from the current table. */
-function collectBreakRanges(tableInfo: TableInfo): Array<{ from: number; to: number }> {
+function collectBreakRanges(
+  tableInfo: TableInfo,
+): Array<{ from: number; to: number }> {
   const ranges: Array<{ from: number; to: number }> = [];
 
   for (const row of tableInfo.cellsByRow) {
@@ -694,40 +823,75 @@ function collectBreakRanges(tableInfo: TableInfo): Array<{ from: number; to: num
 }
 
 const lineDecorations = {
-  header: Decoration.line({ class: "cm-draftly-table-row cm-draftly-table-header-row" }),
-  delimiter: Decoration.line({ class: "cm-draftly-table-row cm-draftly-table-delimiter-row" }),
-  body: Decoration.line({ class: "cm-draftly-table-row cm-draftly-table-body-row" }),
-  even: Decoration.line({ class: "cm-draftly-table-row cm-draftly-table-body-row cm-draftly-table-row-even" }),
+  header: Decoration.line({
+    class: "cm-draftly-table-row cm-draftly-table-header-row",
+  }),
+  delimiter: Decoration.line({
+    class: "cm-draftly-table-row cm-draftly-table-delimiter-row",
+  }),
+  body: Decoration.line({
+    class: "cm-draftly-table-row cm-draftly-table-body-row",
+  }),
+  even: Decoration.line({
+    class:
+      "cm-draftly-table-row cm-draftly-table-body-row cm-draftly-table-row-even",
+  }),
   last: Decoration.line({ class: "cm-draftly-table-row-last" }),
 };
 
 const cellDecorations = {
-  "th-left": Decoration.mark({ class: "cm-draftly-table-cell cm-draftly-table-th" }),
-  "th-center": Decoration.mark({ class: "cm-draftly-table-cell cm-draftly-table-th cm-draftly-table-cell-center" }),
-  "th-right": Decoration.mark({ class: "cm-draftly-table-cell cm-draftly-table-th cm-draftly-table-cell-right" }),
-  "th-left-last": Decoration.mark({ class: "cm-draftly-table-cell cm-draftly-table-th cm-draftly-table-cell-last" }),
+  "th-left": Decoration.mark({
+    class: "cm-draftly-table-cell cm-draftly-table-th",
+  }),
+  "th-center": Decoration.mark({
+    class:
+      "cm-draftly-table-cell cm-draftly-table-th cm-draftly-table-cell-center",
+  }),
+  "th-right": Decoration.mark({
+    class:
+      "cm-draftly-table-cell cm-draftly-table-th cm-draftly-table-cell-right",
+  }),
+  "th-left-last": Decoration.mark({
+    class:
+      "cm-draftly-table-cell cm-draftly-table-th cm-draftly-table-cell-last",
+  }),
   "th-center-last": Decoration.mark({
-    class: "cm-draftly-table-cell cm-draftly-table-th cm-draftly-table-cell-center cm-draftly-table-cell-last",
+    class:
+      "cm-draftly-table-cell cm-draftly-table-th cm-draftly-table-cell-center cm-draftly-table-cell-last",
   }),
   "th-right-last": Decoration.mark({
-    class: "cm-draftly-table-cell cm-draftly-table-th cm-draftly-table-cell-right cm-draftly-table-cell-last",
+    class:
+      "cm-draftly-table-cell cm-draftly-table-th cm-draftly-table-cell-right cm-draftly-table-cell-last",
   }),
   "td-left": Decoration.mark({ class: "cm-draftly-table-cell" }),
-  "td-center": Decoration.mark({ class: "cm-draftly-table-cell cm-draftly-table-cell-center" }),
-  "td-right": Decoration.mark({ class: "cm-draftly-table-cell cm-draftly-table-cell-right" }),
-  "td-left-last": Decoration.mark({ class: "cm-draftly-table-cell cm-draftly-table-cell-last" }),
+  "td-center": Decoration.mark({
+    class: "cm-draftly-table-cell cm-draftly-table-cell-center",
+  }),
+  "td-right": Decoration.mark({
+    class: "cm-draftly-table-cell cm-draftly-table-cell-right",
+  }),
+  "td-left-last": Decoration.mark({
+    class: "cm-draftly-table-cell cm-draftly-table-cell-last",
+  }),
   "td-center-last": Decoration.mark({
-    class: "cm-draftly-table-cell cm-draftly-table-cell-center cm-draftly-table-cell-last",
+    class:
+      "cm-draftly-table-cell cm-draftly-table-cell-center cm-draftly-table-cell-last",
   }),
   "td-right-last": Decoration.mark({
-    class: "cm-draftly-table-cell cm-draftly-table-cell-right cm-draftly-table-cell-last",
+    class:
+      "cm-draftly-table-cell cm-draftly-table-cell-right cm-draftly-table-cell-last",
   }),
 } as const;
 
 type CellDecorationKey = keyof typeof cellDecorations;
 
-function getCellDecoration(isHeader: boolean, alignment: Alignment, isLastCell: boolean): Decoration {
-  const key = `${isHeader ? "th" : "td"}-${alignment}${isLastCell ? "-last" : ""}` as CellDecorationKey;
+function getCellDecoration(
+  isHeader: boolean,
+  alignment: Alignment,
+  isLastCell: boolean,
+): Decoration {
+  const key =
+    `${isHeader ? "th" : "td"}-${alignment}${isLastCell ? "-last" : ""}` as CellDecorationKey;
   return cellDecorations[key];
 }
 
@@ -735,7 +899,13 @@ export class TablePlugin extends DecorationPlugin {
   readonly name = "table";
   readonly version = "2.0.0";
   override decorationPriority = 20;
-  override readonly requiredNodes = ["Table", "TableHeader", "TableDelimiter", "TableRow", "TableCell"] as const;
+  override readonly requiredNodes = [
+    "Table",
+    "TableHeader",
+    "TableDelimiter",
+    "TableRow",
+    "TableCell",
+  ] as const;
 
   private draftlyConfig: DraftlyConfig | undefined;
   private pendingNormalizationView: EditorView | null = null;
@@ -778,20 +948,53 @@ export class TablePlugin extends DecorationPlugin {
   /** Builds the high-priority key bindings used inside tables. */
   private buildTableKeymap(): KeyBinding[] {
     return [
-      { key: "Mod-Shift-t", run: (view) => this.insertTable(view), preventDefault: true },
-      { key: "Mod-Alt-ArrowDown", run: (view) => this.addRow(view), preventDefault: true },
-      { key: "Mod-Alt-ArrowRight", run: (view) => this.addColumn(view), preventDefault: true },
-      { key: "Mod-Alt-Backspace", run: (view) => this.removeRow(view), preventDefault: true },
-      { key: "Mod-Alt-Delete", run: (view) => this.removeColumn(view), preventDefault: true },
+      {
+        key: "Mod-Shift-t",
+        run: (view) => this.insertTable(view),
+        preventDefault: true,
+      },
+      {
+        key: "Mod-Alt-ArrowDown",
+        run: (view) => this.addRow(view),
+        preventDefault: true,
+      },
+      {
+        key: "Mod-Alt-ArrowRight",
+        run: (view) => this.addColumn(view),
+        preventDefault: true,
+      },
+      {
+        key: "Mod-Alt-Backspace",
+        run: (view) => this.removeRow(view),
+        preventDefault: true,
+      },
+      {
+        key: "Mod-Alt-Delete",
+        run: (view) => this.removeColumn(view),
+        preventDefault: true,
+      },
       { key: "Tab", run: (view) => this.handleTab(view, false) },
       { key: "Shift-Tab", run: (view) => this.handleTab(view, true) },
-      { key: "ArrowLeft", run: (view) => this.handleArrowHorizontal(view, false) },
-      { key: "ArrowRight", run: (view) => this.handleArrowHorizontal(view, true) },
+      {
+        key: "ArrowLeft",
+        run: (view) => this.handleArrowHorizontal(view, false),
+      },
+      {
+        key: "ArrowRight",
+        run: (view) => this.handleArrowHorizontal(view, true),
+      },
       { key: "ArrowUp", run: (view) => this.handleArrowVertical(view, false) },
       { key: "ArrowDown", run: (view) => this.handleArrowVertical(view, true) },
       { key: "Enter", run: (view) => this.handleEnter(view) },
-      { key: "Shift-Enter", run: (view) => this.insertBreakTag(view), preventDefault: true },
-      { key: "Backspace", run: (view) => this.handleBreakDeletion(view, false) },
+      {
+        key: "Shift-Enter",
+        run: (view) => this.insertBreakTag(view),
+        preventDefault: true,
+      },
+      {
+        key: "Backspace",
+        run: (view) => this.handleBreakDeletion(view, false),
+      },
       { key: "Delete", run: (view) => this.handleBreakDeletion(view, true) },
     ];
   }
@@ -803,13 +1006,20 @@ export class TablePlugin extends DecorationPlugin {
 
   /** Re-schedules normalization after user-driven document changes. */
   override onViewUpdate(update: import("@codemirror/view").ViewUpdate): void {
-    if (update.docChanged && !update.transactions.some((transaction) => transaction.annotation(normalizeAnnotation))) {
+    if (
+      update.docChanged &&
+      !update.transactions.some((transaction) =>
+        transaction.annotation(normalizeAnnotation),
+      )
+    ) {
       this.schedulePadding(update.view);
     }
 
     if (
       update.selectionSet &&
-      !update.transactions.some((transaction) => transaction.annotation(repairSelectionAnnotation))
+      !update.transactions.some((transaction) =>
+        transaction.annotation(repairSelectionAnnotation),
+      )
     ) {
       this.scheduleSelectionRepair(update.view);
     }
@@ -817,7 +1027,13 @@ export class TablePlugin extends DecorationPlugin {
 
   /** Intercepts table-specific DOM key handling before browser defaults run. */
   private handleDomKeydown(view: EditorView, event: KeyboardEvent): boolean {
-    if (event.defaultPrevented || event.isComposing || event.altKey || event.metaKey || event.ctrlKey) {
+    if (
+      event.defaultPrevented ||
+      event.isComposing ||
+      event.altKey ||
+      event.metaKey ||
+      event.ctrlKey
+    ) {
       return false;
     }
 
@@ -870,10 +1086,15 @@ export class TablePlugin extends DecorationPlugin {
   }
 
   /** Renders the full table node to semantic preview HTML. */
-  override async renderToHTML(node: SyntaxNode, _children: string, ctx: PreviewContextLike): Promise<string | null> {
+  override async renderToHTML(
+    node: SyntaxNode,
+    _children: string,
+    ctx: PreviewContextLike,
+  ): Promise<string | null> {
     if (node.name === "Table") {
       const content = ctx.sliceDoc(node.from, node.to);
-      const { tableMarkdown, trailingMarkdown } = splitTableAndTrailingMarkdown(content);
+      const { tableMarkdown, trailingMarkdown } =
+        splitTableAndTrailingMarkdown(content);
       const parsed = parseTableMarkdown(tableMarkdown);
       if (!parsed) {
         return null;
@@ -884,7 +1105,13 @@ export class TablePlugin extends DecorationPlugin {
         return tableHtml;
       }
 
-      return tableHtml + (await createPreviewRenderer(trailingMarkdown, this.draftlyConfig).render());
+      return (
+        tableHtml +
+        (await createPreviewRenderer(
+          trailingMarkdown,
+          this.draftlyConfig,
+        ).render())
+      );
     }
 
     if (TABLE_SUB_NODE_NAMES.has(node.name)) {
@@ -929,7 +1156,11 @@ export class TablePlugin extends DecorationPlugin {
           return;
         }
 
-        for (let lineNumber = tableInfo.startLineNumber; lineNumber <= tableInfo.endLineNumber; lineNumber++) {
+        for (
+          let lineNumber = tableInfo.startLineNumber;
+          lineNumber <= tableInfo.endLineNumber;
+          lineNumber++
+        ) {
           const line = view.state.doc.line(lineNumber);
           if (lineNumber === tableInfo.delimiterLineNumber) {
             ranges.push(delimiterReplace.range(line.from, line.to));
@@ -938,20 +1169,36 @@ export class TablePlugin extends DecorationPlugin {
 
           const pipes = getPipePositions(line.text);
           for (const pipe of pipes) {
-            ranges.push(pipeReplace.range(line.from + pipe, line.from + pipe + 1));
+            ranges.push(
+              pipeReplace.range(line.from + pipe, line.from + pipe + 1),
+            );
           }
 
-          for (let columnIndex = 0; columnIndex < pipes.length - 1; columnIndex++) {
+          for (
+            let columnIndex = 0;
+            columnIndex < pipes.length - 1;
+            columnIndex++
+          ) {
             const rawFrom = pipes[columnIndex]! + 1;
             const rawTo = pipes[columnIndex + 1]!;
             const rawText = line.text.slice(rawFrom, rawTo);
             const visible = getVisibleBounds(rawText);
 
             if (visible.startOffset > 0) {
-              ranges.push(pipeReplace.range(line.from + rawFrom, line.from + rawFrom + visible.startOffset));
+              ranges.push(
+                pipeReplace.range(
+                  line.from + rawFrom,
+                  line.from + rawFrom + visible.startOffset,
+                ),
+              );
             }
             if (visible.endOffset < rawText.length) {
-              ranges.push(pipeReplace.range(line.from + rawFrom + visible.endOffset, line.from + rawTo));
+              ranges.push(
+                pipeReplace.range(
+                  line.from + rawFrom + visible.endOffset,
+                  line.from + rawTo,
+                ),
+              );
             }
 
             let match: RegExpExecArray | null;
@@ -960,8 +1207,8 @@ export class TablePlugin extends DecorationPlugin {
               ranges.push(
                 Decoration.replace({ widget: new TableBreakWidget() }).range(
                   line.from + rawFrom + match.index,
-                  line.from + rawFrom + match.index + match[0].length
-                )
+                  line.from + rawFrom + match.index + match[0].length,
+                ),
               );
             }
           }
@@ -973,13 +1220,25 @@ export class TablePlugin extends DecorationPlugin {
   }
 
   /** Applies row, cell, and control decorations for a single table. */
-  private decorateTable(view: EditorView, decorations: Range<Decoration>[], tableInfo: TableInfo): void {
-    for (let lineNumber = tableInfo.startLineNumber; lineNumber <= tableInfo.endLineNumber; lineNumber++) {
+  private decorateTable(
+    view: EditorView,
+    decorations: Range<Decoration>[],
+    tableInfo: TableInfo,
+  ): void {
+    for (
+      let lineNumber = tableInfo.startLineNumber;
+      lineNumber <= tableInfo.endLineNumber;
+      lineNumber++
+    ) {
       const line = view.state.doc.line(lineNumber);
       const isHeader = lineNumber === tableInfo.startLineNumber;
       const isDelimiter = lineNumber === tableInfo.delimiterLineNumber;
-      const isLastBody = !isHeader && !isDelimiter && lineNumber === tableInfo.endLineNumber;
-      const bodyIndex = isHeader || isDelimiter ? -1 : lineNumber - tableInfo.delimiterLineNumber - 1;
+      const isLastBody =
+        !isHeader && !isDelimiter && lineNumber === tableInfo.endLineNumber;
+      const bodyIndex =
+        isHeader || isDelimiter
+          ? -1
+          : lineNumber - tableInfo.delimiterLineNumber - 1;
 
       if (isHeader) {
         decorations.push(lineDecorations.header.range(line.from));
@@ -1000,27 +1259,39 @@ export class TablePlugin extends DecorationPlugin {
         continue;
       }
 
-      this.decorateLine(decorations, line.from, line.text, tableInfo.alignments, isHeader);
+      this.decorateLine(
+        decorations,
+        line.from,
+        line.text,
+        tableInfo.alignments,
+        isHeader,
+      );
     }
 
     decorations.push(
       Decoration.widget({
         widget: new TableControlsWidget(
           (view) => {
-            const liveTable = getTableInfoAtPosition(view.state, tableInfo.from);
+            const liveTable = getTableInfoAtPosition(
+              view.state,
+              tableInfo.from,
+            );
             if (liveTable) {
               this.appendRow(view, liveTable, liveTable.columnCount - 1);
             }
           },
           (view) => {
-            const liveTable = getTableInfoAtPosition(view.state, tableInfo.from);
+            const liveTable = getTableInfoAtPosition(
+              view.state,
+              tableInfo.from,
+            );
             if (liveTable) {
               this.appendColumn(view, liveTable);
             }
-          }
+          },
         ),
         side: 1,
-      }).range(tableInfo.to)
+      }).range(tableInfo.to),
     );
   }
 
@@ -1030,7 +1301,7 @@ export class TablePlugin extends DecorationPlugin {
     lineFrom: number,
     lineText: string,
     alignments: Alignment[],
-    isHeader: boolean
+    isHeader: boolean,
   ): void {
     const pipes = getPipePositions(lineText);
     if (pipes.length < 2) {
@@ -1050,17 +1321,22 @@ export class TablePlugin extends DecorationPlugin {
       const absoluteTo = lineFrom + rawTo;
 
       if (visible.startOffset > 0) {
-        decorations.push(pipeReplace.range(absoluteFrom, absoluteFrom + visible.startOffset));
+        decorations.push(
+          pipeReplace.range(absoluteFrom, absoluteFrom + visible.startOffset),
+        );
       }
       if (visible.endOffset < rawText.length) {
-        decorations.push(pipeReplace.range(absoluteFrom + visible.endOffset, absoluteTo));
+        decorations.push(
+          pipeReplace.range(absoluteFrom + visible.endOffset, absoluteTo),
+        );
       }
 
       decorations.push(
-        getCellDecoration(isHeader, alignments[columnIndex] || "left", columnIndex === pipes.length - 2).range(
-          absoluteFrom,
-          absoluteTo
-        )
+        getCellDecoration(
+          isHeader,
+          alignments[columnIndex] || "left",
+          columnIndex === pipes.length - 2,
+        ).range(absoluteFrom, absoluteTo),
       );
 
       let match: RegExpExecArray | null;
@@ -1069,8 +1345,8 @@ export class TablePlugin extends DecorationPlugin {
         decorations.push(
           Decoration.replace({ widget: new TableBreakWidget() }).range(
             absoluteFrom + match.index,
-            absoluteFrom + match.index + match[0].length
-          )
+            absoluteFrom + match.index + match[0].length,
+          ),
         );
       }
     }
@@ -1094,7 +1370,12 @@ export class TablePlugin extends DecorationPlugin {
         }
 
         const formatted = formatTableMarkdown(parsed);
-        const change = createTableInsert(view.state, node.from, node.from + tableMarkdown.length, formatted);
+        const change = createTableInsert(
+          view.state,
+          node.from,
+          node.from + tableMarkdown.length,
+          formatted,
+        );
         if (
           change.insert !== tableMarkdown ||
           change.from !== node.from ||
@@ -1151,11 +1432,19 @@ export class TablePlugin extends DecorationPlugin {
 
         const startLine = view.state.doc.lineAt(tableInfo.from);
         if (startLine.number === 1) {
-          changes.push({ from: startLine.from, to: startLine.from, insert: "\n" });
+          changes.push({
+            from: startLine.from,
+            to: startLine.from,
+            insert: "\n",
+          });
         } else {
           const previousLine = view.state.doc.line(startLine.number - 1);
           if (previousLine.text.trim() !== "") {
-            changes.push({ from: startLine.from, to: startLine.from, insert: "\n" });
+            changes.push({
+              from: startLine.from,
+              to: startLine.from,
+              insert: "\n",
+            });
           }
         }
 
@@ -1249,18 +1538,26 @@ export class TablePlugin extends DecorationPlugin {
     parsed: ParsedTable,
     targetRowIndex: number,
     targetColumnIndex: number,
-    offset = 0
+    offset = 0,
   ): void {
     const formatted = formatTableMarkdown(parsed);
-    const change = createTableInsert(view.state, tableInfo.from, tableInfo.to, formatted);
+    const change = createTableInsert(
+      view.state,
+      tableInfo.from,
+      tableInfo.to,
+      formatted,
+    );
     const selection =
       change.from +
       change.prefixLength +
       getCellAnchorInFormattedTable(
         formatted,
         Math.max(0, targetRowIndex),
-        Math.max(0, Math.min(targetColumnIndex, Math.max(parsed.headers.length - 1, 0))),
-        Math.max(0, offset)
+        Math.max(
+          0,
+          Math.min(targetColumnIndex, Math.max(parsed.headers.length - 1, 0)),
+        ),
+        Math.max(0, offset),
       );
 
     view.dispatch({
@@ -1270,11 +1567,29 @@ export class TablePlugin extends DecorationPlugin {
   }
 
   /** Inserts an empty body row below the given logical row index. */
-  private insertRowBelow(view: EditorView, tableInfo: TableInfo, afterRowIndex: number, targetColumn: number): void {
+  private insertRowBelow(
+    view: EditorView,
+    tableInfo: TableInfo,
+    afterRowIndex: number,
+    targetColumn: number,
+  ): void {
     const parsed = normalizeParsedTable(buildTableFromInfo(tableInfo));
-    const insertBodyIndex = Math.max(0, Math.min(afterRowIndex, parsed.rows.length));
-    parsed.rows.splice(insertBodyIndex, 0, buildEmptyRow(tableInfo.columnCount));
-    this.replaceTable(view, tableInfo, parsed, insertBodyIndex + 1, targetColumn);
+    const insertBodyIndex = Math.max(
+      0,
+      Math.min(afterRowIndex, parsed.rows.length),
+    );
+    parsed.rows.splice(
+      insertBodyIndex,
+      0,
+      buildEmptyRow(tableInfo.columnCount),
+    );
+    this.replaceTable(
+      view,
+      tableInfo,
+      parsed,
+      insertBodyIndex + 1,
+      targetColumn,
+    );
   }
 
   /** Inserts a starter table near the current cursor line. */
@@ -1285,7 +1600,10 @@ export class TablePlugin extends DecorationPlugin {
     const insertAt = line.text.trim() ? line.to : line.from;
     const formatted = formatTableMarkdown(TABLE_TEMPLATE);
     const change = createTableInsert(state, insertAt, insertAt, formatted);
-    const selection = change.from + change.prefixLength + getCellAnchorInFormattedTable(formatted, 0, 0);
+    const selection =
+      change.from +
+      change.prefixLength +
+      getCellAnchorInFormattedTable(formatted, 0, 0);
 
     view.dispatch({
       changes: { from: change.from, to: change.to, insert: change.insert },
@@ -1308,8 +1626,17 @@ export class TablePlugin extends DecorationPlugin {
   }
 
   /** Appends a row and keeps the caret in the requested column. */
-  private appendRow(view: EditorView, tableInfo: TableInfo, targetColumn: number): void {
-    this.insertRowBelow(view, tableInfo, tableInfo.bodyCells.length, targetColumn);
+  private appendRow(
+    view: EditorView,
+    tableInfo: TableInfo,
+    targetColumn: number,
+  ): void {
+    this.insertRowBelow(
+      view,
+      tableInfo,
+      tableInfo.bodyCells.length,
+      targetColumn,
+    );
   }
 
   /** Inserts a new column after the current column. */
@@ -1329,7 +1656,13 @@ export class TablePlugin extends DecorationPlugin {
       row.splice(insertAfter + 1, 0, "");
     }
 
-    this.replaceTable(view, tableInfo, parsed, cell?.rowIndex || 0, insertAfter + 1);
+    this.replaceTable(
+      view,
+      tableInfo,
+      parsed,
+      cell?.rowIndex || 0,
+      insertAfter + 1,
+    );
 
     return true;
   }
@@ -1370,8 +1703,17 @@ export class TablePlugin extends DecorationPlugin {
       parsed.rows.splice(bodyIndex, 1);
     }
 
-    const nextRowIndex = Math.max(1, Math.min(cell.rowIndex, parsed.rows.length));
-    this.replaceTable(view, tableInfo, parsed, nextRowIndex, Math.min(cell.columnIndex, tableInfo.columnCount - 1));
+    const nextRowIndex = Math.max(
+      1,
+      Math.min(cell.rowIndex, parsed.rows.length),
+    );
+    this.replaceTable(
+      view,
+      tableInfo,
+      parsed,
+      nextRowIndex,
+      Math.min(cell.columnIndex, tableInfo.columnCount - 1),
+    );
 
     return true;
   }
@@ -1393,7 +1735,13 @@ export class TablePlugin extends DecorationPlugin {
       row.splice(removeAt, 1);
     }
 
-    this.replaceTable(view, tableInfo, parsed, cell?.rowIndex || 0, Math.min(removeAt, parsed.headers.length - 1));
+    this.replaceTable(
+      view,
+      tableInfo,
+      parsed,
+      cell?.rowIndex || 0,
+      Math.min(removeAt, parsed.headers.length - 1),
+    );
 
     return true;
   }
@@ -1411,7 +1759,9 @@ export class TablePlugin extends DecorationPlugin {
     }
 
     const cells = tableInfo.cellsByRow.flat();
-    const currentIndex = cells.findIndex((candidate) => candidate.from === cell.from && candidate.to === cell.to);
+    const currentIndex = cells.findIndex(
+      (candidate) => candidate.from === cell.from && candidate.to === cell.to,
+    );
     if (currentIndex < 0) {
       return false;
     }
@@ -1504,8 +1854,16 @@ export class TablePlugin extends DecorationPlugin {
         const parsed = normalizeParsedTable(buildTableFromInfo(tableInfo));
         parsed.rows.splice(cell.rowIndex - 1, 1);
         const formatted = formatTableMarkdown(parsed);
-        const change = createTableInsert(view.state, tableInfo.from, tableInfo.to, formatted);
-        const anchor = Math.min(change.from + change.insert.length, view.state.doc.length + change.insert.length);
+        const change = createTableInsert(
+          view.state,
+          tableInfo.from,
+          tableInfo.to,
+          formatted,
+        );
+        const anchor = Math.min(
+          change.from + change.insert.length,
+          view.state.doc.length + change.insert.length,
+        );
 
         view.dispatch({
           changes: { from: change.from, to: change.to, insert: change.insert },
@@ -1515,10 +1873,19 @@ export class TablePlugin extends DecorationPlugin {
       }
     }
 
-    if (cell.rowKind === "body" && cell.rowIndex === tableInfo.cellsByRow.length - 1) {
+    if (
+      cell.rowKind === "body" &&
+      cell.rowIndex === tableInfo.cellsByRow.length - 1
+    ) {
       const parsed = normalizeParsedTable(buildTableFromInfo(tableInfo));
       parsed.rows.push(buildEmptyRow(tableInfo.columnCount));
-      this.replaceTable(view, tableInfo, parsed, parsed.rows.length, cell.columnIndex);
+      this.replaceTable(
+        view,
+        tableInfo,
+        parsed,
+        parsed.rows.length,
+        cell.columnIndex,
+      );
       return true;
     }
 
@@ -1555,7 +1922,10 @@ export class TablePlugin extends DecorationPlugin {
       const within = cursor > range.from && cursor < range.to;
       const matchesBackspace = !forward && cursor === range.to;
       const matchesDelete = forward && cursor === range.from;
-      const overlapsSelection = !selection.empty && selection.from <= range.from && selection.to >= range.to;
+      const overlapsSelection =
+        !selection.empty &&
+        selection.from <= range.from &&
+        selection.to >= range.to;
 
       if (within || matchesBackspace || matchesDelete || overlapsSelection) {
         view.dispatch({
@@ -1570,7 +1940,11 @@ export class TablePlugin extends DecorationPlugin {
   }
 
   /** Moves the current selection anchor into a target cell. */
-  private moveSelectionToCell(view: EditorView, cell: TableCellInfo, offset = 0): void {
+  private moveSelectionToCell(
+    view: EditorView,
+    cell: TableCellInfo,
+    offset = 0,
+  ): void {
     const end = Math.max(cell.contentFrom, cell.contentTo);
     view.dispatch({
       selection: { anchor: Math.min(cell.contentFrom + offset, end) },
@@ -1584,7 +1958,10 @@ export class TablePlugin extends DecorationPlugin {
   }
 
   /** Returns the active cell under the current selection head. */
-  private getCurrentCell(view: EditorView, tableInfo: TableInfo): TableCellInfo | null {
+  private getCurrentCell(
+    view: EditorView,
+    tableInfo: TableInfo,
+  ): TableCellInfo | null {
     return findCellAtPosition(tableInfo, view.state.selection.main.head);
   }
 }
@@ -1694,7 +2071,8 @@ const theme = createTheme({
         justifyContent: "center",
         opacity: "0",
         pointerEvents: "auto",
-        transition: "opacity 120ms ease, transform 120ms ease, background-color 120ms ease",
+        transition:
+          "opacity 120ms ease, transform 120ms ease, background-color 120ms ease",
       },
 
       "& .cm-draftly-table-control:hover": {
@@ -1713,17 +2091,20 @@ const theme = createTheme({
         transform: "translate(-50%, 0.35rem)",
       },
 
-      "&:hover .cm-draftly-table-control, &:focus-within .cm-draftly-table-control": {
-        opacity: "1",
-      },
+      "&:hover .cm-draftly-table-control, &:focus-within .cm-draftly-table-control":
+        {
+          opacity: "1",
+        },
 
-      "&:hover .cm-draftly-table-control-column, &:focus-within .cm-draftly-table-control-column": {
-        transform: "translate(0, -50%)",
-      },
+      "&:hover .cm-draftly-table-control-column, &:focus-within .cm-draftly-table-control-column":
+        {
+          transform: "translate(0, -50%)",
+        },
 
-      "&:hover .cm-draftly-table-control-row, &:focus-within .cm-draftly-table-control-row": {
-        transform: "translate(-50%, 0)",
-      },
+      "&:hover .cm-draftly-table-control-row, &:focus-within .cm-draftly-table-control-row":
+        {
+          transform: "translate(-50%, 0)",
+        },
     },
   },
 });

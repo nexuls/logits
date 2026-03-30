@@ -1,5 +1,5 @@
-import { SyntaxNode } from "@lezer/common";
-import { ThemeEnum } from "../editor/utils";
+import type { SyntaxNode } from "@lezer/common";
+import type { ThemeEnum } from "../editor/utils";
 
 export type SyntaxThemeInput =
   | import("@codemirror/language").HighlightStyle
@@ -78,7 +78,11 @@ export interface GenerateCSSConfig {
 /**
  * Node renderer function type
  */
-export type NodeRenderer = (node: SyntaxNode, children: string, ctx: PreviewContext) => string;
+export type NodeRenderer = (
+  node: SyntaxNode,
+  children: string,
+  ctx: PreviewContext,
+) => string;
 
 /**
  * Map of node names to their renderers

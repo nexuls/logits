@@ -77,7 +77,9 @@ export function DataProvider({
   const [isHydrating, setIsHydrating] = useState(true);
   const dataRef = useRef<AppData>(createEmptyData(normalizedInitialSettings));
   const initialSettingsRef = useRef<UserSettings>(normalizedInitialSettings);
-  const pendingDataWriteRef = useRef<Promise<AppData>>(Promise.resolve(dataRef.current));
+  const pendingDataWriteRef = useRef<Promise<AppData>>(
+    Promise.resolve(dataRef.current),
+  );
 
   useEffect(() => {
     initialSettingsRef.current = normalizedInitialSettings;
@@ -86,12 +88,19 @@ export function DataProvider({
   const queueDataWrite = useCallback(
     (updater: (currentData: AppData) => AppData) => {
       const runWrite = async () => {
-        const nextData = updater(dataRef.current);
-        const savedData = await writeAppData(nextData);
-        dataRef.current = savedData;
-        initialSettingsRef.current = normalizeUserSettings(savedData.settings);
-        setDataState(savedData);
-        return savedData;
+        try {
+          const nextData = updater(dataRef.current);
+          const savedData = await writeAppData(nextData);
+          dataRef.current = savedData;
+          initialSettingsRef.current = normalizeUserSettings(
+            savedData.settings,
+          );
+          setDataState(savedData);
+          return savedData;
+        } catch (error) {
+          console.error("[data-provider] failed to persist app data", error);
+          throw error;
+        }
       };
 
       const queuedWrite = pendingDataWriteRef.current.then(runWrite, runWrite);
@@ -116,23 +125,30 @@ export function DataProvider({
   );
 
   const reloadData = useCallback(async () => {
-    const storedData = await readAppData();
-    const mergedSettings = mergeUserSettings(
-      storedData.settings,
-      initialSettingsRef.current,
-    );
-    const nextData = areSettingsEqual(mergedSettings, storedData.settings)
-      ? storedData
-      : await writeAppData({
-          ...storedData,
-          settings: mergedSettings,
-        });
+    try {
+      const storedData = await readAppData();
+      const mergedSettings = mergeUserSettings(
+        storedData.settings,
+        initialSettingsRef.current,
+      );
+      const nextData = areSettingsEqual(mergedSettings, storedData.settings)
+        ? storedData
+        : await writeAppData({
+            ...storedData,
+            settings: mergedSettings,
+          });
 
-    dataRef.current = nextData;
-    initialSettingsRef.current = normalizeUserSettings(nextData.settings);
-    setDataState(nextData);
-    writeUserSettingsToCookie(nextData.settings);
-    setIsHydrating(false);
+      dataRef.current = nextData;
+      initialSettingsRef.current = normalizeUserSettings(nextData.settings);
+      setDataState(nextData);
+      writeUserSettingsToCookie(nextData.settings);
+    } catch (error) {
+      console.error("[data-provider] failed to load app data", error);
+      writeUserSettingsToCookie(initialSettingsRef.current);
+      setDataState(createEmptyData(initialSettingsRef.current));
+    } finally {
+      setIsHydrating(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -153,7 +169,9 @@ export function DataProvider({
   );
 
   const updateSettings = useCallback(
-    async (updater: (currentSettings: UserSettings) => Partial<UserSettings>) => {
+    async (
+      updater: (currentSettings: UserSettings) => Partial<UserSettings>,
+    ) => {
       const savedData = await updateData((currentData) =>
         updateStoredUserSettings(
           currentData,

@@ -1,5 +1,5 @@
-import { EditorView } from "@codemirror/view";
-import { StyleSpec } from "style-mod";
+import type { EditorView } from "@codemirror/view";
+import type { StyleSpec } from "style-mod";
 
 /**
  * Deep merge two objects
@@ -15,7 +15,12 @@ export function deepMerge<T>(a: T, b?: T): T {
   }
 
   for (const key in b as T) {
-    if (b[key] && typeof b[key] === "object" && !Array.isArray(b[key]) && typeof a[key] === "object") {
+    if (
+      b[key] &&
+      typeof b[key] === "object" &&
+      !Array.isArray(b[key]) &&
+      typeof a[key] === "object"
+    ) {
       result[key] = deepMerge(a[key], b[key]);
     } else {
       result[key] = b[key];
@@ -77,20 +82,31 @@ export function createTheme({
   };
 }
 
-export function flattenThemeStyles(themeStyles: ThemeStyle, parentSelector?: string): ThemeStyle {
+export function flattenThemeStyles(
+  themeStyles: ThemeStyle,
+  parentSelector?: string,
+): ThemeStyle {
   const flattened: ThemeStyle = {};
 
   for (const [selectors, styles] of Object.entries(themeStyles)) {
     for (const selector of selectors.split(",")) {
       if (typeof styles === "object" && !Array.isArray(styles)) {
         // Flatten nested styles
-        const fullSelector = fixSelector(parentSelector ? `${parentSelector} ${selector}` : selector);
-        const nestedStyles = flattenThemeStyles(styles as ThemeStyle, fullSelector);
+        const fullSelector = fixSelector(
+          parentSelector ? `${parentSelector} ${selector}` : selector,
+        );
+        const nestedStyles = flattenThemeStyles(
+          styles as ThemeStyle,
+          fullSelector,
+        );
         Object.assign(flattened, nestedStyles);
       } else {
         // Add styles to the flattened object
         if (parentSelector) {
-          flattened[parentSelector] = { ...flattened[parentSelector], [selector]: styles };
+          flattened[parentSelector] = {
+            ...flattened[parentSelector],
+            [selector]: styles,
+          };
         } else {
           flattened[selector] = styles as StyleSpec;
         }
@@ -109,7 +125,11 @@ export function fixSelector(selector: string): string {
 /**
  * Check if cursor is within the given range
  */
-export function cursorInRange(view: EditorView, from: number, to: number): boolean {
+export function cursorInRange(
+  view: EditorView,
+  from: number,
+  to: number,
+): boolean {
   const selection = view.state.selection.main;
   return selection.from <= to && selection.to >= from;
 }
@@ -117,7 +137,11 @@ export function cursorInRange(view: EditorView, from: number, to: number): boole
 /**
  * Check if any selection overlaps with the given range
  */
-export function selectionOverlapsRange(view: EditorView, from: number, to: number): boolean {
+export function selectionOverlapsRange(
+  view: EditorView,
+  from: number,
+  to: number,
+): boolean {
   for (const range of view.state.selection.ranges) {
     if (range.from <= to && range.to >= from) {
       return true;
@@ -131,7 +155,9 @@ export function selectionOverlapsRange(view: EditorView, from: number, to: numbe
  * @param marker - The markdown marker (e.g., "**" for bold, "*" for italic)
  * @returns Command function for EditorView
  */
-export function toggleMarkdownStyle(marker: string): (view: EditorView) => boolean {
+export function toggleMarkdownStyle(
+  marker: string,
+): (view: EditorView) => boolean {
   return (view: EditorView) => {
     const { state } = view;
     const { from, to, empty } = state.selection.main;
@@ -155,7 +181,10 @@ export function toggleMarkdownStyle(marker: string): (view: EditorView) => boole
           { from: beforeFrom, to: from, insert: "" },
           { from: to, to: afterTo, insert: "" },
         ],
-        selection: { anchor: beforeFrom, head: beforeFrom + selectedText.length },
+        selection: {
+          anchor: beforeFrom,
+          head: beforeFrom + selectedText.length,
+        },
       });
     } else if (empty) {
       // No selection - insert markers and place cursor between them

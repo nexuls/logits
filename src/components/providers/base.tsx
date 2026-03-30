@@ -2,6 +2,7 @@
 
 import { useEffect, type ReactNode } from "react";
 import { ThemeProvider, useTheme } from "next-themes";
+import { useUserSettings } from "@/hooks/use-user-settings";
 import {
   APPEARANCE_FONT_SCALE_DEFAULT,
   DEFAULT_INTERFACE_FONT,
@@ -18,12 +19,11 @@ import {
   getColorSchemeClassName,
 } from "@/coloe-scheme";
 import { writeResolvedSystemThemeToCookie } from "@/data/settings-cookie";
+import { SidebarProvider } from "../ui/sidebar";
+import { Toaster } from "../ui/sonner";
+import { TooltipProvider } from "../ui/tooltip";
 import { AppSidebar } from "../sidebar/app-sidebar";
 import { DataProvider } from "./data";
-import { Toaster } from "../ui/sonner";
-import { SidebarProvider } from "../ui/sidebar";
-import { TooltipProvider } from "../ui/tooltip";
-import { useUserSettings } from "@/hooks/use-user-settings";
 
 type Props = {
   children?: ReactNode;
@@ -37,7 +37,8 @@ function SettingsThemeSync() {
   const colorScheme = settings.appearance?.colorScheme;
   const fontSize =
     settings.appearance?.fontSize ?? APPEARANCE_FONT_SCALE_DEFAULT;
-  const interfaceFont = settings.appearance?.interfaceFont ?? DEFAULT_INTERFACE_FONT;
+  const interfaceFont =
+    settings.appearance?.interfaceFont ?? DEFAULT_INTERFACE_FONT;
   const textFont = settings.appearance?.textFont ?? DEFAULT_TEXT_FONT;
   const monospaceFont =
     settings.appearance?.monospaceFont ?? DEFAULT_MONOSPACE_FONT;
@@ -47,9 +48,7 @@ function SettingsThemeSync() {
   }, [setTheme, theme]);
 
   useEffect(() => {
-    if (theme !== "system") {
-      return;
-    }
+    if (theme !== "system") return;
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
@@ -82,7 +81,10 @@ function SettingsThemeSync() {
       "--user-interface-font",
       resolveInterfaceFontFamily(interfaceFont),
     );
-    rootElement.style.setProperty("--user-text-font", resolveTextFontFamily(textFont));
+    rootElement.style.setProperty(
+      "--user-text-font",
+      resolveTextFontFamily(textFont),
+    );
     rootElement.style.setProperty(
       "--user-monospace-font",
       resolveMonospaceFontFamily(monospaceFont),

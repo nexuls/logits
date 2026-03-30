@@ -1,8 +1,13 @@
-import { Decoration, EditorView, KeyBinding, WidgetType } from "@codemirror/view";
+import {
+  Decoration,
+  type EditorView,
+  type KeyBinding,
+  WidgetType,
+} from "@codemirror/view";
 import { syntaxTree } from "@codemirror/language";
-import { DecorationContext, DecorationPlugin } from "../editor/plugin";
+import { type DecorationContext, DecorationPlugin } from "../editor/plugin";
 import { createTheme } from "../editor";
-import { SyntaxNode } from "@lezer/common";
+import type { SyntaxNode } from "@lezer/common";
 
 /**
  * Mark decorations for image syntax elements
@@ -19,9 +24,13 @@ const imageMarkDecorations = {
  * Parse image markdown to extract alt text, URL, and optional title
  * Format: ![alt text](url "optional title")
  */
-function parseImageMarkdown(content: string): { alt: string; url: string; title?: string } | null {
+function parseImageMarkdown(
+  content: string,
+): { alt: string; url: string; title?: string } | null {
   // Regex to match: ![alt](url) or ![alt](url "title")
-  const match = content.match(/^!\[([^\]]*)\]\(([^"\s)]+)(?:\s+"([^"]*)")?\s*\)$/);
+  const match = content.match(
+    /^!\[([^\]]*)\]\(([^"\s)]+)(?:\s+"([^"]*)")?\s*\)$/,
+  );
   if (!match) return null;
 
   const result: { alt: string; url: string; title?: string } = {
@@ -46,7 +55,7 @@ class ImageWidget extends WidgetType {
     readonly alt: string,
     readonly from: number,
     readonly to: number,
-    readonly title?: string
+    readonly title?: string,
   ) {
     super();
   }
@@ -136,10 +145,6 @@ export class ImagePlugin extends DecorationPlugin {
   readonly version = "1.0.0";
   override decorationPriority = 25;
   override readonly requiredNodes = ["Image"] as const;
-
-  constructor() {
-    super();
-  }
 
   /**
    * Plugin theme
@@ -265,10 +270,16 @@ export class ImagePlugin extends DecorationPlugin {
           // Always add the image widget below the node
           decorations.push(
             Decoration.widget({
-              widget: new ImageWidget(parsed.url, parsed.alt, from, to, parsed.title),
+              widget: new ImageWidget(
+                parsed.url,
+                parsed.alt,
+                from,
+                to,
+                parsed.title,
+              ),
               side: 1, // Place after the position
               block: false, // Don't create a new line
-            }).range(to)
+            }).range(to),
           );
 
           if (cursorInRange) {
@@ -276,7 +287,9 @@ export class ImagePlugin extends DecorationPlugin {
             this.decorateRawImage(node.node, decorations, view);
           } else {
             // Cursor out of range: hide the raw markdown text
-            decorations.push(imageMarkDecorations["image-hidden"].range(from, to));
+            decorations.push(
+              imageMarkDecorations["image-hidden"].range(from, to),
+            );
           }
         }
       },
@@ -289,12 +302,14 @@ export class ImagePlugin extends DecorationPlugin {
   private decorateRawImage(
     node: SyntaxNode,
     decorations: import("@codemirror/state").Range<Decoration>[],
-    view: import("@codemirror/view").EditorView
+    view: import("@codemirror/view").EditorView,
   ): void {
     // Find and style child nodes
     for (let child = node.firstChild; child; child = child.nextSibling) {
       if (child.name === "URL") {
-        decorations.push(imageMarkDecorations["image-url"].range(child.from, child.to));
+        decorations.push(
+          imageMarkDecorations["image-url"].range(child.from, child.to),
+        );
       }
     }
 
@@ -302,7 +317,12 @@ export class ImagePlugin extends DecorationPlugin {
     const content = view.state.sliceDoc(node.from, node.to);
     const bangBracket = node.from; // Position of !
     if (content.startsWith("![")) {
-      decorations.push(imageMarkDecorations["image-marker"].range(bangBracket, bangBracket + 2));
+      decorations.push(
+        imageMarkDecorations["image-marker"].range(
+          bangBracket,
+          bangBracket + 2,
+        ),
+      );
     }
 
     // Find and style closing bracket and parentheses
@@ -311,12 +331,24 @@ export class ImagePlugin extends DecorationPlugin {
       const altStart = 2;
       // Style alt text
       if (altEnd > altStart) {
-        decorations.push(imageMarkDecorations["image-alt"].range(node.from + altStart, node.from + altEnd));
+        decorations.push(
+          imageMarkDecorations["image-alt"].range(
+            node.from + altStart,
+            node.from + altEnd,
+          ),
+        );
       }
       // Style ]( markers
-      decorations.push(imageMarkDecorations["image-marker"].range(node.from + altEnd, node.from + altEnd + 2));
+      decorations.push(
+        imageMarkDecorations["image-marker"].range(
+          node.from + altEnd,
+          node.from + altEnd + 2,
+        ),
+      );
       // Style closing )
-      decorations.push(imageMarkDecorations["image-marker"].range(node.to - 1, node.to));
+      decorations.push(
+        imageMarkDecorations["image-marker"].range(node.to - 1, node.to),
+      );
     }
   }
 
@@ -326,7 +358,10 @@ export class ImagePlugin extends DecorationPlugin {
   override renderToHTML(
     node: SyntaxNode,
     _children: string,
-    ctx: { sliceDoc(from: number, to: number): string; sanitize(html: string): string }
+    ctx: {
+      sliceDoc(from: number, to: number): string;
+      sanitize(html: string): string;
+    },
   ): string | null {
     if (node.name !== "Image") return null;
 
@@ -335,8 +370,12 @@ export class ImagePlugin extends DecorationPlugin {
     if (!parsed) return null;
 
     const altAttr = ctx.sanitize(parsed.alt);
-    const titleAttr = parsed.title ? ` title="${ctx.sanitize(parsed.title)}"` : "";
-    const ariaLabel = parsed.title ? ` aria-label="${ctx.sanitize(parsed.title)}"` : "";
+    const titleAttr = parsed.title
+      ? ` title="${ctx.sanitize(parsed.title)}"`
+      : "";
+    const ariaLabel = parsed.title
+      ? ` aria-label="${ctx.sanitize(parsed.title)}"`
+      : "";
 
     let html = `<figure class="cm-draftly-image-figure" role="figure"${ariaLabel}>`;
     html += `<img class="cm-draftly-image" src="${ctx.sanitize(parsed.url)}" alt="${altAttr}"${titleAttr} loading="lazy" decoding="async" />`;

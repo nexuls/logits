@@ -1,4 +1,9 @@
-import type { Decoration, EditorView, KeyBinding, ViewUpdate } from "@codemirror/view";
+import type {
+  Decoration,
+  EditorView,
+  KeyBinding,
+  ViewUpdate,
+} from "@codemirror/view";
 import type { Extension, Range } from "@codemirror/state";
 import type { MarkdownConfig } from "@lezer/markdown";
 import type { SyntaxNode } from "@lezer/common";
@@ -219,7 +224,7 @@ export abstract class DraftlyPlugin {
       sliceDoc(from: number, to: number): string;
       sanitize(html: string): string;
       syntaxHighlighters?: readonly import("@lezer/highlight").Highlighter[];
-    }
+    },
   ): string | null | Promise<string | null>;
 
   /**
@@ -238,7 +243,10 @@ export abstract class DraftlyPlugin {
    * Transform ThemeStyle object to CSS string for preview
    * Uses cssClassMap to convert CM selectors to semantic selectors
    */
-  protected transformToCss(themeStyles: ThemeStyle, wrapperClass: string): string {
+  protected transformToCss(
+    themeStyles: ThemeStyle,
+    wrapperClass: string,
+  ): string {
     const styleMod = new StyleModule(themeStyles, {
       finish: (sel) => {
         return `.${wrapperClass} ${sel}`;

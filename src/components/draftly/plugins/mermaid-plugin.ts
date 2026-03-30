@@ -1,10 +1,15 @@
-import { Decoration, EditorView, WidgetType } from "@codemirror/view";
+import { Decoration, type EditorView, WidgetType } from "@codemirror/view";
 import { syntaxTree } from "@codemirror/language";
-import { DecorationContext, DecorationPlugin } from "../editor/plugin";
+import { type DecorationContext, DecorationPlugin } from "../editor/plugin";
 import { createTheme, ThemeEnum } from "../editor";
-import { SyntaxNode } from "@lezer/common";
+import type { SyntaxNode } from "@lezer/common";
 import { tags } from "@lezer/highlight";
-import type { MarkdownConfig, BlockParser, Line, BlockContext } from "@lezer/markdown";
+import type {
+  MarkdownConfig,
+  BlockParser,
+  Line,
+  BlockContext,
+} from "@lezer/markdown";
 import mermaid from "mermaid";
 
 /**
@@ -23,7 +28,7 @@ let mermaidCounter = 0;
 async function renderMermaid(
   definition: string,
   options: Record<string, string> = {},
-  defaultTheme: string = "default"
+  defaultTheme: string = "default",
 ): Promise<{ svg: string; error: string | null }> {
   try {
     const id = `draftly-mermaid-${mermaidCounter++}`;
@@ -71,10 +76,16 @@ function parseAttributes(fenceLine: string): Record<string, string> {
  * Mark decorations for mermaid syntax elements
  */
 const mermaidMarkDecorations = {
-  "mermaid-block-start": Decoration.line({ class: "cm-draftly-mermaid-block-start" }),
-  "mermaid-block-end": Decoration.line({ class: "cm-draftly-mermaid-block-end" }),
+  "mermaid-block-start": Decoration.line({
+    class: "cm-draftly-mermaid-block-start",
+  }),
+  "mermaid-block-end": Decoration.line({
+    class: "cm-draftly-mermaid-block-end",
+  }),
   "mermaid-block": Decoration.line({ class: "cm-draftly-mermaid-block" }),
-  "mermaid-block-rendered": Decoration.line({ class: "cm-draftly-mermaid-block-rendered" }),
+  "mermaid-block-rendered": Decoration.line({
+    class: "cm-draftly-mermaid-block-rendered",
+  }),
   "mermaid-marker": Decoration.mark({ class: "cm-draftly-mermaid-marker" }),
   "mermaid-hidden": Decoration.mark({ class: "cm-draftly-mermaid-hidden" }),
 };
@@ -88,7 +99,7 @@ class MermaidBlockWidget extends WidgetType {
     readonly attributes: Record<string, string>,
     readonly defaultTheme: string,
     readonly from: number,
-    readonly to: number
+    readonly to: number,
   ) {
     super();
   }
@@ -113,14 +124,16 @@ class MermaidBlockWidget extends WidgetType {
 
     // Render mermaid asynchronously
     // Render mermaid asynchronously
-    renderMermaid(this.definition, this.attributes, this.defaultTheme).then(({ svg, error }) => {
-      if (error) {
-        div.className += " cm-draftly-mermaid-error";
-        div.innerHTML = `<span>[Mermaid Error: ${error}]</span>`;
-      } else {
-        div.innerHTML = svg;
-      }
-    });
+    renderMermaid(this.definition, this.attributes, this.defaultTheme).then(
+      ({ svg, error }) => {
+        if (error) {
+          div.className += " cm-draftly-mermaid-error";
+          div.innerHTML = `<span>[Mermaid Error: ${error}]</span>`;
+        } else {
+          div.innerHTML = svg;
+        }
+      },
+    );
 
     // Click handler to select the raw mermaid text
     div.addEventListener("click", (e) => {
@@ -192,9 +205,15 @@ const mermaidBlockParser: BlockParser = {
     // Create the mermaid block element with markers
     const openMarkEnd = startLine + text.indexOf("```mermaid") + 10;
     const openMark = cx.elt("MermaidBlockMark", startLine, openMarkEnd);
-    const closeMark = cx.elt("MermaidBlockMark", closeBacktickStart, closeBacktickStart + 3);
+    const closeMark = cx.elt(
+      "MermaidBlockMark",
+      closeBacktickStart,
+      closeBacktickStart + 3,
+    );
 
-    cx.addElement(cx.elt("MermaidBlock", startLine, endPos, [openMark, closeMark]));
+    cx.addElement(
+      cx.elt("MermaidBlock", startLine, endPos, [openMark, closeMark]),
+    );
 
     return true;
   },
@@ -218,11 +237,10 @@ export class MermaidPlugin extends DecorationPlugin {
   readonly name = "mermaid";
   readonly version = "1.0.0";
   override decorationPriority = 25;
-  override readonly requiredNodes = ["MermaidBlock", "MermaidBlockMark"] as const;
-
-  constructor() {
-    super();
-  }
+  override readonly requiredNodes = [
+    "MermaidBlock",
+    "MermaidBlockMark",
+  ] as const;
 
   /**
    * Plugin theme
@@ -273,7 +291,10 @@ export class MermaidPlugin extends DecorationPlugin {
 
           const nodeLineStart = view.state.doc.lineAt(from);
           const nodeLineEnd = view.state.doc.lineAt(to);
-          const cursorInRange = ctx.selectionOverlapsRange(nodeLineStart.from, nodeLineEnd.to);
+          const cursorInRange = ctx.selectionOverlapsRange(
+            nodeLineStart.from,
+            nodeLineEnd.to,
+          );
 
           // Calculate line number width for mermaid block
           const totalCodeLines = nodeLineEnd.number - nodeLineStart.number - 1;
@@ -283,17 +304,29 @@ export class MermaidPlugin extends DecorationPlugin {
           // Add line decorations for mermaid block
           for (let i = nodeLineStart.number; i <= nodeLineEnd.number; i++) {
             const line = view.state.doc.line(i);
-            const isFenceLine = i === nodeLineStart.number || i === nodeLineEnd.number;
+            const isFenceLine =
+              i === nodeLineStart.number || i === nodeLineEnd.number;
             const relativeLineNum = codeLineIndex;
 
-            decorations.push(mermaidMarkDecorations["mermaid-block"].range(line.from));
-            if (!cursorInRange) decorations.push(mermaidMarkDecorations["mermaid-block-rendered"].range(line.from));
+            decorations.push(
+              mermaidMarkDecorations["mermaid-block"].range(line.from),
+            );
+            if (!cursorInRange)
+              decorations.push(
+                mermaidMarkDecorations["mermaid-block-rendered"].range(
+                  line.from,
+                ),
+              );
 
             if (i === nodeLineStart.number)
-              decorations.push(mermaidMarkDecorations["mermaid-block-start"].range(line.from));
+              decorations.push(
+                mermaidMarkDecorations["mermaid-block-start"].range(line.from),
+              );
 
             if (i === nodeLineEnd.number)
-              decorations.push(mermaidMarkDecorations["mermaid-block-end"].range(line.from));
+              decorations.push(
+                mermaidMarkDecorations["mermaid-block-end"].range(line.from),
+              );
 
             if (!isFenceLine) {
               decorations.push(
@@ -302,7 +335,7 @@ export class MermaidPlugin extends DecorationPlugin {
                     "data-line-num": String(relativeLineNum),
                     style: `--line-num-width: ${lineNumWidth}ch`,
                   },
-                }).range(line.from)
+                }).range(line.from),
               );
             }
 
@@ -315,22 +348,39 @@ export class MermaidPlugin extends DecorationPlugin {
           // Always add the rendered widget below the block
           decorations.push(
             Decoration.widget({
-              widget: new MermaidBlockWidget(definition, attributes, currentTheme, from, to),
+              widget: new MermaidBlockWidget(
+                definition,
+                attributes,
+                currentTheme,
+                from,
+                to,
+              ),
               side: 1,
               block: false,
-            }).range(to)
+            }).range(to),
           );
 
           if (cursorInRange) {
             // Cursor in range: show raw definition with styled markers
-            for (let child = node.node.firstChild; child; child = child.nextSibling) {
+            for (
+              let child = node.node.firstChild;
+              child;
+              child = child.nextSibling
+            ) {
               if (child.name === "MermaidBlockMark") {
-                decorations.push(mermaidMarkDecorations["mermaid-marker"].range(child.from, child.to));
+                decorations.push(
+                  mermaidMarkDecorations["mermaid-marker"].range(
+                    child.from,
+                    child.to,
+                  ),
+                );
               }
             }
           } else {
             // Cursor out of range: hide the raw text
-            decorations.push(mermaidMarkDecorations["mermaid-hidden"].range(from, to));
+            decorations.push(
+              mermaidMarkDecorations["mermaid-hidden"].range(from, to),
+            );
           }
         }
       },
@@ -345,20 +395,29 @@ export class MermaidPlugin extends DecorationPlugin {
   override async renderToHTML(
     node: SyntaxNode,
     _children: string,
-    ctx: { sliceDoc(from: number, to: number): string; sanitize(html: string): string }
+    ctx: {
+      sliceDoc(from: number, to: number): string;
+      sanitize(html: string): string;
+    },
   ): Promise<string | null> {
     if (node.name === "MermaidBlock") {
       const content = ctx.sliceDoc(node.from, node.to);
       const lines = content.split("\n");
-      const definition = lines.length > 1 ? lines.slice(1, -1).join("\n").trim() : "";
+      const definition =
+        lines.length > 1 ? lines.slice(1, -1).join("\n").trim() : "";
 
       const fenceLine = lines[0] || "";
       const attributes = parseAttributes(fenceLine);
 
       const config = this.context?.config;
-      const currentTheme = config?.theme === ThemeEnum.DARK ? "dark" : "default";
+      const currentTheme =
+        config?.theme === ThemeEnum.DARK ? "dark" : "default";
 
-      const { svg, error } = await renderMermaid(definition, attributes, currentTheme);
+      const { svg, error } = await renderMermaid(
+        definition,
+        attributes,
+        currentTheme,
+      );
 
       if (error) {
         return `<div class="cm-draftly-mermaid-error">${ctx.sanitize(`[Mermaid Error: ${error}]`)}</div>`;
@@ -410,19 +469,20 @@ const theme = createTheme({
       borderBottom: "1px solid var(--color-border)",
     },
 
-    ".cm-draftly-mermaid-block:not(.cm-draftly-mermaid-block-rendered)::before": {
-      content: "attr(data-line-num)",
-      position: "absolute",
-      left: "0.5rem",
-      top: "0.2rem",
-      width: "var(--line-num-width, 2ch)",
-      textAlign: "right",
-      color: "var(--draftly-color-muted)",
-      opacity: "0.6",
-      fontFamily: "var(--user-monospace-font)",
-      fontSize: "var(--text-sm)",
-      userSelect: "none",
-    },
+    ".cm-draftly-mermaid-block:not(.cm-draftly-mermaid-block-rendered)::before":
+      {
+        content: "attr(data-line-num)",
+        position: "absolute",
+        left: "0.5rem",
+        top: "0.2rem",
+        width: "var(--line-num-width, 2ch)",
+        textAlign: "right",
+        color: "var(--draftly-color-muted)",
+        opacity: "0.6",
+        fontFamily: "var(--user-monospace-font)",
+        fontSize: "var(--text-sm)",
+        userSelect: "none",
+      },
 
     ".cm-draftly-mermaid-block.cm-draftly-mermaid-block-rendered br": {
       display: "none",

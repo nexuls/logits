@@ -1,4 +1,4 @@
-import { classHighlighter, Highlighter } from "@lezer/highlight";
+import { classHighlighter, type Highlighter } from "@lezer/highlight";
 import type { SyntaxThemeInput } from "./types";
 
 type HighlightSpec = {
@@ -20,7 +20,7 @@ const MAX_WALK_DEPTH = 8;
  */
 export function generateSyntaxThemeCSS(
   syntaxTheme: SyntaxThemeInput | SyntaxThemeInput[] | undefined,
-  _wrapperClass: string
+  _wrapperClass: string,
 ): string {
   if (!syntaxTheme) return "";
 
@@ -37,13 +37,12 @@ export function generateSyntaxThemeCSS(
 
   if (!cssChunks.length) return "";
 
-  return Array.from(new Set(cssChunks))
-    .join("\n");
+  return Array.from(new Set(cssChunks)).join("\n");
 }
 
 export function resolveSyntaxHighlighters(
   syntaxTheme: SyntaxThemeInput | SyntaxThemeInput[] | undefined,
-  includeLegacyClassHighlighter: boolean = true
+  includeLegacyClassHighlighter: boolean = true,
 ): readonly Highlighter[] {
   const resolved: Highlighter[] = [];
   if (includeLegacyClassHighlighter) {
@@ -60,7 +59,9 @@ export function resolveSyntaxHighlighters(
   return Array.from(new Set(resolved));
 }
 
-function extractRuntimeHighlightStyles(input: SyntaxThemeInput | SyntaxThemeInput[] | undefined): RuntimeHighlightStyle[] {
+function extractRuntimeHighlightStyles(
+  input: SyntaxThemeInput | SyntaxThemeInput[] | undefined,
+): RuntimeHighlightStyle[] {
   if (!input) return [];
 
   const values = Array.isArray(input) ? input : [input];
@@ -74,7 +75,12 @@ function extractRuntimeHighlightStyles(input: SyntaxThemeInput | SyntaxThemeInpu
   return styles;
 }
 
-function walk(value: unknown, depth: number, visited: WeakSet<object>, out: RuntimeHighlightStyle[]): void {
+function walk(
+  value: unknown,
+  depth: number,
+  visited: WeakSet<object>,
+  out: RuntimeHighlightStyle[],
+): void {
   if (value === null || value === undefined) return;
   if (depth > MAX_WALK_DEPTH) return;
 
@@ -103,7 +109,9 @@ function walk(value: unknown, depth: number, visited: WeakSet<object>, out: Runt
   }
 }
 
-function isRuntimeHighlightStyle(value: unknown): value is RuntimeHighlightStyle {
+function isRuntimeHighlightStyle(
+  value: unknown,
+): value is RuntimeHighlightStyle {
   if (!value || typeof value !== "object") return false;
   const style = value as RuntimeHighlightStyle;
   return Array.isArray(style.specs) && typeof style.style === "function";

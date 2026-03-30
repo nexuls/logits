@@ -1,16 +1,30 @@
-import { Decoration, DecorationSet, EditorView, ViewPlugin, ViewUpdate } from "@codemirror/view";
-import { Extension, Facet, Range, RangeSetBuilder } from "@codemirror/state";
+import {
+  type Decoration,
+  type DecorationSet,
+  EditorView,
+  ViewPlugin,
+  type ViewUpdate,
+} from "@codemirror/view";
+import {
+  type Extension,
+  Facet,
+  type Range,
+  RangeSetBuilder,
+} from "@codemirror/state";
 import { syntaxTree } from "@codemirror/language";
 
 import { cursorInRange, selectionOverlapsRange, ThemeEnum } from "./utils";
 import { draftlyBaseTheme } from "./theme";
-import { DecorationContext, DraftlyPlugin } from "./plugin";
-import { DraftlyNode } from "./draftly";
+import type { DecorationContext, DraftlyPlugin } from "./plugin";
+import type { DraftlyNode } from "./draftly";
 
 /**
  * Facet to register plugins with the view plugin
  */
-export const DraftlyPluginsFacet = Facet.define<DraftlyPlugin[], DraftlyPlugin[]>({
+export const DraftlyPluginsFacet = Facet.define<
+  DraftlyPlugin[],
+  DraftlyPlugin[]
+>({
   combine: (values) => values.flat(),
 });
 
@@ -36,7 +50,10 @@ export const draftlyThemeFacet = Facet.define<ThemeEnum, ThemeEnum>({
  * @param view - The EditorView instance
  * @param plugins - Optional array of plugins to invoke for decorations
  */
-function buildDecorations(view: EditorView, plugins: DraftlyPlugin[] = []): DecorationSet {
+function buildDecorations(
+  view: EditorView,
+  plugins: DraftlyPlugin[] = [],
+): DecorationSet {
   const builder = new RangeSetBuilder<Decoration>();
   const decorations: Range<Decoration>[] = [];
 
@@ -45,12 +62,15 @@ function buildDecorations(view: EditorView, plugins: DraftlyPlugin[] = []): Deco
     const ctx: DecorationContext = {
       view,
       decorations,
-      selectionOverlapsRange: (from, to) => selectionOverlapsRange(view, from, to),
+      selectionOverlapsRange: (from, to) =>
+        selectionOverlapsRange(view, from, to),
       cursorInRange: (from, to) => cursorInRange(view, from, to),
     };
 
     // Sort plugins by priority and invoke each one's decoration builder
-    const sortedPlugins = [...plugins].sort((a, b) => a.decorationPriority - b.decorationPriority);
+    const sortedPlugins = [...plugins].sort(
+      (a, b) => a.decorationPriority - b.decorationPriority,
+    );
 
     for (const plugin of sortedPlugins) {
       try {
@@ -63,7 +83,9 @@ function buildDecorations(view: EditorView, plugins: DraftlyPlugin[] = []): Deco
   }
 
   // Sort decorations by position (required for RangeSetBuilder)
-  decorations.sort((a, b) => a.from - b.from || a.value.startSide - b.value.startSide);
+  decorations.sort(
+    (a, b) => a.from - b.from || a.value.startSide - b.value.startSide,
+  );
 
   // Build the decoration set
   for (const decoration of decorations) {
@@ -138,7 +160,7 @@ class draftlyViewPluginClass {
         };
 
         if (stack.length > 0) {
-          stack[stack.length - 1]!.children.push(node);
+          stack[stack.length - 1]?.children.push(node);
         } else {
           roots.push(node);
         }
@@ -165,7 +187,9 @@ export const draftlyViewPlugin = ViewPlugin.fromClass(draftlyViewPluginClass, {
 /**
  * Extension to add the cm-draftly-enabled class to the editor
  */
-const draftlyEditorClass = EditorView.editorAttributes.of({ class: "cm-draftly" });
+const draftlyEditorClass = EditorView.editorAttributes.of({
+  class: "cm-draftly",
+});
 
 /**
  * Create draftly view extension bundle with plugin support
@@ -177,7 +201,7 @@ export function createDraftlyViewExtension(
   theme: ThemeEnum = ThemeEnum.AUTO,
   baseStyles: boolean = true,
   plugins: DraftlyPlugin[] = [],
-  onNodesChange?: (nodes: DraftlyNode[]) => void
+  onNodesChange?: (nodes: DraftlyNode[]) => void,
 ): Extension[] {
   return [
     draftlyEditorClass,

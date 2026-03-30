@@ -36,26 +36,36 @@ function getDb() {
 }
 
 export async function readAppData() {
-  const db = await getDb();
-  const record = await db.get(STORE_NAME, ROOT_KEY);
+  try {
+    const db = await getDb();
+    const record = await db.get(STORE_NAME, ROOT_KEY);
 
-  if (!record) {
-    const initialData = createInitialData();
-    await writeAppData(initialData);
-    return initialData;
+    if (!record) {
+      const initialData = createInitialData();
+      await writeAppData(initialData);
+      return initialData;
+    }
+
+    return normalizeAppData(record.data);
+  } catch (error) {
+    console.error("[store] failed reading app data from IndexedDB", error);
+    throw error;
   }
-
-  return normalizeAppData(record.data);
 }
 
 export async function writeAppData(data: AppData) {
-  const db = await getDb();
-  const normalized = normalizeAppData(data);
+  try {
+    const db = await getDb();
+    const normalized = normalizeAppData(data);
 
-  await db.put(STORE_NAME, {
-    key: ROOT_KEY,
-    data: normalized,
-  });
+    await db.put(STORE_NAME, {
+      key: ROOT_KEY,
+      data: normalized,
+    });
 
-  return normalized;
+    return normalized;
+  } catch (error) {
+    console.error("[store] failed writing app data to IndexedDB", error);
+    throw error;
+  }
 }

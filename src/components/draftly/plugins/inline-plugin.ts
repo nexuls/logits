@@ -1,12 +1,12 @@
-import { Decoration, KeyBinding } from "@codemirror/view";
+import { Decoration, type KeyBinding } from "@codemirror/view";
 import { syntaxTree } from "@codemirror/language";
-import { DecorationContext, DecorationPlugin } from "../editor/plugin";
+import { type DecorationContext, DecorationPlugin } from "../editor/plugin";
 import { createTheme } from "../editor";
-import { SyntaxNode } from "@lezer/common";
+import type { SyntaxNode } from "@lezer/common";
 import { toggleMarkdownStyle } from "../editor/utils";
 import { tags } from "@lezer/highlight";
 import type { MarkdownConfig, InlineParser } from "@lezer/markdown";
-import { Extension } from "@codemirror/state";
+import type { Extension } from "@codemirror/state";
 import { createWrapSelectionInputHandler } from "../lib";
 
 /**
@@ -40,9 +40,9 @@ const EQUALS = 61;
 
 // Punctuation regex for flanking checks (matches Unicode punctuation)
 // eslint-disable-next-line no-useless-escape
-let Punctuation = /[!"#$%&'()*+,\-./:;<=>?@\[\\\]^_`{|}~\xA1\u2010-\u2027]/;
+let Punctuation = /[!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~\xA1\u2010-\u2027]/;
 try {
-  Punctuation = new RegExp("[\\p{S}|\\p{P}]", "u");
+  Punctuation = /[\p{S}|\p{P}]/u;
 } catch {
   // Fallback regex is used above for environments without Unicode support
 }
@@ -75,7 +75,7 @@ const highlightParser: InlineParser = {
       pos,
       pos + 2,
       !sAfter && (!pAfter || sBefore || pBefore),
-      !sBefore && (!pBefore || sAfter || pAfter)
+      !sBefore && (!pBefore || sAfter || pAfter),
     );
   },
 };
@@ -174,7 +174,15 @@ export class InlinePlugin extends DecorationPlugin {
    * - = -> ==selected==
    */
   override getExtensions(): Extension[] {
-    return [createWrapSelectionInputHandler({ "*": "*", _: "_", "~": "~", "^": "^", "=": "==" })];
+    return [
+      createWrapSelectionInputHandler({
+        "*": "*",
+        _: "_",
+        "~": "~",
+        "^": "^",
+        "=": "==",
+      }),
+    ];
   }
 
   /**
@@ -218,7 +226,9 @@ export class InlinePlugin extends DecorationPlugin {
           for (const markerName of markerNames) {
             const marks = node.node.getChildren(markerName);
             for (const mark of marks) {
-              decorations.push(inlineMarkDecorations["inline-mark"].range(mark.from, mark.to));
+              decorations.push(
+                inlineMarkDecorations["inline-mark"].range(mark.from, mark.to),
+              );
             }
           }
         }

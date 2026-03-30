@@ -378,7 +378,12 @@ export function useCanvasMouseActions({
             Math.max(minScale, prev.scale * scaleFactor),
           );
 
-          const zoomed = getZoomedViewState(prev, pointerX, pointerY, nextScale);
+          const zoomed = getZoomedViewState(
+            prev,
+            pointerX,
+            pointerY,
+            nextScale,
+          );
 
           return {
             ...zoomed,
@@ -437,7 +442,10 @@ export function useCanvasMouseActions({
       return;
     }
 
-    if (panPointerIdRef.current !== null && event.pointerId !== panPointerIdRef.current) {
+    if (
+      panPointerIdRef.current !== null &&
+      event.pointerId !== panPointerIdRef.current
+    ) {
       return;
     }
 

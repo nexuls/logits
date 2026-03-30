@@ -1,11 +1,16 @@
-import { Decoration, EditorView, KeyBinding, WidgetType } from "@codemirror/view";
-import { Extension } from "@codemirror/state";
+import {
+  Decoration,
+  type EditorView,
+  type KeyBinding,
+  WidgetType,
+} from "@codemirror/view";
+import type { Extension } from "@codemirror/state";
 import { LanguageDescription, syntaxTree } from "@codemirror/language";
 import { languages } from "@codemirror/language-data";
-import { Highlighter, highlightCode } from "@lezer/highlight";
-import { Parser, SyntaxNode } from "@lezer/common";
+import { type Highlighter, highlightCode } from "@lezer/highlight";
+import type { Parser, SyntaxNode } from "@lezer/common";
 
-import { DecorationContext, DecorationPlugin } from "../editor/plugin";
+import { type DecorationContext, DecorationPlugin } from "../editor/plugin";
 import { toggleMarkdownStyle } from "../editor";
 import { createWrapSelectionInputHandler } from "../lib";
 import { codePluginTheme as theme } from "./code-plugin.theme";
@@ -30,7 +35,8 @@ const CODE_FENCE = "```";
 const QUOTED_INFO_PATTERN = /(\w+)="([^"]*)"/g;
 
 /** Regex for /pattern/ with optional instance selectors (/pattern/1-3,5) */
-const TEXT_HIGHLIGHT_PATTERN = /\/([^/]+)\/(?:(\d+(?:-\d+)?(?:,\d+(?:-\d+)?)*))?/g;
+const TEXT_HIGHLIGHT_PATTERN =
+  /\/([^/]+)\/(?:(\d+(?:-\d+)?(?:,\d+(?:-\d+)?)*))?/g;
 
 interface PreviewRenderContext {
   sliceDoc(from: number, to: number): string;
@@ -50,14 +56,22 @@ const codeMarkDecorations = {
 
   // Fenced code block
   "code-block-line": Decoration.line({ class: "cm-draftly-code-block-line" }),
-  "code-block-line-start": Decoration.line({ class: "cm-draftly-code-block-line-start" }),
-  "code-block-line-end": Decoration.line({ class: "cm-draftly-code-block-line-end" }),
+  "code-block-line-start": Decoration.line({
+    class: "cm-draftly-code-block-line-start",
+  }),
+  "code-block-line-end": Decoration.line({
+    class: "cm-draftly-code-block-line-end",
+  }),
   "code-fence": Decoration.mark({ class: "cm-draftly-code-fence" }),
   "code-hidden": Decoration.replace({}),
 
   // Highlights
-  "code-line-highlight": Decoration.line({ class: "cm-draftly-code-line-highlight" }),
-  "code-text-highlight": Decoration.mark({ class: "cm-draftly-code-text-highlight" }),
+  "code-line-highlight": Decoration.line({
+    class: "cm-draftly-code-line-highlight",
+  }),
+  "code-text-highlight": Decoration.mark({
+    class: "cm-draftly-code-text-highlight",
+  }),
 
   // Diff preview
   "diff-line-add": Decoration.line({ class: "cm-draftly-code-line-diff-add" }),
@@ -130,7 +144,7 @@ interface DiffDisplayLineNumbers {
 class CodeBlockHeaderWidget extends WidgetType {
   constructor(
     private props: CodeBlockProperties,
-    private codeContent: string
+    private codeContent: string,
   ) {
     super();
   }
@@ -256,7 +270,13 @@ export class CodePlugin extends DecorationPlugin {
   readonly name = "code";
   readonly version = "1.0.0";
   override decorationPriority = 25;
-  override readonly requiredNodes = ["InlineCode", "FencedCode", "CodeMark", "CodeInfo", "CodeText"] as const;
+  override readonly requiredNodes = [
+    "InlineCode",
+    "FencedCode",
+    "CodeMark",
+    "CodeInfo",
+    "CodeText",
+  ] as const;
   private readonly parserCache = new Map<string, Promise<Parser | null>>();
 
   /**
@@ -306,8 +326,10 @@ export class CodePlugin extends DecorationPlugin {
     const endLine = state.doc.lineAt(to);
 
     // Check if lines are already in a code block
-    const prevLineNum = startLine.number > 1 ? startLine.number - 1 : startLine.number;
-    const nextLineNum = endLine.number < state.doc.lines ? endLine.number + 1 : endLine.number;
+    const prevLineNum =
+      startLine.number > 1 ? startLine.number - 1 : startLine.number;
+    const nextLineNum =
+      endLine.number < state.doc.lines ? endLine.number + 1 : endLine.number;
 
     const prevLine = state.doc.line(prevLineNum);
     const nextLine = state.doc.line(nextLineNum);
@@ -336,7 +358,10 @@ export class CodePlugin extends DecorationPlugin {
           { from: startLine.from, insert: openFence },
           { from: endLine.to, insert: closeFence },
         ],
-        selection: { anchor: startLine.from + openFence.length, head: endLine.to + openFence.length },
+        selection: {
+          anchor: startLine.from + openFence.length,
+          head: endLine.to + openFence.length,
+        },
       });
     }
 
@@ -378,12 +403,13 @@ export class CodePlugin extends DecorationPlugin {
 
     // Extract language (first token), but only when it isn't a known directive.
     const firstTokenMatch = remaining.match(/^([^\s]+)/);
-    if (firstTokenMatch && firstTokenMatch[1]) {
+    if (firstTokenMatch?.[1]) {
       const firstToken = firstTokenMatch[1];
       const normalizedToken = firstToken.toLowerCase();
-      const isLineNumberDirective = /^(?:line-numbers|linenumbers|showlinenumbers)(?:\{\d+\})?$/.test(
-        normalizedToken
-      );
+      const isLineNumberDirective =
+        /^(?:line-numbers|linenumbers|showlinenumbers)(?:\{\d+\})?$/.test(
+          normalizedToken,
+        );
       const isKnownDirective =
         isLineNumberDirective ||
         normalizedToken === "copy" ||
@@ -414,7 +440,9 @@ export class CodePlugin extends DecorationPlugin {
 
     // Check for line numbers with optional start value.
     // Supports both `line-numbers` and legacy `showLineNumbers` tokens.
-    const lineNumbersMatch = remaining.match(/\b(?:line-numbers|lineNumbers|showLineNumbers)(?:\{(\d+)\})?/i);
+    const lineNumbersMatch = remaining.match(
+      /\b(?:line-numbers|lineNumbers|showLineNumbers)(?:\{(\d+)\})?/i,
+    );
     if (lineNumbersMatch) {
       if (lineNumbersMatch[1]) {
         props.showLineNumbers = parseInt(lineNumbersMatch[1], 10);
@@ -438,7 +466,7 @@ export class CodePlugin extends DecorationPlugin {
 
     // Extract line highlights {2-4,5,9}
     const lineHighlightMatch = remaining.match(/\{([^}]+)\}/);
-    if (lineHighlightMatch && lineHighlightMatch[1]) {
+    if (lineHighlightMatch?.[1]) {
       const highlightLines = this.parseNumberList(lineHighlightMatch[1]);
 
       if (highlightLines.length > 0) {
@@ -497,7 +525,10 @@ export class CodePlugin extends DecorationPlugin {
     });
   }
 
-  private decorateInlineCode(node: { from: number; to: number; node: SyntaxNode }, ctx: DecorationContext): void {
+  private decorateInlineCode(
+    node: { from: number; to: number; node: SyntaxNode },
+    ctx: DecorationContext,
+  ): void {
     const { from, to } = node;
     ctx.decorations.push(codeMarkDecorations["inline-code"].range(from, to));
 
@@ -507,23 +538,33 @@ export class CodePlugin extends DecorationPlugin {
 
     for (let child = node.node.firstChild; child; child = child.nextSibling) {
       if (child.name === "CodeMark") {
-        ctx.decorations.push(codeMarkDecorations["inline-mark"].range(child.from, child.to));
+        ctx.decorations.push(
+          codeMarkDecorations["inline-mark"].range(child.from, child.to),
+        );
       }
     }
   }
 
-  private decorateFencedCode(node: { from: number; to: number; node: SyntaxNode }, ctx: DecorationContext): void {
+  private decorateFencedCode(
+    node: { from: number; to: number; node: SyntaxNode },
+    ctx: DecorationContext,
+  ): void {
     const { view, decorations } = ctx;
     const nodeLineStart = view.state.doc.lineAt(node.from);
     const nodeLineEnd = view.state.doc.lineAt(node.to);
-    const cursorInRange = ctx.selectionOverlapsRange(nodeLineStart.from, nodeLineEnd.to);
+    const cursorInRange = ctx.selectionOverlapsRange(
+      nodeLineStart.from,
+      nodeLineEnd.to,
+    );
 
     let infoProps: CodeBlockProperties = { language: "" };
     let codeContent = "";
 
     for (let child = node.node.firstChild; child; child = child.nextSibling) {
       if (child.name === "CodeInfo") {
-        infoProps = this.parseCodeInfo(view.state.sliceDoc(child.from, child.to).trim());
+        infoProps = this.parseCodeInfo(
+          view.state.sliceDoc(child.from, child.to).trim(),
+        );
       }
       if (child.name === "CodeText") {
         codeContent = view.state.sliceDoc(child.from, child.to);
@@ -537,19 +578,33 @@ export class CodePlugin extends DecorationPlugin {
     }
 
     const totalCodeLines = nodeLineEnd.number - nodeLineStart.number - 1;
-    const startLineNum = typeof infoProps.showLineNumbers === "number" ? infoProps.showLineNumbers : 1;
+    const startLineNum =
+      typeof infoProps.showLineNumbers === "number"
+        ? infoProps.showLineNumbers
+        : 1;
     const maxLineNum = startLineNum + totalCodeLines - 1;
-    const lineNumWidth = Math.max(String(maxLineNum).length, String(startLineNum).length);
-    const highlightInstanceCounters = new Array(infoProps.highlightText?.length ?? 0).fill(0);
+    const lineNumWidth = Math.max(
+      String(maxLineNum).length,
+      String(startLineNum).length,
+    );
+    const highlightInstanceCounters = new Array(
+      infoProps.highlightText?.length ?? 0,
+    ).fill(0);
 
     const diffStates = infoProps.diff ? this.analyzeDiffLines(codeLines) : [];
-    const diffDisplayLineNumbers = infoProps.diff ? this.computeDiffDisplayLineNumbers(diffStates, startLineNum) : [];
+    const diffDisplayLineNumbers = infoProps.diff
+      ? this.computeDiffDisplayLineNumbers(diffStates, startLineNum)
+      : [];
     const displayLineNumbers = infoProps.diff
-      ? diffDisplayLineNumbers.map((numbers, index) => numbers.newLine ?? numbers.oldLine ?? startLineNum + index)
+      ? diffDisplayLineNumbers.map(
+          (numbers, index) =>
+            numbers.newLine ?? numbers.oldLine ?? startLineNum + index,
+        )
       : codeLines.map((_, index) => startLineNum + index);
     const diffHighlightLineNumbers = infoProps.diff
       ? this.computeDiffDisplayLineNumbers(diffStates, startLineNum).map(
-          (numbers, index) => numbers.newLine ?? numbers.oldLine ?? startLineNum + index
+          (numbers, index) =>
+            numbers.newLine ?? numbers.oldLine ?? startLineNum + index,
         )
       : [];
     const maxOldDiffLineNum = diffDisplayLineNumbers.reduce((max, numbers) => {
@@ -560,10 +615,18 @@ export class CodePlugin extends DecorationPlugin {
       const newLine = numbers.newLine ?? 0;
       return newLine > max ? newLine : max;
     }, startLineNum);
-    const diffOldLineNumWidth = Math.max(String(startLineNum).length, String(maxOldDiffLineNum).length);
-    const diffNewLineNumWidth = Math.max(String(startLineNum).length, String(maxNewDiffLineNum).length);
+    const diffOldLineNumWidth = Math.max(
+      String(startLineNum).length,
+      String(maxOldDiffLineNum).length,
+    );
+    const diffNewLineNumWidth = Math.max(
+      String(startLineNum).length,
+      String(maxNewDiffLineNum).length,
+    );
 
-    const shouldShowHeader = !cursorInRange && (infoProps.title || infoProps.copy || infoProps.language);
+    const shouldShowHeader =
+      !cursorInRange &&
+      (infoProps.title || infoProps.copy || infoProps.language);
     const shouldShowCaption = !cursorInRange && !!infoProps.caption;
 
     if (shouldShowHeader) {
@@ -572,29 +635,48 @@ export class CodePlugin extends DecorationPlugin {
           widget: new CodeBlockHeaderWidget(infoProps, codeContent),
           block: false,
           side: -1,
-        }).range(nodeLineStart.from)
+        }).range(nodeLineStart.from),
       );
     }
 
     let codeLineIndex = 0;
-    for (let lineNumber = nodeLineStart.number; lineNumber <= nodeLineEnd.number; lineNumber++) {
+    for (
+      let lineNumber = nodeLineStart.number;
+      lineNumber <= nodeLineEnd.number;
+      lineNumber++
+    ) {
       const line = view.state.doc.line(lineNumber);
-      const isFenceLine = lineNumber === nodeLineStart.number || lineNumber === nodeLineEnd.number;
-      const relativeLineNum = displayLineNumbers[codeLineIndex] ?? startLineNum + codeLineIndex;
+      const isFenceLine =
+        lineNumber === nodeLineStart.number ||
+        lineNumber === nodeLineEnd.number;
+      const relativeLineNum =
+        displayLineNumbers[codeLineIndex] ?? startLineNum + codeLineIndex;
 
       decorations.push(codeMarkDecorations["code-block-line"].range(line.from));
 
       if (lineNumber === nodeLineStart.number) {
-        decorations.push(codeMarkDecorations["code-block-line-start"].range(line.from));
+        decorations.push(
+          codeMarkDecorations["code-block-line-start"].range(line.from),
+        );
         if (shouldShowHeader) {
-          decorations.push(Decoration.line({ class: "cm-draftly-code-block-has-header" }).range(line.from));
+          decorations.push(
+            Decoration.line({
+              class: "cm-draftly-code-block-has-header",
+            }).range(line.from),
+          );
         }
       }
 
       if (lineNumber === nodeLineEnd.number) {
-        decorations.push(codeMarkDecorations["code-block-line-end"].range(line.from));
+        decorations.push(
+          codeMarkDecorations["code-block-line-end"].range(line.from),
+        );
         if (shouldShowCaption) {
-          decorations.push(Decoration.line({ class: "cm-draftly-code-block-has-caption" }).range(line.from));
+          decorations.push(
+            Decoration.line({
+              class: "cm-draftly-code-block-has-caption",
+            }).range(line.from),
+          );
         }
       }
 
@@ -606,24 +688,35 @@ export class CodePlugin extends DecorationPlugin {
               "data-line-num": String(relativeLineNum),
               style: `--line-num-width: ${lineNumWidth}ch`,
             },
-          }).range(line.from)
+          }).range(line.from),
         );
       }
 
       if (!isFenceLine && infoProps.showLineNumbers && infoProps.diff) {
         const diffLineNumbers = diffDisplayLineNumbers[codeLineIndex];
         const diffState = diffStates[codeLineIndex];
-        const diffMarker = diffState?.kind === "addition" ? "+" : diffState?.kind === "deletion" ? "-" : " ";
+        const diffMarker =
+          diffState?.kind === "addition"
+            ? "+"
+            : diffState?.kind === "deletion"
+              ? "-"
+              : " ";
         decorations.push(
           Decoration.line({
             class: "cm-draftly-code-line-numbered-diff",
             attributes: {
-              "data-line-num-old": diffLineNumbers?.oldLine != null ? String(diffLineNumbers.oldLine) : "",
-              "data-line-num-new": diffLineNumbers?.newLine != null ? String(diffLineNumbers.newLine) : "",
+              "data-line-num-old":
+                diffLineNumbers?.oldLine != null
+                  ? String(diffLineNumbers.oldLine)
+                  : "",
+              "data-line-num-new":
+                diffLineNumbers?.newLine != null
+                  ? String(diffLineNumbers.newLine)
+                  : "",
               "data-diff-marker": diffMarker,
               style: `--line-num-old-width: ${diffOldLineNumWidth}ch; --line-num-new-width: ${diffNewLineNumWidth}ch`,
             },
-          }).range(line.from)
+          }).range(line.from),
         );
       }
 
@@ -634,7 +727,7 @@ export class CodePlugin extends DecorationPlugin {
           diffStates,
           cursorInRange,
           !infoProps.showLineNumbers,
-          decorations
+          decorations,
         );
       }
 
@@ -643,7 +736,9 @@ export class CodePlugin extends DecorationPlugin {
           ? (diffHighlightLineNumbers[codeLineIndex] ?? codeLineIndex + 1)
           : startLineNum + codeLineIndex;
         if (infoProps.highlightLines.includes(highlightLineNumber)) {
-          decorations.push(codeMarkDecorations["code-line-highlight"].range(line.from));
+          decorations.push(
+            codeMarkDecorations["code-line-highlight"].range(line.from),
+          );
         }
       }
 
@@ -653,7 +748,7 @@ export class CodePlugin extends DecorationPlugin {
           view.state.sliceDoc(line.from, line.to),
           infoProps.highlightText,
           highlightInstanceCounters,
-          decorations
+          decorations,
         );
       }
 
@@ -670,7 +765,7 @@ export class CodePlugin extends DecorationPlugin {
           widget: new CodeBlockCaptionWidget(infoProps.caption),
           block: false,
           side: 1,
-        }).range(nodeLineEnd.to)
+        }).range(nodeLineEnd.to),
       );
     }
   }
@@ -678,15 +773,15 @@ export class CodePlugin extends DecorationPlugin {
   private decorateFenceMarkers(
     node: SyntaxNode,
     cursorInRange: boolean,
-    decorations: DecorationContext["decorations"]
+    decorations: DecorationContext["decorations"],
   ): void {
     for (let child = node.firstChild; child; child = child.nextSibling) {
       if (child.name === "CodeMark" || child.name === "CodeInfo") {
         decorations.push(
-          (cursorInRange ? codeMarkDecorations["code-fence"] : codeMarkDecorations["code-hidden"]).range(
-            child.from,
-            child.to
-          )
+          (cursorInRange
+            ? codeMarkDecorations["code-fence"]
+            : codeMarkDecorations["code-hidden"]
+          ).range(child.from, child.to),
         );
       }
     }
@@ -698,10 +793,15 @@ export class CodePlugin extends DecorationPlugin {
     diffStates: DiffLineState[],
     cursorInRange: boolean,
     showDiffMarkerGutter: boolean,
-    decorations: DecorationContext["decorations"]
+    decorations: DecorationContext["decorations"],
   ): void {
     const diffState = diffStates[codeLineIndex];
-    const diffMarker = diffState?.kind === "addition" ? "+" : diffState?.kind === "deletion" ? "-" : " ";
+    const diffMarker =
+      diffState?.kind === "addition"
+        ? "+"
+        : diffState?.kind === "deletion"
+          ? "-"
+          : " ";
 
     if (showDiffMarkerGutter) {
       decorations.push(
@@ -710,30 +810,41 @@ export class CodePlugin extends DecorationPlugin {
           attributes: {
             "data-diff-marker": diffMarker,
           },
-        }).range(line.from)
+        }).range(line.from),
       );
     }
 
     if (diffState?.kind === "addition") {
       decorations.push(codeMarkDecorations["diff-line-add"].range(line.from));
       if (cursorInRange && line.to > line.from) {
-        decorations.push(codeMarkDecorations["diff-sign-add"].range(line.from, line.from + 1));
+        decorations.push(
+          codeMarkDecorations["diff-sign-add"].range(line.from, line.from + 1),
+        );
       }
     }
 
     if (diffState?.kind === "deletion") {
       decorations.push(codeMarkDecorations["diff-line-del"].range(line.from));
       if (cursorInRange && line.to > line.from) {
-        decorations.push(codeMarkDecorations["diff-sign-del"].range(line.from, line.from + 1));
+        decorations.push(
+          codeMarkDecorations["diff-sign-del"].range(line.from, line.from + 1),
+        );
       }
     }
 
     if (
       !cursorInRange &&
       line.to > line.from &&
-      (diffState?.escapedMarker || diffState?.kind === "addition" || diffState?.kind === "deletion")
+      (diffState?.escapedMarker ||
+        diffState?.kind === "addition" ||
+        diffState?.kind === "deletion")
     ) {
-      decorations.push(codeMarkDecorations["diff-escape-hidden"].range(line.from, line.from + 1));
+      decorations.push(
+        codeMarkDecorations["diff-escape-hidden"].range(
+          line.from,
+          line.from + 1,
+        ),
+      );
     }
 
     if (diffState?.modificationRanges?.length) {
@@ -745,7 +856,7 @@ export class CodePlugin extends DecorationPlugin {
             (diffState.kind === "addition"
               ? codeMarkDecorations["diff-mod-add"]
               : codeMarkDecorations["diff-mod-del"]
-            ).range(rangeFrom, rangeTo)
+            ).range(rangeFrom, rangeTo),
           );
         }
       }
@@ -757,7 +868,7 @@ export class CodePlugin extends DecorationPlugin {
     lineText: string,
     highlights: TextHighlight[],
     instanceCounters: number[],
-    decorations: DecorationContext["decorations"]
+    decorations: DecorationContext["decorations"],
   ): void {
     for (const [highlightIndex, textHighlight] of highlights.entries()) {
       try {
@@ -765,14 +876,22 @@ export class CodePlugin extends DecorationPlugin {
         let match: RegExpExecArray | null;
 
         while ((match = regex.exec(lineText)) !== null) {
-          instanceCounters[highlightIndex] = (instanceCounters[highlightIndex] ?? 0) + 1;
+          instanceCounters[highlightIndex] =
+            (instanceCounters[highlightIndex] ?? 0) + 1;
           const globalMatchIndex = instanceCounters[highlightIndex];
-          const shouldHighlight = !textHighlight.instances || textHighlight.instances.includes(globalMatchIndex);
+          const shouldHighlight =
+            !textHighlight.instances ||
+            textHighlight.instances.includes(globalMatchIndex);
 
           if (shouldHighlight) {
             const matchFrom = lineFrom + match.index;
             const matchTo = matchFrom + match[0].length;
-            decorations.push(codeMarkDecorations["code-text-highlight"].range(matchFrom, matchTo));
+            decorations.push(
+              codeMarkDecorations["code-text-highlight"].range(
+                matchFrom,
+                matchTo,
+              ),
+            );
           }
         }
       } catch {
@@ -785,7 +904,11 @@ export class CodePlugin extends DecorationPlugin {
    * Render code elements to HTML for static preview.
    * Applies syntax highlighting using @lezer/highlight.
    */
-  override async renderToHTML(node: SyntaxNode, _children: string, ctx: PreviewRenderContext): Promise<string | null> {
+  override async renderToHTML(
+    node: SyntaxNode,
+    _children: string,
+    ctx: PreviewRenderContext,
+  ): Promise<string | null> {
     // Hide CodeMark (backticks)
     if (node.name === "CodeMark") {
       return "";
@@ -797,7 +920,7 @@ export class CodePlugin extends DecorationPlugin {
       let content = ctx.sliceDoc(node.from, node.to);
       // Remove leading and trailing backticks
       const match = content.match(/^`+(.+?)`+$/);
-      if (match && match[1]) {
+      if (match?.[1]) {
         content = match[1];
       }
       return `<code class="cm-draftly-code-inline" style="padding: 0.1rem 0.25rem">${this.escapeHtml(content)}</code>`;
@@ -841,7 +964,9 @@ export class CodePlugin extends DecorationPlugin {
           html += `<div class="cm-draftly-code-header-right">`;
           // Encode code as base64 to safely store in data attribute (preserves newlines and special chars)
           const encodedCode =
-            typeof btoa !== "undefined" ? btoa(encodeURIComponent(code)) : Buffer.from(code).toString("base64");
+            typeof btoa !== "undefined"
+              ? btoa(encodeURIComponent(code))
+              : Buffer.from(code).toString("base64");
           html += `<button class="cm-draftly-code-copy-btn" type="button" title="Copy code" data-code="${encodedCode}" data-encoded="true">`;
           html += `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
           html += `</button>`;
@@ -851,41 +976,56 @@ export class CodePlugin extends DecorationPlugin {
       }
 
       // Calculate line number info
-      const startLineNum = typeof props.showLineNumbers === "number" ? props.showLineNumbers : 1;
-      const previewHighlightCounters = new Array(props.highlightText?.length ?? 0).fill(0);
+      const startLineNum =
+        typeof props.showLineNumbers === "number" ? props.showLineNumbers : 1;
+      const previewHighlightCounters = new Array(
+        props.highlightText?.length ?? 0,
+      ).fill(0);
       const diffStates = props.diff ? this.analyzeDiffLines(codeLines) : [];
-      const previewDiffLineNumbers = props.diff ? this.computeDiffDisplayLineNumbers(diffStates, startLineNum) : [];
+      const previewDiffLineNumbers = props.diff
+        ? this.computeDiffDisplayLineNumbers(diffStates, startLineNum)
+        : [];
       const previewLineNumbers = props.diff
-        ? previewDiffLineNumbers.map((numbers, index) => numbers.newLine ?? numbers.oldLine ?? startLineNum + index)
+        ? previewDiffLineNumbers.map(
+            (numbers, index) =>
+              numbers.newLine ?? numbers.oldLine ?? startLineNum + index,
+          )
         : codeLines.map((_, index) => startLineNum + index);
       const previewHighlightLineNumbers = props.diff
         ? this.computeDiffDisplayLineNumbers(diffStates, startLineNum).map(
-            (numbers, index) => numbers.newLine ?? numbers.oldLine ?? startLineNum + index
+            (numbers, index) =>
+              numbers.newLine ?? numbers.oldLine ?? startLineNum + index,
           )
         : [];
-      const lineNumWidth = String(Math.max(...previewLineNumbers, startLineNum)).length;
+      const lineNumWidth = String(
+        Math.max(...previewLineNumbers, startLineNum),
+      ).length;
       const previewOldLineNumWidth = String(
         Math.max(
           ...previewDiffLineNumbers.map((numbers) => numbers.oldLine ?? 0),
-          startLineNum
-        )
+          startLineNum,
+        ),
       ).length;
       const previewNewLineNumWidth = String(
         Math.max(
           ...previewDiffLineNumbers.map((numbers) => numbers.newLine ?? 0),
-          startLineNum
-        )
+          startLineNum,
+        ),
       ).length;
-      const previewContentLines = props.diff ? diffStates.map((state) => state.content) : codeLines;
+      const previewContentLines = props.diff
+        ? diffStates.map((state) => state.content)
+        : codeLines;
       const highlightedLines = await this.highlightCodeLines(
         previewContentLines.join("\n"),
         props.language || "",
-        ctx.syntaxHighlighters
+        ctx.syntaxHighlighters,
       );
 
       // Code block with line processing
       const hasHeader = showHeader ? " cm-draftly-code-block-has-header" : "";
-      const hasCaption = props.caption ? " cm-draftly-code-block-has-caption" : "";
+      const hasCaption = props.caption
+        ? " cm-draftly-code-block-has-caption"
+        : "";
       html += `<pre class="cm-draftly-code-block${hasHeader}${hasCaption}"${props.language ? ` data-lang="${this.escapeAttribute(props.language)}"` : ""}>`;
       html += `<code>`;
 
@@ -895,18 +1035,27 @@ export class CodePlugin extends DecorationPlugin {
         const highlightLineNumber = props.diff
           ? (previewHighlightLineNumbers[index] ?? startLineNum + index)
           : startLineNum + index;
-        const isHighlighted = props.highlightLines?.includes(highlightLineNumber);
+        const isHighlighted =
+          props.highlightLines?.includes(highlightLineNumber);
         const diffState = props.diff ? diffStates[index] : undefined;
-        const diffLineNumbers = props.diff ? previewDiffLineNumbers[index] : undefined;
+        const diffLineNumbers = props.diff
+          ? previewDiffLineNumbers[index]
+          : undefined;
 
         // Line classes
         const lineClasses: string[] = ["cm-draftly-code-line"];
         if (isHighlighted) lineClasses.push("cm-draftly-code-line-highlight");
         if (props.showLineNumbers) {
-          lineClasses.push(props.diff ? "cm-draftly-code-line-numbered-diff" : "cm-draftly-code-line-numbered");
+          lineClasses.push(
+            props.diff
+              ? "cm-draftly-code-line-numbered-diff"
+              : "cm-draftly-code-line-numbered",
+          );
         }
-        if (diffState?.kind === "addition") lineClasses.push("cm-draftly-code-line-diff-add");
-        if (diffState?.kind === "deletion") lineClasses.push("cm-draftly-code-line-diff-del");
+        if (diffState?.kind === "addition")
+          lineClasses.push("cm-draftly-code-line-diff-add");
+        if (diffState?.kind === "deletion")
+          lineClasses.push("cm-draftly-code-line-diff-del");
 
         // Line attributes
         const lineAttrs: string[] = [`class="${lineClasses.join(" ")}"`];
@@ -915,13 +1064,22 @@ export class CodePlugin extends DecorationPlugin {
           lineAttrs.push(`style="--line-num-width: ${lineNumWidth}ch"`);
         }
         if (props.diff) {
-          const diffMarker = diffState?.kind === "addition" ? "+" : diffState?.kind === "deletion" ? "-" : " ";
+          const diffMarker =
+            diffState?.kind === "addition"
+              ? "+"
+              : diffState?.kind === "deletion"
+                ? "-"
+                : " ";
           if (props.showLineNumbers) {
-            lineAttrs.push(`data-line-num-old="${diffLineNumbers?.oldLine != null ? diffLineNumbers.oldLine : ""}"`);
-            lineAttrs.push(`data-line-num-new="${diffLineNumbers?.newLine != null ? diffLineNumbers.newLine : ""}"`);
+            lineAttrs.push(
+              `data-line-num-old="${diffLineNumbers?.oldLine != null ? diffLineNumbers.oldLine : ""}"`,
+            );
+            lineAttrs.push(
+              `data-line-num-new="${diffLineNumbers?.newLine != null ? diffLineNumbers.newLine : ""}"`,
+            );
             lineAttrs.push(`data-diff-marker="${diffMarker}"`);
             lineAttrs.push(
-              `style="--line-num-old-width: ${previewOldLineNumWidth}ch; --line-num-new-width: ${previewNewLineNumWidth}ch"`
+              `style="--line-num-old-width: ${previewOldLineNumWidth}ch; --line-num-new-width: ${previewNewLineNumWidth}ch"`,
             );
           } else {
             lineAttrs.push(`data-diff-marker="${diffMarker}"`);
@@ -931,7 +1089,9 @@ export class CodePlugin extends DecorationPlugin {
         }
 
         // Highlight text content
-        const highlightedLine = highlightedLines[index] ?? this.escapeHtml(previewContentLines[index] ?? line);
+        const highlightedLine =
+          highlightedLines[index] ??
+          this.escapeHtml(previewContentLines[index] ?? line);
         let lineContent = highlightedLine;
 
         if (diffState) {
@@ -940,7 +1100,11 @@ export class CodePlugin extends DecorationPlugin {
 
         // Apply text highlights
         if (props.highlightText && props.highlightText.length > 0) {
-          lineContent = this.applyTextHighlights(lineContent, props.highlightText, previewHighlightCounters);
+          lineContent = this.applyTextHighlights(
+            lineContent,
+            props.highlightText,
+            previewHighlightCounters,
+          );
         }
 
         html += `<span ${lineAttrs.join(" ")}>${lineContent || " "}</span>`;
@@ -975,7 +1139,7 @@ export class CodePlugin extends DecorationPlugin {
       const trimmed = part.trim();
       const rangeMatch = trimmed.match(/^(\d+)-(\d+)$/);
 
-      if (rangeMatch && rangeMatch[1] && rangeMatch[2]) {
+      if (rangeMatch?.[1] && rangeMatch[2]) {
         const start = parseInt(rangeMatch[1], 10);
         const end = parseInt(rangeMatch[2], 10);
         for (let i = start; i <= end; i++) {
@@ -999,7 +1163,7 @@ export class CodePlugin extends DecorationPlugin {
   private async highlightCodeLines(
     code: string,
     lang: string,
-    syntaxHighlighters?: readonly Highlighter[]
+    syntaxHighlighters?: readonly Highlighter[],
   ): Promise<string[]> {
     const rawLines = code.split("\n");
     if (!lang || !code) {
@@ -1018,7 +1182,9 @@ export class CodePlugin extends DecorationPlugin {
       highlightCode(
         code,
         tree,
-        syntaxHighlighters && syntaxHighlighters.length > 0 ? syntaxHighlighters : [],
+        syntaxHighlighters && syntaxHighlighters.length > 0
+          ? syntaxHighlighters
+          : [],
         (text, classes) => {
           const chunk = classes
             ? `<span class="${this.escapeAttribute(classes)}">${this.escapeHtml(text)}</span>`
@@ -1027,10 +1193,12 @@ export class CodePlugin extends DecorationPlugin {
         },
         () => {
           highlightedLines.push("");
-        }
+        },
       );
 
-      return rawLines.map((line, index) => highlightedLines[index] || this.escapeHtml(line));
+      return rawLines.map(
+        (line, index) => highlightedLines[index] || this.escapeHtml(line),
+      );
     } catch {
       return rawLines.map((line) => this.escapeHtml(line));
     }
@@ -1044,7 +1212,11 @@ export class CodePlugin extends DecorationPlugin {
     if (cached) return cached;
 
     const parserPromise = (async () => {
-      const langDesc = LanguageDescription.matchLanguageName(languages, normalizedLang, true);
+      const langDesc = LanguageDescription.matchLanguageName(
+        languages,
+        normalizedLang,
+        true,
+      );
 
       if (!langDesc) return null;
 
@@ -1124,7 +1296,10 @@ export class CodePlugin extends DecorationPlugin {
         continue;
       }
 
-      const pairCount = Math.min(deletionEnd - deletionStart, additionEnd - additionStart);
+      const pairCount = Math.min(
+        deletionEnd - deletionStart,
+        additionEnd - additionStart,
+      );
       for (let pairIndex = 0; pairIndex < pairCount; pairIndex++) {
         const deletionState = states[deletionStart + pairIndex];
         const additionState = states[additionStart + pairIndex];
@@ -1133,7 +1308,10 @@ export class CodePlugin extends DecorationPlugin {
           continue;
         }
 
-        const ranges = this.computeChangedRanges(deletionState.content, additionState.content);
+        const ranges = this.computeChangedRanges(
+          deletionState.content,
+          additionState.content,
+        );
         if (ranges.oldRanges.length > 0) {
           deletionState.modificationRanges = ranges.oldRanges;
         }
@@ -1146,7 +1324,10 @@ export class CodePlugin extends DecorationPlugin {
     return states;
   }
 
-  private computeDiffDisplayLineNumbers(states: DiffLineState[], startLineNum: number): DiffDisplayLineNumbers[] {
+  private computeDiffDisplayLineNumbers(
+    states: DiffLineState[],
+    startLineNum: number,
+  ): DiffDisplayLineNumbers[] {
     const numbers: DiffDisplayLineNumbers[] = [];
     let oldLineNumber = startLineNum;
     let newLineNumber = startLineNum;
@@ -1212,16 +1393,27 @@ export class CodePlugin extends DecorationPlugin {
 
   private computeChangedRanges(
     oldText: string,
-    newText: string
-  ): { oldRanges: Array<[number, number]>; newRanges: Array<[number, number]> } {
+    newText: string,
+  ): {
+    oldRanges: Array<[number, number]>;
+    newRanges: Array<[number, number]>;
+  } {
     let prefix = 0;
-    while (prefix < oldText.length && prefix < newText.length && oldText[prefix] === newText[prefix]) {
+    while (
+      prefix < oldText.length &&
+      prefix < newText.length &&
+      oldText[prefix] === newText[prefix]
+    ) {
       prefix++;
     }
 
     let oldSuffix = oldText.length;
     let newSuffix = newText.length;
-    while (oldSuffix > prefix && newSuffix > prefix && oldText[oldSuffix - 1] === newText[newSuffix - 1]) {
+    while (
+      oldSuffix > prefix &&
+      newSuffix > prefix &&
+      oldText[oldSuffix - 1] === newText[newSuffix - 1]
+    ) {
       oldSuffix--;
       newSuffix--;
     }
@@ -1239,7 +1431,10 @@ export class CodePlugin extends DecorationPlugin {
     return { oldRanges, newRanges };
   }
 
-  private renderDiffPreviewLine(diffState: DiffLineState, highlightedContent: string): string {
+  private renderDiffPreviewLine(
+    diffState: DiffLineState,
+    highlightedContent: string,
+  ): string {
     const modClass =
       diffState.kind === "addition"
         ? "cm-draftly-code-diff-mod-add"
@@ -1247,11 +1442,16 @@ export class CodePlugin extends DecorationPlugin {
           ? "cm-draftly-code-diff-mod-del"
           : "";
 
-    const baseHighlightedContent = highlightedContent || this.escapeHtml(diffState.content);
+    const baseHighlightedContent =
+      highlightedContent || this.escapeHtml(diffState.content);
 
     const contentHtml =
       diffState.modificationRanges && modClass
-        ? this.applyRangesToHighlightedHTML(baseHighlightedContent, diffState.modificationRanges, modClass)
+        ? this.applyRangesToHighlightedHTML(
+            baseHighlightedContent,
+            diffState.modificationRanges,
+            modClass,
+          )
         : baseHighlightedContent;
 
     return contentHtml || " ";
@@ -1260,10 +1460,13 @@ export class CodePlugin extends DecorationPlugin {
   private applyRangesToHighlightedHTML(
     htmlContent: string,
     ranges: Array<[number, number]>,
-    className: string
+    className: string,
   ): string {
     const normalizedRanges = ranges
-      .map(([start, end]) => [Math.max(0, start), Math.max(0, end)] as [number, number])
+      .map(
+        ([start, end]) =>
+          [Math.max(0, start), Math.max(0, end)] as [number, number],
+      )
       .filter(([start, end]) => end > start)
       .sort((a, b) => a[0] - b[0]);
 
@@ -1337,7 +1540,11 @@ export class CodePlugin extends DecorationPlugin {
    * Apply text highlights (regex patterns) to already syntax-highlighted HTML.
    * Wraps matched patterns in `<mark>` elements.
    */
-  private applyTextHighlights(htmlContent: string, highlights: TextHighlight[], instanceCounters?: number[]): string {
+  private applyTextHighlights(
+    htmlContent: string,
+    highlights: TextHighlight[],
+    instanceCounters?: number[],
+  ): string {
     let result = htmlContent;
 
     for (const [highlightIndex, highlight] of highlights.entries()) {
@@ -1349,7 +1556,8 @@ export class CodePlugin extends DecorationPlugin {
         result = result.replace(regex, (match) => {
           matchCount++;
           // Check if this instance should be highlighted
-          const shouldHighlight = !highlight.instances || highlight.instances.includes(matchCount);
+          const shouldHighlight =
+            !highlight.instances || highlight.instances.includes(matchCount);
           if (shouldHighlight) {
             return `<mark class="cm-draftly-code-text-highlight">${match}</mark>`;
           }

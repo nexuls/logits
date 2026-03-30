@@ -1,13 +1,20 @@
 import { Decoration } from "@codemirror/view";
 import { syntaxTree } from "@codemirror/language";
-import { DecorationContext, DecorationPlugin } from "../editor/plugin";
+import { type DecorationContext, DecorationPlugin } from "../editor/plugin";
 import { createTheme } from "../editor";
-import { SyntaxNode } from "@lezer/common";
+import type { SyntaxNode } from "@lezer/common";
 
 /**
  * Node types for ATX headings in markdown
  */
-const HEADING_TYPES = ["ATXHeading1", "ATXHeading2", "ATXHeading3", "ATXHeading4", "ATXHeading5", "ATXHeading6"];
+const HEADING_TYPES = [
+  "ATXHeading1",
+  "ATXHeading2",
+  "ATXHeading3",
+  "ATXHeading4",
+  "ATXHeading5",
+  "ATXHeading6",
+];
 
 /**
  * Mark decorations for heading content
@@ -58,13 +65,6 @@ export class HeadingPlugin extends DecorationPlugin {
   ] as const;
 
   /**
-   * Constructor - calls super constructor
-   */
-  constructor() {
-    super();
-  }
-
-  /**
    * Plugin theme
    */
   override get theme() {
@@ -87,8 +87,10 @@ export class HeadingPlugin extends DecorationPlugin {
         }
 
         const level = parseInt(name.slice(-1), 10);
-        const headingClass = `heading-${level}` as keyof typeof headingMarkDecorations;
-        const lineClass = `heading-${level}` as keyof typeof headingLineDecorations;
+        const headingClass =
+          `heading-${level}` as keyof typeof headingMarkDecorations;
+        const lineClass =
+          `heading-${level}` as keyof typeof headingLineDecorations;
 
         // Add line decoration
         const line = view.state.doc.lineAt(from);
@@ -105,9 +107,19 @@ export class HeadingPlugin extends DecorationPlugin {
           const cursorInNode = ctx.selectionOverlapsRange(from, to);
           if (!cursorInNode) {
             // Clamp to line end so replace decoration never spans a newline
-            decorations.push(headingMarkDecorations["heading-mark"].range(headingMark.from, markEnd));
+            decorations.push(
+              headingMarkDecorations["heading-mark"].range(
+                headingMark.from,
+                markEnd,
+              ),
+            );
           } else {
-            decorations.push(headingMarkDecorations["header-mark-class"].range(headingMark.from, markEnd));
+            decorations.push(
+              headingMarkDecorations["header-mark-class"].range(
+                headingMark.from,
+                markEnd,
+              ),
+            );
           }
         }
       },
@@ -124,8 +136,14 @@ export class HeadingPlugin extends DecorationPlugin {
     }
 
     const level = parseInt(node.name.slice(-1), 10);
-    const lineClass = headingLineDecorations[`heading-${level}` as keyof typeof headingLineDecorations].spec.class;
-    const headingClass = headingMarkDecorations[`heading-${level}` as keyof typeof headingMarkDecorations].spec.class;
+    const lineClass =
+      headingLineDecorations[
+        `heading-${level}` as keyof typeof headingLineDecorations
+      ].spec.class;
+    const headingClass =
+      headingMarkDecorations[
+        `heading-${level}` as keyof typeof headingMarkDecorations
+      ].spec.class;
 
     return `<div class="${lineClass}">
       <h${level} class="${headingClass}">${children}</h${level}>
@@ -186,10 +204,11 @@ const theme = createTheme({
       paddingTop: "1.25em",
       paddingBottom: "0.5em",
     },
-    ".cm-draftly-line-h3, .cm-draftly-line-h4, .cm-draftly-line-h5, .cm-draftly-line-h6": {
-      paddingTop: "1em",
-      paddingBottom: "0.5em",
-    },
+    ".cm-draftly-line-h3, .cm-draftly-line-h4, .cm-draftly-line-h5, .cm-draftly-line-h6":
+      {
+        paddingTop: "1em",
+        paddingBottom: "0.5em",
+      },
     ".cm-draftly-header-mark": {
       opacity: 0.5,
     },

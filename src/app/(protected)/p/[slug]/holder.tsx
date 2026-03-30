@@ -9,10 +9,14 @@ import {
   NotebookText,
   TriangleAlertIcon,
 } from "lucide-react";
-import Header from "@/components/header";
-import { useNotebooks } from "@/hooks/use-notebooks";
 import type { AppFile } from "@/data/schema";
+import Editor from "@/components/editor/markdown-editor";
+import NavBar from "@/components/editor/nav";
+import Footer from "@/components/footer/index";
+import Header from "@/components/header/index";
 import { Spinner } from "@/components/ui/spinner";
+import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
+import { useNotebooks } from "@/hooks/use-notebooks";
 import {
   Empty,
   EmptyDescription,
@@ -20,10 +24,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import Footer from "@/components/footer";
-import Editor from "@/components/editor/markdown-editor";
-import NavBar from "@/components/editor/nav";
-import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 
 type CursorMeta = {
   line: number;
@@ -294,7 +294,7 @@ export default function Holder({ slug }: { slug: string }) {
     }
 
     setDraftContent(selectedFile?.content ?? "");
-  }, [selectedFile?.id, selectedFileId]);
+  }, [selectedFile?.content, selectedFileId]);
 
   const { debounced: debouncedSave, flush: flushDebouncedSave } =
     useDebouncedCallback(
@@ -315,7 +315,7 @@ export default function Holder({ slug }: { slug: string }) {
     setFooterField(FOOTER_FIELD_IDS.saveStatus, "Saved");
     setFooterField(FOOTER_FIELD_IDS.cursor, "Ln 1, Col 1");
     setFooterField(FOOTER_FIELD_IDS.tabSize, "Spaces: 2");
-  }, [selectedFileId]);
+  }, []);
 
   useEffect(() => {
     if (selectedFile?.metadata.type === "file") {

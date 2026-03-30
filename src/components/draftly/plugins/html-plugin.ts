@@ -1,6 +1,6 @@
 import { Decoration, WidgetType } from "@codemirror/view";
 import { syntaxTree } from "@codemirror/language";
-import { DecorationContext, DecorationPlugin } from "../editor/plugin";
+import { type DecorationContext, DecorationPlugin } from "../editor/plugin";
 import DOMPurify from "dompurify";
 import { createTheme } from "../editor";
 
@@ -90,18 +90,32 @@ interface InlineHTMLElement {
 /**
  * Parse an HTML tag to extract its name and type
  */
-function parseHTMLTag(content: string): { tagName: string; isClosing: boolean; isSelfClosing: boolean } | null {
+function parseHTMLTag(
+  content: string,
+): { tagName: string; isClosing: boolean; isSelfClosing: boolean } | null {
   const match = content.match(/^<\s*(\/?)([a-zA-Z][a-zA-Z0-9-]*)[^>]*(\/?)>$/);
   if (!match) return null;
 
   return {
-    tagName: match[2]!.toLowerCase(),
+    tagName: match[2]?.toLowerCase(),
     isClosing: match[1] === "/",
     isSelfClosing:
       match[3] === "/" ||
-      ["br", "hr", "img", "input", "meta", "link", "area", "base", "col", "embed", "source", "track", "wbr"].includes(
-        match[2]!.toLowerCase()
-      ),
+      [
+        "br",
+        "hr",
+        "img",
+        "input",
+        "meta",
+        "link",
+        "area",
+        "base",
+        "col",
+        "embed",
+        "source",
+        "track",
+        "wbr",
+      ].includes(match[2]?.toLowerCase()),
   };
 }
 
@@ -112,10 +126,6 @@ export class HTMLPlugin extends DecorationPlugin {
   readonly name = "html";
   readonly version = "1.0.0";
   override decorationPriority = 30;
-
-  constructor() {
-    super();
-  }
 
   /**
    * Plugin theme
@@ -251,7 +261,9 @@ export class HTMLPlugin extends DecorationPlugin {
         // Show source - find and style the tags within this element
         for (const tag of htmlTags) {
           if (tag.from >= elem.from && tag.to <= elem.to) {
-            decorations.push(htmlMarkDecorations["html-tag"].range(tag.from, tag.to));
+            decorations.push(
+              htmlMarkDecorations["html-tag"].range(tag.from, tag.to),
+            );
           }
         }
       } else {
@@ -259,7 +271,7 @@ export class HTMLPlugin extends DecorationPlugin {
         decorations.push(
           Decoration.replace({
             widget: new InlineHTMLPreviewWidget(elem.content),
-          }).range(elem.from, elem.to)
+          }).range(elem.from, elem.to),
         );
       }
     }
@@ -268,7 +280,9 @@ export class HTMLPlugin extends DecorationPlugin {
     for (let i = 0; i < htmlTags.length; i++) {
       if (!usedTags.has(i)) {
         const tag = htmlTags[i]!;
-        decorations.push(htmlMarkDecorations["html-tag"].range(tag.from, tag.to));
+        decorations.push(
+          htmlMarkDecorations["html-tag"].range(tag.from, tag.to),
+        );
       }
     }
 
@@ -278,7 +292,10 @@ export class HTMLPlugin extends DecorationPlugin {
 
       const nodeLineStart = view.state.doc.lineAt(from);
       const nodeLineEnd = view.state.doc.lineAt(to);
-      const cursorInRange = ctx.cursorInRange(nodeLineStart.from, nodeLineEnd.to);
+      const cursorInRange = ctx.cursorInRange(
+        nodeLineStart.from,
+        nodeLineEnd.to,
+      );
 
       if (cursorInRange) {
         for (let i = nodeLineStart.number; i <= nodeLineEnd.number; i++) {
@@ -291,7 +308,7 @@ export class HTMLPlugin extends DecorationPlugin {
         decorations.push(
           Decoration.replace({
             widget: new HTMLPreviewWidget(htmlContent.trim()),
-          }).range(from, nodeLineStart.to)
+          }).range(from, nodeLineStart.to),
         );
 
         for (let i = nodeLineStart.number + 1; i <= nodeLineEnd.number; i++) {

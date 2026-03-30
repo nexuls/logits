@@ -12,12 +12,31 @@
 - Zod-backed schemas are used for normalization and data validation boundaries.
 - Client persistence uses IndexedDB via idb (`src/data/store.ts`).
 - Global app/state wiring is centralized through providers (`src/components/providers/*`).
+- Root layout hydrates initial appearance settings from cookies on the server (`src/app/layout.tsx`) to minimize theme/font flicker.
+- Theme and color-scheme synchronization is handled in a dedicated settings sync component (`src/components/providers/base.tsx`).
 
 ## Design Patterns in Use
 - Provider pattern for global concerns (theme, data, sidebar, tooltips, toasts).
 - Layered separation: app routes -> feature/UI components -> data/services -> shared utilities.
 - Serialized write queue in data provider to avoid out-of-order persistent writes.
 - Domain update helpers in `src/data/*` to keep mutation logic centralized.
+- Pure domain transforms in `src/data/notebooks.ts` keep notebook/file mutation logic deterministic and testable.
+- Feature hooks (`src/hooks/use-notebooks.ts`, `src/hooks/use-user-settings.ts`) expose stable APIs over provider state.
+
+## Persistence and State Flow
+- `DataProvider` is the single write boundary for app data and user settings.
+- Data writes are queued through a promise chain to preserve ordering under rapid UI updates.
+- User settings are persisted to both IndexedDB and cookies to keep SSR/CSR appearance state aligned.
+- Local storage is used for notebook-scoped ephemeral UI state (open tabs), separate from canonical notebook/file data.
+
+## Error Handling Decisions
+- IO boundaries (IndexedDB reads/writes and hydration) should use `try/catch` and structured error logs.
+- On hydration failure, the app should fall back to safe empty state and continue rendering.
+
+## Quality Baseline
+- Repository formatting is standardized with Biome (`bun run format`).
+- Remaining lint debt is concentrated in Draftly plugins (regex loops with assignment expressions, non-null assertions, and implicit `any` variables).
+- When touching Draftly plugins, prioritize removing `!` assertions and replacing `while ((match = regex.exec(...)) !== null)` with explicit loop variables for safer typing and readability.
 
 ## Conventions
 - Import order:

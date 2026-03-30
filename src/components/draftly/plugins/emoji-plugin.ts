@@ -1,8 +1,8 @@
 import { Decoration, WidgetType } from "@codemirror/view";
 import { syntaxTree } from "@codemirror/language";
-import { DecorationContext, DecorationPlugin } from "../editor/plugin";
+import { type DecorationContext, DecorationPlugin } from "../editor/plugin";
 import { createTheme } from "../editor";
-import { SyntaxNode } from "@lezer/common";
+import type { SyntaxNode } from "@lezer/common";
 import * as emoji from "node-emoji";
 
 function shortcodeToEmoji(raw: string): string | null {
@@ -51,10 +51,6 @@ export class EmojiPlugin extends DecorationPlugin {
   override decorationPriority = 20;
   override readonly requiredNodes = ["Emoji", "EmojiMark"] as const;
 
-  constructor() {
-    super();
-  }
-
   /**
    * Plugin theme
    */
@@ -85,14 +81,16 @@ export class EmojiPlugin extends DecorationPlugin {
 
         const cursorInNode = ctx.selectionOverlapsRange(from, to);
         if (cursorInNode) {
-          decorations.push(emojiMarkDecorations["emoji-source"].range(from, to));
+          decorations.push(
+            emojiMarkDecorations["emoji-source"].range(from, to),
+          );
           return;
         }
 
         decorations.push(
           Decoration.replace({
             widget: new EmojiWidget(rendered),
-          }).range(from, to)
+          }).range(from, to),
         );
       },
     });
@@ -105,7 +103,7 @@ export class EmojiPlugin extends DecorationPlugin {
       sliceDoc(from: number, to: number): string;
       sanitize(html: string): string;
       syntaxHighlighters?: readonly import("@lezer/highlight").Highlighter[];
-    }
+    },
   ): string | null {
     if (node.name === "EmojiMark") {
       return "";
@@ -128,7 +126,8 @@ export class EmojiPlugin extends DecorationPlugin {
 const theme = createTheme({
   default: {
     ".cm-draftly-emoji": {
-      fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Segoe UI Symbol", var(--user-text-font)',
+      fontFamily:
+        '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Segoe UI Symbol", var(--user-text-font)',
       fontVariantEmoji: "emoji",
       lineHeight: "1.2",
     },

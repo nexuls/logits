@@ -1,8 +1,8 @@
 import { Decoration } from "@codemirror/view";
 import { syntaxTree } from "@codemirror/language";
-import { DecorationContext, DecorationPlugin } from "../editor/plugin";
+import { type DecorationContext, DecorationPlugin } from "../editor/plugin";
 import { createTheme } from "../editor";
-import { SyntaxNode } from "@lezer/common";
+import type { SyntaxNode } from "@lezer/common";
 
 /**
  * Mark decorations for blockquote elements
@@ -37,13 +37,6 @@ export class QuotePlugin extends DecorationPlugin {
   override readonly requiredNodes = ["Blockquote", "QuoteMark"] as const;
 
   /**
-   * Constructor - calls super constructor
-   */
-  constructor() {
-    super();
-  }
-
-  /**
    * Plugin theme
    */
   override get theme() {
@@ -69,7 +62,11 @@ export class QuotePlugin extends DecorationPlugin {
         const startLine = view.state.doc.lineAt(from);
         const endLine = view.state.doc.lineAt(to);
 
-        for (let lineNum = startLine.number; lineNum <= endLine.number; lineNum++) {
+        for (
+          let lineNum = startLine.number;
+          lineNum <= endLine.number;
+          lineNum++
+        ) {
           const line = view.state.doc.line(lineNum);
 
           // Add line decoration for the blockquote border
@@ -95,7 +92,7 @@ export class QuotePlugin extends DecorationPlugin {
   private hideQuoteMarks(
     node: SyntaxNode,
     decorations: import("@codemirror/state").Range<Decoration>[],
-    view: import("@codemirror/view").EditorView
+    view: import("@codemirror/view").EditorView,
   ): void {
     let child = node.firstChild;
     while (child) {
@@ -103,7 +100,9 @@ export class QuotePlugin extends DecorationPlugin {
         // Clamp to line end so replace decoration never spans a newline
         const line = view.state.doc.lineAt(child.from);
         const markEnd = Math.min(child.to + 1, line.to);
-        decorations.push(quoteMarkDecorations["quote-mark"].range(child.from, markEnd));
+        decorations.push(
+          quoteMarkDecorations["quote-mark"].range(child.from, markEnd),
+        );
       }
       // Recurse into nested blockquotes
       if (child.name === "Blockquote") {

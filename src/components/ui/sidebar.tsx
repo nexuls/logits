@@ -192,7 +192,8 @@ function Sidebar({
   const isSyncingWidth = pendingControlledWidth !== null;
   const rootRef = React.useRef<HTMLDivElement | null>(null);
   const containerRef = React.useRef<HTMLDivElement | null>(null);
-  const activeWidth = dragWidth ?? pendingControlledWidth ?? width ?? internalWidth;
+  const activeWidth =
+    dragWidth ?? pendingControlledWidth ?? width ?? internalWidth;
   const resolvedWidth = Math.max(minWidth, Math.min(maxWidth, activeWidth));
 
   React.useEffect(() => {
