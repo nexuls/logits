@@ -139,7 +139,12 @@ export function FileTreeNode({
 
   return (
     <div>
-      <div className="relative" style={{ paddingLeft: `${depth * 14 + 8}px` }}>
+      <div
+        className={cn("relative", {
+          "pb-0.5": isFolder && !isCollapsed,
+        })}
+        style={{ paddingLeft: `${depth * 14 + 8}px` }}
+      >
         {dropPosition === "before" ? (
           <div className="pointer-events-none absolute inset-x-2 top-0 h-0.5 rounded-full bg-primary" />
         ) : null}
@@ -172,7 +177,7 @@ export function FileTreeNode({
             }}
             onDragEnd={onDragEnd}
             className={cn(
-              "group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none transition-colors hover:transition-none hover:bg-sidebar-accent/50",
+              "group flex items-center gap-2 rounded-md px-2 py-1 text-sm outline-none transition-colors hover:transition-none hover:bg-sidebar-accent/50",
               isActive && "bg-sidebar-accent/70 text-sidebar-accent-foreground",
               isDragging && "opacity-50",
               dropPosition === "inside" &&
