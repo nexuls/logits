@@ -18,7 +18,10 @@ import {
   resolveMonospaceFontFamily,
   resolveTextFontFamily,
 } from "@/data/schema";
-import { getColorSchemeClassName } from "@/coloe-scheme";
+import {
+  getColorSchemeClassName,
+  getColorSchemeStylesheetText,
+} from "@/color-schemes";
 import { classNamesForFontVariables } from "./fonts";
 import "./globals.css";
 
@@ -71,6 +74,7 @@ export default async function RootLayout({
   ]
     .filter(Boolean)
     .join(" ");
+  const colorSchemeStylesheet = getColorSchemeStylesheetText();
 
   return (
     <html
@@ -80,6 +84,7 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        <style id="logits-color-schemes">{colorSchemeStylesheet}</style>
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, interactive-widget=resizes-content"

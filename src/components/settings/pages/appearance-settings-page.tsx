@@ -1,7 +1,7 @@
 "use client";
 
 import { Paintbrush, PilcrowIcon, SlidersHorizontal } from "lucide-react";
-import { COLOR_SCHEMES } from "@/coloe-scheme";
+import { COLOR_SCHEMES } from "@/color-schemes";
 import type {
   AppearanceColorScheme,
   AppearanceFontSize,

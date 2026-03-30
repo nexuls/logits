@@ -2,11 +2,6 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@import "../coloe-scheme/logits.css";
-@import "../coloe-scheme/github.css";
-@import "../coloe-scheme/material.css";
-@import "../coloe-scheme/catppuccin.css";
-
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -55,7 +50,6 @@
 }
 
 html {
-  --radius: 0.625rem;
   --user-interface-font:
     var(--font-geist-sans), "Segoe UI", Roboto, "Helvetica Neue", Arial,
     sans-serif;

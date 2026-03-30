@@ -14,6 +14,8 @@
 - Global app/state wiring is centralized through providers (`src/components/providers/*`).
 - Root layout hydrates initial appearance settings from cookies on the server (`src/app/layout.tsx`) to minimize theme/font flicker.
 - Theme and color-scheme synchronization is handled in a dedicated settings sync component (`src/components/providers/base.tsx`).
+- Color scheme tokens are defined in TypeScript modules (`src/color-schemes/*`) and mounted via `style-mod`, with server-rendered stylesheet text to avoid hydration flicker.
+- CodeMirror syntax/editor theme colors are now part of the same color-scheme source of truth and resolved through `src/color-schemes/index.ts`.
 
 ## Design Patterns in Use
 - Provider pattern for global concerns (theme, data, sidebar, tooltips, toasts).

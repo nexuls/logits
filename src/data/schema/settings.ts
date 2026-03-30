@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { COLOR_SCHEMES } from "@/coloe-scheme";
+import { COLOR_SCHEMES } from "@/color-schemes";
 import {
   DEFAULT_INTERFACE_FONT,
   DEFAULT_MONOSPACE_FONT,

@@ -52,7 +52,7 @@ The app provides:
 - `lib/`: Shared framework-agnostic helpers/utilities.
 - `types/`: Shared type declarations.
 - `functions/`: App-level function modules and command-style logic.
-- `coloe-scheme/`: Theme/color-scheme token mapping and exported helpers.
+- `color-schemes/`: Theme/color-scheme token mapping and exported helpers.
 
 ### Architecture and Separation of Concerns
 - Route layer (`src/app`) handles page composition and routing concerns.

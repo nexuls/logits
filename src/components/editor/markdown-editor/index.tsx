@@ -2,8 +2,9 @@ import { useMemo } from "react";
 import { useTheme } from "next-themes";
 
 import { allPlugins, draftly, ThemeEnum } from "@/components/draftly";
+import { DEFAULT_COLOR_SCHEME, getCodeMirrorTheme } from "@/color-schemes";
+import { useUserSettings } from "@/hooks/use-user-settings";
 import CodeMirror, { type Extension } from "@uiw/react-codemirror";
-import { githubDark, githubLight } from "@uiw/codemirror-theme-github";
 import type { ViewUpdate } from "@codemirror/view";
 
 type Props = {
@@ -25,6 +26,9 @@ export default function Editor({
   onEditorMetaChange,
 }: Props) {
   const { resolvedTheme: theme } = useTheme();
+  const { settings } = useUserSettings();
+  const colorScheme = settings.appearance?.colorScheme ?? DEFAULT_COLOR_SCHEME;
+  const resolvedMode = theme === "dark" ? "dark" : "light";
 
   const defaultExtensions = useMemo<Extension[]>(
     () =>
@@ -48,6 +52,11 @@ export default function Editor({
         lineWrapping: true,
       }),
     [theme, mode],
+  );
+
+  const colorSchemeCodeMirrorTheme = useMemo(
+    () => getCodeMirrorTheme(colorScheme, resolvedMode),
+    [colorScheme, resolvedMode],
   );
 
   return (
@@ -85,13 +94,7 @@ export default function Editor({
             ),
           });
         }}
-        theme={
-          theme && theme !== "system"
-            ? theme.includes("dark")
-              ? githubDark
-              : githubLight
-            : undefined
-        }
+        theme={colorSchemeCodeMirrorTheme}
         extensions={[...defaultExtensions]}
         basicSetup={{
           lineNumbers: mode === "code",

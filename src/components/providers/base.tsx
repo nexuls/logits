@@ -16,8 +16,9 @@ import {
 } from "@/data/schema";
 import {
   ALL_COLOR_SCHEME_CLASSES,
+  ensureColorSchemeStylesMounted,
   getColorSchemeClassName,
-} from "@/coloe-scheme";
+} from "@/color-schemes";
 import { writeResolvedSystemThemeToCookie } from "@/data/settings-cookie";
 import { SidebarProvider } from "../ui/sidebar";
 import { Toaster } from "../ui/sonner";
@@ -66,6 +67,8 @@ function SettingsThemeSync() {
   }, [theme]);
 
   useEffect(() => {
+    ensureColorSchemeStylesMounted();
+
     const mode = resolvedTheme === "dark" ? "dark" : "light";
     const colorSchemeClass = getColorSchemeClassName(colorScheme, mode);
     const rootElement = document.documentElement;

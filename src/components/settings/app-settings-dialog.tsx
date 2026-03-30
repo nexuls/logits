@@ -9,7 +9,7 @@ import {
   Shield,
   SlidersHorizontal,
 } from "lucide-react";
-import { DEFAULT_COLOR_SCHEME } from "@/coloe-scheme";
+import { DEFAULT_COLOR_SCHEME } from "@/color-schemes";
 import type {
   AppearanceColorScheme,
   AppearanceFontSize,
