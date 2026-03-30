@@ -174,8 +174,8 @@ export class ListPlugin extends DecorationPlugin {
         const indent = match[1] || "";
 
         // Check if this is the same marker type (toggle off)
-        const isUnordered = /^[-*+]$/.test(match[2]!);
-        const isOrdered = /^\d+\.$/.test(match[2]!);
+        const isUnordered = /^[-*+]$/.test(match[2]);
+        const isOrdered = /^\d+\.$/.test(match[2]);
         const hasTask = !!match[3];
 
         const wantUnordered = marker === "- ";
@@ -205,7 +205,7 @@ export class ListPlugin extends DecorationPlugin {
       } else {
         // No list marker - add one at start of line (after any indent)
         const indentMatch = line.text.match(/^(\s*)/);
-        const indent = indentMatch ? indentMatch[1]! : "";
+        const indent = indentMatch ? indentMatch[1] : "";
         changes.push({
           from: line.from + indent.length,
           to: line.from + indent.length,

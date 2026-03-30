@@ -62,7 +62,6 @@ export function writeUserSettingsToCookie(settings: UserSettings) {
     return;
   }
 
-  // biome-ignore lint/suspicious/noDocumentCookie: no problem writing to cookie in browser environment
   document.cookie = dumpUserSettingsToCookie(settings);
 }
 
@@ -90,6 +89,5 @@ export function writeResolvedSystemThemeToCookie(theme: "light" | "dark") {
     return;
   }
 
-  // biome-ignore lint/suspicious/noDocumentCookie: no problem writing to cookie in browser environment
   document.cookie = dumpResolvedSystemThemeToCookie(theme);
 }

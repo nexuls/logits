@@ -424,8 +424,8 @@ export class CodePlugin extends DecorationPlugin {
     }
 
     // Extract quoted values (title="..." caption="...")
-    let quotedMatch;
-    while ((quotedMatch = QUOTED_INFO_PATTERN.exec(remaining)) !== null) {
+    let quotedMatch = QUOTED_INFO_PATTERN.exec(remaining);
+    while (quotedMatch !== null) {
       const key = quotedMatch[1]?.toLowerCase();
       const value = quotedMatch[2];
 
@@ -434,6 +434,7 @@ export class CodePlugin extends DecorationPlugin {
       } else if (key === "caption" && value !== undefined) {
         props.caption = value;
       }
+      quotedMatch = QUOTED_INFO_PATTERN.exec(remaining);
     }
     // Remove matched quoted values
     remaining = remaining.replace(QUOTED_INFO_PATTERN, "").trim();
@@ -476,11 +477,14 @@ export class CodePlugin extends DecorationPlugin {
     }
 
     // Extract text/regex highlights /pattern/ or /pattern/3-5 or /pattern/3,5
-    let textMatch;
+    let textMatch = TEXT_HIGHLIGHT_PATTERN.exec(remaining);
     const highlightText: TextHighlight[] = [];
 
-    while ((textMatch = TEXT_HIGHLIGHT_PATTERN.exec(remaining)) !== null) {
-      if (!textMatch[1]) continue;
+    while (textMatch !== null) {
+      if (!textMatch[1]) {
+        textMatch = TEXT_HIGHLIGHT_PATTERN.exec(remaining);
+        continue;
+      }
       const highlight: TextHighlight = {
         pattern: textMatch[1],
       };
@@ -495,6 +499,7 @@ export class CodePlugin extends DecorationPlugin {
       }
 
       highlightText.push(highlight);
+      textMatch = TEXT_HIGHLIGHT_PATTERN.exec(remaining);
     }
 
     if (highlightText.length > 0) {
@@ -873,9 +878,9 @@ export class CodePlugin extends DecorationPlugin {
     for (const [highlightIndex, textHighlight] of highlights.entries()) {
       try {
         const regex = new RegExp(textHighlight.pattern, "g");
-        let match: RegExpExecArray | null;
+        let match = regex.exec(lineText);
 
-        while ((match = regex.exec(lineText)) !== null) {
+        while (match !== null) {
           instanceCounters[highlightIndex] =
             (instanceCounters[highlightIndex] ?? 0) + 1;
           const globalMatchIndex = instanceCounters[highlightIndex];
@@ -893,6 +898,7 @@ export class CodePlugin extends DecorationPlugin {
               ),
             );
           }
+          match = regex.exec(lineText);
         }
       } catch {
         // Invalid regex; ignore this highlight pattern.

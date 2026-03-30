@@ -34,7 +34,7 @@ function parseLinkMarkdown(
 
   const result: { text: string; url: string; title?: string } = {
     text: match[1] || "",
-    url: match[2]!,
+    url: match[2],
   };
 
   if (match[3] !== undefined) {
@@ -186,8 +186,8 @@ export class LinkPlugin extends DecorationPlugin {
 
     // Find link pattern in line that contains the selection
     const linkRegex = /\[([^\]]*)\]\(([^)]*)\)/g;
-    let match;
-    while ((match = linkRegex.exec(lineText)) !== null) {
+    let match = linkRegex.exec(lineText);
+    while (match !== null) {
       const matchFrom = lineStart + match.index;
       const matchTo = matchFrom + match[0].length;
 
@@ -201,6 +201,7 @@ export class LinkPlugin extends DecorationPlugin {
         });
         return true;
       }
+      match = linkRegex.exec(lineText);
     }
 
     if (empty) {

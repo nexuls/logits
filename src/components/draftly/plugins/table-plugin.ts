@@ -204,7 +204,7 @@ function splitTableLine(lineText: string): string[] {
 
   let current = "";
   for (let index = 0; index < trimmed.length; index++) {
-    const char = trimmed[index]!;
+    const char = trimmed[index];
     if (char === "|" && !isEscaped(trimmed, index)) {
       cells.push(current);
       current = "";
@@ -290,7 +290,7 @@ function canonicalizeBreakTags(text: string): string {
 function escapeUnescapedPipes(text: string): string {
   let result = "";
   for (let index = 0; index < text.length; index++) {
-    const char = text[index]!;
+    const char = text[index];
     if (char === "|" && !isEscaped(text, index)) {
       result += "\\|";
       continue;
@@ -588,8 +588,8 @@ function getCellAnchorInFormattedTable(
     return formattedTable.length;
   }
 
-  const rawFrom = pipes[columnIndex]! + 1;
-  const rawTo = pipes[columnIndex + 1]!;
+  const rawFrom = pipes[columnIndex] + 1;
+  const rawTo = pipes[columnIndex + 1];
   const visible = getVisibleBounds(lineText.slice(rawFrom, rawTo));
   const lineOffset = lines
     .slice(0, lineIndex)
@@ -686,10 +686,10 @@ function readTableInfo(
     const cells: TableCellInfo[] = [];
 
     for (let columnIndex = 0; columnIndex < pipes.length - 1; columnIndex++) {
-      const from = line.from + pipes[columnIndex]! + 1;
-      const to = line.from + pipes[columnIndex + 1]!;
+      const from = line.from + pipes[columnIndex] + 1;
+      const to = line.from + pipes[columnIndex + 1];
       const rawText = line.text.slice(
-        pipes[columnIndex]! + 1,
+        pipes[columnIndex] + 1,
         pipes[columnIndex + 1],
       );
       const visible = getVisibleBounds(rawText);
@@ -727,7 +727,7 @@ function readTableInfo(
       (_, index) => alignments[index] || "left",
     ),
     cellsByRow,
-    headerCells: cellsByRow[0]!,
+    headerCells: cellsByRow[0],
     bodyCells: cellsByRow.slice(1),
   };
 }
@@ -808,13 +808,14 @@ function collectBreakRanges(
 
   for (const row of tableInfo.cellsByRow) {
     for (const cell of row) {
-      let match: RegExpExecArray | null;
       const regex = new RegExp(BREAK_TAG_REGEX);
-      while ((match = regex.exec(cell.rawText)) !== null) {
+      let match = regex.exec(cell.rawText);
+      while (match !== null) {
         ranges.push({
           from: cell.from + match.index,
           to: cell.from + match.index + match[0].length,
         });
+        match = regex.exec(cell.rawText);
       }
     }
   }
@@ -1179,8 +1180,8 @@ export class TablePlugin extends DecorationPlugin {
             columnIndex < pipes.length - 1;
             columnIndex++
           ) {
-            const rawFrom = pipes[columnIndex]! + 1;
-            const rawTo = pipes[columnIndex + 1]!;
+            const rawFrom = pipes[columnIndex] + 1;
+            const rawTo = pipes[columnIndex + 1];
             const rawText = line.text.slice(rawFrom, rawTo);
             const visible = getVisibleBounds(rawText);
 
@@ -1201,15 +1202,16 @@ export class TablePlugin extends DecorationPlugin {
               );
             }
 
-            let match: RegExpExecArray | null;
             const regex = new RegExp(BREAK_TAG_REGEX);
-            while ((match = regex.exec(rawText)) !== null) {
+            let match = regex.exec(rawText);
+            while (match !== null) {
               ranges.push(
                 Decoration.replace({ widget: new TableBreakWidget() }).range(
                   line.from + rawFrom + match.index,
                   line.from + rawFrom + match.index + match[0].length,
                 ),
               );
+              match = regex.exec(rawText);
             }
           }
         }
@@ -1313,8 +1315,8 @@ export class TablePlugin extends DecorationPlugin {
     }
 
     for (let columnIndex = 0; columnIndex < pipes.length - 1; columnIndex++) {
-      const rawFrom = pipes[columnIndex]! + 1;
-      const rawTo = pipes[columnIndex + 1]!;
+      const rawFrom = pipes[columnIndex] + 1;
+      const rawTo = pipes[columnIndex + 1];
       const rawText = lineText.slice(rawFrom, rawTo);
       const visible = getVisibleBounds(rawText);
       const absoluteFrom = lineFrom + rawFrom;
@@ -1339,15 +1341,16 @@ export class TablePlugin extends DecorationPlugin {
         ).range(absoluteFrom, absoluteTo),
       );
 
-      let match: RegExpExecArray | null;
       const regex = new RegExp(BREAK_TAG_REGEX);
-      while ((match = regex.exec(rawText)) !== null) {
+      let match = regex.exec(rawText);
+      while (match !== null) {
         decorations.push(
           Decoration.replace({ widget: new TableBreakWidget() }).range(
             absoluteFrom + match.index,
             absoluteFrom + match.index + match[0].length,
           ),
         );
+        match = regex.exec(rawText);
       }
     }
   }
@@ -1775,7 +1778,7 @@ export class TablePlugin extends DecorationPlugin {
       return true;
     }
 
-    this.moveSelectionToCell(view, cells[nextIndex]!);
+    this.moveSelectionToCell(view, cells[nextIndex]);
     return true;
   }
 

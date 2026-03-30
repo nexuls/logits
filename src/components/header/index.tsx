@@ -78,7 +78,6 @@ export default function Header(props: Props) {
                       tab.isActive && "z-0 h-10",
                     )}
                   >
-                    {/** biome-ignore lint/a11y/useSemanticElements: cannot use nested buttons */}
                     <div
                       onClick={() => props.onTabSelect(tab.id)}
                       onMouseDown={() => props.onTabSelect(tab.id)}

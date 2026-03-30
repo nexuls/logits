@@ -35,7 +35,7 @@ function parseImageMarkdown(
 
   const result: { alt: string; url: string; title?: string } = {
     alt: match[1] || "",
-    url: match[2]!,
+    url: match[2],
   };
 
   if (match[3] !== undefined) {
@@ -202,8 +202,8 @@ export class ImagePlugin extends DecorationPlugin {
 
     // Find image pattern in line that contains the selection
     const imageRegex = /!\[([^\]]*)\]\(([^)]*)\)/g;
-    let match;
-    while ((match = imageRegex.exec(lineText)) !== null) {
+    let match = imageRegex.exec(lineText);
+    while (match !== null) {
       const matchFrom = lineStart + match.index;
       const matchTo = matchFrom + match[0].length;
 
@@ -217,6 +217,7 @@ export class ImagePlugin extends DecorationPlugin {
         });
         return true;
       }
+      match = imageRegex.exec(lineText);
     }
 
     if (empty) {

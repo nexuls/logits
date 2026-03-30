@@ -189,7 +189,7 @@ export class HTMLPlugin extends DecorationPlugin {
     for (let i = 0; i < htmlTags.length; i++) {
       if (usedTags.has(i)) continue;
 
-      const openTag = htmlTags[i]!;
+      const openTag = htmlTags[i];
       if (openTag.isClosing) continue;
 
       // Handle self-closing tags
@@ -209,7 +209,7 @@ export class HTMLPlugin extends DecorationPlugin {
       let closeTagIndex: number | null = null;
 
       for (let j = i + 1; j < htmlTags.length && depth > 0; j++) {
-        const tag = htmlTags[j]!;
+        const tag = htmlTags[j];
 
         // Stop if we've gone past the open tag's line
         if (tag.from > openLine.to) break;
@@ -227,7 +227,7 @@ export class HTMLPlugin extends DecorationPlugin {
       }
 
       if (closeTagIndex !== null) {
-        const closeTag = htmlTags[closeTagIndex]!;
+        const closeTag = htmlTags[closeTagIndex];
         inlineElements.push({
           from: openTag.from,
           to: closeTag.to,
@@ -279,7 +279,7 @@ export class HTMLPlugin extends DecorationPlugin {
     // Style any remaining unprocessed tags (orphan tags)
     for (let i = 0; i < htmlTags.length; i++) {
       if (!usedTags.has(i)) {
-        const tag = htmlTags[i]!;
+        const tag = htmlTags[i];
         decorations.push(
           htmlMarkDecorations["html-tag"].range(tag.from, tag.to),
         );

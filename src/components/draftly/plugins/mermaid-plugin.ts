@@ -65,9 +65,16 @@ function parseAttributes(fenceLine: string): Record<string, string> {
   const attributes: Record<string, string> = {};
   // Match key="value" or key='value'
   const regex = /(\w+)=["']([^"']*)["']/g;
-  let match;
-  while ((match = regex.exec(fenceLine)) !== null && match[1] && match[2]) {
-    attributes[match[1]] = match[2];
+  let match = regex.exec(fenceLine);
+  while (match !== null) {
+    const key = match[1];
+    const value = match[2];
+
+    if (key && value) {
+      attributes[key] = value;
+    }
+
+    match = regex.exec(fenceLine);
   }
   return attributes;
 }
