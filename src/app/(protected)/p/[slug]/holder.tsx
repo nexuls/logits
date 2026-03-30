@@ -93,7 +93,6 @@ export default function Holder({ slug }: { slug: string }) {
   const { notebooks, isHydrating, updateFileContent, getNotebookFiles } =
     useNotebooks();
   const [draftContent, setDraftContent] = useState("");
-  const [saveStatus, setSaveStatus] = useState<"saved" | "saving">("saved");
   const [openTabIds, setOpenTabIds] = useState<string[]>([]);
   const [loadedTabsForSlug, setLoadedTabsForSlug] = useState<string | null>(
     null,
@@ -211,8 +210,13 @@ export default function Holder({ slug }: { slug: string }) {
   ]);
 
   useEffect(() => {
+    if (!selectedFileId) {
+      setDraftContent("");
+      return;
+    }
+
     setDraftContent(selectedFile?.content ?? "");
-  }, [selectedFile?.content]);
+  }, [selectedFile?.id, selectedFileId]);
 
   const { debounced: debouncedSave, flush: flushDebouncedSave } =
     useDebouncedCallback(
@@ -224,7 +228,6 @@ export default function Holder({ slug }: { slug: string }) {
         if (currentEditingFileIdRef.current === fileId)
           setDraftContent(content);
 
-        setSaveStatus("saved");
         setFooterField("logits-footer-save-status", "Saved");
       },
       { delayMs: 450 },
@@ -233,7 +236,6 @@ export default function Holder({ slug }: { slug: string }) {
   useEffect(() => {
     currentEditingFileIdRef.current = selectedFileId;
     cursorMetaRef.current = { line: 1, col: 1, tabSize: 2, selection: 0 };
-    setSaveStatus("saved");
     setFooterField("logits-footer-save-status", "Saved");
     setFooterField("logits-footer-cursor", "Ln 1, Col 1");
     setFooterField("logits-footer-tabsize", "Spaces: 2");
@@ -435,12 +437,9 @@ export default function Holder({ slug }: { slug: string }) {
                 updateFooterCursor(meta);
               }}
               onContentChange={(newContent) => {
-                if (!selectedFile?.id) {
-                  return;
-                }
+                if (!selectedFile?.id) return;
 
                 updateFooterStats(newContent);
-                setSaveStatus("saving");
                 setFooterField("logits-footer-save-status", "Saving");
                 const requestId = latestSaveRequestRef.current + 1;
                 latestSaveRequestRef.current = requestId;
@@ -462,7 +461,7 @@ export default function Holder({ slug }: { slug: string }) {
                 tabSize: cursorMetaRef.current.tabSize,
                 selection: cursorMetaRef.current.selection,
                 version: "v0.1.0",
-                saveStatus,
+                saveStatus: "saved",
               }
             : undefined
         }

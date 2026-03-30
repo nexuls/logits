@@ -77,25 +77,42 @@ export function DataProvider({
   const [isHydrating, setIsHydrating] = useState(true);
   const dataRef = useRef<AppData>(createEmptyData(normalizedInitialSettings));
   const initialSettingsRef = useRef<UserSettings>(normalizedInitialSettings);
+  const pendingDataWriteRef = useRef<Promise<AppData>>(Promise.resolve(dataRef.current));
 
   useEffect(() => {
     initialSettingsRef.current = normalizedInitialSettings;
   }, [normalizedInitialSettings]);
 
-  const setData = useCallback(async (nextData: AppData) => {
-    const savedData = await writeAppData(nextData);
-    dataRef.current = savedData;
-    initialSettingsRef.current = normalizeUserSettings(savedData.settings);
-    setDataState(savedData);
-    return savedData;
-  }, []);
+  const queueDataWrite = useCallback(
+    (updater: (currentData: AppData) => AppData) => {
+      const runWrite = async () => {
+        const nextData = updater(dataRef.current);
+        const savedData = await writeAppData(nextData);
+        dataRef.current = savedData;
+        initialSettingsRef.current = normalizeUserSettings(savedData.settings);
+        setDataState(savedData);
+        return savedData;
+      };
+
+      const queuedWrite = pendingDataWriteRef.current.then(runWrite, runWrite);
+      pendingDataWriteRef.current = queuedWrite.catch(() => dataRef.current);
+      return queuedWrite;
+    },
+    [],
+  );
+
+  const setData = useCallback(
+    async (nextData: AppData) => {
+      return queueDataWrite(() => nextData);
+    },
+    [queueDataWrite],
+  );
 
   const updateData = useCallback(
     async (updater: (currentData: AppData) => AppData) => {
-      const nextData = updater(dataRef.current);
-      return setData(nextData);
+      return queueDataWrite(updater);
     },
-    [setData],
+    [queueDataWrite],
   );
 
   const reloadData = useCallback(async () => {
