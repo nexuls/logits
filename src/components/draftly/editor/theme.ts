@@ -30,9 +30,9 @@ export const draftlyBaseTheme = EditorView.theme({
     "--draftly-surface-1":
       "color-mix(in oklch, var(--color-foreground) 3%, transparent)",
     "--draftly-surface-2":
-      "color-mix(in oklch, var(--color-foreground) 5%, transparent)",
+      "color-mix(in oklch, var(--color-muted) 50%, transparent)",
     "--draftly-surface-3":
-      "color-mix(in oklch, var(--color-foreground) 8%, transparent)",
+      "color-mix(in oklch, var(--color-muted) 100%, transparent)",
     "--draftly-surface-hover":
       "color-mix(in oklch, var(--color-foreground) 7%, transparent)",
     "--draftly-surface-success":
