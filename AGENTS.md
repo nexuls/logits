@@ -137,6 +137,14 @@ Keep dependencies directed inward:
 - Keep comments concise and only where intent is non-obvious.
 - Prefer reusable utilities/hooks over copy-paste logic.
 - Keep modules small; split files when a component starts handling multiple concerns.
+- Use descriptive names for variables, functions, and components that convey intent without needing extra comments.
+- Avoid deep nesting; return early or break into smaller functions/components to keep complexity manageable.
+- Use consistent patterns for similar problems to reduce cognitive load when navigating the codebase.
+- Avoid over-engineering; implement the simplest solution that meets the requirements and can be extended later if needed.
+- Regularly review and refactor code to improve clarity and remove duplication as the codebase evolves.
+- Write comments that explain the "why" behind non-obvious decisions, not the "what" (which should be clear from good naming and structure).
+	For functions with complex logic, consider adding a brief comment summarizing the overall approach or key steps, but avoid line-by-line comments that restate the code and add typedoc-style comments for public APIs and complex functions.
+	For simpler but non-obvious code, a short comment explaining the intent or rationale can be helpful, but strive to keep comments concise and focused on clarifying intent rather than describing implementation details.
 
 ### TypeScript and React Practices
 - Prefer TypeScript everywhere.
