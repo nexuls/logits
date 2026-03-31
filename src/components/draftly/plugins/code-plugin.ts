@@ -557,10 +557,13 @@ export class CodePlugin extends DecorationPlugin {
     const { view, decorations } = ctx;
     const nodeLineStart = view.state.doc.lineAt(node.from);
     const nodeLineEnd = view.state.doc.lineAt(node.to);
-    const cursorInRange = ctx.selectionOverlapsRange(
+    const cursorInCodeBlock = ctx.selectionOverlapsRange(
       nodeLineStart.from,
       nodeLineEnd.to,
     );
+    const cursorOnFenceLine =
+      ctx.selectionOverlapsRange(nodeLineStart.from, nodeLineStart.to) ||
+      ctx.selectionOverlapsRange(nodeLineEnd.from, nodeLineEnd.to);
 
     let infoProps: CodeBlockProperties = { language: "" };
     let codeContent = "";
@@ -629,10 +632,10 @@ export class CodePlugin extends DecorationPlugin {
       String(maxNewDiffLineNum).length,
     );
 
-    const shouldShowHeader =
-      !cursorInRange &&
-      (infoProps.title || infoProps.copy || infoProps.language);
-    const shouldShowCaption = !cursorInRange && !!infoProps.caption;
+    const shouldShowHeader = !!(
+      infoProps.title || infoProps.copy || infoProps.language
+    );
+    const shouldShowCaption = !!infoProps.caption;
 
     if (shouldShowHeader) {
       decorations.push(
@@ -730,7 +733,7 @@ export class CodePlugin extends DecorationPlugin {
           line,
           codeLineIndex,
           diffStates,
-          cursorInRange,
+          cursorInCodeBlock,
           !infoProps.showLineNumbers,
           decorations,
         );
@@ -762,9 +765,9 @@ export class CodePlugin extends DecorationPlugin {
       }
     }
 
-    this.decorateFenceMarkers(node.node, cursorInRange, decorations);
+    this.decorateFenceMarkers(node.node, cursorOnFenceLine, decorations);
 
-    if (!cursorInRange && infoProps.caption) {
+    if (infoProps.caption) {
       decorations.push(
         Decoration.widget({
           widget: new CodeBlockCaptionWidget(infoProps.caption),
@@ -777,13 +780,13 @@ export class CodePlugin extends DecorationPlugin {
 
   private decorateFenceMarkers(
     node: SyntaxNode,
-    cursorInRange: boolean,
+    showFenceMarkers: boolean,
     decorations: DecorationContext["decorations"],
   ): void {
     for (let child = node.firstChild; child; child = child.nextSibling) {
       if (child.name === "CodeMark" || child.name === "CodeInfo") {
         decorations.push(
-          (cursorInRange
+          (showFenceMarkers
             ? codeMarkDecorations["code-fence"]
             : codeMarkDecorations["code-hidden"]
           ).range(child.from, child.to),
