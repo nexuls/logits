@@ -22,9 +22,9 @@ export const draftlyBaseTheme = EditorView.theme({
     "--draftly-color-danger": "var(--color-destructive)",
     "--draftly-color-danger-strong":
       "color-mix(in oklch, var(--color-destructive) 85%, white)",
-    "--draftly-color-warning": "var(--color-chart-5)",
+    "--draftly-color-warning": "var(--color-chart-2)",
     "--draftly-color-warning-strong":
-      "color-mix(in oklch, var(--color-chart-5) 82%, var(--color-foreground))",
+      "color-mix(in oklch, var(--color-chart-2) 82%, var(--color-foreground))",
     "--draftly-color-tooltip-bg": "var(--color-popover)",
     "--draftly-color-tooltip-fg": "var(--color-popover-foreground)",
     "--draftly-surface-1":
