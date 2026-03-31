@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { Paintbrush, PilcrowIcon, SlidersHorizontal } from "lucide-react";
 import { COLOR_SCHEMES } from "@/color-schemes";
 import type {
@@ -9,22 +10,35 @@ import type {
   AppearanceMonospaceFont,
   AppearanceTextFont,
   AppearanceTheme,
+  LocalFontCategory,
 } from "@/data/schema";
 import {
   APPEARANCE_FONT_SCALE_DEFAULT,
   APPEARANCE_FONT_SCALE_MAX,
   APPEARANCE_FONT_SCALE_MIN,
   APPEARANCE_FONT_SCALE_STEP,
+  isAppearanceInterfaceFont,
+  isAppearanceMonospaceFont,
+  isAppearanceTextFont,
   interfaceFontOptions,
+  isLocalFontValue,
   monospaceFontOptions,
   normalizeAppearanceFontScale,
+  parseLocalFontValue,
   textFontOptions,
 } from "@/data/schema";
+import {
+  getLocalFontOptions,
+  type LocalFontOptionsResult,
+} from "@/lib/local-fonts";
 import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -62,6 +76,35 @@ function colorSchemeLabel(value: AppearanceColorScheme) {
   return value[0].toUpperCase() + value.slice(1);
 }
 
+function localCategoryLabel(category: LocalFontCategory) {
+  if (category === "monospace") return "mono";
+
+  return category;
+}
+
+function withSelectedLocalFont(
+  options: LocalFontOptionsResult["nonMonospace"] | LocalFontOptionsResult["monospace"],
+  selected: string,
+) {
+  if (!isLocalFontValue(selected)) return options;
+
+  if (options.some((option) => option.value === selected)) return options;
+
+  const parsed = parseLocalFontValue(selected);
+
+  if (!parsed) return options;
+
+  return [
+    {
+      value: selected,
+      label: parsed.family,
+      family: parsed.family,
+      category: parsed.category,
+    },
+    ...options,
+  ];
+}
+
 export function AppearanceSettingsPage({
   theme,
   colorScheme,
@@ -78,8 +121,40 @@ export function AppearanceSettingsPage({
   onMonospaceFontChange,
   onSidebarPositionChange,
 }: Props) {
+  const [localFontOptions, setLocalFontOptions] = useState<LocalFontOptionsResult>({
+    available: false,
+    nonMonospace: [],
+    monospace: [],
+  });
+
+  useEffect(() => {
+    let disposed = false;
+
+    void getLocalFontOptions().then((result) => {
+      if (disposed) return;
+
+      setLocalFontOptions(result);
+    });
+
+    return () => {
+      disposed = true;
+    };
+  }, []);
+
   const normalizedFontScale = normalizeAppearanceFontScale(
     fontSize ?? APPEARANCE_FONT_SCALE_DEFAULT,
+  );
+  const selectableInterfaceLocalFonts = useMemo(
+    () => withSelectedLocalFont(localFontOptions.nonMonospace, interfaceFont),
+    [interfaceFont, localFontOptions.nonMonospace],
+  );
+  const selectableTextLocalFonts = useMemo(
+    () => withSelectedLocalFont(localFontOptions.nonMonospace, textFont),
+    [localFontOptions.nonMonospace, textFont],
+  );
+  const selectableMonospaceLocalFonts = useMemo(
+    () => withSelectedLocalFont(localFontOptions.monospace, monospaceFont),
+    [localFontOptions.monospace, monospaceFont],
   );
 
   return (
@@ -200,9 +275,11 @@ export function AppearanceSettingsPage({
             </div>
             <Select
               value={interfaceFont}
-              onValueChange={(value) =>
-                onInterfaceFontChange(value as AppearanceInterfaceFont)
-              }
+              onValueChange={(value) => {
+                if (!isAppearanceInterfaceFont(value)) return;
+
+                onInterfaceFontChange(value as AppearanceInterfaceFont);
+              }}
             >
               <SelectTrigger
                 id="interface-font"
@@ -211,11 +288,27 @@ export function AppearanceSettingsPage({
                 <SelectValue placeholder="Select interface font" />
               </SelectTrigger>
               <SelectContent>
-                {interfaceFontOptions.map((item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
+                <SelectGroup>
+                  <SelectLabel>Built-in fonts</SelectLabel>
+                  {interfaceFontOptions.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+                {selectableInterfaceLocalFonts.length > 0 && (
+                  <>
+                    <SelectSeparator />
+                    <SelectGroup>
+                      <SelectLabel>Installed on this device</SelectLabel>
+                      {selectableInterfaceLocalFonts.map((item) => (
+                        <SelectItem key={item.value} value={item.value}>
+                          {item.label} ({localCategoryLabel(item.category)})
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -231,19 +324,37 @@ export function AppearanceSettingsPage({
             </div>
             <Select
               value={textFont}
-              onValueChange={(value) =>
-                onTextFontChange(value as AppearanceTextFont)
-              }
+              onValueChange={(value) => {
+                if (!isAppearanceTextFont(value)) return;
+
+                onTextFontChange(value as AppearanceTextFont);
+              }}
             >
               <SelectTrigger id="text-font" className="w-full min-w-48 sm:w-52">
                 <SelectValue placeholder="Select text font" />
               </SelectTrigger>
               <SelectContent>
-                {textFontOptions.map((item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
+                <SelectGroup>
+                  <SelectLabel>Built-in fonts</SelectLabel>
+                  {textFontOptions.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+                {selectableTextLocalFonts.length > 0 && (
+                  <>
+                    <SelectSeparator />
+                    <SelectGroup>
+                      <SelectLabel>Installed on this device</SelectLabel>
+                      {selectableTextLocalFonts.map((item) => (
+                        <SelectItem key={item.value} value={item.value}>
+                          {item.label} ({localCategoryLabel(item.category)})
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -259,9 +370,11 @@ export function AppearanceSettingsPage({
             </div>
             <Select
               value={monospaceFont}
-              onValueChange={(value) =>
-                onMonospaceFontChange(value as AppearanceMonospaceFont)
-              }
+              onValueChange={(value) => {
+                if (!isAppearanceMonospaceFont(value)) return;
+
+                onMonospaceFontChange(value as AppearanceMonospaceFont);
+              }}
             >
               <SelectTrigger
                 id="monospace-font"
@@ -270,11 +383,27 @@ export function AppearanceSettingsPage({
                 <SelectValue placeholder="Select monospace font" />
               </SelectTrigger>
               <SelectContent>
-                {monospaceFontOptions.map((item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
+                <SelectGroup>
+                  <SelectLabel>Built-in fonts</SelectLabel>
+                  {monospaceFontOptions.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+                {selectableMonospaceLocalFonts.length > 0 && (
+                  <>
+                    <SelectSeparator />
+                    <SelectGroup>
+                      <SelectLabel>Installed on this device</SelectLabel>
+                      {selectableMonospaceLocalFonts.map((item) => (
+                        <SelectItem key={item.value} value={item.value}>
+                          {item.label} ({localCategoryLabel(item.category)})
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </>
+                )}
               </SelectContent>
             </Select>
           </div>

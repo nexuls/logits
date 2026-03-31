@@ -1,19 +1,24 @@
 import { z } from "zod";
 import { COLOR_SCHEMES } from "@/color-schemes";
 import {
+  createLocalFontValue,
   DEFAULT_INTERFACE_FONT,
   DEFAULT_MONOSPACE_FONT,
   DEFAULT_TEXT_FONT,
+  isLocalFontValue,
   interfaceFontOptions,
   interfaceFontValues,
   monospaceFontOptions,
   monospaceFontValues,
+  parseLocalFontValue,
   resolveInterfaceFontFamily,
   resolveMonospaceFontFamily,
   resolveTextFontFamily,
   textFontOptions,
   textFontValues,
   type InterfaceFontKey,
+  type LocalFontCategory,
+  type LocalFontValue,
   type MonospaceFontKey,
   type TextFontKey,
 } from "@/app/fonts";
@@ -36,9 +41,15 @@ type AppearanceFontOption = {
   family: string;
 };
 
-export type AppearanceInterfaceFont = InterfaceFontKey;
-export type AppearanceTextFont = TextFontKey;
-export type AppearanceMonospaceFont = MonospaceFontKey;
+export type { LocalFontCategory };
+
+type BuiltInInterfaceFont = InterfaceFontKey;
+type BuiltInTextFont = TextFontKey;
+type BuiltInMonospaceFont = MonospaceFontKey;
+
+export type AppearanceInterfaceFont = BuiltInInterfaceFont | LocalFontValue;
+export type AppearanceTextFont = BuiltInTextFont | LocalFontValue;
+export type AppearanceMonospaceFont = BuiltInMonospaceFont | LocalFontValue;
 
 export const appearanceInterfaceFontValues = interfaceFontValues;
 export const appearanceTextFontValues = textFontValues;
@@ -50,6 +61,38 @@ export const appearanceTextFontOptions =
   textFontOptions as AppearanceFontOption[];
 export const appearanceMonospaceFontOptions =
   monospaceFontOptions as AppearanceFontOption[];
+
+export function isAppearanceInterfaceFont(value: string) {
+  if (appearanceInterfaceFontValues.includes(value as BuiltInInterfaceFont)) {
+    return true;
+  }
+
+  if (!isLocalFontValue(value)) return false;
+
+  const parsed = parseLocalFontValue(value);
+
+  return parsed?.category === "sans" || parsed?.category === "serif";
+}
+
+export function isAppearanceTextFont(value: string) {
+  if (appearanceTextFontValues.includes(value as BuiltInTextFont)) return true;
+
+  if (!isLocalFontValue(value)) return false;
+
+  return parseLocalFontValue(value) !== null;
+}
+
+export function isAppearanceMonospaceFont(value: string) {
+  if (appearanceMonospaceFontValues.includes(value as BuiltInMonospaceFont)) {
+    return true;
+  }
+
+  if (!isLocalFontValue(value)) return false;
+
+  const parsed = parseLocalFontValue(value);
+
+  return parsed?.category === "monospace";
+}
 
 function roundToStep(value: number) {
   return (
@@ -75,6 +118,9 @@ export {
   resolveTextFontFamily,
 };
 export {
+  createLocalFontValue,
+  isLocalFontValue,
+  parseLocalFontValue,
   appearanceInterfaceFontOptions as interfaceFontOptions,
   appearanceMonospaceFontOptions as monospaceFontOptions,
   appearanceTextFontOptions as textFontOptions,
@@ -90,9 +136,9 @@ const AppearanceSettingsSchema = z.object({
     .min(APPEARANCE_FONT_SCALE_MIN)
     .max(APPEARANCE_FONT_SCALE_MAX)
     .optional(),
-  interfaceFont: z.enum(appearanceInterfaceFontValues).optional(),
-  textFont: z.enum(appearanceTextFontValues).optional(),
-  monospaceFont: z.enum(appearanceMonospaceFontValues).optional(),
+  interfaceFont: z.string().refine(isAppearanceInterfaceFont).optional(),
+  textFont: z.string().refine(isAppearanceTextFont).optional(),
+  monospaceFont: z.string().refine(isAppearanceMonospaceFont).optional(),
 
   // Workspace layout
   sidebarPosition: z.enum(["left", "right"]).optional(),
