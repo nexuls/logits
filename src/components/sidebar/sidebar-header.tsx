@@ -10,6 +10,7 @@ import {
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useNotebooks } from "@/hooks/use-notebooks";
+import { buildNotebookUrl } from "@/lib/notebook-url";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -63,7 +64,7 @@ export function AppSidebarHeader({ activeNotebookId }: Props) {
 
     if (createdNotebook) {
       setQuery("");
-      router.push(`/p/${createdNotebook.id}`);
+      router.push(buildNotebookUrl(createdNotebook.id));
     }
   };
 
@@ -93,7 +94,7 @@ export function AppSidebarHeader({ activeNotebookId }: Props) {
 
     if (activeNotebook?.id === settingsNotebook.id) {
       if (fallbackNotebook) {
-        router.push(`/p/${fallbackNotebook.id}`);
+        router.push(buildNotebookUrl(fallbackNotebook.id));
       } else {
         router.push("/");
       }
@@ -147,7 +148,7 @@ export function AppSidebarHeader({ activeNotebookId }: Props) {
                       key={notebook.id}
                       onSelect={() => {
                         setQuery("");
-                        router.push(`/p/${notebook.id}`);
+                        router.push(buildNotebookUrl(notebook.id));
                       }}
                       className="flex min-h-10 items-center gap-0 rounded-lg px-2 py-0 focus:bg-accent"
                     >

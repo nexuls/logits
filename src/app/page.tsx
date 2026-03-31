@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpenText } from "lucide-react";
 import { useNotebooks } from "@/hooks/use-notebooks";
+import { buildNotebookUrl } from "@/lib/notebook-url";
 import Header from "@/components/header/index";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +22,7 @@ export default function Home() {
   useEffect(() => {
     if (isHydrating || !notebooks.length) return;
 
-    router.replace(`/p/${notebooks[0].id}`);
+    router.replace(buildNotebookUrl(notebooks[0].id));
   }, [isHydrating, notebooks, router]);
 
   return (
@@ -43,7 +44,7 @@ export default function Home() {
               const notebook = await createNotebook();
 
               if (notebook) {
-                router.push(`/p/${notebook.id}`);
+                  router.push(buildNotebookUrl(notebook.id));
               }
             }}
           >

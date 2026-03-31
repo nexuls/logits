@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { AppFile, FileType } from "@/data/schema";
 import { useNotebooks } from "@/hooks/use-notebooks";
+import { buildNotebookUrl } from "@/lib/notebook-url";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -170,7 +171,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
       return;
     }
 
-    router.push(`/p/${notebookId}?file=${file.id}`);
+    router.push(buildNotebookUrl(notebookId, { fileId: file.id }));
   };
 
   const handleCreate = async (
@@ -198,7 +199,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
 
     startRename(createdFile);
     toast.success("File created");
-    router.push(`/p/${notebookId}?file=${createdFile.id}`);
+    router.push(buildNotebookUrl(notebookId, { fileId: createdFile.id }));
   };
 
   const handleRenameNotebook = async () => {
@@ -226,7 +227,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
     setIsNotebookSettingsOpen(false);
 
     if (fallbackNotebook) {
-      router.push(`/p/${fallbackNotebook.id}`);
+      router.push(buildNotebookUrl(fallbackNotebook.id));
       return;
     }
 
@@ -271,7 +272,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
     toast.success("Duplicated");
 
     if (duplicatedFile.metadata.type !== "folder") {
-      router.push(`/p/${notebookId}?file=${duplicatedFile.id}`);
+      router.push(buildNotebookUrl(notebookId, { fileId: duplicatedFile.id }));
     }
   };
 
@@ -280,7 +281,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
     toast.success("Deleted");
 
     if (activeFileId === file.id) {
-      router.push(`/p/${notebookId}`);
+      router.push(buildNotebookUrl(notebookId));
     }
   };
 
@@ -289,7 +290,10 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
       return;
     }
 
-    const fileUrl = `${window.location.origin}/p/${notebookId}?file=${file.id}`;
+    const fileUrl = new URL(
+      buildNotebookUrl(notebookId, { fileId: file.id }),
+      window.location.origin,
+    ).toString();
     await navigator.clipboard.writeText(fileUrl);
     toast.success("Link copied");
   };

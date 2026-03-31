@@ -14,6 +14,7 @@ import Editor from "@/components/editor/markdown-editor";
 import NavBar from "@/components/editor/nav";
 import Footer from "@/components/footer/index";
 import Header from "@/components/header/index";
+import { buildNotebookUrl } from "@/lib/notebook-url";
 import { Spinner } from "@/components/ui/spinner";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { useNotebooks } from "@/hooks/use-notebooks";
@@ -276,7 +277,12 @@ export default function Holder({ slug }: { slug: string }) {
       return;
     }
 
-    router.replace(`/p/${selectedNotebook.id}?file=${fallbackFileId}`);
+    router.replace(
+      buildNotebookUrl(selectedNotebook.id, {
+        fileId: fallbackFileId,
+        searchParams,
+      }),
+    );
   }, [
     firstOpenableFile,
     openTabIds,
@@ -284,6 +290,7 @@ export default function Holder({ slug }: { slug: string }) {
     selectedFile,
     selectedFileId,
     selectedNotebook,
+    searchParams,
   ]);
 
   // Sync editor content only when active file changes.
@@ -379,7 +386,12 @@ export default function Holder({ slug }: { slug: string }) {
     : null;
 
   const openTab = (fileId: string) => {
-    router.push(`/p/${selectedNotebook.id}?file=${fileId}`);
+    router.push(
+      buildNotebookUrl(selectedNotebook.id, {
+        fileId,
+        searchParams,
+      }),
+    );
   };
 
   const closeTab = (fileId: string) => {
@@ -397,9 +409,14 @@ export default function Holder({ slug }: { slug: string }) {
           currentTabs[currentIndex + 1] ?? currentTabs[currentIndex - 1] ?? "";
 
         if (fallbackTabId) {
-          router.push(`/p/${selectedNotebook.id}?file=${fallbackTabId}`);
+          router.push(
+            buildNotebookUrl(selectedNotebook.id, {
+              fileId: fallbackTabId,
+              searchParams,
+            }),
+          );
         } else {
-          router.push(`/p/${selectedNotebook.id}`);
+          router.push(buildNotebookUrl(selectedNotebook.id));
         }
       }
 
@@ -449,6 +466,14 @@ export default function Holder({ slug }: { slug: string }) {
               notebookName={selectedNotebook.name}
               files={notebookFiles}
               activeFileId={selectedFile.id}
+              onNavigateToFile={(fileId) => {
+                router.push(
+                  buildNotebookUrl(selectedNotebook.id, {
+                    fileId,
+                    searchParams,
+                  }),
+                );
+              }}
             />
 
             <Editor
