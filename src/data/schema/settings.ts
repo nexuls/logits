@@ -62,7 +62,9 @@ export const appearanceTextFontOptions =
 export const appearanceMonospaceFontOptions =
   monospaceFontOptions as AppearanceFontOption[];
 
-export function isAppearanceInterfaceFont(value: string) {
+export function isAppearanceInterfaceFont(
+  value: string,
+): value is AppearanceInterfaceFont {
   if (appearanceInterfaceFontValues.includes(value as BuiltInInterfaceFont)) {
     return true;
   }
@@ -74,7 +76,7 @@ export function isAppearanceInterfaceFont(value: string) {
   return parsed?.category === "sans" || parsed?.category === "serif";
 }
 
-export function isAppearanceTextFont(value: string) {
+export function isAppearanceTextFont(value: string): value is AppearanceTextFont {
   if (appearanceTextFontValues.includes(value as BuiltInTextFont)) return true;
 
   if (!isLocalFontValue(value)) return false;
@@ -82,7 +84,9 @@ export function isAppearanceTextFont(value: string) {
   return parseLocalFontValue(value) !== null;
 }
 
-export function isAppearanceMonospaceFont(value: string) {
+export function isAppearanceMonospaceFont(
+  value: string,
+): value is AppearanceMonospaceFont {
   if (appearanceMonospaceFontValues.includes(value as BuiltInMonospaceFont)) {
     return true;
   }
@@ -136,9 +140,24 @@ const AppearanceSettingsSchema = z.object({
     .min(APPEARANCE_FONT_SCALE_MIN)
     .max(APPEARANCE_FONT_SCALE_MAX)
     .optional(),
-  interfaceFont: z.string().refine(isAppearanceInterfaceFont).optional(),
-  textFont: z.string().refine(isAppearanceTextFont).optional(),
-  monospaceFont: z.string().refine(isAppearanceMonospaceFont).optional(),
+  interfaceFont: z
+    .custom<AppearanceInterfaceFont>(
+      (value): value is AppearanceInterfaceFont =>
+        typeof value === "string" && isAppearanceInterfaceFont(value),
+    )
+    .optional(),
+  textFont: z
+    .custom<AppearanceTextFont>(
+      (value): value is AppearanceTextFont =>
+        typeof value === "string" && isAppearanceTextFont(value),
+    )
+    .optional(),
+  monospaceFont: z
+    .custom<AppearanceMonospaceFont>(
+      (value): value is AppearanceMonospaceFont =>
+        typeof value === "string" && isAppearanceMonospaceFont(value),
+    )
+    .optional(),
 
   // Workspace layout
   sidebarPosition: z.enum(["left", "right"]).optional(),
