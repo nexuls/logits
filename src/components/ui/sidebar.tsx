@@ -383,7 +383,7 @@ function Sidebar({
             aria-label="Resize sidebar"
             onMouseDown={handleResizeMouseDown}
             className={cn(
-              "absolute inset-y-0 z-20 w-1 cursor-col-resize select-none hover:bg-sidebar-border/70",
+              "absolute inset-y-0 z-20 w-1 cursor-e-resize select-none hover:bg-sidebar-border/70",
               side === "left" ? "-right-0.5" : "-left-0.5",
             )}
           />
