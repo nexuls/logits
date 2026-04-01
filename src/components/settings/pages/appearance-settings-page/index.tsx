@@ -83,11 +83,11 @@ export function AppearanceSettingsPage({
   useEffect(() => {
     let disposed = false;
 
-    void getLocalFontOptions().then((result) => {
-      if (disposed) return;
+    // void getLocalFontOptions().then((result) => {
+    //   if (disposed) return;
 
-      setLocalFontOptions(result);
-    });
+    //   setLocalFontOptions(result);
+    // });
 
     return () => {
       disposed = true;
