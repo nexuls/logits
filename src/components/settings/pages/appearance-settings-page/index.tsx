@@ -10,7 +10,7 @@ import type {
   AppearanceMonospaceFont,
   AppearanceTextFont,
   AppearanceTheme,
-} from "@/data/schema";
+} from "@/data/modules/app/settings";
 import {
   APPEARANCE_FONT_SCALE_DEFAULT,
   APPEARANCE_FONT_SCALE_MAX,
@@ -23,7 +23,7 @@ import {
   monospaceFontOptions,
   normalizeAppearanceFontScale,
   textFontOptions,
-} from "@/data/schema";
+} from "@/data/modules/app/settings";
 import {
   getLocalFontOptions,
   type LocalFontOptionsResult,

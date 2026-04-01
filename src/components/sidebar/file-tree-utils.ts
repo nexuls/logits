@@ -5,7 +5,7 @@ import {
   Folder,
   type LucideIcon,
 } from "lucide-react";
-import type { AppFile, FileType } from "@/data/schema";
+import type { AppFile, FileType } from "@/data/modules/notebook/client-types";
 
 export type FileTreeDropPosition = "before" | "inside" | "after";
 

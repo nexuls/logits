@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { ChevronDown, FolderOpen } from "lucide-react";
-import type { AppFile } from "@/data/schema";
+import type { AppFile } from "@/data/modules/notebook/client-types";
 import { Button } from "@/components/ui/button";
 import {
   Breadcrumb,

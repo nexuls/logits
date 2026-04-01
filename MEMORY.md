@@ -11,6 +11,8 @@
 - TypeScript is required for all core app code.
 - Zod-backed schemas are used for normalization and data validation boundaries.
 - Client persistence uses IndexedDB via idb (`src/data/store.ts`).
+- Modular data architecture scaffold introduced under `src/data/modules/*` with separate app, notebook, and fileContent stores plus a shared module base class (`src/data/dataModule.ts`).
+- `src/data/store.ts` now acts as a coordinator for module composition, migration bootstrap, and serialized cross-module writes while preserving legacy `readAppData`/`writeAppData` exports during transition.
 - Global app/state wiring is centralized through providers (`src/components/providers/*`).
 - Root layout hydrates initial appearance settings from cookies on the server (`src/app/layout.tsx`) to minimize theme/font flicker.
 - Theme and color-scheme synchronization is handled in a dedicated settings sync component (`src/components/providers/base.tsx`).
@@ -28,6 +30,7 @@
 ## Persistence and State Flow
 - `DataProvider` is the single write boundary for app data and user settings.
 - Data writes are queued through a promise chain to preserve ordering under rapid UI updates.
+- New modular store path started: a `DataStore` queue now serializes module-level write operations to preserve ordering guarantees for cross-store transactions.
 - User settings are persisted to both IndexedDB and cookies to keep SSR/CSR appearance state aligned.
 - Local storage is used for notebook-scoped ephemeral UI state (open tabs), separate from canonical notebook/file data.
 

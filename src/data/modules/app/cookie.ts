@@ -2,7 +2,7 @@ import {
   createInitialUserSettings,
   normalizeUserSettings,
   type UserSettings,
-} from "@/data/schema";
+} from "./settings";
 
 export const USER_SETTINGS_COOKIE_NAME = "user_settings";
 export const USER_SETTINGS_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
@@ -38,40 +38,12 @@ export function retrieveUserSettingsFromCookieValue(value?: string | null) {
   }
 }
 
-export function retrieveUserSettingsFromCookie(cookieHeader?: string | null) {
-  if (!cookieHeader) {
-    return createInitialUserSettings();
-  }
-
-  const settingsCookie = cookieHeader
-    .split(";")
-    .map((part) => part.trim())
-    .find((part) => part.startsWith(`${USER_SETTINGS_COOKIE_NAME}=`));
-
-  if (!settingsCookie) {
-    return createInitialUserSettings();
-  }
-
-  return retrieveUserSettingsFromCookieValue(
-    settingsCookie.slice(USER_SETTINGS_COOKIE_NAME.length + 1),
-  );
-}
-
 export function writeUserSettingsToCookie(settings: UserSettings) {
   if (typeof document === "undefined") {
     return;
   }
 
   document.cookie = dumpUserSettingsToCookie(settings);
-}
-
-export function dumpResolvedSystemThemeToCookie(theme: "light" | "dark") {
-  return [
-    `${RESOLVED_SYSTEM_THEME_COOKIE_NAME}=${theme}`,
-    "Path=/",
-    `Max-Age=${RESOLVED_SYSTEM_THEME_COOKIE_MAX_AGE}`,
-    "SameSite=Lax",
-  ].join("; ");
 }
 
 export function retrieveResolvedSystemThemeFromCookieValue(
@@ -89,5 +61,10 @@ export function writeResolvedSystemThemeToCookie(theme: "light" | "dark") {
     return;
   }
 
-  document.cookie = dumpResolvedSystemThemeToCookie(theme);
+  document.cookie = [
+    `${RESOLVED_SYSTEM_THEME_COOKIE_NAME}=${theme}`,
+    "Path=/",
+    `Max-Age=${RESOLVED_SYSTEM_THEME_COOKIE_MAX_AGE}`,
+    "SameSite=Lax",
+  ].join("; ");
 }

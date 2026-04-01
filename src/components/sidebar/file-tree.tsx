@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import type { AppFile, FileType } from "@/data/schema";
+import type { AppFile, FileType } from "@/data/modules/notebook/client-types";
 import { useNotebooks } from "@/hooks/use-notebooks";
 import { buildNotebookUrl } from "@/lib/notebook-url";
 import { Button } from "@/components/ui/button";

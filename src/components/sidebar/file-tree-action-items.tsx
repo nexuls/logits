@@ -9,7 +9,7 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import type { AppFile } from "@/data/schema";
+import type { AppFile } from "@/data/modules/notebook/client-types";
 
 type MenuItemComponent = ComponentType<{
   children: ReactNode;

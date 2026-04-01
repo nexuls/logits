@@ -13,18 +13,18 @@ import {
   resolveMonospaceFontFamily,
   resolveTextFontFamily,
   type UserSettings,
-} from "@/data/schema";
+} from "@/data/modules/app/settings";
 import {
   ALL_COLOR_SCHEME_CLASSES,
   ensureColorSchemeStylesMounted,
   getColorSchemeClassName,
 } from "@/color-schemes";
-import { writeResolvedSystemThemeToCookie } from "@/data/settings-cookie";
+import { writeResolvedSystemThemeToCookie } from "@/data/modules/app/cookie";
+import { DataStoreProvider } from "@/data/context";
 import { SidebarProvider } from "../ui/sidebar";
 import { Toaster } from "../ui/sonner";
 import { TooltipProvider } from "../ui/tooltip";
 import { AppSidebar } from "../sidebar/app-sidebar";
-import { DataProvider } from "./data";
 
 type Props = {
   children?: ReactNode;
@@ -113,14 +113,14 @@ export default function BaseProvider({ children, initialSettings }: Props) {
       enableColorScheme
     >
       <TooltipProvider>
-        <DataProvider initialSettings={initialSettings}>
+        <DataStoreProvider initialSettings={initialSettings}>
           <SettingsThemeSync />
           <SidebarProvider>
             <AppSidebar />
             {children}
             <Toaster />
           </SidebarProvider>
-        </DataProvider>
+        </DataStoreProvider>
       </TooltipProvider>
     </ThemeProvider>
   );

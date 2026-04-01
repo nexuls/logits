@@ -4,7 +4,7 @@ import {
   type AppearanceColorScheme,
   type AppearanceTheme,
   type LocalFontCategory,
-} from "@/data/schema";
+} from "@/data/modules/app/settings";
 import type { LocalFontOptionsResult } from "@/lib/local-fonts";
 
 export const themes: { value: AppearanceTheme; label: string }[] = [

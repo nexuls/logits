@@ -7,7 +7,7 @@ import {
   PanelLeftIcon,
   XIcon,
 } from "lucide-react";
-import type { FileType } from "@/data/schema";
+import type { FileType } from "@/data/modules/notebook/client-types";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { useSidebar } from "../ui/sidebar";

@@ -9,7 +9,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
-import type { AppFile } from "@/data/schema";
+import type { AppFile } from "@/data/modules/notebook/client-types";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import {

@@ -9,7 +9,7 @@ import {
   NotebookText,
   TriangleAlertIcon,
 } from "lucide-react";
-import type { AppFile } from "@/data/schema";
+import type { AppFile } from "@/data/modules/notebook/client-types";
 import Editor from "@/components/editor/markdown-editor";
 import NavBar from "@/components/editor/nav";
 import Footer from "@/components/footer/index";
@@ -17,7 +17,7 @@ import Header from "@/components/header/index";
 import { buildNotebookUrl } from "@/lib/notebook-url";
 import { Spinner } from "@/components/ui/spinner";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
-import { useNotebooks } from "@/hooks/use-notebooks";
+import { useNotebooks } from "../../../../hooks/use-notebooks";
 import {
   Empty,
   EmptyDescription,
@@ -181,7 +181,13 @@ export default function Holder({ slug }: { slug: string }) {
   // Routing and data access.
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { notebooks, isHydrating, updateFileContent, getNotebookFiles } =
+  const {
+    notebooks,
+    isHydrating,
+    updateFileContent,
+    getNotebookFiles,
+    getFileContent,
+  } =
     useNotebooks();
 
   // UI/editor state.
@@ -300,8 +306,28 @@ export default function Holder({ slug }: { slug: string }) {
       return;
     }
 
-    setDraftContent(selectedFile?.content ?? "");
-  }, [selectedFile?.content, selectedFileId]);
+    let isCancelled = false;
+
+    if (!selectedFile) {
+      setDraftContent("");
+      return;
+    }
+
+    setDraftContent(selectedFile.content);
+
+    if (selectedFile.metadata.type !== "file") {
+      return;
+    }
+
+    void getFileContent(selectedFile.id).then((content) => {
+      if (isCancelled) return;
+      setDraftContent(content);
+    });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [getFileContent, selectedFile, selectedFileId]);
 
   const { debounced: debouncedSave, flush: flushDebouncedSave } =
     useDebouncedCallback(
@@ -326,9 +352,9 @@ export default function Holder({ slug }: { slug: string }) {
 
   useEffect(() => {
     if (selectedFile?.metadata.type === "file") {
-      updateFooterStats(selectedFile.content);
+      updateFooterStats(draftContent);
     }
-  }, [selectedFile?.content, selectedFile?.metadata.type]);
+  }, [draftContent, selectedFile?.metadata.type]);
 
   useEffect(() => {
     if (!selectedFileId) {

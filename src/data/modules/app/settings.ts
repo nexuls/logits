@@ -5,9 +5,9 @@ import {
   DEFAULT_INTERFACE_FONT,
   DEFAULT_MONOSPACE_FONT,
   DEFAULT_TEXT_FONT,
-  isLocalFontValue,
   interfaceFontOptions,
   interfaceFontValues,
+  isLocalFontValue,
   monospaceFontOptions,
   monospaceFontValues,
   parseLocalFontValue,
@@ -76,7 +76,9 @@ export function isAppearanceInterfaceFont(
   return parsed?.category === "sans" || parsed?.category === "serif";
 }
 
-export function isAppearanceTextFont(value: string): value is AppearanceTextFont {
+export function isAppearanceTextFont(
+  value: string,
+): value is AppearanceTextFont {
   if (appearanceTextFontValues.includes(value as BuiltInTextFont)) return true;
 
   if (!isLocalFontValue(value)) return false;
@@ -130,11 +132,9 @@ export {
   appearanceTextFontOptions as textFontOptions,
 };
 
-const AppearanceSettingsSchema = z.object({
+const appearanceSettingsSchema = z.object({
   theme: z.enum(appearanceThemeValues).optional(),
   colorScheme: z.enum(COLOR_SCHEMES).optional(),
-
-  // Fonts
   fontSize: z
     .number()
     .min(APPEARANCE_FONT_SCALE_MIN)
@@ -158,14 +158,12 @@ const AppearanceSettingsSchema = z.object({
         typeof value === "string" && isAppearanceMonospaceFont(value),
     )
     .optional(),
-
-  // Workspace layout
   sidebarPosition: z.enum(["left", "right"]).optional(),
   sidebarWidth: z.number().int().positive().optional(),
 });
 
 export const userSettingsSchema = z.object({
-  appearance: AppearanceSettingsSchema.optional(),
+  appearance: appearanceSettingsSchema.optional(),
 });
 
 export type UserSettings = z.infer<typeof userSettingsSchema>;

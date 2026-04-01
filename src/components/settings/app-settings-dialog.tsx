@@ -18,13 +18,13 @@ import type {
   AppearanceTextFont,
   AppearanceTheme,
   UserSettings,
-} from "@/data/schema";
+} from "@/data/modules/app/settings";
 import {
   APPEARANCE_FONT_SCALE_DEFAULT,
   DEFAULT_INTERFACE_FONT,
   DEFAULT_MONOSPACE_FONT,
   DEFAULT_TEXT_FONT,
-} from "@/data/schema";
+} from "@/data/modules/app/settings";
 import { useUserSettings } from "@/hooks/use-user-settings";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";

@@ -7,7 +7,7 @@ import {
   USER_SETTINGS_COOKIE_NAME,
   retrieveResolvedSystemThemeFromCookieValue,
   retrieveUserSettingsFromCookieValue,
-} from "@/data/settings-cookie";
+} from "@/data/modules/app/cookie";
 import {
   APPEARANCE_FONT_SCALE_DEFAULT,
   DEFAULT_INTERFACE_FONT,
@@ -17,7 +17,7 @@ import {
   resolveInterfaceFontFamily,
   resolveMonospaceFontFamily,
   resolveTextFontFamily,
-} from "@/data/schema";
+} from "@/data/modules/app/settings";
 import {
   getColorSchemeClassName,
   getColorSchemeStylesheetText,

@@ -1,6 +1,6 @@
 "use client";
 
-import type { AppFile } from "@/data/schema";
+import type { AppFile } from "@/data/modules/notebook/client-types";
 import { NotebookActions } from "./actions";
 import { NotebookBreadcrumbs } from "./breadcrumbs";
 
