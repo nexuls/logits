@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { BookOpenText } from "lucide-react";
 import { useNotebooks } from "@/hooks/use-notebooks";
 import { buildNotebookUrl } from "@/lib/notebook-url";
-import Header from "@/components/tabs/index";
+import Header from "@/components/tabs/header";
 import { Button } from "@/components/ui/button";
 import {
   Empty,

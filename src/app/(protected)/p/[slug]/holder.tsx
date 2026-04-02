@@ -2,29 +2,22 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  FileImage,
-  FilePenLine,
-  FolderClosed,
-  NotebookText,
-  TriangleAlertIcon,
-} from "lucide-react";
+import { TriangleAlertIcon } from "lucide-react";
 import type { AppFile } from "@/data/modules/notebook/client-types";
 import Editor from "@/components/editor/markdown-editor";
 import NavBar from "@/components/editor/nav";
 import Footer from "@/components/footer/index";
-import Header from "@/components/tabs/index";
+import Header from "@/components/tabs/header";
+import TabsView, { type TabsViewTab } from "@/components/tabs";
 import { buildNotebookUrl } from "@/lib/notebook-url";
 import { Spinner } from "@/components/ui/spinner";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { useNotebooks } from "../../../../hooks/use-notebooks";
 import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
+  getUnsupportedFileState,
+  NotebookEmptyState,
+  renderEmptyState,
+} from "./helper";
 
 type CursorMeta = {
   line: number;
@@ -125,58 +118,6 @@ function updateFooterCursor(meta: {
   setFooterField(FOOTER_FIELD_IDS.cursor, cursorValue);
 }
 
-function getUnsupportedFileState(fileType: AppFile["metadata"]["type"]) {
-  if (fileType === "folder") {
-    return {
-      icon: <FolderClosed />,
-      title: "Folder selected",
-      description: "Pick a note inside this folder to edit its contents.",
-    };
-  }
-
-  if (fileType === "draw") {
-    return {
-      icon: <FilePenLine />,
-      title: "Drawing files are not editable yet",
-      description:
-        "The notebook architecture is ready for draw files, but the note editor currently focuses on text notes.",
-    };
-  }
-
-  if (fileType === "image") {
-    return {
-      icon: <FileImage />,
-      title: "Image files are not editable yet",
-      description:
-        "Use note files for writing today; image-specific editing can be layered onto this file system next.",
-    };
-  }
-
-  return null;
-}
-
-function NotebookEmptyState({
-  icon,
-  title,
-  description,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="h-full p-6">
-      <Empty className="h-full border-border">
-        <EmptyHeader>
-          <EmptyMedia variant="icon">{icon}</EmptyMedia>
-          <EmptyTitle>{title}</EmptyTitle>
-          <EmptyDescription>{description}</EmptyDescription>
-        </EmptyHeader>
-      </Empty>
-    </div>
-  );
-}
-
 export default function Holder({ slug }: { slug: string }) {
   // Routing and data access.
   const router = useRouter();
@@ -187,17 +128,18 @@ export default function Holder({ slug }: { slug: string }) {
     updateFileContent,
     getNotebookFiles,
     getFileContent,
-  } =
-    useNotebooks();
+  } = useNotebooks();
 
   // UI/editor state.
-  const [draftContent, setDraftContent] = useState("");
+  const [draftByFileId, setDraftByFileId] = useState<Record<string, string>>(
+    {},
+  );
   const [openTabIds, setOpenTabIds] = useState<string[]>([]);
   const [loadedTabsSlug, setLoadedTabsSlug] = useState<string | null>(null);
 
   // Guards against out-of-order async save completion.
-  const latestSaveRequestRef = useRef(0);
-  const cursorMetaRef = useRef<CursorMeta>(DEFAULT_CURSOR_META);
+  const latestSaveRequestRef = useRef<Record<string, number>>({});
+  const cursorMetaRef = useRef<Record<string, CursorMeta>>({});
 
   // Derived entities.
   const selectedNotebook = useMemo(
@@ -302,18 +244,25 @@ export default function Holder({ slug }: { slug: string }) {
   // Sync editor content only when active file changes.
   useEffect(() => {
     if (!selectedFileId) {
-      setDraftContent("");
       return;
     }
 
     let isCancelled = false;
 
     if (!selectedFile) {
-      setDraftContent("");
       return;
     }
 
-    setDraftContent(selectedFile.content);
+    setDraftByFileId((currentDrafts) => {
+      if (currentDrafts[selectedFile.id] !== undefined) {
+        return currentDrafts;
+      }
+
+      return {
+        ...currentDrafts,
+        [selectedFile.id]: selectedFile.content,
+      };
+    });
 
     if (selectedFile.metadata.type !== "file") {
       return;
@@ -321,7 +270,11 @@ export default function Holder({ slug }: { slug: string }) {
 
     void getFileContent(selectedFile.id).then((content) => {
       if (isCancelled) return;
-      setDraftContent(content);
+
+      setDraftByFileId((currentDrafts) => ({
+        ...currentDrafts,
+        [selectedFile.id]: content,
+      }));
     });
 
     return () => {
@@ -334,27 +287,68 @@ export default function Holder({ slug }: { slug: string }) {
       async (fileId: string, content: string, requestId: number) => {
         await updateFileContent(fileId, content);
 
-        if (latestSaveRequestRef.current !== requestId) {
+        if ((latestSaveRequestRef.current[fileId] ?? 0) !== requestId) {
           return;
         }
 
-        setFooterField(FOOTER_FIELD_IDS.saveStatus, "Saved");
+        if (selectedFileId === fileId) {
+          setFooterField(FOOTER_FIELD_IDS.saveStatus, "Saved");
+        }
       },
       { delayMs: 450 },
     );
 
   useEffect(() => {
-    cursorMetaRef.current = DEFAULT_CURSOR_META;
+    cursorMetaRef.current = {};
     setFooterField(FOOTER_FIELD_IDS.saveStatus, "Saved");
     setFooterField(FOOTER_FIELD_IDS.cursor, "Ln 1, Col 1");
     setFooterField(FOOTER_FIELD_IDS.tabSize, "Spaces: 2");
   }, []);
 
   useEffect(() => {
-    if (selectedFile?.metadata.type === "file") {
-      updateFooterStats(draftContent);
+    setDraftByFileId((currentDrafts) => {
+      if (!openableFiles.length && Object.keys(currentDrafts).length === 0) {
+        return currentDrafts;
+      }
+
+      const nextDrafts: Record<string, string> = {};
+
+      for (const file of openableFiles) {
+        nextDrafts[file.id] =
+          currentDrafts[file.id] !== undefined
+            ? currentDrafts[file.id]
+            : file.content;
+      }
+
+      return nextDrafts;
+    });
+  }, [openableFiles]);
+
+  const activeDraftContent = useMemo(() => {
+    if (!selectedFile || selectedFile.metadata.type !== "file") {
+      return "";
     }
-  }, [draftContent, selectedFile?.metadata.type]);
+
+    return draftByFileId[selectedFile.id] ?? selectedFile.content;
+  }, [draftByFileId, selectedFile]);
+
+  useEffect(() => {
+    if (selectedFile?.metadata.type === "file") {
+      updateFooterStats(activeDraftContent);
+    }
+  }, [activeDraftContent, selectedFile?.metadata.type]);
+
+  useEffect(() => {
+    const activeCursor = selectedFileId
+      ? (cursorMetaRef.current[selectedFileId] ?? DEFAULT_CURSOR_META)
+      : DEFAULT_CURSOR_META;
+
+    setFooterField(
+      FOOTER_FIELD_IDS.cursor,
+      `Ln ${activeCursor.line}, Col ${activeCursor.col}`,
+    );
+    setFooterField(FOOTER_FIELD_IDS.tabSize, `Spaces: ${activeCursor.tabSize}`);
+  }, [selectedFileId]);
 
   useEffect(() => {
     if (!selectedFileId) {
@@ -368,12 +362,109 @@ export default function Holder({ slug }: { slug: string }) {
   }, [flushDebouncedSave, selectedFileId]);
 
   const markdownStats = useMemo(
-    () => getTextStats(draftContent),
-    [draftContent],
+    () => getTextStats(activeDraftContent),
+    [activeDraftContent],
   );
 
   const footerView =
     selectedFile?.metadata.type === "file" ? "markdown" : "other";
+
+  const tabs = useMemo<
+    TabsViewTab<{ type: AppFile["metadata"]["type"] }>[]
+  >(() => {
+    if (!selectedNotebook) return [];
+
+    return openTabs.map((file) => {
+      const unsupportedFileState = getUnsupportedFileState(file.metadata.type);
+
+      return {
+        id: file.id,
+        title: file.name,
+        meta: {
+          type: file.metadata.type,
+        },
+        content: unsupportedFileState ? (
+          <NotebookEmptyState
+            icon={unsupportedFileState.icon}
+            title={unsupportedFileState.title}
+            description={unsupportedFileState.description}
+          />
+        ) : (
+          <div className="h-full flex flex-col">
+            <NavBar
+              notebookId={selectedNotebook.id}
+              notebookName={selectedNotebook.name}
+              files={notebookFiles}
+              activeFileId={file.id}
+              onNavigateToFile={(fileId) => {
+                router.push(
+                  buildNotebookUrl(selectedNotebook.id, {
+                    fileId,
+                    searchParams,
+                  }),
+                );
+              }}
+            />
+
+            <Editor
+              mode="markdown"
+              content={draftByFileId[file.id] ?? file.content}
+              onEditorMetaChange={(meta) => {
+                cursorMetaRef.current[file.id] = meta;
+
+                if (selectedFileId !== file.id) {
+                  return;
+                }
+
+                setFooterField(
+                  FOOTER_FIELD_IDS.tabSize,
+                  `Spaces: ${meta.tabSize}`,
+                );
+                updateFooterCursor(meta);
+              }}
+              onContentChange={(newContent) => {
+                setDraftByFileId((currentDrafts) => ({
+                  ...currentDrafts,
+                  [file.id]: newContent,
+                }));
+
+                if (selectedFileId === file.id) {
+                  updateFooterStats(newContent);
+                  setFooterField(FOOTER_FIELD_IDS.saveStatus, "Saving");
+                }
+
+                const requestId =
+                  (latestSaveRequestRef.current[file.id] ?? 0) + 1;
+
+                latestSaveRequestRef.current[file.id] = requestId;
+                debouncedSave(file.id, newContent, requestId);
+              }}
+            />
+          </div>
+        ),
+      };
+    });
+  }, [
+    debouncedSave,
+    draftByFileId,
+    notebookFiles,
+    openTabs,
+    router,
+    searchParams,
+    selectedFileId,
+    selectedNotebook,
+  ]);
+
+  const tabsForHeader = useMemo(
+    () =>
+      openTabs.map((file) => ({
+        id: file.id,
+        name: file.name,
+        type: file.metadata.type,
+        isActive: file.id === selectedFileId,
+      })),
+    [openTabs, selectedFileId],
+  );
 
   if (isHydrating) {
     return (
@@ -389,27 +480,17 @@ export default function Holder({ slug }: { slug: string }) {
     return (
       <div className="relative h-dvh w-full bg-background">
         <Header placeholder />
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-muted-foreground">
-          <Empty className="h-full border-border">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <TriangleAlertIcon />
-              </EmptyMedia>
-              <EmptyTitle>Notebook not found.</EmptyTitle>
-              <EmptyDescription>
-                It may have been deleted or the link is out of date.
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        </div>
+        <NotebookEmptyState
+          icon={<TriangleAlertIcon />}
+          title="Notebook not found."
+          description="It may have been deleted or the link is out of date."
+        />
       </div>
     );
   }
 
   const hasAnyFiles = notebookFiles.length > 0;
-  const unsupportedState = selectedFile
-    ? getUnsupportedFileState(selectedFile.metadata.type)
-    : null;
+  const emptyState = renderEmptyState(hasAnyFiles, selectedFile, openTabs);
 
   const openTab = (fileId: string) => {
     router.push(
@@ -452,78 +533,30 @@ export default function Holder({ slug }: { slug: string }) {
 
   return (
     <div className="relative h-dvh w-[calc(100%-18rem)] flex-1 flex flex-col bg-background">
-      <Header
-        placeholder={false}
-        notebookName={selectedNotebook.name}
-        currentFileName={selectedFile?.name}
-        tabs={openTabs.map((file) => ({
-          id: file.id,
-          name: file.name,
-          type: file.metadata.type,
-          isActive: file.id === selectedFileId,
-        }))}
-        onTabSelect={openTab}
-        onTabClose={closeTab}
-      />
-
       <main className="min-h-0 w-full flex-1">
-        {!hasAnyFiles ? (
-          <NotebookEmptyState
-            icon={<NotebookText />}
-            title="No files yet"
-            description="Create your first note or folder from the sidebar."
-          />
-        ) : !selectedFile ? (
-          <NotebookEmptyState
-            icon={<NotebookText />}
-            title="Select a file"
-            description="Choose a note from the sidebar to start writing."
-          />
-        ) : unsupportedState ? (
-          <NotebookEmptyState
-            icon={unsupportedState.icon}
-            title={unsupportedState.title}
-            description={unsupportedState.description}
-          />
+        {emptyState ? (
+          <>
+            <Header
+              placeholder={false}
+              tabs={tabsForHeader}
+              onTabSelect={openTab}
+              onTabClose={closeTab}
+            />
+
+            <NotebookEmptyState
+              icon={emptyState.icon}
+              title={emptyState.title}
+              description={emptyState.description}
+            />
+          </>
         ) : (
-          <div className="h-full flex flex-col">
-            <NavBar
-              notebookId={selectedNotebook.id}
-              notebookName={selectedNotebook.name}
-              files={notebookFiles}
-              activeFileId={selectedFile.id}
-              onNavigateToFile={(fileId) => {
-                router.push(
-                  buildNotebookUrl(selectedNotebook.id, {
-                    fileId,
-                    searchParams,
-                  }),
-                );
-              }}
-            />
-
-            <Editor
-              mode="markdown"
-              content={draftContent}
-              onEditorMetaChange={(meta) => {
-                cursorMetaRef.current = meta;
-                setFooterField(
-                  FOOTER_FIELD_IDS.tabSize,
-                  `Spaces: ${meta.tabSize}`,
-                );
-                updateFooterCursor(meta);
-              }}
-              onContentChange={(newContent) => {
-                if (!selectedFile?.id) return;
-
-                updateFooterStats(newContent);
-                setFooterField(FOOTER_FIELD_IDS.saveStatus, "Saving");
-                const requestId = latestSaveRequestRef.current + 1;
-                latestSaveRequestRef.current = requestId;
-                debouncedSave(selectedFile.id, newContent, requestId);
-              }}
-            />
-          </div>
+          <TabsView
+            tabs={tabs}
+            activeTabId={selectedFileId}
+            defaultActiveTabId={firstOpenableFile?.id}
+            onTabSelect={openTab}
+            onTabClose={closeTab}
+          />
         )}
       </main>
 
@@ -533,10 +566,22 @@ export default function Holder({ slug }: { slug: string }) {
           footerView === "markdown"
             ? {
                 ...markdownStats,
-                line: cursorMetaRef.current.line,
-                col: cursorMetaRef.current.col,
-                tabSize: cursorMetaRef.current.tabSize,
-                selection: cursorMetaRef.current.selection,
+                line:
+                  selectedFileId && cursorMetaRef.current[selectedFileId]
+                    ? cursorMetaRef.current[selectedFileId].line
+                    : DEFAULT_CURSOR_META.line,
+                col:
+                  selectedFileId && cursorMetaRef.current[selectedFileId]
+                    ? cursorMetaRef.current[selectedFileId].col
+                    : DEFAULT_CURSOR_META.col,
+                tabSize:
+                  selectedFileId && cursorMetaRef.current[selectedFileId]
+                    ? cursorMetaRef.current[selectedFileId].tabSize
+                    : DEFAULT_CURSOR_META.tabSize,
+                selection:
+                  selectedFileId && cursorMetaRef.current[selectedFileId]
+                    ? cursorMetaRef.current[selectedFileId].selection
+                    : DEFAULT_CURSOR_META.selection,
                 version: "v0.1.0",
                 saveStatus: "saved",
               }
