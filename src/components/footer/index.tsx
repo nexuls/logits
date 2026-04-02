@@ -1,5 +1,6 @@
 import { Bell, Bot, GitCommitHorizontal, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getTextStats } from "../editor/utils";
 
 export const FOOTER_FIELD_IDS = {
   lines: "logits-footer-lines",
@@ -11,51 +12,56 @@ export const FOOTER_FIELD_IDS = {
   saveStatus: "logits-footer-save-status",
 } as const;
 
-export function getTextStats(content: string) {
-  const normalized = content.replace(/\r\n/g, "\n");
-  const totalLines =
-    normalized.length === 0 ? 1 : normalized.split("\n").length;
-  const totalChars = content.length;
-  const totalWords = content.trim().length
-    ? (content.trim().match(/\S+/g)?.length ?? 0)
-    : 0;
-
-  return {
-    totalLines,
-    totalChars,
-    totalWords,
-  };
-}
-
-export function setFooterField(id: string, value: string) {
+// Manipulate footer fields directly to avoid unnecessary React renders and potential performance issues with large documents.
+export function setFooterField(
+  id: (typeof FOOTER_FIELD_IDS)[keyof typeof FOOTER_FIELD_IDS],
+  value: string,
+) {
   if (typeof document === "undefined") return;
   const element = document.getElementById(id);
   if (!element || element.textContent === value) return;
   element.textContent = value;
 }
 
-export function updateFooterStats(content: string) {
-  const stats = getTextStats(content);
-  setFooterField(FOOTER_FIELD_IDS.lines, String(stats.totalLines));
-  setFooterField(FOOTER_FIELD_IDS.chars, String(stats.totalChars));
-  setFooterField(FOOTER_FIELD_IDS.words, String(stats.totalWords));
-}
+type UpdateFooterParams = {
+  stats: {
+    lines: number;
+    chars: number;
+    words: number;
+  };
+  cursor: {
+    line: number;
+    col: number;
+    selection: number;
+  };
+};
 
-export function updateFooterCursor(meta: {
-  line: number;
-  col: number;
-  selection: number;
-}) {
-  const cursorValue = `Ln ${meta.line}, Col ${meta.col}${
-    meta.selection > 0 ? ` (${meta.selection} selected)` : ""
-  }`;
-  setFooterField(FOOTER_FIELD_IDS.cursor, cursorValue);
+export function updateFooter(
+  ...args:
+    | ["stats", UpdateFooterParams["stats"]]
+    | ["cursor", UpdateFooterParams["cursor"]]
+) {
+  const [field, params] = args;
+
+  if (field === "stats") {
+    setFooterField(FOOTER_FIELD_IDS.lines, String(params.lines));
+    setFooterField(FOOTER_FIELD_IDS.chars, String(params.chars));
+    setFooterField(FOOTER_FIELD_IDS.words, String(params.words));
+    return;
+  }
+
+  if (field === "cursor") {
+    const cursorValue = `Ln ${params.line}, Col ${params.col}${
+      params.selection > 0 ? ` (${params.selection} selected)` : ""
+    }`;
+    setFooterField(FOOTER_FIELD_IDS.cursor, cursorValue);
+  }
 }
 
 type MarkdownFooterMeta = {
-  totalLines: number;
-  totalChars: number;
-  totalWords: number;
+  lines: number;
+  chars: number;
+  words: number;
   line: number;
   col: number;
   selection: number;
@@ -108,17 +114,17 @@ export default function Footer({ view, markdownMeta }: Props) {
       <div className="flex min-w-0 items-center gap-3 overflow-x-auto">
         <StatChip
           post="lines"
-          value={markdownMeta.totalLines}
+          value={markdownMeta.lines}
           valueId={FOOTER_FIELD_IDS.lines}
         />
         <StatChip
           post="chars"
-          value={markdownMeta.totalChars}
+          value={markdownMeta.chars}
           valueId={FOOTER_FIELD_IDS.chars}
         />
         <StatChip
           post="words"
-          value={markdownMeta.totalWords}
+          value={markdownMeta.words}
           valueId={FOOTER_FIELD_IDS.words}
         />
         <span className="mx-1 text-muted-foreground">|</span>

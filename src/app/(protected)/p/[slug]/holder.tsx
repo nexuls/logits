@@ -11,10 +11,8 @@ import Editor, {
 import NavBar from "@/components/editor/nav";
 import Footer, {
   FOOTER_FIELD_IDS,
-  getTextStats,
   setFooterField,
-  updateFooterCursor,
-  updateFooterStats,
+  updateFooter,
 } from "@/components/footer/index";
 import Header from "@/components/tabs/header";
 import TabsView, { type TabsViewTab } from "@/components/tabs";
@@ -27,6 +25,7 @@ import {
   NotebookEmptyState,
   renderEmptyState,
 } from "./helper";
+import { getTextStats } from "@/components/editor/utils";
 
 // Keep file ordering stable and predictable in tab/open file logic.
 function getNotebookTree(files: AppFile[]) {
@@ -251,7 +250,10 @@ export default function Holder({ slug }: { slug: string }) {
     }
 
     if (selectedFile.metadata.type === "file") {
-      updateFooterStats(draftsByFileIdRef.current[selectedFile.id]);
+      updateFooter(
+        "stats",
+        getTextStats(draftsByFileIdRef.current[selectedFile.id]),
+      );
       setFooterField(FOOTER_FIELD_IDS.saveStatus, "Saved");
       setEditorRevision((current) => current + 1);
     }
@@ -266,7 +268,7 @@ export default function Holder({ slug }: { slug: string }) {
       draftsByFileIdRef.current[selectedFile.id] = content;
 
       if (activeFileIdRef.current === selectedFile.id) {
-        updateFooterStats(content);
+        updateFooter("stats", getTextStats(content));
         setEditorRevision((current) => current + 1);
       }
     });
@@ -308,23 +310,19 @@ export default function Holder({ slug }: { slug: string }) {
     setFooterField(FOOTER_FIELD_IDS.tabSize, `Spaces: ${activeCursor.tabSize}`);
   }, [selectedFileId]);
 
+  // Flush pending saves when switching between files to avoid losing data.
   useEffect(() => {
     if (
       lastSelectedFileIdRef.current &&
       lastSelectedFileIdRef.current !== selectedFileId
-    ) {
+    )
       flushDebouncedSave();
-    }
 
     lastSelectedFileIdRef.current = selectedFileId;
   }, [flushDebouncedSave, selectedFileId]);
 
-  useEffect(
-    () => () => {
-      flushDebouncedSave();
-    },
-    [flushDebouncedSave],
-  );
+  // Flush pending saves when unmounting or switching notebooks to avoid losing data.
+  useEffect(() => () => flushDebouncedSave(), [flushDebouncedSave]);
 
   const tabs = useMemo<
     TabsViewTab<{ type: AppFile["metadata"]["type"] }>[]
@@ -344,14 +342,14 @@ export default function Holder({ slug }: { slug: string }) {
         if (selectedFileId !== file.id) return;
 
         setFooterField(FOOTER_FIELD_IDS.tabSize, `Spaces: ${meta.tabSize}`);
-        updateFooterCursor(meta);
+        updateFooter("cursor", meta);
       }
 
       function updateContent(newContent: string) {
         draftsByFileIdRef.current[file.id] = newContent;
 
         if (selectedFileId === file.id) {
-          updateFooterStats(newContent);
+          updateFooter("stats", getTextStats(newContent));
           setFooterField(FOOTER_FIELD_IDS.saveStatus, "Saving");
         }
 

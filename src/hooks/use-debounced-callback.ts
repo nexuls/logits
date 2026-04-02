@@ -19,18 +19,14 @@ export function useDebouncedCallback<TArgs extends unknown[]>(
   }, [callback]);
 
   const cancel = useCallback(() => {
-    if (!timerRef.current) {
-      return;
-    }
+    if (!timerRef.current) return;
 
     clearTimeout(timerRef.current);
     timerRef.current = null;
   }, []);
 
   const flush = useCallback(() => {
-    if (!lastArgsRef.current) {
-      return;
-    }
+    if (!lastArgsRef.current) return;
 
     cancel();
     void callbackRef.current(...lastArgsRef.current);
@@ -44,10 +40,7 @@ export function useDebouncedCallback<TArgs extends unknown[]>(
 
       timerRef.current = setTimeout(() => {
         timerRef.current = null;
-
-        if (!lastArgsRef.current) {
-          return;
-        }
+        if (!lastArgsRef.current) return;
 
         const nextArgs = lastArgsRef.current;
         lastArgsRef.current = null;
@@ -57,11 +50,7 @@ export function useDebouncedCallback<TArgs extends unknown[]>(
     [cancel, delayMs],
   );
 
-  useEffect(() => {
-    return () => {
-      cancel();
-    };
-  }, [cancel]);
+  useEffect(() => () => cancel(), [cancel]);
 
   return {
     debounced,
