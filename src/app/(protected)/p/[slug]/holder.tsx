@@ -13,7 +13,7 @@ import type { AppFile } from "@/data/modules/notebook/client-types";
 import Editor from "@/components/editor/markdown-editor";
 import NavBar from "@/components/editor/nav";
 import Footer from "@/components/footer/index";
-import Header from "@/components/header/index";
+import Header from "@/components/tabs/index";
 import { buildNotebookUrl } from "@/lib/notebook-url";
 import { Spinner } from "@/components/ui/spinner";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
