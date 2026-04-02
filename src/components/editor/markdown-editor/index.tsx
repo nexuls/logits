@@ -7,16 +7,25 @@ import { useUserSettings } from "@/hooks/use-user-settings";
 import CodeMirror, { type Extension } from "@uiw/react-codemirror";
 import type { ViewUpdate } from "@codemirror/view";
 
+export type CursorMeta = {
+  line: number;
+  col: number;
+  tabSize: number;
+  selection: number;
+};
+
+export const DEFAULT_CURSOR_META: CursorMeta = {
+  line: 1,
+  col: 1,
+  tabSize: 2,
+  selection: 0,
+};
+
 type Props = {
   mode: "code" | "markdown";
   content: string;
   onContentChange: (content: string) => void;
-  onEditorMetaChange?: (meta: {
-    line: number;
-    col: number;
-    tabSize: number;
-    selection: number;
-  }) => void;
+  onEditorMetaChange?: (meta: CursorMeta) => void;
 };
 
 export default function Editor({

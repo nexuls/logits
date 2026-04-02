@@ -1,6 +1,57 @@
 import { Bell, Bot, GitCommitHorizontal, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+export const FOOTER_FIELD_IDS = {
+  lines: "logits-footer-lines",
+  chars: "logits-footer-chars",
+  words: "logits-footer-words",
+  cursor: "logits-footer-cursor",
+  tabSize: "logits-footer-tabsize",
+  version: "logits-footer-version",
+  saveStatus: "logits-footer-save-status",
+} as const;
+
+export function getTextStats(content: string) {
+  const normalized = content.replace(/\r\n/g, "\n");
+  const totalLines =
+    normalized.length === 0 ? 1 : normalized.split("\n").length;
+  const totalChars = content.length;
+  const totalWords = content.trim().length
+    ? (content.trim().match(/\S+/g)?.length ?? 0)
+    : 0;
+
+  return {
+    totalLines,
+    totalChars,
+    totalWords,
+  };
+}
+
+export function setFooterField(id: string, value: string) {
+  if (typeof document === "undefined") return;
+  const element = document.getElementById(id);
+  if (!element || element.textContent === value) return;
+  element.textContent = value;
+}
+
+export function updateFooterStats(content: string) {
+  const stats = getTextStats(content);
+  setFooterField(FOOTER_FIELD_IDS.lines, String(stats.totalLines));
+  setFooterField(FOOTER_FIELD_IDS.chars, String(stats.totalChars));
+  setFooterField(FOOTER_FIELD_IDS.words, String(stats.totalWords));
+}
+
+export function updateFooterCursor(meta: {
+  line: number;
+  col: number;
+  selection: number;
+}) {
+  const cursorValue = `Ln ${meta.line}, Col ${meta.col}${
+    meta.selection > 0 ? ` (${meta.selection} selected)` : ""
+  }`;
+  setFooterField(FOOTER_FIELD_IDS.cursor, cursorValue);
+}
+
 type MarkdownFooterMeta = {
   totalLines: number;
   totalChars: number;
@@ -58,21 +109,21 @@ export default function Footer({ view, markdownMeta }: Props) {
         <StatChip
           post="lines"
           value={markdownMeta.totalLines}
-          valueId="logits-footer-lines"
+          valueId={FOOTER_FIELD_IDS.lines}
         />
         <StatChip
           post="chars"
           value={markdownMeta.totalChars}
-          valueId="logits-footer-chars"
+          valueId={FOOTER_FIELD_IDS.chars}
         />
         <StatChip
           post="words"
           value={markdownMeta.totalWords}
-          valueId="logits-footer-words"
+          valueId={FOOTER_FIELD_IDS.words}
         />
         <span className="mx-1 text-muted-foreground">|</span>
         <StatChip
-          valueId="logits-footer-cursor"
+          valueId={FOOTER_FIELD_IDS.cursor}
           value={`Ln ${markdownMeta.line}, Col ${markdownMeta.col}${
             markdownMeta.selection > 0
               ? ` (${markdownMeta.selection} selected)`
@@ -81,7 +132,7 @@ export default function Footer({ view, markdownMeta }: Props) {
         />
         <StatChip
           pre="Spaces:"
-          valueId="logits-footer-tabsize"
+          valueId={FOOTER_FIELD_IDS.tabSize}
           value={`${markdownMeta.tabSize}`}
         />
       </div>
@@ -94,12 +145,12 @@ export default function Footer({ view, markdownMeta }: Props) {
 
         <Button variant="ghost" size="xs">
           <GitCommitHorizontal className="size-3.5" />
-          <span id="logits-footer-version">{markdownMeta.version}</span>
+          <span id={FOOTER_FIELD_IDS.version}>{markdownMeta.version}</span>
         </Button>
 
         <Button variant="ghost" size="xs">
           <Save className="size-3.5" />
-          <span id="logits-footer-save-status">
+          <span id={FOOTER_FIELD_IDS.saveStatus}>
             {markdownMeta.saveStatus === "saving" ? "Saving" : "Saved"}
           </span>
         </Button>
