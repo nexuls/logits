@@ -1,5 +1,8 @@
 {
   "editor.defaultFormatter": "biomejs.biome",
   "biome.lsp.bin": "D:/projects/logits/node_modules/@biomejs/cli-win32-x64/biome.exe",
-  "biome.suggestInstallingGlobally": true
+  "biome.suggestInstallingGlobally": true,
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  }
 }
