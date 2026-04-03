@@ -1,6 +1,5 @@
 import { Bell, Bot, GitCommitHorizontal, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getTextStats } from "../editor/utils";
 
 export const FOOTER_FIELD_IDS = {
   lines: "logits-footer-lines",

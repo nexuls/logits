@@ -3,43 +3,40 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { TriangleAlertIcon } from "lucide-react";
-import type { AppFile } from "@/data/modules/notebook/client-types";
-import Editor, {
+
+import {
   DEFAULT_CURSOR_META,
   type CursorMeta,
 } from "@/components/editor/markdown-editor";
-import NavBar from "@/components/editor/nav";
 import Footer, {
   FOOTER_FIELD_IDS,
   setFooterField,
   updateFooter,
 } from "@/components/footer/index";
 import Header from "@/components/tabs/header";
-import TabsView, { type TabsViewTab } from "@/components/tabs";
-import { buildNotebookUrl } from "@/lib/notebook-url";
 import { Spinner } from "@/components/ui/spinner";
-import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
-import { useNotebooks } from "../../../../hooks/use-notebooks";
-import {
-  getUnsupportedFileState,
-  NotebookEmptyState,
-  renderEmptyState,
-} from "./helper";
 import { getTextStats } from "@/components/editor/utils";
+import TabsView from "@/components/tabs";
+
+import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
+import { useNotebooks } from "@/hooks/use-notebooks";
+import type { AppFile } from "@/data/modules/notebook/client-types";
+import { buildNotebookUrl } from "@/lib/notebook-url";
+
+import { getEditorFileTabs } from "./get-editor-file-tabs";
+import { NotebookEmptyState, renderEmptyState } from "./helper";
 
 // Keep file ordering stable and predictable in tab/open file logic.
-function getNotebookTree(files: AppFile[]) {
-  return [...files].sort((first, second) => {
+const getNotebookTree = (files: AppFile[]) =>
+  [...files].sort((first, second) => {
     if (first.metadata.fileOrder !== second.metadata.fileOrder)
       return first.metadata.fileOrder - second.metadata.fileOrder;
 
     return first.name.localeCompare(second.name);
   });
-}
 
-function getNotebookTabStorageKey(notebookId: string) {
-  return `logits:open-tabs:${notebookId}`;
-}
+const getNotebookTabStorageKey = (notebookId: string) =>
+  `logits:open-tabs:${notebookId}`;
 
 function readStoredTabIds(notebookId: string) {
   if (typeof window === "undefined") return [];
@@ -86,36 +83,42 @@ export default function Holder({ slug }: { slug: string }) {
   const draftsByFileIdRef = useRef<Record<string, string>>({});
   const latestSaveRequestRef = useRef<Record<string, number>>({});
   const cursorMetaRef = useRef<Record<string, CursorMeta>>({});
-  const activeFileIdRef = useRef("");
+  const hydratedFileIdsRef = useRef<Set<string>>(new Set());
   const lastSelectedFileIdRef = useRef("");
 
   const selectedNotebook = useMemo(
     () => notebooks.find((notebook) => notebook.id === slug) ?? null,
     [notebooks, slug],
   );
-  const notebookFiles = useMemo(
-    () => (selectedNotebook ? getNotebookFiles(selectedNotebook.id) : []),
-    [getNotebookFiles, selectedNotebook],
-  );
+
+  // Derive files for current notebook and openable files for tab logic.
+  const { notebookFiles, openableFiles, firstOpenableFile } = useMemo(() => {
+    if (!selectedNotebook)
+      return { notebookFiles: [], openableFiles: [], firstOpenableFile: null };
+
+    const notebookFiles = getNotebookFiles(selectedNotebook.id);
+
+    const openableFiles = notebookFiles.filter(
+      (file) => file.metadata.type !== "folder",
+    );
+    const firstOpenableFile = getNotebookTree(openableFiles)[0] ?? null;
+
+    return { notebookFiles, openableFiles, firstOpenableFile };
+  }, [getNotebookFiles, selectedNotebook]);
+
+  // Derive selected file from query param for direct linking and navigation.
   const selectedFileId = searchParams.get("file") ?? "";
   const selectedFile = useMemo(
     () => notebookFiles.find((file) => file.id === selectedFileId) ?? null,
     [notebookFiles, selectedFileId],
   );
-  const openableFiles = useMemo(
-    () => notebookFiles.filter((file) => file.metadata.type !== "folder"),
-    [notebookFiles],
-  );
-  const firstOpenableFile = useMemo(
-    () => getNotebookTree(openableFiles)[0] ?? null,
-    [openableFiles],
-  );
+
   const openTabs = useMemo(() => {
     const filesById = new Map(openableFiles.map((file) => [file.id, file]));
 
     return openTabIds
-      .map((tabId) => filesById.get(tabId))
-      .filter((file): file is AppFile => Boolean(file));
+      .map((tabId) => filesById.get(tabId) as AppFile)
+      .filter(Boolean);
   }, [openTabIds, openableFiles]);
 
   const activeDraftContent = getDraftContent(
@@ -178,6 +181,7 @@ export default function Holder({ slug }: { slug: string }) {
         delete draftsByFileIdRef.current[fileId];
         delete latestSaveRequestRef.current[fileId];
         delete cursorMetaRef.current[fileId];
+        hydratedFileIdsRef.current.delete(fileId);
       }
     }
 
@@ -185,10 +189,6 @@ export default function Holder({ slug }: { slug: string }) {
       currentTabs.filter((tabId) => validFileIds.has(tabId)),
     );
   }, [openableFiles]);
-
-  useEffect(() => {
-    activeFileIdRef.current = selectedFileId;
-  }, [selectedFileId]);
 
   // Auto-open selected non-folder file in tab strip.
   useEffect(() => {
@@ -235,39 +235,36 @@ export default function Holder({ slug }: { slug: string }) {
 
   // Sync active file content without binding each keystroke to component state.
   useEffect(() => {
-    if (!selectedFileId) {
-      return;
-    }
-
+    if (!selectedFileId) return;
     let isCancelled = false;
+    if (!selectedFile) return;
 
-    if (!selectedFile) {
-      return;
-    }
+    const fileId = selectedFile.id;
+    const hasHydratedFromStorage = hydratedFileIdsRef.current.has(fileId);
 
-    if (draftsByFileIdRef.current[selectedFile.id] === undefined) {
-      draftsByFileIdRef.current[selectedFile.id] = selectedFile.content;
-    }
+    if (draftsByFileIdRef.current[fileId] === undefined)
+      draftsByFileIdRef.current[fileId] = selectedFile.content;
 
     if (selectedFile.metadata.type === "file") {
-      updateFooter(
-        "stats",
-        getTextStats(draftsByFileIdRef.current[selectedFile.id]),
-      );
+      updateFooter("stats", getTextStats(draftsByFileIdRef.current[fileId]));
       setFooterField(FOOTER_FIELD_IDS.saveStatus, "Saved");
       setEditorRevision((current) => current + 1);
     }
 
-    if (selectedFile.metadata.type !== "file") {
-      return;
-    }
+    // Hydrate from storage once per file id and ignore stale responses.
+    if (selectedFile.metadata.type !== "file" || hasHydratedFromStorage) return;
 
-    void getFileContent(selectedFile.id).then((content) => {
+    const draftAtRequestStart = draftsByFileIdRef.current[fileId];
+
+    void getFileContent(fileId).then((content) => {
       if (isCancelled) return;
 
-      draftsByFileIdRef.current[selectedFile.id] = content;
+      if (draftsByFileIdRef.current[fileId] !== draftAtRequestStart) return;
 
-      if (activeFileIdRef.current === selectedFile.id) {
+      draftsByFileIdRef.current[fileId] = content;
+      hydratedFileIdsRef.current.add(fileId);
+
+      if (selectedFileId === fileId) {
         updateFooter("stats", getTextStats(content));
         setEditorRevision((current) => current + 1);
       }
@@ -285,7 +282,7 @@ export default function Holder({ slug }: { slug: string }) {
 
         if ((latestSaveRequestRef.current[fileId] ?? 0) !== requestId) return;
 
-        if (activeFileIdRef.current === fileId)
+        if (selectedFileId === fileId)
           setFooterField(FOOTER_FIELD_IDS.saveStatus, "Saved");
       },
       { delayMs: 450 },
@@ -324,80 +321,30 @@ export default function Holder({ slug }: { slug: string }) {
   // Flush pending saves when unmounting or switching notebooks to avoid losing data.
   useEffect(() => () => flushDebouncedSave(), [flushDebouncedSave]);
 
-  const tabs = useMemo<
-    TabsViewTab<{ type: AppFile["metadata"]["type"] }>[]
-  >(() => {
-    if (!selectedNotebook) return [];
-
-    return openTabs.map((file) => {
-      const unsupportedFileState = getUnsupportedFileState(file.metadata.type);
-      const fileContent =
-        draftsByFileIdRef.current[file.id] !== undefined
-          ? draftsByFileIdRef.current[file.id]
-          : file.content;
-
-      function editorMetaChangeHandler(meta: CursorMeta) {
-        cursorMetaRef.current[file.id] = meta;
-
-        if (selectedFileId !== file.id) return;
-
-        setFooterField(FOOTER_FIELD_IDS.tabSize, `Spaces: ${meta.tabSize}`);
-        updateFooter("cursor", meta);
-      }
-
-      function updateContent(newContent: string) {
-        draftsByFileIdRef.current[file.id] = newContent;
-
-        if (selectedFileId === file.id) {
-          updateFooter("stats", getTextStats(newContent));
-          setFooterField(FOOTER_FIELD_IDS.saveStatus, "Saving");
-        }
-
-        const requestId = (latestSaveRequestRef.current[file.id] ?? 0) + 1;
-        latestSaveRequestRef.current[file.id] = requestId;
-        debouncedSave(file.id, newContent, requestId);
-      }
-
-      return {
-        id: file.id,
-        title: file.name,
-        meta: {
-          type: file.metadata.type,
-        },
-        content: unsupportedFileState ? (
-          <NotebookEmptyState
-            icon={unsupportedFileState.icon}
-            title={unsupportedFileState.title}
-            description={unsupportedFileState.description}
-          />
-        ) : (
-          <div className="h-full flex flex-col">
-            <NavBar
-              notebookId={selectedNotebook.id}
-              notebookName={selectedNotebook.name}
-              files={notebookFiles}
-              activeFileId={file.id}
-              onNavigateToFile={navigateToFile}
-            />
-
-            <Editor
-              mode="markdown"
-              content={fileContent}
-              onEditorMetaChange={editorMetaChangeHandler}
-              onContentChange={updateContent}
-            />
-          </div>
-        ),
-      };
-    });
-  }, [
-    debouncedSave,
-    navigateToFile,
-    notebookFiles,
-    openTabs,
-    selectedFileId,
-    selectedNotebook,
-  ]);
+  const tabs = useMemo(
+    () =>
+      selectedNotebook
+        ? getEditorFileTabs({
+            openTabs,
+            selectedNotebook,
+            notebookFiles,
+            selectedFileId,
+            draftsByFileIdRef,
+            cursorMetaRef,
+            latestSaveRequestRef,
+            navigateToFile,
+            debouncedSave,
+          })
+        : [],
+    [
+      debouncedSave,
+      navigateToFile,
+      notebookFiles,
+      openTabs,
+      selectedFileId,
+      selectedNotebook,
+    ],
+  );
 
   if (isHydrating) {
     return (
