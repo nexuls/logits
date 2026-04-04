@@ -1,6 +1,11 @@
 import { z } from "zod";
 
-export const notebookFileTypeSchema = z.enum(["folder", "file", "draw", "image"]);
+export const notebookFileTypeSchema = z.enum([
+  "folder",
+  "file",
+  "draw",
+  "image",
+]);
 
 export const notebookFileFeatureSchema = z.enum([
   "versioning",
@@ -47,6 +52,8 @@ export const notebookSchema = z.object({
 
 export type NotebookFileType = z.infer<typeof notebookFileTypeSchema>;
 export type NotebookFileFeature = z.infer<typeof notebookFileFeatureSchema>;
-export type NotebookFileSharedWith = z.infer<typeof notebookFileSharedWithSchema>;
+export type NotebookFileSharedWith = z.infer<
+  typeof notebookFileSharedWithSchema
+>;
 export type NotebookFile = z.infer<typeof notebookFileSchema>;
 export type NotebookRecord = z.infer<typeof notebookSchema>;

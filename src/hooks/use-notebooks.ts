@@ -59,7 +59,9 @@ export function useNotebooks() {
         });
       };
 
-      const queue = sortFiles(childrenByParent.get(notebookId) ?? []).map((file) => file.id);
+      const queue = sortFiles(childrenByParent.get(notebookId) ?? []).map(
+        (file) => file.id,
+      );
       const visibleFiles: AppFile[] = [];
 
       while (queue.length > 0) {
@@ -126,7 +128,8 @@ export function useNotebooks() {
   const deleteNotebook = useCallback(
     async (notebookId: string): Promise<Notebook | null> => {
       await store.deleteNotebookCascade(notebookId);
-      const fallbackNotebook = notebookRecords.find((item) => item.id !== notebookId) ?? null;
+      const fallbackNotebook =
+        notebookRecords.find((item) => item.id !== notebookId) ?? null;
       return fallbackNotebook ? toClientNotebook(fallbackNotebook) : null;
     },
     [notebookRecords, store],
@@ -195,7 +198,8 @@ export function useNotebooks() {
           if (!parentId) continue;
 
           for (const child of notebook.files) {
-            if (child.parentId !== parentId || descendantIds.has(child.id)) continue;
+            if (child.parentId !== parentId || descendantIds.has(child.id))
+              continue;
             descendantIds.add(child.id);
             stack.push(child.id);
           }
@@ -239,7 +243,8 @@ export function useNotebooks() {
     async (parentId: string, orderedIds: string[]) => {
       await store.enqueueWrite(async () => {
         const firstFileId = orderedIds[0] ?? "";
-        const notebookId = await store.notebook.findNotebookIdForFile(firstFileId);
+        const notebookId =
+          await store.notebook.findNotebookIdForFile(firstFileId);
         if (!notebookId) return;
         await store.notebook.reorderFiles(notebookId, parentId, orderedIds);
       });

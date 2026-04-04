@@ -74,9 +74,9 @@ export function DataStoreProvider({
   const [isHydrating, setIsHydrating] = useState(true);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [notebookRecords, setNotebookRecords] = useState<NotebookRecord[]>([]);
-  const [fileContents, setFileContents] = useState<Map<string, FileContentRecord>>(
-    new Map(),
-  );
+  const [fileContents, setFileContents] = useState<
+    Map<string, FileContentRecord>
+  >(new Map());
   const [settings, setSettingsState] = useState<UserSettings>(
     normalizedInitialSettings,
   );
@@ -108,7 +108,10 @@ export function DataStoreProvider({
         await store.initialize();
         await Promise.all([reloadNotebooks(), reloadSettings()]);
       } catch (error: unknown) {
-        console.error("[data-context] failed to initialize modular store", error);
+        console.error(
+          "[data-context] failed to initialize modular store",
+          error,
+        );
       } finally {
         if (isMounted) {
           setIsDataLoading(false);

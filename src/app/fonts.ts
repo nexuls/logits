@@ -108,11 +108,7 @@ export function parseLocalFontValue(
   const category = rest.slice(0, separatorIndex);
   const encodedFamily = rest.slice(separatorIndex + 1);
 
-  if (
-    category !== "sans" &&
-    category !== "serif" &&
-    category !== "monospace"
-  ) {
+  if (category !== "sans" && category !== "serif" && category !== "monospace") {
     return null;
   }
 
@@ -221,7 +217,9 @@ export const DEFAULT_INTERFACE_FONT: InterfaceFontKey = interfaceFontValues[0];
 export const DEFAULT_TEXT_FONT: TextFontKey = textFontValues[0];
 export const DEFAULT_MONOSPACE_FONT: MonospaceFontKey = monospaceFontValues[0];
 
-export function resolveInterfaceFontFamily(value?: InterfaceFontKey | LocalFontValue) {
+export function resolveInterfaceFontFamily(
+  value?: InterfaceFontKey | LocalFontValue,
+) {
   if (value) {
     const local = parseLocalFontValue(value);
 
@@ -245,7 +243,8 @@ export function resolveTextFontFamily(value?: TextFontKey | LocalFontValue) {
     const local = parseLocalFontValue(value);
 
     if (local) {
-      if (local.category === "monospace") return monoFamilyFromName(local.family);
+      if (local.category === "monospace")
+        return monoFamilyFromName(local.family);
 
       return local.category === "serif"
         ? serifFamilyFromName(local.family)

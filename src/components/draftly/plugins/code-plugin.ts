@@ -633,7 +633,9 @@ export class CodePlugin extends DecorationPlugin {
     );
 
     const shouldShowHeader = !!(
-      infoProps.title || infoProps.copy || infoProps.language
+      infoProps.title ||
+      infoProps.copy ||
+      infoProps.language
     );
     const shouldShowCaption = !!infoProps.caption;
 

@@ -223,7 +223,9 @@ export class NotebookModule extends DataModule<NotebookRecord> {
     const deleteIds = getDescendantIds(notebook.files, fileId);
     deleteIds.add(fileId);
 
-    const remainingFiles = notebook.files.filter((file) => !deleteIds.has(file.id));
+    const remainingFiles = notebook.files.filter(
+      (file) => !deleteIds.has(file.id),
+    );
     const siblings = getChildren(remainingFiles, target.parentId);
     const reordered = remainingFiles.map((file) => {
       if (file.parentId !== target.parentId) return file;
@@ -247,7 +249,8 @@ export class NotebookModule extends DataModule<NotebookRecord> {
 
   async duplicateFile(notebookId: string, fileId: string, scope?: ModuleScope) {
     const notebook = await this.getById(notebookId, scope);
-    if (!notebook) return { notebook: null, file: null, clonedIds: [] as string[] };
+    if (!notebook)
+      return { notebook: null, file: null, clonedIds: [] as string[] };
 
     const target = notebook.files.find((file) => file.id === fileId);
     if (!target) return { notebook, file: null, clonedIds: [] as string[] };
@@ -280,9 +283,10 @@ export class NotebookModule extends DataModule<NotebookRecord> {
       };
     });
 
-    const siblingIds = getChildren([...notebook.files, ...clones], target.parentId).map(
-      (file) => file.id,
-    );
+    const siblingIds = getChildren(
+      [...notebook.files, ...clones],
+      target.parentId,
+    ).map((file) => file.id);
     const targetIndex = siblingIds.indexOf(fileId);
     const rootCloneId = clones[0]?.id ?? "";
     const reorderedIds = siblingIds.filter((id) => id !== rootCloneId);
@@ -353,7 +357,10 @@ export class NotebookModule extends DataModule<NotebookRecord> {
       return notebook;
     }
 
-    if (target.type === "folder" && getDescendantIds(notebook.files, fileId).has(nextParentId)) {
+    if (
+      target.type === "folder" &&
+      getDescendantIds(notebook.files, fileId).has(nextParentId)
+    ) {
       return notebook;
     }
 
@@ -369,7 +376,9 @@ export class NotebookModule extends DataModule<NotebookRecord> {
         : file,
     );
 
-    const previousSiblingIds = getChildren(nextFiles, previousParentId).map((file) => file.id);
+    const previousSiblingIds = getChildren(nextFiles, previousParentId).map(
+      (file) => file.id,
+    );
     const nextSiblingIds = getChildren(nextFiles, nextParentId)
       .map((file) => file.id)
       .filter((id) => id !== fileId);
@@ -388,7 +397,10 @@ export class NotebookModule extends DataModule<NotebookRecord> {
           };
         }
 
-        if (previousParentId !== nextParentId && file.parentId === nextParentId) {
+        if (
+          previousParentId !== nextParentId &&
+          file.parentId === nextParentId
+        ) {
           return {
             ...file,
             order: nextSiblingIds.indexOf(file.id),
@@ -407,7 +419,9 @@ export class NotebookModule extends DataModule<NotebookRecord> {
 
   async findNotebookIdForFile(fileId: string, scope?: ModuleScope) {
     const notebooks = await this.list(scope);
-    const notebook = notebooks.find((entry) => entry.files.some((file) => file.id === fileId));
+    const notebook = notebooks.find((entry) =>
+      entry.files.some((file) => file.id === fileId),
+    );
     return notebook?.id ?? "";
   }
 
@@ -416,7 +430,9 @@ export class NotebookModule extends DataModule<NotebookRecord> {
     if (!notebook) return [];
 
     const visibleFiles: NotebookFile[] = [];
-    const queue = getChildren(notebook.files, notebookId).map((file) => file.id);
+    const queue = getChildren(notebook.files, notebookId).map(
+      (file) => file.id,
+    );
 
     while (queue.length > 0) {
       const nextId = queue.shift();

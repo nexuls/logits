@@ -14,7 +14,10 @@ export type TxLike = {
 };
 
 export type DbLike = {
-  transaction: (storeName: string, mode: TransactionMode) => {
+  transaction: (
+    storeName: string,
+    mode: TransactionMode,
+  ) => {
     objectStore: (requestedStoreName: string) => StoreLike;
   };
 };
@@ -48,7 +51,9 @@ export abstract class DataModule<TRecord> {
     const db = scope?.db ?? (await this.getDb());
 
     return {
-      store: db.transaction(this.storeName, "readwrite").objectStore(this.storeName),
+      store: db
+        .transaction(this.storeName, "readwrite")
+        .objectStore(this.storeName),
       tx: null,
     };
   }
@@ -69,14 +74,20 @@ export abstract class DataModule<TRecord> {
     return records.map((record: unknown) => this.parse(record));
   }
 
-  protected async saveRecord(record: TRecord, scope?: ModuleScope): Promise<TRecord> {
+  protected async saveRecord(
+    record: TRecord,
+    scope?: ModuleScope,
+  ): Promise<TRecord> {
     const parsed = this.parse(record);
     const { store } = await this.resolveStore(scope);
     await store.put(parsed);
     return parsed;
   }
 
-  protected async removeRecord(key: IDBValidKey, scope?: ModuleScope): Promise<void> {
+  protected async removeRecord(
+    key: IDBValidKey,
+    scope?: ModuleScope,
+  ): Promise<void> {
     const { store } = await this.resolveStore(scope);
     await store.delete(key);
   }

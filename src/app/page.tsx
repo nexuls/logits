@@ -44,7 +44,7 @@ export default function Home() {
               const notebook = await createNotebook();
 
               if (notebook) {
-                  router.push(buildNotebookUrl(notebook.id));
+                router.push(buildNotebookUrl(notebook.id));
               }
             }}
           >

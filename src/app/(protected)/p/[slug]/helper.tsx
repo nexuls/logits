@@ -1,4 +1,9 @@
-import { FileImage, FilePenLine, FolderClosed, NotebookText } from "lucide-react";
+import {
+  FileImage,
+  FilePenLine,
+  FolderClosed,
+  NotebookText,
+} from "lucide-react";
 import type { AppFile } from "@/hooks/use-notebooks";
 import {
   Empty,

@@ -9,12 +9,7 @@ import {
 import { writeUserSettingsToCookie } from "@/data/modules/app/cookie";
 
 export function useUserSettings() {
-  const {
-    store,
-    settings,
-    isHydrating,
-    setSettingsState,
-  } = useDataStore();
+  const { store, settings, isHydrating, setSettingsState } = useDataStore();
 
   const reloadSettings = useCallback(async () => {
     const next = await store.app.getSettings();
@@ -24,7 +19,9 @@ export function useUserSettings() {
   }, [setSettingsState, store]);
 
   const setSettings = useCallback(
-    async (nextSettings: import("@/data/modules/app/settings").UserSettings) => {
+    async (
+      nextSettings: import("@/data/modules/app/settings").UserSettings,
+    ) => {
       const saved = await store.enqueueWrite(
         () => store.app.setSettings(nextSettings),
         { type: "settings-updated" },

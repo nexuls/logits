@@ -185,9 +185,14 @@ export class DataStore {
         const db = await getDb();
         const tx = db.transaction(["notebooks", "fileContents"], "readwrite");
         await this.fileContent.upsert(fileId, content, { tx });
-        await this.notebook.updateFileContentStats(notebookId, fileId, content, {
-          tx,
-        });
+        await this.notebook.updateFileContentStats(
+          notebookId,
+          fileId,
+          content,
+          {
+            tx,
+          },
+        );
         await tx.done;
       },
       { type: "file-content-updated", notebookId, fileId },

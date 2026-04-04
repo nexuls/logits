@@ -17,7 +17,12 @@ export type FileMetadata = {
     permission: "read" | "write";
   }[];
   tags: string[];
-  enabledFeatures: ("versioning" | "collaboration" | "comments" | "ai-assistance")[];
+  enabledFeatures: (
+    | "versioning"
+    | "collaboration"
+    | "comments"
+    | "ai-assistance"
+  )[];
   createdAt: string;
   updatedAt: string;
   createdBy: string;

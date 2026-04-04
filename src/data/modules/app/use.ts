@@ -19,7 +19,9 @@ export function useAppModule() {
   );
 
   const updateSettings = useCallback(
-    async (updater: (currentSettings: UserSettings) => Partial<UserSettings>) => {
+    async (
+      updater: (currentSettings: UserSettings) => Partial<UserSettings>,
+    ) => {
       return store.app.updateSettings(updater);
     },
     [store],

@@ -1,9 +1,6 @@
 import { DataModule, type ModuleScope } from "@/data/dataModule";
 import type { DbLike } from "@/data/dataModule";
-import {
-  fileContentSchema,
-  type FileContentRecord,
-} from "./schema";
+import { fileContentSchema, type FileContentRecord } from "./schema";
 
 function nowIso() {
   return new Date().toISOString();

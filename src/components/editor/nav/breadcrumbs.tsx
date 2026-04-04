@@ -46,7 +46,11 @@ type FolderMenuItemsProps = {
   onNavigate: (fileId: string) => void;
 };
 
-function FolderMenuItems({ folderId, filesByParent, onNavigate }: FolderMenuItemsProps) {
+function FolderMenuItems({
+  folderId,
+  filesByParent,
+  onNavigate,
+}: FolderMenuItemsProps) {
   const children = sortChildren(filesByParent.get(folderId) ?? []);
 
   if (children.length === 0) {
@@ -101,7 +105,10 @@ export function NotebookBreadcrumbs({
   activeFileId,
   onNavigateToFile,
 }: Props) {
-  const filesById = useMemo(() => new Map(files.map((file) => [file.id, file])), [files]);
+  const filesById = useMemo(
+    () => new Map(files.map((file) => [file.id, file])),
+    [files],
+  );
 
   const filesByParent = useMemo(() => {
     const mapping = new Map<string, AppFile[]>();

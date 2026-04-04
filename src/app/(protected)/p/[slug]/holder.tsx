@@ -397,6 +397,29 @@ export default function Holder({ slug }: { slug: string }) {
     });
   };
 
+  const reorderTabs = (nextTabIds: string[]) => {
+    setOpenTabIds((currentTabIds) => {
+      if (currentTabIds.length !== nextTabIds.length) {
+        return currentTabIds;
+      }
+
+      const currentIdSet = new Set(currentTabIds);
+      if (nextTabIds.some((tabId) => !currentIdSet.has(tabId))) {
+        return currentTabIds;
+      }
+
+      const hasOrderChanged = nextTabIds.some(
+        (tabId, index) => currentTabIds[index] !== tabId,
+      );
+
+      if (!hasOrderChanged) {
+        return currentTabIds;
+      }
+
+      return nextTabIds;
+    });
+  };
+
   return (
     <div className="relative h-dvh w-[calc(100%-18rem)] flex-1 flex flex-col bg-background">
       <main className="min-h-0 w-full flex-1">
@@ -412,6 +435,7 @@ export default function Holder({ slug }: { slug: string }) {
               }))}
               onTabSelect={navigateToFile}
               onTabClose={closeTab}
+              onTabReorder={reorderTabs}
             />
 
             <NotebookEmptyState
@@ -427,6 +451,7 @@ export default function Holder({ slug }: { slug: string }) {
             defaultActiveTabId={firstOpenableFile?.id}
             onTabSelect={navigateToFile}
             onTabClose={closeTab}
+            onTabReorder={reorderTabs}
           />
         )}
       </main>
