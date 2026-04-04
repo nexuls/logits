@@ -421,7 +421,7 @@ export default function Holder({ slug }: { slug: string }) {
   };
 
   return (
-    <div className="relative h-dvh w-[calc(100%-18rem)] flex-1 flex flex-col bg-background">
+    <div className="relative h-dvh w-[calc(100%-var(--sidebar-width))] flex-1 flex flex-col bg-background">
       <main className="min-h-0 w-full flex-1">
         {emptyState ? (
           <>
