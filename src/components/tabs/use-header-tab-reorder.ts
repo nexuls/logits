@@ -33,6 +33,7 @@ type UseHeaderTabReorderResult = {
   canReorder: boolean;
   orderedTabs: HeaderTab[];
   slidingTabId: string | null;
+  draggingTabId: string | null;
   slideOffsetX: number;
   setContainerRef: (node: HTMLDivElement | null) => void;
   setTabRef: (tabId: string, node: HTMLDivElement | null) => void;
@@ -55,6 +56,7 @@ export function useHeaderTabReorder({
   // Drag visual state only. Source-of-truth order remains external until
   // reorder is committed via `onTabReorder`.
   const [slidingTabId, setSlidingTabId] = useState<string | null>(null);
+  const [draggingTabId, setDraggingTabId] = useState<string | null>(null);
   const [slideOffsetX, setSlideOffsetX] = useState(0);
   const [visualTabOrder, setVisualTabOrder] = useState<string[]>([]);
 
@@ -133,6 +135,7 @@ export function useHeaderTabReorder({
 
     pointerStateRef.current = null;
     setSlidingTabId(null);
+    setDraggingTabId(null);
     setSlideOffsetX(0);
 
     // Commit reorder only when an actual drag occurred and order changed.
@@ -209,8 +212,13 @@ export function useHeaderTabReorder({
     const deltaX = clampSlideOffset(pointerState.tabId, rawDeltaX);
     setSlideOffsetX(deltaX);
 
-    // 4px movement threshold distinguishes drag from a normal click gesture.
-    if (Math.abs(deltaX) > 4) pointerState.hasMoved = true;
+    // Dragging state starts only after threshold movement from pointer down.
+    // We use raw cursor distance so "grabbing" is based on user intent,
+    // independent of clamping at container boundaries.
+    if (Math.abs(rawDeltaX) > 16 && !pointerState.hasMoved) {
+      pointerState.hasMoved = true;
+      setDraggingTabId(pointerState.tabId);
+    }
 
     // We gate swaps with a movement threshold so tiny cursor jitters do not
     // cause rapid tab-order churn while dragging across tight hit targets.
@@ -331,6 +339,7 @@ export function useHeaderTabReorder({
       };
 
       setSlidingTabId(tabId);
+      setDraggingTabId(null);
       setSlideOffsetX(0);
       event.currentTarget.setPointerCapture(event.pointerId);
     },
@@ -353,6 +362,7 @@ export function useHeaderTabReorder({
     canReorder,
     orderedTabs,
     slidingTabId,
+    draggingTabId,
     slideOffsetX,
     setContainerRef,
     setTabRef,

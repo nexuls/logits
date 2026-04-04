@@ -22,7 +22,7 @@ export default function Header(props: HeaderProps) {
   const {
     canReorder,
     orderedTabs,
-    slidingTabId,
+    draggingTabId,
     slideOffsetX,
     setContainerRef,
     setTabRef,
@@ -62,7 +62,7 @@ export default function Header(props: HeaderProps) {
                     key={tab.id}
                     tab={tab}
                     icon={Icon}
-                    isSliding={slidingTabId === tab.id}
+                    isSliding={draggingTabId === tab.id}
                     slideOffsetX={slideOffsetX}
                     canReorder={canReorder}
                     setRef={(node) => setTabRef(tab.id, node)}

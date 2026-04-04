@@ -68,6 +68,7 @@ export function HeaderTabItem({
           tab.isActive &&
             "after:size-4 after:absolute after:bottom-0 after:-right-4 after:rounded-full" +
               " after:[clip-path:inset(50%_50%_-2px_-2px)] after:[box-shadow:inset_0_0_0_1px_var(--border),0_0_0_6px_var(--background)]",
+          isSliding && "pointer-events-none",
         )}
       >
         <div className="flex flex-1 min-w-0 items-center gap-2 px-3 cursor-pointer">
