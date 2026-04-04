@@ -34,6 +34,7 @@ type UseHeaderTabReorderResult = {
   orderedTabs: HeaderTab[];
   slidingTabId: string | null;
   slideOffsetX: number;
+  setContainerRef: (node: HTMLDivElement | null) => void;
   setTabRef: (tabId: string, node: HTMLDivElement | null) => void;
   handleTabClick: (
     event: MouseEvent<HTMLDivElement>,
@@ -58,6 +59,7 @@ export function useHeaderTabReorder({
   const [visualTabOrder, setVisualTabOrder] = useState<string[]>([]);
 
   // Refs are used for high-frequency pointer operations to avoid extra renders.
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const tabRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const orderRef = useRef<string[]>([]);
   const tabLeftByIdRef = useRef<Record<string, number>>({});
@@ -96,6 +98,26 @@ export function useHeaderTabReorder({
       .map((tabId) => tabsById.get(tabId))
       .filter((tab): tab is HeaderTab => Boolean(tab));
   }, [tabs, visualTabOrder]);
+
+  const clampSlideOffset = useCallback(
+    (tabId: string, offsetX: number) => {
+      const draggedElement = tabRefs.current[tabId];
+      const containerElement = containerRef.current;
+      if (!draggedElement || !containerElement) return offsetX;
+
+      // Boundaries are computed against the tab strip viewport so the dragged
+      // tab always remains fully visible inside the header container.
+      const minOffset = -draggedElement.offsetLeft;
+      const maxOffset =
+        containerElement.clientWidth -
+        (draggedElement.offsetLeft + draggedElement.offsetWidth);
+
+      if (offsetX < minOffset) return minOffset;
+      if (offsetX > maxOffset) return maxOffset;
+      return offsetX;
+    },
+    [],
+  );
 
   const finishSliding = useCallback(() => {
     // Finalize drag lifecycle and release pointer capture if still active.
@@ -153,7 +175,7 @@ export function useHeaderTabReorder({
         const domShift = nextLeft - previousLeft;
         if (pointerStateRef.current)
           pointerStateRef.current.startClientX += domShift;
-        setSlideOffsetX((prev) => prev - domShift);
+        setSlideOffsetX((prev) => clampSlideOffset(tab.id, prev - domShift));
         continue;
       }
 
@@ -176,14 +198,15 @@ export function useHeaderTabReorder({
     }
 
     tabLeftByIdRef.current = nextTabLeftById;
-  }, [orderedTabs, slidingTabId]);
+  }, [clampSlideOffset, orderedTabs, slidingTabId]);
 
   const handlePointerMove = useCallback((event: PointerEvent) => {
     const pointerState = pointerStateRef.current;
     if (!pointerState) return;
 
     // Continuous drag offset from original pointer-down anchor.
-    const deltaX = event.clientX - pointerState.startClientX;
+    const rawDeltaX = event.clientX - pointerState.startClientX;
+    const deltaX = clampSlideOffset(pointerState.tabId, rawDeltaX);
     setSlideOffsetX(deltaX);
 
     // 4px movement threshold distinguishes drag from a normal click gesture.
@@ -233,7 +256,7 @@ export function useHeaderTabReorder({
     orderRef.current = nextOrder;
     pointerState.swapAnchorX = event.clientX;
     setVisualTabOrder(nextOrder);
-  }, []);
+  }, [clampSlideOffset]);
 
   useEffect(() => {
     // Subscribe to global pointer lifecycle only during active drag.
@@ -322,11 +345,16 @@ export function useHeaderTabReorder({
     [],
   );
 
+  const setContainerRef = useCallback((node: HTMLDivElement | null) => {
+    containerRef.current = node;
+  }, []);
+
   return {
     canReorder,
     orderedTabs,
     slidingTabId,
     slideOffsetX,
+    setContainerRef,
     setTabRef,
     handleTabClick,
     handlePointerDown,

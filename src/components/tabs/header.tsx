@@ -24,6 +24,7 @@ export default function Header(props: HeaderProps) {
     orderedTabs,
     slidingTabId,
     slideOffsetX,
+    setContainerRef,
     setTabRef,
     handleTabClick,
     handlePointerDown,
@@ -49,7 +50,10 @@ export default function Header(props: HeaderProps) {
           <div className="min-w-0 flex-1" />
         ) : (
           <>
-            <div className="relative flex w-full grow max-w-full gap-1 -mb-0.5">
+            <div
+              ref={setContainerRef}
+              className="relative flex w-full grow max-w-full gap-1 -mb-0.5"
+            >
               {orderedTabs.map((tab) => {
                 const Icon = getTabIcon(tab.type);
 
