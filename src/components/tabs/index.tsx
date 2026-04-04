@@ -36,6 +36,7 @@ type TabsViewProps<TMeta = unknown> = {
   activeTabId?: string;
   onTabSelect?: (tabId: string) => void;
   onTabClose?: (tabId: string) => void;
+  onTabReorder?: (tabIds: string[]) => void;
   onTabChange?: (change: TabsViewChange<TMeta>) => void;
   className?: string;
   headerClassName?: string;
@@ -60,6 +61,7 @@ export default function TabsView<TMeta = unknown>({
   activeTabId: controlledActiveTabId,
   onTabSelect,
   onTabClose,
+  onTabReorder,
   onTabChange,
   className,
   headerClassName,
@@ -163,6 +165,19 @@ export default function TabsView<TMeta = unknown>({
     });
   };
 
+  const reorderTabs = (nextTabIds: string[]) => {
+    if (!tabs.length) return;
+
+    const currentTabIds = tabs.map((tab) => tab.id);
+
+    if (currentTabIds.length !== nextTabIds.length) return;
+
+    const currentIdSet = new Set(currentTabIds);
+    if (nextTabIds.some((tabId) => !currentIdSet.has(tabId))) return;
+
+    onTabReorder?.(nextTabIds);
+  };
+
   const headerTabs: HeaderTab<TMeta>[] = tabs.map((tab) => ({
     id: tab.id,
     title: tab.title,
@@ -184,6 +199,7 @@ export default function TabsView<TMeta = unknown>({
         }))}
         onTabSelect={selectTab}
         onTabClose={closeTab}
+        onTabReorder={reorderTabs}
       />
 
       <div className={cn("min-h-0 flex-1", contentClassName)}>
