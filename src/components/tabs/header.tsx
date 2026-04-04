@@ -52,7 +52,7 @@ export default function Header(props: HeaderProps) {
           <>
             <div
               ref={setContainerRef}
-              className="relative flex w-full grow max-w-full gap-1 -mb-0.5"
+              className="relative flex w-full min-w-0 grow max-w-full gap-1 -mb-0.5"
             >
               {orderedTabs.map((tab) => {
                 const Icon = getTabIcon(tab.type);

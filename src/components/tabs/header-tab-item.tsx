@@ -34,7 +34,7 @@ export function HeaderTabItem({
       ref={setRef}
       onPointerDown={onPointerDown}
       className={cn(
-        "relative flex grow shrink max-w-64 pt-1 transition-transform",
+        "relative flex grow shrink max-w-64 min-w-0 pt-1 transition-transform",
         tab.isActive && "z-0 h-10",
         canReorder && "touch-none",
         isSliding && "z-10 cursor-grabbing",
