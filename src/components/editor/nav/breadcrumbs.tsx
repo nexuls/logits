@@ -1,5 +1,3 @@
-"use client";
-
 import { useMemo } from "react";
 import { ChevronDown, FolderOpen } from "lucide-react";
 import type { AppFile } from "@/data/modules/notebook/client-types";
@@ -24,7 +22,7 @@ import {
 import {
   getFileIcon,
   sortChildren,
-} from "@/components/sidebar/file-tree-utils";
+} from "@/components/sidebar/file-tree/file-tree-utils";
 
 type Props = {
   notebookId: string;

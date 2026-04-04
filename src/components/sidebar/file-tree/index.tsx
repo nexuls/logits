@@ -31,7 +31,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FileTreeNode } from "./file-tree-node";
-import { NotebookSettingsDialog } from "./notebook-settings-dialog";
+import { NotebookSettingsDialog } from "../notebook-settings-dialog";
 import {
   getDescendantIds,
   getTreeDropPosition,
