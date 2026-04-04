@@ -10,6 +10,20 @@ import {
 import type { HeaderPointerState, HeaderTab } from "./header-types";
 import { areOrdersEqual, moveTab } from "./header-utils";
 
+/**
+ * Hook that owns interactive tab reordering behavior.
+ *
+ * Process overview:
+ * 1. Keep a visual order that can diverge from incoming `tabs` while dragging.
+ * 2. Track pointer state to compute drag distance and swap decisions.
+ * 3. Animate sibling tabs when order changes.
+ * 4. Commit reorder only after drag ends and the order actually changed.
+ *
+ * Constraints:
+ * - Preserve tab selection behavior (pointer down still selects immediately).
+ * - Avoid accidental reorders from tiny pointer jitter.
+ * - Keep DOM reads and writes stable enough for smooth dragging.
+ */
 type UseHeaderTabReorderParams = {
   tabs: HeaderTab[];
   onTabReorder?: (tabIds: string[]) => void;
@@ -37,19 +51,25 @@ export function useHeaderTabReorder({
   tabs,
   onTabReorder,
 }: UseHeaderTabReorderParams): UseHeaderTabReorderResult {
+  // Drag visual state only. Source-of-truth order remains external until
+  // reorder is committed via `onTabReorder`.
   const [slidingTabId, setSlidingTabId] = useState<string | null>(null);
   const [slideOffsetX, setSlideOffsetX] = useState(0);
   const [visualTabOrder, setVisualTabOrder] = useState<string[]>([]);
 
+  // Refs are used for high-frequency pointer operations to avoid extra renders.
   const tabRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const orderRef = useRef<string[]>([]);
   const tabLeftByIdRef = useRef<Record<string, number>>({});
   const pointerStateRef = useRef<HeaderPointerState | null>(null);
   const suppressClickRef = useRef(false);
 
+  // Reordering is disabled if there is no handler or only one tab.
   const canReorder = Boolean(onTabReorder) && tabs.length > 1;
 
   useEffect(() => {
+    // While dragging, we keep the visual order stable and ignore external order
+    // changes to avoid mid-drag jumps.
     if (slidingTabId) return;
 
     const nextOrder = tabs.map((tab) => tab.id);
@@ -60,11 +80,14 @@ export function useHeaderTabReorder({
   }, [tabs, slidingTabId]);
 
   const orderedTabs = useMemo(() => {
+    // Build lookup map once per render to resolve tabs from current visual order.
     const tabsById = new Map(tabs.map((tab) => [tab.id, tab]));
     const hasValidVisualOrder =
       visualTabOrder.length === tabs.length &&
       visualTabOrder.every((tabId) => tabsById.has(tabId));
 
+    // Constraint: if visual order is stale (tab closed/opened), fall back to
+    // canonical incoming order so rendering never references missing tabs.
     const sourceOrder = hasValidVisualOrder
       ? visualTabOrder
       : tabs.map((tab) => tab.id);
@@ -75,6 +98,7 @@ export function useHeaderTabReorder({
   }, [tabs, visualTabOrder]);
 
   const finishSliding = useCallback(() => {
+    // Finalize drag lifecycle and release pointer capture if still active.
     const pointerState = pointerStateRef.current;
     const nextOrder = orderRef.current;
 
@@ -89,6 +113,7 @@ export function useHeaderTabReorder({
     setSlidingTabId(null);
     setSlideOffsetX(0);
 
+    // Commit reorder only when an actual drag occurred and order changed.
     if (
       pointerState?.hasMoved &&
       onTabReorder &&
@@ -98,6 +123,8 @@ export function useHeaderTabReorder({
 
     if (!pointerState?.hasMoved) return;
 
+    // Prevent the synthetic click that may follow pointerup after drag,
+    // otherwise a reorder can unintentionally trigger a select action.
     suppressClickRef.current = true;
     window.setTimeout(() => {
       suppressClickRef.current = false;
@@ -105,6 +132,8 @@ export function useHeaderTabReorder({
   }, [onTabReorder]);
 
   useLayoutEffect(() => {
+    // Compute current layout positions and animate tabs into new slots.
+    // useLayoutEffect keeps reads/writes before paint to avoid visible flicker.
     const nextTabLeftById: Record<string, number> = {};
 
     for (const tab of orderedTabs) {
@@ -153,9 +182,11 @@ export function useHeaderTabReorder({
     const pointerState = pointerStateRef.current;
     if (!pointerState) return;
 
+    // Continuous drag offset from original pointer-down anchor.
     const deltaX = event.clientX - pointerState.startClientX;
     setSlideOffsetX(deltaX);
 
+    // 4px movement threshold distinguishes drag from a normal click gesture.
     if (Math.abs(deltaX) > 4) pointerState.hasMoved = true;
 
     // We gate swaps with a movement threshold so tiny cursor jitters do not
@@ -174,6 +205,8 @@ export function useHeaderTabReorder({
     const draggedProbeX =
       deltaX >= 0 ? draggedLeftX + draggedElement.offsetWidth : draggedLeftX;
 
+    // Recompute insertion index by counting candidate tab centers crossed by
+    // the dragged probe point.
     let nextIndex = 0;
 
     for (const candidateTabId of currentOrder) {
@@ -195,12 +228,16 @@ export function useHeaderTabReorder({
 
     if (!hasOrderChanged) return;
 
+    // Update visual order and move swap anchor forward so swaps are progressive
+    // and less noisy during long drags.
     orderRef.current = nextOrder;
     pointerState.swapAnchorX = event.clientX;
     setVisualTabOrder(nextOrder);
   }, []);
 
   useEffect(() => {
+    // Subscribe to global pointer lifecycle only during active drag.
+    // This guarantees drag completion even if pointer leaves tab bounds.
     if (!slidingTabId) return;
 
     const handleWindowPointerUp = () => {
@@ -226,6 +263,7 @@ export function useHeaderTabReorder({
       tabId: string,
       onTabSelect: (tabId: string) => void,
     ) => {
+      // A click immediately after drag-end is ignored by design.
       if (suppressClickRef.current) {
         event.preventDefault();
         event.stopPropagation();
@@ -243,11 +281,15 @@ export function useHeaderTabReorder({
       event: ReactPointerEvent<HTMLDivElement>,
       onTabSelect: (tabId: string) => void,
     ) => {
+      // Left button only; right/middle clicks must not start drag interactions.
       if (event.button !== 0) return;
 
+      // Select first so keyboard/editor state tracks the user's target tab,
+      // even when reorder mode is not available.
       onTabSelect(tabId);
       if (!canReorder) return;
 
+      // Start reorder gesture from current visual order snapshot.
       const initialOrder =
         visualTabOrder.length === tabs.length
           ? visualTabOrder
@@ -272,6 +314,7 @@ export function useHeaderTabReorder({
     [canReorder, tabs, visualTabOrder],
   );
 
+  // Stable callback to register/unregister tab DOM refs from item components.
   const setTabRef = useCallback(
     (tabId: string, node: HTMLDivElement | null) => {
       tabRefs.current[tabId] = node;
