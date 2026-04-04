@@ -34,7 +34,7 @@ export function HeaderTabItem({
       ref={setRef}
       onPointerDown={onPointerDown}
       className={cn(
-        "relative flex grow shrink max-w-64 pt-1 border-b border-border transition-transform",
+        "relative flex grow shrink max-w-64 pt-1 transition-transform",
         tab.isActive && "z-0 h-10",
         canReorder && "touch-none",
         isSliding && "z-10 cursor-grabbing",
@@ -60,8 +60,8 @@ export function HeaderTabItem({
           "group relative w-full z-0 flex items-center gap-1 pr-0.5 text-sm transition-[background-color]",
           "border-x border-t",
           tab.isActive
-            ? "h-9 pb-1 rounded-t-lg border-border bg-background text-foreground"
-            : "h-8 rounded-lg border-transparent bg-transparent text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+            ? "h-9 pb-1 rounded-t-lg border-border      bg-background  text-foreground transition-none"
+            : "h-8      rounded-lg   border-transparent bg-transparent text-muted-foreground hover:bg-accent/60 hover:text-foreground",
           tab.isActive &&
             "before:size-4 before:absolute before:bottom-0 before:-left-4 before:rounded-full" +
               " before:[clip-path:inset(50%_-2px_-2px_50%)] before:[box-shadow:inset_0_0_0_1px_var(--border),0_0_0_6px_var(--background)]",
