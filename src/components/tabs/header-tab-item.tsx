@@ -34,7 +34,7 @@ export function HeaderTabItem({
       ref={setRef}
       onPointerDown={onPointerDown}
       className={cn(
-        "relative flex pt-1 border-b border-border transition-transform",
+        "relative flex grow shrink max-w-64 pt-1 border-b border-border transition-transform",
         tab.isActive && "z-0 h-10",
         canReorder && "touch-none",
         isSliding && "z-10 cursor-grabbing",
@@ -57,7 +57,7 @@ export function HeaderTabItem({
         role="button"
         tabIndex={0}
         className={cn(
-          "group relative z-0 flex items-center gap-1 pr-0.5 text-sm transition-[background-color]",
+          "group relative w-full z-0 flex items-center gap-1 pr-0.5 text-sm transition-[background-color]",
           "border-x border-t",
           tab.isActive
             ? "h-9 pb-1 rounded-t-lg border-border bg-background text-foreground"
@@ -70,7 +70,7 @@ export function HeaderTabItem({
               " after:[clip-path:inset(50%_50%_-2px_-2px)] after:[box-shadow:inset_0_0_0_1px_var(--border),0_0_0_6px_var(--background)]",
         )}
       >
-        <div className="flex min-w-0 items-center gap-2 px-3 cursor-pointer">
+        <div className="flex flex-1 min-w-0 items-center gap-2 px-3 cursor-pointer">
           <Icon className="size-4 shrink-0" />
           <span className="max-w-40 truncate font-medium">{tab.name}</span>
         </div>
