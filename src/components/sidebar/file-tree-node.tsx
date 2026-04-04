@@ -69,6 +69,7 @@ export function FileTreeNode({
 }: Props) {
   const isFolder = file.metadata.type === "folder";
   const Icon = getFileIcon(file.metadata.type);
+  const childIndentGuideLeft = depth * 14 + 18;
   const inputRef = useRef<HTMLInputElement | null>(null);
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const renameStartedAtRef = useRef(0);
@@ -143,7 +144,6 @@ export function FileTreeNode({
         className={cn("relative", {
           "pb-0.5": isFolder && !isCollapsed,
         })}
-        style={{ paddingLeft: `${depth * 14 + 8}px` }}
       >
         {dropPosition === "before" ? (
           <div className="pointer-events-none absolute inset-x-2 top-0 h-0.5 rounded-full bg-primary" />
@@ -183,6 +183,7 @@ export function FileTreeNode({
               dropPosition === "inside" &&
                 "bg-sidebar-accent text-sidebar-accent-foreground",
             )}
+            style={{ paddingLeft: `${depth * 14 + 8}px` }}
           >
             <span className="flex size-5 shrink-0 items-center justify-center text-muted-foreground">
               {isFolder ? (
@@ -252,7 +253,16 @@ export function FileTreeNode({
         </FileTreeItemContextMenu>
       </div>
 
-      {isFolder && !isCollapsed ? children : null}
+      {isFolder && !isCollapsed ? (
+        <div className="relative">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute top-0 bottom-0 border-l border-sidebar-border/70"
+            style={{ left: `${childIndentGuideLeft}px` }}
+          />
+          {children}
+        </div>
+      ) : null}
     </div>
   );
 }
