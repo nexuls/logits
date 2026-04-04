@@ -60,14 +60,14 @@ export function HeaderTabItem({
           "group relative w-full z-0 flex items-center gap-1 pr-0.5 text-sm transition-[background-color]",
           "border-x border-t",
           tab.isActive
-            ? "h-9 pb-1 rounded-t-lg border-border      bg-background  text-foreground transition-none"
-            : "h-8      rounded-lg   border-transparent bg-transparent text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+            ? "h-9 pb-1 rounded-t-lg border-sidebar-border bg-background  text-foreground transition-none"
+            : "h-8      rounded-lg   border-transparent    bg-transparent text-muted-foreground hover:bg-accent/60 hover:text-foreground",
           tab.isActive &&
-            "before:size-4 before:absolute before:bottom-0 before:-left-4 before:rounded-full" +
-              " before:[clip-path:inset(50%_-2px_-2px_50%)] before:[box-shadow:inset_0_0_0_1px_var(--border),0_0_0_6px_var(--background)]",
+            "before:size-[calc(var(--radius)*2)] before:absolute before:bottom-0 before:-left-[calc(var(--radius)*2)] before:rounded-full" +
+              " before:[clip-path:inset(50%_-2px_-2px_50%)] before:[box-shadow:inset_0_0_0_1px_var(--sidebar-border),0_0_0_6px_var(--background)]",
           tab.isActive &&
-            "after:size-4 after:absolute after:bottom-0 after:-right-4 after:rounded-full" +
-              " after:[clip-path:inset(50%_50%_-2px_-2px)] after:[box-shadow:inset_0_0_0_1px_var(--border),0_0_0_6px_var(--background)]",
+            "after:size-[calc(var(--radius)*2)] after:absolute after:bottom-0 after:-right-[calc(var(--radius)*2)] after:rounded-full" +
+              " after:[clip-path:inset(50%_50%_-2px_-2px)] after:[box-shadow:inset_0_0_0_1px_var(--sidebar-border),0_0_0_6px_var(--background)]",
           isSliding && "pointer-events-none",
         )}
       >

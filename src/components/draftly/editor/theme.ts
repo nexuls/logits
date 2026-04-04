@@ -10,6 +10,7 @@ export const draftlyBaseTheme = EditorView.theme({
     fontFamily: "var(--user-text-font)",
     fontSize: "var(--text-base)",
     lineHeight: "1.6",
+    color: "var(--color-foreground)",
     backgroundColor: "transparent !important",
 
     "--draftly-color-link": "var(--color-primary)",

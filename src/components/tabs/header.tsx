@@ -36,7 +36,7 @@ export default function Header(props: HeaderProps) {
   return (
     <div
       className={cn(
-        "border-b border-border bg-sidebar px-2 backdrop-blur-sm",
+        "border-b border-sidebar-border bg-sidebar px-2 backdrop-blur-sm",
         props.className,
       )}
     >
