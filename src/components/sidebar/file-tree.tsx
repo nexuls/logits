@@ -121,7 +121,15 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
       for (const file of files) {
         if (file.metadata.type !== "folder") continue;
 
-        nextState[file.id] = !activeFolderPathIds.has(file.id);
+        const existingValue = currentState[file.id];
+        nextState[file.id] =
+          existingValue === undefined ? true : existingValue;
+      }
+
+      for (const folderId of activeFolderPathIds) {
+        if (nextState[folderId] !== undefined) {
+          nextState[folderId] = false;
+        }
       }
 
       const currentFolderIds = Object.keys(currentState);
