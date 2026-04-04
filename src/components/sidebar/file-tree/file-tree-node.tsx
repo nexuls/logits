@@ -1,5 +1,3 @@
-"use client";
-
 import { ChevronRight } from "lucide-react";
 import {
   useEffect,
@@ -15,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import {
   FileTreeItemActions,
   FileTreeItemContextMenu,
-} from "./file-tree-item-actions";
+} from "./file-tree-items-actions";
 import { type FileTreeDropPosition, getFileIcon } from "./file-tree-utils";
 
 type Props = {

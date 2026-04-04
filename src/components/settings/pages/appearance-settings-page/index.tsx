@@ -1,6 +1,4 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Paintbrush, PilcrowIcon, SlidersHorizontal } from "lucide-react";
 import { COLOR_SCHEMES } from "@/color-schemes";
 import type {
@@ -24,10 +22,7 @@ import {
   normalizeAppearanceFontScale,
   textFontOptions,
 } from "@/data/modules/app/settings";
-import {
-  getLocalFontOptions,
-  type LocalFontOptionsResult,
-} from "@/lib/local-fonts";
+import type { LocalFontOptionsResult } from "@/lib/local-fonts";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -73,26 +68,26 @@ export function AppearanceSettingsPage({
   onMonospaceFontChange: (value: AppearanceMonospaceFont) => void;
   onSidebarPositionChange: (value: "left" | "right") => void;
 }) {
-  const [localFontOptions, setLocalFontOptions] =
+  const [localFontOptions, _setLocalFontOptions] =
     useState<LocalFontOptionsResult>({
       available: false,
       nonMonospace: [],
       monospace: [],
     });
 
-  useEffect(() => {
-    let disposed = false;
+  // useEffect(() => {
+  //   let disposed = false;
 
-    // void getLocalFontOptions().then((result) => {
-    //   if (disposed) return;
+  //   // void getLocalFontOptions().then((result) => {
+  //   //   if (disposed) return;
 
-    //   setLocalFontOptions(result);
-    // });
+  //   //   setLocalFontOptions(result);
+  //   // });
 
-    return () => {
-      disposed = true;
-    };
-  }, []);
+  //   return () => {
+  //     disposed = true;
+  //   };
+  // }, []);
 
   const normalizedFontScale = normalizeAppearanceFontScale(
     fontSize ?? APPEARANCE_FONT_SCALE_DEFAULT,

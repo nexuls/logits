@@ -2,6 +2,7 @@ import type { ComponentType, ReactNode } from "react";
 import {
   CopyPlus,
   Download,
+  EllipsisVertical,
   FolderPlus,
   Link2,
   Pencil,
@@ -10,6 +11,10 @@ import {
   Trash2,
 } from "lucide-react";
 import type { AppFile } from "@/data/modules/notebook/client-types";
+import {
+  FileTreeContextActionMenu,
+  FileTreeDropdownActionMenu,
+} from "./actions-menus";
 
 type MenuItemComponent = ComponentType<{
   children: ReactNode;
@@ -47,19 +52,11 @@ export function FileTreeActionItems({
     <>
       {isFolder ? (
         <>
-          <Item
-            onSelect={() => {
-              onCreate(file.id, "file");
-            }}
-          >
+          <Item onSelect={() => onCreate(file.id, "file")}>
             <Plus className="size-4" />
             New note
           </Item>
-          <Item
-            onSelect={() => {
-              onCreate(file.id, "folder");
-            }}
-          >
+          <Item onSelect={() => onCreate(file.id, "folder")}>
             <FolderPlus className="size-4" />
             New folder
           </Item>
@@ -67,27 +64,15 @@ export function FileTreeActionItems({
         </>
       ) : null}
 
-      <Item
-        onSelect={() => {
-          onCopyLink(file);
-        }}
-      >
+      <Item onSelect={() => onCopyLink(file)}>
         <Link2 className="size-4" />
         Copy link
       </Item>
-      <Item
-        onSelect={() => {
-          onRename(file);
-        }}
-      >
+      <Item onSelect={() => onRename(file)}>
         <Pencil className="size-4" />
         Rename
       </Item>
-      <Item
-        onSelect={() => {
-          onDuplicate(file);
-        }}
-      >
+      <Item onSelect={() => onDuplicate(file)}>
         <CopyPlus className="size-4" />
         Duplicate
       </Item>
@@ -100,15 +85,48 @@ export function FileTreeActionItems({
         Pin file
       </Item>
       <Separator />
-      <Item
-        variant="destructive"
-        onSelect={() => {
-          onDelete(file);
-        }}
-      >
+      <Item variant="destructive" onSelect={() => onDelete(file)}>
         <Trash2 className="size-4" />
         Delete
       </Item>
     </>
+  );
+}
+
+type SharedProps = {
+  file: AppFile;
+  onCreate: (parentId: string, type: "file" | "folder") => void;
+  onCopyLink: (file: AppFile) => void;
+  onRename: (file: AppFile) => void;
+  onDuplicate: (file: AppFile) => void;
+  onDelete: (file: AppFile) => void;
+};
+
+type ContextProps = SharedProps & {
+  children: ReactNode;
+};
+
+export function FileTreeItemContextMenu({ children, ...props }: ContextProps) {
+  return (
+    <FileTreeContextActionMenu
+      renderActions={({ Item, Separator }) => (
+        <FileTreeActionItems {...props} Item={Item} Separator={Separator} />
+      )}
+    >
+      {children}
+    </FileTreeContextActionMenu>
+  );
+}
+
+export function FileTreeItemActions(props: SharedProps) {
+  return (
+    <FileTreeDropdownActionMenu
+      ariaLabel={`${props.file.name} actions`}
+      trigger={<EllipsisVertical className="size-4" />}
+      buttonClassName="size-7 shrink-0 rounded-md text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-sidebar-accent hover:text-foreground"
+      renderActions={({ Item, Separator }) => (
+        <FileTreeActionItems {...props} Item={Item} Separator={Separator} />
+      )}
+    />
   );
 }

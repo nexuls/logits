@@ -9,27 +9,19 @@ import {
   type ReactNode,
 } from "react";
 import {
-  EllipsisIcon,
-  FolderPlus,
-  Plus,
   Search,
-  Settings2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { AppFile, FileType } from "@/data/modules/notebook/client-types";
 import { useNotebooks } from "@/hooks/use-notebooks";
 import { buildNotebookUrl } from "@/lib/notebook-url";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  FileTreeActions,
+  FileTreeActionsContextMenu,
+} from "./file-tree-actions";
 import { FileTreeNode } from "./file-tree-node";
 import { NotebookSettingsDialog } from "../notebook-settings-dialog";
 import {
@@ -569,93 +561,79 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
 
   const renderedTree = renderBranch(notebookId);
 
+  const openNotebookSettings = () => {
+    if (!activeNotebook) {
+      return;
+    }
+
+    setDraftNotebookName(activeNotebook.name);
+    setIsNotebookSettingsOpen(true);
+  };
+
   return (
     <>
-      <div className="flex h-full min-h-0 flex-col gap-3">
-        <div className="flex items-center gap-2 px-1">
-          <div className="relative flex-1">
-            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search files..."
-              className="h-9 rounded-lg border-sidebar-border bg-sidebar/60 pl-9"
+      <FileTreeActionsContextMenu
+        notebookId={notebookId}
+        hasActiveNotebook={Boolean(activeNotebook)}
+        onCreate={(parentId, type) => {
+          void handleCreate(parentId, type);
+        }}
+        onOpenNotebookSettings={openNotebookSettings}
+      >
+        <div className="flex h-full min-h-0 flex-col gap-3">
+          <div className="flex items-center gap-2 px-1">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search files..."
+                className="h-9 rounded-lg border-sidebar-border bg-sidebar/60 pl-9"
+              />
+            </div>
+
+            <FileTreeActions
+              notebookId={notebookId}
+              hasActiveNotebook={Boolean(activeNotebook)}
+              onCreate={(parentId, type) => {
+                void handleCreate(parentId, type);
+              }}
+              onOpenNotebookSettings={openNotebookSettings}
             />
           </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="sm" variant="outline" className="rounded-lg h-9">
-                <EllipsisIcon className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuItem
-                onSelect={() => {
-                  void handleCreate(notebookId, "file");
-                }}
-              >
-                <Plus className="size-4" />
-                Create new file
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() => {
-                  void handleCreate(notebookId, "folder");
-                }}
-              >
-                <FolderPlus className="size-4" />
-                Create new folder
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                disabled={!activeNotebook}
-                onSelect={() => {
-                  if (!activeNotebook) {
-                    return;
-                  }
+          <ScrollArea className="min-h-0 flex-1 [&>div>div]:block!">
+            <div
+              className="min-w-0 px-1"
+              onDragOver={handleRootDragOver}
+              onDrop={(event) => {
+                void handleRootDrop(event);
+              }}
+            >
+              {renderedTree}
 
-                  setDraftNotebookName(activeNotebook.name);
-                  setIsNotebookSettingsOpen(true);
-                }}
-              >
-                <Settings2 className="size-4" />
-                Notebook settings
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              {query.trim() && !renderedTree ? (
+                <div className="px-3 py-6 text-sm text-muted-foreground">
+                  No files found.
+                </div>
+              ) : null}
+
+              {draggingFileId ? (
+                <div
+                  className={[
+                    "mt-2 w-full rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground transition-colors",
+                    dropTarget?.position === "root"
+                      ? "border-primary bg-primary/5 text-foreground"
+                      : "border-sidebar-border",
+                  ].join(" ")}
+                >
+                  Drop here to move to notebook root
+                </div>
+              ) : null}
+            </div>
+          </ScrollArea>
         </div>
-
-        <ScrollArea className="min-h-0 flex-1 [&>div>div]:block!">
-          <div
-            className="min-w-0 px-1"
-            onDragOver={handleRootDragOver}
-            onDrop={(event) => {
-              void handleRootDrop(event);
-            }}
-          >
-            {renderedTree}
-
-            {query.trim() && !renderedTree ? (
-              <div className="px-3 py-6 text-sm text-muted-foreground">
-                No files found.
-              </div>
-            ) : null}
-
-            {draggingFileId ? (
-              <div
-                className={[
-                  "mt-2 w-full rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground transition-colors",
-                  dropTarget?.position === "root"
-                    ? "border-primary bg-primary/5 text-foreground"
-                    : "border-sidebar-border",
-                ].join(" ")}
-              >
-                Drop here to move to notebook root
-              </div>
-            ) : null}
-          </div>
-        </ScrollArea>
-      </div>
+      </FileTreeActionsContextMenu>
 
       <NotebookSettingsDialog
         open={isNotebookSettingsOpen}
