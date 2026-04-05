@@ -1,44 +1,74 @@
 "use client";
 
-import { ChevronDown, Ellipsis, Eye } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Ellipsis, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { buildNotebookUrl } from "@/lib/notebook-url";
 
-type Props = object;
+type Props = {
+  notebookId: string;
+  activeFileId?: string;
+};
 
-function PreviewMenu(_: Props) {
+export function NotebookActions(props: Props) {
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="xs" className="gap-1.5">
-          <Eye className="size-3.5" />
-          Preview
-          <ChevronDown className="size-3.5" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-52">
-        <DropdownMenuItem>Open split view</DropdownMenuItem>
-        <DropdownMenuItem>Open in new tab</DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="ml-3 flex shrink-0 items-center gap-1.5">
+      <EditorMenu {...props} />
+    </div>
   );
 }
 
-export function NotebookActions(_: Props) {
+function EditorMenu({ notebookId, activeFileId }: Props) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const openPreviewInTabView = () => {
+    if (!activeFileId) return;
+
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.set("preview", "1");
+
+    router.push(
+      buildNotebookUrl(notebookId, {
+        fileId: activeFileId,
+        searchParams: nextParams,
+      }),
+    );
+  };
+
   return (
-    <div className="ml-3 flex shrink-0 items-center gap-1.5">
-      <PreviewMenu />
-      <Button variant="ghost" size="xs" disabled>
-        Action 1
-      </Button>
-      <Button variant="ghost" size="icon-xs" disabled aria-label="More actions">
-        <Ellipsis className="size-3.5" />
-      </Button>
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon-xs" aria-label="More actions">
+          <Ellipsis className="size-3.5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-52">
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <Eye className="size-4" />
+            Preview
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            <DropdownMenuItem
+              disabled={!activeFileId}
+              onSelect={openPreviewInTabView}
+            >
+              Open in tab view
+            </DropdownMenuItem>
+            <DropdownMenuItem>Open in split view</DropdownMenuItem>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

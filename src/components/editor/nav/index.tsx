@@ -27,7 +27,7 @@ export default function NavBar({
         onNavigateToFile={onNavigateToFile}
       />
 
-      <NotebookActions />
+      <NotebookActions notebookId={notebookId} activeFileId={activeFileId} />
     </div>
   );
 }
