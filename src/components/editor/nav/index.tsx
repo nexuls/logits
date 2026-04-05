@@ -18,7 +18,7 @@ export default function NavBar({
   onNavigateToFile,
 }: Props) {
   return (
-    <div className="flex h-10 items-center justify-between bg-background/80 px-3 backdrop-blur">
+    <div className="flex h-10 px-3 items-center justify-between bg-background">
       <NotebookBreadcrumbs
         notebookId={notebookId}
         notebookName={notebookName}

@@ -13,6 +13,10 @@ export const draftlyBaseTheme = EditorView.theme({
     color: "var(--color-foreground)",
     backgroundColor: "transparent !important",
 
+    "&.cm-focused": {
+      outline: "none",
+    },
+
     "--draftly-color-link": "var(--color-primary)",
     "--draftly-color-link-hover":
       "color-mix(in oklch, var(--color-primary) 80%, var(--color-foreground))",
@@ -62,6 +66,9 @@ export const draftlyBaseTheme = EditorView.theme({
     fontFamily: "var(--user-text-font)",
     fontSize: "var(--text-base)",
     lineHeight: "1.6",
+
+    paddingTop: "2rem",
+    paddingBottom: "12rem",
   },
 
   "&.cm-draftly .cm-content .cm-line": {

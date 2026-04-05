@@ -155,42 +155,42 @@ const theme = createTheme({
   default: {
     ".cm-draftly-h1": {
       fontSize: "var(--text-4xl)",
-      fontWeight: "bold",
+      fontWeight: "700",
       fontFamily: "var(--user-text-font)",
       textDecoration: "none",
     },
 
     ".cm-draftly-h2": {
       fontSize: "var(--text-3xl)",
-      fontWeight: "bold",
+      fontWeight: "600",
       fontFamily: "var(--user-text-font)",
       textDecoration: "none",
     },
 
     ".cm-draftly-h3": {
       fontSize: "var(--text-2xl)",
-      fontWeight: "bold",
+      fontWeight: "600",
       fontFamily: "var(--user-text-font)",
       textDecoration: "none",
     },
 
     ".cm-draftly-h4": {
       fontSize: "var(--text-xl)",
-      fontWeight: "bold",
+      fontWeight: "600",
       fontFamily: "var(--user-text-font)",
       textDecoration: "none",
     },
 
     ".cm-draftly-h5": {
       fontSize: "var(--text-lg)",
-      fontWeight: "bold",
+      fontWeight: "600",
       fontFamily: "var(--user-text-font)",
       textDecoration: "none",
     },
 
     ".cm-draftly-h6": {
-      fontSize: "var(--text-base)",
-      fontWeight: "bold",
+      fontSize: "var(--text-lg)",
+      fontWeight: "600",
       fontFamily: "var(--user-text-font)",
       textDecoration: "none",
     },

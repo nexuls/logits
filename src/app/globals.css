@@ -67,9 +67,9 @@ html {
   --text-base: calc(1rem * var(--user-font-scale));
   --text-lg: calc(1.125rem * var(--user-font-scale));
   --text-xl: calc(1.25rem * var(--user-font-scale));
-  --text-2xl: calc(1.5rem * var(--user-font-scale));
-  --text-3xl: calc(1.875rem * var(--user-font-scale));
-  --text-4xl: calc(2.25rem * var(--user-font-scale));
+  --text-2xl: calc(1.37rem * var(--user-font-scale));
+  --text-3xl: calc(1.6rem * var(--user-font-scale));
+  --text-4xl: calc(2rem * var(--user-font-scale));
   --text-5xl: calc(3rem * var(--user-font-scale));
   --text-6xl: calc(3.75rem * var(--user-font-scale));
   --text-7xl: calc(4.5rem * var(--user-font-scale));

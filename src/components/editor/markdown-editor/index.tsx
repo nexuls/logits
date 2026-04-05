@@ -69,7 +69,7 @@ export default function Editor({
   );
 
   return (
-    <div className="w-full min-h-0 flex-1">
+    <div className="relative w-full min-h-0 flex-1">
       <CodeMirror
         key={`draftly-editor-${mode}`}
         id={"draftly-editor"}
@@ -114,6 +114,8 @@ export default function Editor({
           drawSelection: false,
         }}
       />
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-8 bg-linear-to-b from-background to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-8 bg-linear-to-t from-background to-transparent" />
     </div>
   );
 }
