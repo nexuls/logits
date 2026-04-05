@@ -124,7 +124,7 @@ export default function Footer({ view, markdownMeta }: Props) {
   }
 
   return (
-    <footer className="flex h-8 items-center justify-between border-t bg-background/80 px-3 gap-3 text-xs backdrop-blur-sm">
+    <footer className="flex h-8 items-center justify-between bg-background/80 px-3 gap-3 text-xs backdrop-blur-sm">
       <div className="flex min-w-0 items-center gap-3 overflow-x-auto">
         <StatChip
           post="lines"
