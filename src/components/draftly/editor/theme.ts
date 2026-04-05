@@ -4,7 +4,7 @@ import { EditorView } from "@codemirror/view";
  * Base theme for draftly styling
  * Note: Layout styles are scoped under .cm-draftly which is added by the view plugin
  */
-export const draftlyBaseTheme = EditorView.theme({
+export const draftlyBaseThemeRaw = {
   // Container styles - only apply when view plugin is enabled
   "&.cm-draftly": {
     fontFamily: "var(--user-text-font)",
@@ -78,7 +78,9 @@ export const draftlyBaseTheme = EditorView.theme({
   "&.cm-draftly .cm-content .cm-widgetBuffer": {
     display: "none !important",
   },
-});
+};
+
+export const draftlyBaseTheme = EditorView.theme(draftlyBaseThemeRaw);
 
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { tags as t } from "@lezer/highlight";

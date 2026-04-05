@@ -47,5 +47,5 @@ export async function preview(
 
   // Wrap in container
   const classAttr = wrapperClass ? ` class="${wrapperClass}"` : "";
-  return `<${wrapperTag}${classAttr}>\n${content}</${wrapperTag}>`;
+  return `<${wrapperTag}${classAttr}>\n<div class="cm-content">${content}</div></${wrapperTag}>`;
 }

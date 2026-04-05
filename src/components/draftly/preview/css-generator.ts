@@ -1,13 +1,19 @@
 import { ThemeEnum } from "../editor/utils";
+import { StyleModule } from "style-mod";
 import type { GenerateCSSConfig } from "./types";
 import { generateSyntaxThemeCSS } from "./syntax-theme";
+import { draftlyBaseThemeRaw } from "../editor";
 
 /**
  * Base CSS styles for preview rendering
  */
-const baseStyles = `.draftly-preview {
-  padding: 0 0.5rem;
-}`;
+const baseStyles = new StyleModule(draftlyBaseThemeRaw, {
+  // Normalize CodeMirror-style selectors (`&`) into preview wrapper selectors.
+  finish: (selector) =>
+    selector
+      .replace(/&\.cm-draftly/g, ".draftly-preview")
+      .replace(/&/g, ".draftly-preview"),
+}).getRules();
 
 /**
  * Generate CSS for preview rendering
