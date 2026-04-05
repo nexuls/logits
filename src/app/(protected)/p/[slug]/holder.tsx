@@ -203,6 +203,8 @@ export default function Holder({ slug }: { slug: string }) {
 
   // Keep local refs and tabs aligned with available files.
   useEffect(() => {
+    if (isHydrating || loadedTabsSlug !== slug) return;
+
     const validFileIds = new Set(openableFiles.map((file) => file.id));
 
     setOpenTabIds((currentTabs) =>
@@ -213,10 +215,11 @@ export default function Holder({ slug }: { slug: string }) {
         return validFileIds.has(parsed.fileId);
       }),
     );
-  }, [openableFiles]);
+  }, [isHydrating, loadedTabsSlug, openableFiles, slug]);
 
-  // Auto-open selected non-folder file in tab strip.
+  // Ensure URL-selected tab exists; if not, prepend it so URL intent stays primary.
   useEffect(() => {
+    if (isHydrating || loadedTabsSlug !== slug) return;
     if (!selectedFile || selectedFile.metadata.type === "folder") {
       return;
     }
@@ -226,7 +229,7 @@ export default function Holder({ slug }: { slug: string }) {
         ? currentTabs
         : [...currentTabs, selectedTabId],
     );
-  }, [selectedFile, selectedTabId]);
+  }, [isHydrating, loadedTabsSlug, selectedFile, selectedTabId, slug]);
 
   // Redirect to a fallback file when query param points to a missing file.
   useEffect(() => {
