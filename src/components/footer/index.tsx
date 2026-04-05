@@ -31,7 +31,11 @@ type UpdateFooterParams = {
   cursor: {
     line: number;
     col: number;
-    selection: number;
+    selection?: number;
+  };
+  others: {
+    tabSize?: number;
+    saveStatus?: "saved" | "saving";
   };
 };
 
@@ -39,6 +43,7 @@ export function updateFooter(
   ...args:
     | ["stats", UpdateFooterParams["stats"]]
     | ["cursor", UpdateFooterParams["cursor"]]
+    | ["others", UpdateFooterParams["others"]]
 ) {
   const [field, params] = args;
 
@@ -51,9 +56,19 @@ export function updateFooter(
 
   if (field === "cursor") {
     const cursorValue = `Ln ${params.line}, Col ${params.col}${
-      params.selection > 0 ? ` (${params.selection} selected)` : ""
+      (params.selection ?? 0) > 0 ? ` (${params.selection} selected)` : ""
     }`;
     setFooterField(FOOTER_FIELD_IDS.cursor, cursorValue);
+  }
+
+  if (field === "others") {
+    if (params.tabSize !== undefined)
+      setFooterField(FOOTER_FIELD_IDS.tabSize, String(params.tabSize) || "4");
+    if (params.saveStatus !== undefined)
+      setFooterField(
+        FOOTER_FIELD_IDS.saveStatus,
+        params.saveStatus === "saving" ? "Saving" : "Saved",
+      );
   }
 }
 

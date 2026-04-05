@@ -8,22 +8,19 @@ import {
   DEFAULT_CURSOR_META,
   type CursorMeta,
 } from "@/components/editor/markdown-editor";
-import Footer, {
-  FOOTER_FIELD_IDS,
-  setFooterField,
-  updateFooter,
-} from "@/components/footer/index";
+import Footer, { updateFooter } from "@/components/footer/index";
 import Header from "@/components/tabs/header";
 import { Spinner } from "@/components/ui/spinner";
-import { getTextStats } from "@/components/editor/utils";
 import TabsView from "@/components/tabs";
+import type { TabsViewTab } from "@/components/tabs";
+import { getTextStats } from "@/components/editor/utils";
 
-import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { useNotebooks } from "@/hooks/use-notebooks";
 import type { AppFile } from "@/data/modules/notebook/client-types";
 import { buildNotebookUrl } from "@/lib/notebook-url";
 
-import { getEditorFileTabs } from "./get-editor-file-tabs";
+import { getEditorFileTab } from "./get-editor-file-tab";
+import { getEditorFilePreviewTab } from "./get-editor-file-preview-tab";
 import { NotebookEmptyState, renderEmptyState } from "./helper";
 
 // Keep file ordering stable and predictable in tab/open file logic.
@@ -38,6 +35,35 @@ const getNotebookTree = (files: AppFile[]) =>
 const getNotebookTabStorageKey = (notebookId: string) =>
   `logits:open-tabs:${notebookId}`;
 
+type TabViewMode = "editor" | "preview";
+type OpenTab = {
+  tabId: string;
+  file: AppFile;
+  mode: TabViewMode;
+};
+
+type MixedTabMeta = {
+  type: AppFile["metadata"]["type"];
+  view: TabViewMode;
+  fileId: string;
+};
+
+const getTabId = (fileId: string, mode: TabViewMode) => `${mode}:${fileId}`;
+
+function parseTabId(
+  tabId: string,
+): { mode: TabViewMode; fileId: string } | null {
+  const [rawMode, ...rest] = tabId.split(":");
+  const fileId = rest.join(":");
+  if (!fileId) return null;
+
+  if (rawMode === "editor" || rawMode === "preview") {
+    return { mode: rawMode, fileId };
+  }
+
+  return { mode: "editor", fileId: tabId };
+}
+
 function readStoredTabIds(notebookId: string) {
   if (typeof window === "undefined") return [];
 
@@ -49,42 +75,28 @@ function readStoredTabIds(notebookId: string) {
 
   try {
     const parsedTabs = JSON.parse(storedTabs);
-    return Array.isArray(parsedTabs) ? parsedTabs : [];
+    if (!Array.isArray(parsedTabs)) return [];
+
+    return parsedTabs
+      .map((rawTabId) => {
+        if (typeof rawTabId !== "string") return null;
+        const parsed = parseTabId(rawTabId);
+        return parsed ? getTabId(parsed.fileId, parsed.mode) : null;
+      })
+      .filter((tabId): tabId is string => Boolean(tabId));
   } catch {
     return [];
   }
 }
 
-function getDraftContent(
-  draftsByFileId: Record<string, string>,
-  file: AppFile | null,
-) {
-  if (!file || file.metadata.type !== "file") return "";
-
-  return draftsByFileId[file.id] ?? file.content;
-}
-
 export default function Holder({ slug }: { slug: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const {
-    notebooks,
-    isHydrating,
-    updateFileContent,
-    getNotebookFiles,
-    getFileContent,
-  } = useNotebooks();
+  const { notebooks, isHydrating, getNotebookFiles } = useNotebooks();
 
   const [openTabIds, setOpenTabIds] = useState<string[]>([]);
   const [loadedTabsSlug, setLoadedTabsSlug] = useState<string | null>(null);
-  const [, setEditorRevision] = useState(0);
-
-  // Refs keep fast-changing editor data out of React render cycle.
-  const draftsByFileIdRef = useRef<Record<string, string>>({});
-  const latestSaveRequestRef = useRef<Record<string, number>>({});
   const cursorMetaRef = useRef<Record<string, CursorMeta>>({});
-  const hydratedFileIdsRef = useRef<Set<string>>(new Set());
-  const lastSelectedFileIdRef = useRef("");
 
   const selectedNotebook = useMemo(
     () => notebooks.find((notebook) => notebook.id === slug) ?? null,
@@ -108,44 +120,67 @@ export default function Holder({ slug }: { slug: string }) {
 
   // Derive selected file from query param for direct linking and navigation.
   const selectedFileId = searchParams.get("file") ?? "";
+  const isPreviewTabView = searchParams.has("preview");
+  const selectedTabMode: TabViewMode = isPreviewTabView ? "preview" : "editor";
+  const selectedTabId = selectedFileId
+    ? getTabId(selectedFileId, selectedTabMode)
+    : "";
   const selectedFile = useMemo(
     () => notebookFiles.find((file) => file.id === selectedFileId) ?? null,
     [notebookFiles, selectedFileId],
   );
 
-  const openTabs = useMemo(() => {
+  const openTabs = useMemo<OpenTab[]>(() => {
     const filesById = new Map(openableFiles.map((file) => [file.id, file]));
 
     return openTabIds
-      .map((tabId) => filesById.get(tabId) as AppFile)
-      .filter(Boolean);
+      .map((tabId) => {
+        const parsed = parseTabId(tabId);
+        if (!parsed) return null;
+
+        const file = filesById.get(parsed.fileId);
+        if (!file) return null;
+
+        return {
+          tabId,
+          file,
+          mode: parsed.mode,
+        };
+      })
+      .filter((tab): tab is OpenTab => Boolean(tab));
   }, [openTabIds, openableFiles]);
 
-  const activeDraftContent = getDraftContent(
-    draftsByFileIdRef.current,
-    selectedFile,
-  );
-
-  const markdownStats = useMemo(
-    () => getTextStats(activeDraftContent),
-    [activeDraftContent],
-  );
-
-  const footerView =
-    selectedFile?.metadata.type === "file" ? "markdown" : "other";
-
   const navigateToFile = useCallback(
-    (fileId: string) => {
+    (fileId: string, mode?: TabViewMode) => {
       if (!selectedNotebook) return;
+
+      const nextParams = new URLSearchParams(searchParams.toString());
+      const targetMode = mode ?? selectedTabMode;
+
+      if (targetMode === "preview") {
+        nextParams.set("preview", "1");
+      } else {
+        nextParams.delete("preview");
+      }
 
       router.push(
         buildNotebookUrl(selectedNotebook.id, {
           fileId,
-          searchParams,
+          searchParams: nextParams,
         }),
       );
     },
-    [router, searchParams, selectedNotebook],
+    [router, searchParams, selectedNotebook, selectedTabMode],
+  );
+
+  const navigateToTab = useCallback(
+    (tabId: string) => {
+      const parsed = parseTabId(tabId);
+      if (!parsed) return;
+
+      navigateToFile(parsed.fileId, parsed.mode);
+    },
+    [navigateToFile],
   );
 
   // Restore persisted tabs for notebook.
@@ -170,23 +205,13 @@ export default function Holder({ slug }: { slug: string }) {
   useEffect(() => {
     const validFileIds = new Set(openableFiles.map((file) => file.id));
 
-    for (const file of openableFiles) {
-      if (draftsByFileIdRef.current[file.id] === undefined) {
-        draftsByFileIdRef.current[file.id] = file.content;
-      }
-    }
-
-    for (const fileId of Object.keys(draftsByFileIdRef.current)) {
-      if (!validFileIds.has(fileId)) {
-        delete draftsByFileIdRef.current[fileId];
-        delete latestSaveRequestRef.current[fileId];
-        delete cursorMetaRef.current[fileId];
-        hydratedFileIdsRef.current.delete(fileId);
-      }
-    }
-
     setOpenTabIds((currentTabs) =>
-      currentTabs.filter((tabId) => validFileIds.has(tabId)),
+      currentTabs.filter((tabId) => {
+        const parsed = parseTabId(tabId);
+        if (!parsed) return false;
+
+        return validFileIds.has(parsed.fileId);
+      }),
     );
   }, [openableFiles]);
 
@@ -197,11 +222,11 @@ export default function Holder({ slug }: { slug: string }) {
     }
 
     setOpenTabIds((currentTabs) =>
-      currentTabs.includes(selectedFile.id)
+      currentTabs.includes(selectedTabId)
         ? currentTabs
-        : [...currentTabs, selectedFile.id],
+        : [...currentTabs, selectedTabId],
     );
-  }, [selectedFile]);
+  }, [selectedFile, selectedTabId]);
 
   // Redirect to a fallback file when query param points to a missing file.
   useEffect(() => {
@@ -209,18 +234,25 @@ export default function Holder({ slug }: { slug: string }) {
       return;
     }
 
-    const fallbackFileId = selectedFileId
-      ? (openTabIds[openTabIds.length - 1] ?? firstOpenableFile?.id ?? "")
-      : (openTabIds[openTabIds.length - 1] ?? "");
+    const fallbackTabId =
+      openTabIds[openTabIds.length - 1] ??
+      (firstOpenableFile ? getTabId(firstOpenableFile.id, "editor") : "");
 
-    if (!fallbackFileId) {
+    if (!fallbackTabId) {
       return;
     }
 
+    const parsedFallback = parseTabId(fallbackTabId);
+    if (!parsedFallback) return;
+
+    const nextParams = new URLSearchParams(searchParams.toString());
+    if (parsedFallback.mode === "preview") nextParams.set("preview", "1");
+    else nextParams.delete("preview");
+
     router.replace(
       buildNotebookUrl(selectedNotebook.id, {
-        fileId: fallbackFileId,
-        searchParams,
+        fileId: parsedFallback.fileId,
+        searchParams: nextParams,
       }),
     );
   }, [
@@ -228,123 +260,88 @@ export default function Holder({ slug }: { slug: string }) {
     openTabIds,
     router,
     selectedFile,
-    selectedFileId,
     selectedNotebook,
     searchParams,
   ]);
 
-  // Sync active file content without binding each keystroke to component state.
   useEffect(() => {
-    if (!selectedFileId) return;
-    let isCancelled = false;
-    if (!selectedFile) return;
-
-    const fileId = selectedFile.id;
-    const hasHydratedFromStorage = hydratedFileIdsRef.current.has(fileId);
-
-    if (draftsByFileIdRef.current[fileId] === undefined)
-      draftsByFileIdRef.current[fileId] = selectedFile.content;
-
-    if (selectedFile.metadata.type === "file") {
-      updateFooter("stats", getTextStats(draftsByFileIdRef.current[fileId]));
-      setFooterField(FOOTER_FIELD_IDS.saveStatus, "Saved");
-      setEditorRevision((current) => current + 1);
-    }
-
-    // Hydrate from storage once per file id and ignore stale responses.
-    if (selectedFile.metadata.type !== "file" || hasHydratedFromStorage) return;
-
-    const draftAtRequestStart = draftsByFileIdRef.current[fileId];
-
-    void getFileContent(fileId).then((content) => {
-      if (isCancelled) return;
-
-      if (draftsByFileIdRef.current[fileId] !== draftAtRequestStart) return;
-
-      draftsByFileIdRef.current[fileId] = content;
-      hydratedFileIdsRef.current.add(fileId);
-
-      if (selectedFileId === fileId) {
-        updateFooter("stats", getTextStats(content));
-        setEditorRevision((current) => current + 1);
-      }
+    updateFooter("cursor", {
+      line: 1,
+      col: 1,
+      selection: 0,
     });
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [getFileContent, selectedFile, selectedFileId]);
-
-  const { debounced: debouncedSave, flush: flushDebouncedSave } =
-    useDebouncedCallback(
-      async (fileId: string, content: string, requestId: number) => {
-        await updateFileContent(fileId, content);
-
-        if ((latestSaveRequestRef.current[fileId] ?? 0) !== requestId) return;
-
-        if (selectedFileId === fileId)
-          setFooterField(FOOTER_FIELD_IDS.saveStatus, "Saved");
-      },
-      { delayMs: 450 },
-    );
-
-  useEffect(() => {
-    cursorMetaRef.current = {};
-    setFooterField(FOOTER_FIELD_IDS.saveStatus, "Saved");
-    setFooterField(FOOTER_FIELD_IDS.cursor, "Ln 1, Col 1");
-    setFooterField(FOOTER_FIELD_IDS.tabSize, "Spaces: 2");
+    updateFooter("others", {
+      tabSize: 2,
+      saveStatus: "saved",
+    });
   }, []);
 
   useEffect(() => {
-    const activeCursor = selectedFileId
-      ? (cursorMetaRef.current[selectedFileId] ?? DEFAULT_CURSOR_META)
-      : DEFAULT_CURSOR_META;
+    if (!selectedTabId) {
+      const fallbackCursorMeta = DEFAULT_CURSOR_META;
 
-    setFooterField(
-      FOOTER_FIELD_IDS.cursor,
-      `Ln ${activeCursor.line}, Col ${activeCursor.col}`,
-    );
-    setFooterField(FOOTER_FIELD_IDS.tabSize, `Spaces: ${activeCursor.tabSize}`);
-  }, [selectedFileId]);
+      updateFooter("cursor", {
+        line: fallbackCursorMeta.line,
+        col: fallbackCursorMeta.col,
+        selection: fallbackCursorMeta.selection,
+      });
+      updateFooter("others", {
+        tabSize: fallbackCursorMeta.tabSize,
+      });
+      return;
+    }
 
-  // Flush pending saves when switching between files to avoid losing data.
-  useEffect(() => {
-    if (
-      lastSelectedFileIdRef.current &&
-      lastSelectedFileIdRef.current !== selectedFileId
-    )
-      flushDebouncedSave();
+    const activeCursorMeta =
+      cursorMetaRef.current[selectedTabId] ?? DEFAULT_CURSOR_META;
 
-    lastSelectedFileIdRef.current = selectedFileId;
-  }, [flushDebouncedSave, selectedFileId]);
+    updateFooter("cursor", {
+      line: activeCursorMeta.line,
+      col: activeCursorMeta.col,
+      selection: activeCursorMeta.selection,
+    });
+    updateFooter("others", {
+      tabSize: activeCursorMeta.tabSize,
+    });
+  }, [selectedTabId]);
 
-  // Flush pending saves when unmounting or switching notebooks to avoid losing data.
-  useEffect(() => () => flushDebouncedSave(), [flushDebouncedSave]);
-
-  const tabs = useMemo(
+  const tabs = useMemo<TabsViewTab<MixedTabMeta>[]>(
     () =>
       selectedNotebook
-        ? getEditorFileTabs({
-            openTabs,
-            selectedNotebook,
-            notebookFiles,
-            selectedFileId,
-            draftsByFileIdRef,
-            cursorMetaRef,
-            latestSaveRequestRef,
-            navigateToFile,
-            debouncedSave,
+        ? openTabs.map((tab) => {
+            const navigateByTabMode = (fileId: string) =>
+              navigateToFile(fileId, tab.mode);
+
+            if (tab.mode === "preview") {
+              return getEditorFilePreviewTab({
+                tabId: tab.tabId,
+                file: tab.file,
+                selectedNotebook,
+                notebookFiles,
+                navigateToFile: navigateByTabMode,
+              });
+            }
+
+            return getEditorFileTab({
+              tabId: tab.tabId,
+              file: tab.file,
+              isActive: tab.tabId === selectedTabId,
+              cursorMetaRef,
+              selectedNotebook,
+              notebookFiles,
+              navigateToFile: navigateByTabMode,
+            });
           })
         : [],
-    [
-      debouncedSave,
-      navigateToFile,
-      notebookFiles,
-      openTabs,
-      selectedFileId,
-      selectedNotebook,
-    ],
+    [navigateToFile, notebookFiles, openTabs, selectedNotebook, selectedTabId],
   );
+
+  const activeDraftContent = selectedFile?.content ?? "";
+  const markdownStats = useMemo(
+    () => getTextStats(activeDraftContent),
+    [activeDraftContent],
+  );
+  const activeCursorMeta =
+    cursorMetaRef.current[selectedTabId] ?? DEFAULT_CURSOR_META;
 
   if (isHydrating) {
     return (
@@ -370,24 +367,30 @@ export default function Holder({ slug }: { slug: string }) {
   }
 
   const hasAnyFiles = notebookFiles.length > 0;
-  const emptyState = renderEmptyState(hasAnyFiles, selectedFile, openTabs);
+  const emptyState = renderEmptyState(
+    hasAnyFiles,
+    selectedFile,
+    openTabs.map((tab) => tab.file),
+  );
 
-  const closeTab = (fileId: string) => {
+  const closeTab = (tabId: string) => {
     setOpenTabIds((currentTabs) => {
-      const currentIndex = currentTabs.indexOf(fileId);
+      const currentIndex = currentTabs.indexOf(tabId);
 
       if (currentIndex === -1) {
         return currentTabs;
       }
 
-      const nextTabs = currentTabs.filter((tabId) => tabId !== fileId);
+      const nextTabs = currentTabs.filter(
+        (currentTabId) => currentTabId !== tabId,
+      );
 
-      if (selectedFileId === fileId) {
+      if (selectedTabId === tabId) {
         const fallbackTabId =
           currentTabs[currentIndex + 1] ?? currentTabs[currentIndex - 1] ?? "";
 
         if (fallbackTabId) {
-          navigateToFile(fallbackTabId);
+          navigateToTab(fallbackTabId);
         } else {
           router.push(buildNotebookUrl(selectedNotebook.id));
         }
@@ -428,12 +431,15 @@ export default function Holder({ slug }: { slug: string }) {
             <Header
               placeholder={false}
               tabs={openTabs.map((file) => ({
-                id: file.id,
-                name: file.name,
-                type: file.metadata.type,
-                isActive: file.id === selectedFileId,
+                id: file.tabId,
+                name:
+                  file.mode === "preview"
+                    ? `${file.file.name} (Preview)`
+                    : file.file.name,
+                type: file.file.metadata.type,
+                isActive: file.tabId === selectedTabId,
               }))}
-              onTabSelect={navigateToFile}
+              onTabSelect={navigateToTab}
               onTabClose={closeTab}
               onTabReorder={reorderTabs}
             />
@@ -447,9 +453,13 @@ export default function Holder({ slug }: { slug: string }) {
         ) : (
           <TabsView
             tabs={tabs}
-            activeTabId={selectedFileId}
-            defaultActiveTabId={firstOpenableFile?.id}
-            onTabSelect={navigateToFile}
+            activeTabId={selectedTabId}
+            defaultActiveTabId={
+              firstOpenableFile
+                ? getTabId(firstOpenableFile.id, "editor")
+                : undefined
+            }
+            onTabSelect={navigateToTab}
             onTabClose={closeTab}
             onTabReorder={reorderTabs}
           />
@@ -457,27 +467,15 @@ export default function Holder({ slug }: { slug: string }) {
       </main>
 
       <Footer
-        view={footerView}
+        view={selectedFile?.metadata.type === "file" ? "markdown" : "other"}
         markdownMeta={
-          footerView === "markdown"
+          selectedFile?.metadata.type === "file"
             ? {
                 ...markdownStats,
-                line:
-                  selectedFileId && cursorMetaRef.current[selectedFileId]
-                    ? cursorMetaRef.current[selectedFileId].line
-                    : DEFAULT_CURSOR_META.line,
-                col:
-                  selectedFileId && cursorMetaRef.current[selectedFileId]
-                    ? cursorMetaRef.current[selectedFileId].col
-                    : DEFAULT_CURSOR_META.col,
-                tabSize:
-                  selectedFileId && cursorMetaRef.current[selectedFileId]
-                    ? cursorMetaRef.current[selectedFileId].tabSize
-                    : DEFAULT_CURSOR_META.tabSize,
-                selection:
-                  selectedFileId && cursorMetaRef.current[selectedFileId]
-                    ? cursorMetaRef.current[selectedFileId].selection
-                    : DEFAULT_CURSOR_META.selection,
+                line: activeCursorMeta.line,
+                col: activeCursorMeta.col,
+                tabSize: activeCursorMeta.tabSize,
+                selection: activeCursorMeta.selection,
                 version: "v0.1.0",
                 saveStatus: "saved",
               }
