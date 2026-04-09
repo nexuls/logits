@@ -1,10 +1,7 @@
 import { syntaxTree } from "@codemirror/language";
 import { Decoration } from "@codemirror/view";
 import type { SyntaxNode } from "@lezer/common";
-import {
-  type DecorationContext,
-  DraftlyPlugin,
-} from "../editor/plugin";
+import { type DecorationContext, DraftlyPlugin } from "../editor/plugin";
 import { createTheme } from "../editor";
 
 const paragraphDecoration = Decoration.line({
@@ -38,7 +35,9 @@ export class ParagraphPlugin extends DraftlyPlugin {
         }
 
         const startLine = view.state.doc.lineAt(node.from).number;
-        const endLine = view.state.doc.lineAt(Math.max(node.to - 1, node.from)).number;
+        const endLine = view.state.doc.lineAt(
+          Math.max(node.to - 1, node.from),
+        ).number;
 
         for (let lineNumber = startLine; lineNumber <= endLine; lineNumber++) {
           const line = view.state.doc.line(lineNumber);

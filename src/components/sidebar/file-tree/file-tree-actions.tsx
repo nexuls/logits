@@ -1,9 +1,4 @@
-import {
-  EllipsisIcon,
-  FolderPlus,
-  Plus,
-  Settings2,
-} from "lucide-react";
+import { EllipsisIcon, FolderPlus, Plus, Settings2 } from "lucide-react";
 import type { ReactNode } from "react";
 import {
   FileTreeContextActionMenu,
@@ -55,7 +50,10 @@ function FileTreeNotebookActionItems({
   );
 }
 
-export function FileTreeActionsContextMenu({ children, ...props }: ContextProps) {
+export function FileTreeActionsContextMenu({
+  children,
+  ...props
+}: ContextProps) {
   return (
     <FileTreeContextActionMenu
       contentClassName="w-52"

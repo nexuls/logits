@@ -101,25 +101,22 @@ export function useHeaderTabReorder({
       .filter((tab): tab is HeaderTab => Boolean(tab));
   }, [tabs, visualTabOrder]);
 
-  const clampSlideOffset = useCallback(
-    (tabId: string, offsetX: number) => {
-      const draggedElement = tabRefs.current[tabId];
-      const containerElement = containerRef.current;
-      if (!draggedElement || !containerElement) return offsetX;
+  const clampSlideOffset = useCallback((tabId: string, offsetX: number) => {
+    const draggedElement = tabRefs.current[tabId];
+    const containerElement = containerRef.current;
+    if (!draggedElement || !containerElement) return offsetX;
 
-      // Boundaries are computed against the tab strip viewport so the dragged
-      // tab always remains fully visible inside the header container.
-      const minOffset = -draggedElement.offsetLeft;
-      const maxOffset =
-        containerElement.clientWidth -
-        (draggedElement.offsetLeft + draggedElement.offsetWidth);
+    // Boundaries are computed against the tab strip viewport so the dragged
+    // tab always remains fully visible inside the header container.
+    const minOffset = -draggedElement.offsetLeft;
+    const maxOffset =
+      containerElement.clientWidth -
+      (draggedElement.offsetLeft + draggedElement.offsetWidth);
 
-      if (offsetX < minOffset) return minOffset;
-      if (offsetX > maxOffset) return maxOffset;
-      return offsetX;
-    },
-    [],
-  );
+    if (offsetX < minOffset) return minOffset;
+    if (offsetX > maxOffset) return maxOffset;
+    return offsetX;
+  }, []);
 
   const finishSliding = useCallback(() => {
     // Finalize drag lifecycle and release pointer capture if still active.
@@ -203,68 +200,71 @@ export function useHeaderTabReorder({
     tabLeftByIdRef.current = nextTabLeftById;
   }, [clampSlideOffset, orderedTabs, slidingTabId]);
 
-  const handlePointerMove = useCallback((event: PointerEvent) => {
-    const pointerState = pointerStateRef.current;
-    if (!pointerState) return;
+  const handlePointerMove = useCallback(
+    (event: PointerEvent) => {
+      const pointerState = pointerStateRef.current;
+      if (!pointerState) return;
 
-    // Continuous drag offset from original pointer-down anchor.
-    const rawDeltaX = event.clientX - pointerState.startClientX;
-    const deltaX = clampSlideOffset(pointerState.tabId, rawDeltaX);
-    setSlideOffsetX(deltaX);
+      // Continuous drag offset from original pointer-down anchor.
+      const rawDeltaX = event.clientX - pointerState.startClientX;
+      const deltaX = clampSlideOffset(pointerState.tabId, rawDeltaX);
+      setSlideOffsetX(deltaX);
 
-    // Dragging state starts only after threshold movement from pointer down.
-    // We use raw cursor distance so "grabbing" is based on user intent,
-    // independent of clamping at container boundaries.
-    if (Math.abs(rawDeltaX) > 16 && !pointerState.hasMoved) {
-      pointerState.hasMoved = true;
-      setDraggingTabId(pointerState.tabId);
-    }
+      // Dragging state starts only after threshold movement from pointer down.
+      // We use raw cursor distance so "grabbing" is based on user intent,
+      // independent of clamping at container boundaries.
+      if (Math.abs(rawDeltaX) > 16 && !pointerState.hasMoved) {
+        pointerState.hasMoved = true;
+        setDraggingTabId(pointerState.tabId);
+      }
 
-    // We gate swaps with a movement threshold so tiny cursor jitters do not
-    // cause rapid tab-order churn while dragging across tight hit targets.
-    const swapDistance = Math.abs(event.clientX - pointerState.swapAnchorX);
-    if (swapDistance < 8) return;
+      // We gate swaps with a movement threshold so tiny cursor jitters do not
+      // cause rapid tab-order churn while dragging across tight hit targets.
+      const swapDistance = Math.abs(event.clientX - pointerState.swapAnchorX);
+      if (swapDistance < 8) return;
 
-    const currentOrder = orderRef.current;
-    const currentIndex = currentOrder.indexOf(pointerState.tabId);
-    if (currentIndex === -1) return;
+      const currentOrder = orderRef.current;
+      const currentIndex = currentOrder.indexOf(pointerState.tabId);
+      if (currentIndex === -1) return;
 
-    const draggedElement = tabRefs.current[pointerState.tabId];
-    if (!draggedElement) return;
+      const draggedElement = tabRefs.current[pointerState.tabId];
+      if (!draggedElement) return;
 
-    const draggedLeftX = draggedElement.offsetLeft + deltaX;
-    const draggedProbeX =
-      deltaX >= 0 ? draggedLeftX + draggedElement.offsetWidth : draggedLeftX;
+      const draggedLeftX = draggedElement.offsetLeft + deltaX;
+      const draggedProbeX =
+        deltaX >= 0 ? draggedLeftX + draggedElement.offsetWidth : draggedLeftX;
 
-    // Recompute insertion index by counting candidate tab centers crossed by
-    // the dragged probe point.
-    let nextIndex = 0;
+      // Recompute insertion index by counting candidate tab centers crossed by
+      // the dragged probe point.
+      let nextIndex = 0;
 
-    for (const candidateTabId of currentOrder) {
-      if (candidateTabId === pointerState.tabId) continue;
+      for (const candidateTabId of currentOrder) {
+        if (candidateTabId === pointerState.tabId) continue;
 
-      const element = tabRefs.current[candidateTabId];
-      if (!element) continue;
+        const element = tabRefs.current[candidateTabId];
+        if (!element) continue;
 
-      const candidateCenterX = element.offsetLeft + element.offsetWidth / 2;
-      if (draggedProbeX > candidateCenterX) nextIndex += 1;
-    }
+        const candidateCenterX = element.offsetLeft + element.offsetWidth / 2;
+        if (draggedProbeX > candidateCenterX) nextIndex += 1;
+      }
 
-    if (nextIndex === currentIndex) return;
+      if (nextIndex === currentIndex) return;
 
-    const nextOrder = moveTab(currentOrder, currentIndex, nextIndex);
-    const hasOrderChanged = nextOrder.some(
-      (tabId, index) => currentOrder[index] !== tabId,
-    );
+      const nextOrder = moveTab(currentOrder, currentIndex, nextIndex);
+      const hasOrderChanged = nextOrder.some(
+        (tabId, index) => currentOrder[index] !== tabId,
+      );
 
-    if (!hasOrderChanged) return;
+      if (!hasOrderChanged) return;
 
-    // Update visual order and move swap anchor forward so swaps are progressive
-    // and less noisy during long drags.
-    orderRef.current = nextOrder;
-    pointerState.swapAnchorX = event.clientX;
-    setVisualTabOrder(nextOrder);
-  }, [clampSlideOffset]);
+      // Update visual order and move swap anchor forward so swaps are progressive
+      // and less noisy during long drags.
+      orderRef.current = nextOrder;
+      pointerState.swapAnchorX = event.clientX;
+      setVisualTabOrder(nextOrder);
+    },
+    [clampSlideOffset],
+  );
 
   useEffect(() => {
     // Subscribe to global pointer lifecycle only during active drag.

@@ -8,9 +8,7 @@ import {
   type DragEvent,
   type ReactNode,
 } from "react";
-import {
-  Search,
-} from "lucide-react";
+import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { AppFile, FileType } from "@/data/modules/notebook/client-types";
@@ -114,8 +112,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
         if (file.metadata.type !== "folder") continue;
 
         const existingValue = currentState[file.id];
-        nextState[file.id] =
-          existingValue === undefined ? true : existingValue;
+        nextState[file.id] = existingValue === undefined ? true : existingValue;
       }
 
       for (const folderId of activeFolderPathIds) {
