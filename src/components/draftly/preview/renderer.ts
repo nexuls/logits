@@ -15,8 +15,10 @@ import type { NodeRendererMap, PreviewContext } from "./types";
  */
 export class PreviewRenderer {
   private doc: string;
+  private theme: ThemeEnum;
   private plugins: DraftlyPlugin[];
   private markdown: MarkdownConfig[];
+  private sanitizeHtml: boolean;
   private syntaxTheme:
     | import("./types").SyntaxThemeInput
     | import("./types").SyntaxThemeInput[]
@@ -119,7 +121,7 @@ export class PreviewRenderer {
         const children = await this.renderChildren(node);
         const result = await plugin.renderToHTML?.(node, children, this.ctx);
         if (result !== null) {
-          return result;
+          return result as string;
         }
       }
     }
