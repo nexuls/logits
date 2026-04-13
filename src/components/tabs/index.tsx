@@ -34,6 +34,7 @@ type TabsViewProps<TMeta = unknown> = {
   tabs: TabsViewTab<TMeta>[];
   defaultActiveTabId?: string;
   activeTabId?: string;
+  inactiveTabMode?: "unmount" | "keep-mounted";
   onTabSelect?: (tabId: string) => void;
   onTabClose?: (tabId: string) => void;
   onTabReorder?: (tabIds: string[]) => void;
@@ -59,6 +60,7 @@ export default function TabsView<TMeta = unknown>({
   tabs,
   defaultActiveTabId,
   activeTabId: controlledActiveTabId,
+  inactiveTabMode = "unmount",
   onTabSelect,
   onTabClose,
   onTabReorder,
@@ -186,6 +188,9 @@ export default function TabsView<TMeta = unknown>({
     closeable: tab.closeable ?? true,
   }));
 
+  const activeTab =
+    tabs.find((tab) => tab.id === activeTabId) ?? tabs[0] ?? null;
+
   return (
     <div className={cn("min-h-0 flex h-full flex-col", className)}>
       <Header
@@ -205,20 +210,31 @@ export default function TabsView<TMeta = unknown>({
       <div className={cn("min-h-0 flex-1", contentClassName)}>
         {tabs.length === 0
           ? (emptyState ?? null)
-          : tabs.map((tab) => (
-              <div
-                key={tab.id}
-                role="tabpanel"
-                aria-hidden={tab.id !== activeTabId}
-                className={cn(
-                  "h-full",
-                  tab.id === activeTabId ? "block" : "hidden",
-                  panelClassName,
-                )}
-              >
-                {tab.content}
-              </div>
-            ))}
+          : inactiveTabMode === "keep-mounted"
+            ? tabs.map((tab) => (
+                <div
+                  key={tab.id}
+                  role="tabpanel"
+                  aria-hidden={tab.id !== activeTabId}
+                  className={cn(
+                    "h-full",
+                    tab.id === activeTabId ? "block" : "hidden",
+                    panelClassName,
+                  )}
+                >
+                  {tab.content}
+                </div>
+              ))
+            : activeTab && (
+                <div
+                  key={activeTab.id}
+                  role="tabpanel"
+                  aria-hidden={false}
+                  className={cn("h-full", panelClassName)}
+                >
+                  {activeTab.content}
+                </div>
+              )}
       </div>
     </div>
   );
