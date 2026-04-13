@@ -633,6 +633,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
       </FileTreeActionsContextMenu>
 
       <NotebookSettingsDialog
+        mode="edit"
         open={isNotebookSettingsOpen}
         notebookName={activeNotebook?.name ?? "this notebook"}
         draftName={draftNotebookName}
@@ -642,7 +643,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
         onDelete={() => {
           void handleDeleteNotebook();
         }}
-        onSave={() => {
+        onSubmit={() => {
           void handleRenameNotebook();
         }}
       />

@@ -34,12 +34,23 @@ type NotebookSettingsState = {
 
 export function AppSidebarHeader({ activeNotebookId }: Props) {
   const router = useRouter();
-  const { notebooks, createNotebook, renameNotebook, deleteNotebook } =
-    useNotebooks();
+  const {
+    notebooks,
+    createNotebook,
+    createFile,
+    renameNotebook,
+    deleteNotebook,
+  } = useNotebooks();
   const [query, setQuery] = useState("");
   const [settingsNotebook, setSettingsNotebook] =
     useState<NotebookSettingsState>(null);
   const [draftName, setDraftName] = useState("");
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [createDraftName, setCreateDraftName] = useState("");
+  const [createOptions, setCreateOptions] = useState({
+    openAfterCreate: true,
+    createStarterFile: true,
+  });
 
   const activeNotebook =
     notebooks.find((notebook) => notebook.id === activeNotebookId) ??
@@ -60,11 +71,26 @@ export function AppSidebarHeader({ activeNotebookId }: Props) {
   }, [settingsNotebook]);
 
   const onCreateNotebook = async () => {
-    const createdNotebook = await createNotebook();
+    const nextName = createDraftName.trim();
+    const createdNotebook = await createNotebook(nextName || undefined);
 
     if (createdNotebook) {
+      if (createOptions.createStarterFile) {
+        await createFile({
+          notebookId: createdNotebook.id,
+          parentId: createdNotebook.id,
+          type: "file",
+          name: "Welcome",
+        });
+      }
+
       setQuery("");
-      router.push(buildNotebookUrl(createdNotebook.id));
+      setCreateDraftName("");
+      setIsCreateDialogOpen(false);
+
+      if (createOptions.openAfterCreate) {
+        router.push(buildNotebookUrl(createdNotebook.id));
+      }
     }
   };
 
@@ -191,7 +217,8 @@ export function AppSidebarHeader({ activeNotebookId }: Props) {
 
             <DropdownMenuItem
               onSelect={() => {
-                void onCreateNotebook();
+                setCreateDraftName("");
+                setIsCreateDialogOpen(true);
               }}
               className="min-h-15 rounded-none px-2 py-1 focus:bg-accent"
             >
@@ -210,6 +237,26 @@ export function AppSidebarHeader({ activeNotebookId }: Props) {
       </SidebarHeader>
 
       <NotebookSettingsDialog
+        mode="create"
+        open={isCreateDialogOpen}
+        draftName={createDraftName}
+        createOptions={createOptions}
+        onDraftNameChange={setCreateDraftName}
+        onCreateOptionsChange={setCreateOptions}
+        onOpenChange={(open) => {
+          setIsCreateDialogOpen(open);
+
+          if (!open) {
+            setCreateDraftName("");
+          }
+        }}
+        onSubmit={() => {
+          void onCreateNotebook();
+        }}
+      />
+
+      <NotebookSettingsDialog
+        mode="edit"
         open={settingsNotebook !== null}
         notebookName={settingsNotebook?.name ?? "this notebook"}
         draftName={draftName}
@@ -223,7 +270,7 @@ export function AppSidebarHeader({ activeNotebookId }: Props) {
         onDelete={() => {
           void onDeleteNotebook();
         }}
-        onSave={() => {
+        onSubmit={() => {
           void onRenameNotebook();
         }}
       />
