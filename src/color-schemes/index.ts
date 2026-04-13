@@ -124,3 +124,11 @@ export function getCodeMirrorTheme(
   codeMirrorThemeCache.set(cacheKey, extension);
   return extension;
 }
+
+export function getManifestThemeColor(
+  colorScheme: ColorSchemeName | undefined,
+  mode: ResolvedAppearanceMode,
+) {
+  return getColorSchemeDefinition(colorScheme)[mode].codeMirror.settings
+    .background;
+}

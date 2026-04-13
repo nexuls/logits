@@ -12,6 +12,7 @@ import Header from "@/components/tabs/header";
 import { Spinner } from "@/components/ui/spinner";
 import TabsView from "@/components/tabs";
 import type { TabsViewTab } from "@/components/tabs";
+import { updateRecentNotebookShortcutsCookie } from "@/data/modules/app/cookie";
 import { useNotebooks } from "@/hooks/use-notebooks";
 import { useFileSelection } from "@/data/file-selection";
 import type { AppFile } from "@/data/modules/notebook/client-types";
@@ -99,6 +100,15 @@ export default function Holder({ slug }: { slug: string }) {
     () => notebooks.find((notebook) => notebook.id === slug) ?? null,
     [notebooks, slug],
   );
+
+  useEffect(() => {
+    if (!selectedNotebook) return;
+
+    updateRecentNotebookShortcutsCookie({
+      notebookId: selectedNotebook.id,
+      notebookName: selectedNotebook.name,
+    });
+  }, [selectedNotebook]);
 
   // Derive files for current notebook and openable files for tab logic.
   const { notebookFiles, openableFiles, firstOpenableFile } = useMemo(() => {
