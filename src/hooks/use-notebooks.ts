@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo } from "react";
 import { useDataStore } from "@/data/context";
+import { notebookToJson } from "@/data/modules/notebook/functions";
 import {
   toClientFile,
   toClientNotebook,
@@ -116,6 +117,35 @@ export function useNotebooks() {
       return created ? toClientNotebook(created) : null;
     },
     [store],
+  );
+
+  const importNotebook = useCallback(
+    async (json: string, name?: string): Promise<Notebook | null> => {
+      const imported = await store.importNotebookFromJson(json, name);
+      return imported ? toClientNotebook(imported) : null;
+    },
+    [store],
+  );
+
+  const exportNotebook = useCallback(
+    async (notebookId: string) => {
+      const notebook = await store.getNotebookById(notebookId);
+      if (!notebook) return null;
+
+      const records = await Promise.all(
+        notebook.files.map(async (file) => {
+          const cached = fileContents.get(file.id);
+          if (cached) return cached;
+          return store.fileContent.getById(file.id);
+        }),
+      );
+
+      return notebookToJson(
+        notebook,
+        records.filter((record) => record !== null),
+      );
+    },
+    [fileContents, store],
   );
 
   const renameNotebook = useCallback(
@@ -319,6 +349,8 @@ export function useNotebooks() {
       files,
       isHydrating,
       createNotebook,
+      importNotebook,
+      exportNotebook,
       renameNotebook,
       deleteNotebook,
       createFile,
@@ -336,6 +368,8 @@ export function useNotebooks() {
       files,
       isHydrating,
       createNotebook,
+      importNotebook,
+      exportNotebook,
       renameNotebook,
       deleteNotebook,
       createFile,

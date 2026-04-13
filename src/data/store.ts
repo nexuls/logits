@@ -4,7 +4,11 @@ import { AppModule } from "./modules/app/functions";
 import type { AppRecord } from "./modules/app/schema";
 import { FileContentModule } from "./modules/fileContent/functions";
 import type { FileContentRecord } from "./modules/fileContent/schema";
-import { NotebookModule } from "./modules/notebook/functions";
+import {
+  cloneImportedNotebookBundle,
+  notebookFromJson,
+  NotebookModule,
+} from "./modules/notebook/functions";
 import type {
   NotebookFileType,
   NotebookRecord,
@@ -142,6 +146,26 @@ export class DataStore {
   async renameNotebook(notebookId: string, name: string) {
     await this.initialize();
     return this.enqueueWrite(() => this.notebook.rename(notebookId, name));
+  }
+
+  async importNotebookFromJson(json: string, name?: string) {
+    await this.initialize();
+
+    return this.enqueueWrite(async () => {
+      const parsed = notebookFromJson(json);
+      const imported = cloneImportedNotebookBundle(parsed, { name });
+      const db = await getDb();
+      const tx = db.transaction(["notebooks", "fileContents"], "readwrite");
+
+      await this.notebook.importRecord(imported.notebook, { tx });
+
+      for (const fileContent of imported.fileContents) {
+        await this.fileContent.importRecord(fileContent, { tx });
+      }
+
+      await tx.done;
+      return imported.notebook;
+    });
   }
 
   async createFileWithInitialContent(input: {

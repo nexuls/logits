@@ -1,5 +1,12 @@
+import { z } from "zod";
 import { DataModule, type ModuleScope } from "@/data/dataModule";
 import type { DbLike } from "@/data/dataModule";
+import {
+  createEmptyFileContentRecord,
+  createFileContentRecord,
+  normalizeNotebookFileContents,
+} from "@/data/modules/fileContent/functions";
+import { type FileContentRecord, fileContentSchema } from "@/data/modules/fileContent/schema";
 import {
   notebookFileSchema,
   notebookSchema,
@@ -7,6 +14,15 @@ import {
   type NotebookFileType,
   type NotebookRecord,
 } from "./schema";
+
+const notebookJsonSchema = z.object({
+  version: z.literal(1),
+  meta: notebookSchema.omit({ files: true }),
+  files: z.array(notebookFileSchema),
+  fileContents: z.array(fileContentSchema),
+});
+
+export type NotebookJsonRecord = z.infer<typeof notebookJsonSchema>;
 
 function nowIso() {
   return new Date().toISOString();
@@ -53,6 +69,112 @@ function getDescendantIds(files: NotebookFile[], rootId: string) {
   return ids;
 }
 
+export function notebookToJson(
+  notebook: NotebookRecord,
+  fileContents: FileContentRecord[],
+) {
+  const normalizedNotebook = notebookSchema.parse(notebook);
+  const normalizedFileContents = normalizeNotebookFileContents(
+    normalizedNotebook,
+    fileContents,
+  );
+  const payload = notebookJsonSchema.parse({
+    version: 1,
+    meta: {
+      id: normalizedNotebook.id,
+      name: normalizedNotebook.name,
+      createdAt: normalizedNotebook.createdAt,
+      updatedAt: normalizedNotebook.updatedAt,
+      createdBy: normalizedNotebook.createdBy,
+      updatedBy: normalizedNotebook.updatedBy,
+    },
+    files: normalizedNotebook.files,
+    fileContents: normalizedFileContents,
+  });
+
+  return JSON.stringify(payload, null, 2);
+}
+
+export function notebookFromJson(json: string) {
+  const payload = notebookJsonSchema.parse(JSON.parse(json));
+  const notebook = notebookSchema.parse({
+    ...payload.meta,
+    files: payload.files,
+  });
+  const fileContents = normalizeNotebookFileContents(notebook, payload.fileContents);
+
+  return { notebook, fileContents };
+}
+
+export function cloneImportedNotebookBundle(
+  input: {
+    notebook: NotebookRecord;
+    fileContents: FileContentRecord[];
+  },
+  overrides?: {
+    name?: string;
+  },
+) {
+  const nextNotebookId = createId();
+  const fileIdMap = new Map<string, string>();
+
+  for (const file of input.notebook.files) {
+    fileIdMap.set(file.id, createId());
+  }
+
+  const normalizedImportedFileContents = normalizeNotebookFileContents(
+    input.notebook,
+    input.fileContents,
+  );
+  const sourceContentById = new Map(
+    normalizedImportedFileContents.map((record) => [record.id, record]),
+  );
+
+  const files = input.notebook.files.map((file) => {
+    const nextId = fileIdMap.get(file.id) ?? createId();
+
+    return notebookFileSchema.parse({
+      ...file,
+      id: nextId,
+      parentId:
+        file.parentId === input.notebook.id
+          ? nextNotebookId
+          : (fileIdMap.get(file.parentId) ?? nextNotebookId),
+    });
+  });
+
+  const notebook = notebookSchema.parse({
+    ...input.notebook,
+    id: nextNotebookId,
+    name: overrides?.name?.trim() || input.notebook.name,
+    files,
+  });
+
+  const fileContents = input.notebook.files.map((sourceFile) => {
+    const nextFileId = fileIdMap.get(sourceFile.id) ?? createId();
+    const source = sourceContentById.get(sourceFile.id);
+    const nextFile = files.find((file) => file.id === nextFileId);
+
+    if (!source || !nextFile) return createEmptyFileContentRecord({
+      ...sourceFile,
+      id: nextFileId,
+      parentId:
+        sourceFile.parentId === input.notebook.id
+          ? nextNotebookId
+          : (fileIdMap.get(sourceFile.parentId) ?? nextNotebookId),
+    });
+
+    return createFileContentRecord(
+      nextFile.id,
+      source.content,
+      source.createdAt,
+      source.updatedAt,
+    );
+  });
+
+  return { notebook, fileContents };
+}
+
 export class NotebookModule extends DataModule<NotebookRecord> {
   constructor(getDb: () => Promise<DbLike>) {
     super("notebooks", notebookSchema, getDb);
@@ -80,6 +202,10 @@ export class NotebookModule extends DataModule<NotebookRecord> {
 
     await this.saveRecord(record, scope);
     return record;
+  }
+
+  async importRecord(record: NotebookRecord, scope?: ModuleScope) {
+    return this.saveRecord(record, scope);
   }
 
   async rename(notebookId: string, name: string, scope?: ModuleScope) {

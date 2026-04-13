@@ -51,6 +51,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
     deleteFile,
     duplicateFile,
     moveFile,
+    exportNotebook,
     renameNotebook,
     deleteNotebook,
   } = useNotebooks();
@@ -567,6 +568,34 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
     setIsNotebookSettingsOpen(true);
   };
 
+  const handleExportNotebook = async () => {
+    if (!activeNotebook || typeof window === "undefined") return;
+
+    const json = await exportNotebook(activeNotebook.id);
+    if (!json) {
+      toast.error("Could not export notebook");
+      return;
+    }
+
+    const safeName =
+      activeNotebook.name
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "") || "notebook";
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `${safeName}.notebook.json`;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    toast.success("Notebook exported");
+  };
+
   return (
     <>
       <FileTreeActionsContextMenu
@@ -574,6 +603,9 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
         hasActiveNotebook={Boolean(activeNotebook)}
         onCreate={(parentId, type) => {
           void handleCreate(parentId, type);
+        }}
+        onExportNotebook={() => {
+          void handleExportNotebook();
         }}
         onOpenNotebookSettings={openNotebookSettings}
       >
@@ -594,6 +626,9 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
               hasActiveNotebook={Boolean(activeNotebook)}
               onCreate={(parentId, type) => {
                 void handleCreate(parentId, type);
+              }}
+              onExportNotebook={() => {
+                void handleExportNotebook();
               }}
               onOpenNotebookSettings={openNotebookSettings}
             />

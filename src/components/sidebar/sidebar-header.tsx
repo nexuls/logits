@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { notebookFromJson } from "@/data/modules/notebook/functions";
 import { useNotebooks } from "@/hooks/use-notebooks";
 import { buildNotebookUrl } from "@/lib/notebook-url";
 import { Button } from "@/components/ui/button";
@@ -32,11 +34,18 @@ type NotebookSettingsState = {
   name: string;
 } | null;
 
+type CreateNotebookImportState = {
+  json: string;
+  sourceFileName: string;
+  preview: ReturnType<typeof notebookFromJson>;
+} | null;
+
 export function AppSidebarHeader({ activeNotebookId }: Props) {
   const router = useRouter();
   const {
     notebooks,
     createNotebook,
+    importNotebook,
     createFile,
     renameNotebook,
     deleteNotebook,
@@ -51,6 +60,9 @@ export function AppSidebarHeader({ activeNotebookId }: Props) {
     openAfterCreate: true,
     createStarterFile: true,
   });
+  const [createImportState, setCreateImportState] =
+    useState<CreateNotebookImportState>(null);
+  const [isImportingNotebook, setIsImportingNotebook] = useState(false);
 
   const activeNotebook =
     notebooks.find((notebook) => notebook.id === activeNotebookId) ??
@@ -72,10 +84,12 @@ export function AppSidebarHeader({ activeNotebookId }: Props) {
 
   const onCreateNotebook = async () => {
     const nextName = createDraftName.trim();
-    const createdNotebook = await createNotebook(nextName || undefined);
+    const createdNotebook = createImportState
+      ? await importNotebook(createImportState.json, nextName || undefined)
+      : await createNotebook(nextName || undefined);
 
     if (createdNotebook) {
-      if (createOptions.createStarterFile) {
+      if (!createImportState && createOptions.createStarterFile) {
         await createFile({
           notebookId: createdNotebook.id,
           parentId: createdNotebook.id,
@@ -86,11 +100,34 @@ export function AppSidebarHeader({ activeNotebookId }: Props) {
 
       setQuery("");
       setCreateDraftName("");
+      setCreateImportState(null);
       setIsCreateDialogOpen(false);
 
       if (createOptions.openAfterCreate) {
         router.push(buildNotebookUrl(createdNotebook.id));
       }
+    }
+  };
+
+  const onImportNotebookFile = async (file: File) => {
+    setIsImportingNotebook(true);
+
+    try {
+      const json = await file.text();
+      const preview = notebookFromJson(json);
+
+      setCreateImportState({
+        json,
+        sourceFileName: file.name,
+        preview,
+      });
+      setCreateDraftName(preview.notebook.name);
+      toast.success("Notebook import preview ready");
+    } catch (error: unknown) {
+      console.error("[sidebar-header] failed to parse notebook import", error);
+      toast.error("Could not import notebook JSON");
+    } finally {
+      setIsImportingNotebook(false);
     }
   };
 
@@ -218,6 +255,7 @@ export function AppSidebarHeader({ activeNotebookId }: Props) {
             <DropdownMenuItem
               onSelect={() => {
                 setCreateDraftName("");
+                setCreateImportState(null);
                 setIsCreateDialogOpen(true);
               }}
               className="min-h-15 rounded-none px-2 py-1 focus:bg-accent"
@@ -241,13 +279,29 @@ export function AppSidebarHeader({ activeNotebookId }: Props) {
         open={isCreateDialogOpen}
         draftName={createDraftName}
         createOptions={createOptions}
+        importPending={isImportingNotebook}
+        importPreview={
+          createImportState
+            ? {
+                sourceFileName: createImportState.sourceFileName,
+                notebook: createImportState.preview.notebook,
+              }
+            : null
+        }
         onDraftNameChange={setCreateDraftName}
         onCreateOptionsChange={setCreateOptions}
+        onClearImport={() => {
+          setCreateImportState(null);
+        }}
+        onImportFileSelect={(file) => {
+          void onImportNotebookFile(file);
+        }}
         onOpenChange={(open) => {
           setIsCreateDialogOpen(open);
 
           if (!open) {
             setCreateDraftName("");
+            setCreateImportState(null);
           }
         }}
         onSubmit={() => {

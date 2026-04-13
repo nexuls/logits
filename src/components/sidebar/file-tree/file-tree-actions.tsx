@@ -1,4 +1,4 @@
-import { EllipsisIcon, FolderPlus, Plus, Settings2 } from "lucide-react";
+import { Download, EllipsisIcon, FolderPlus, Plus, Settings2 } from "lucide-react";
 import type { ReactNode } from "react";
 import {
   FileTreeContextActionMenu,
@@ -11,6 +11,7 @@ type SharedProps = {
   notebookId: string;
   hasActiveNotebook: boolean;
   onCreate: (parentId: string, type: "file" | "folder") => void;
+  onExportNotebook: () => void;
   onOpenNotebookSettings: () => void;
 };
 
@@ -27,6 +28,7 @@ function FileTreeNotebookActionItems({
   notebookId,
   hasActiveNotebook,
   onCreate,
+  onExportNotebook,
   onOpenNotebookSettings,
   Item,
   Separator,
@@ -42,6 +44,10 @@ function FileTreeNotebookActionItems({
         Create new folder
       </Item>
       <Separator />
+      <Item disabled={!hasActiveNotebook} onSelect={onExportNotebook}>
+        <Download className="size-4" />
+        Export notebook
+      </Item>
       <Item disabled={!hasActiveNotebook} onSelect={onOpenNotebookSettings}>
         <Settings2 className="size-4" />
         Notebook settings

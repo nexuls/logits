@@ -1,5 +1,9 @@
 import { DataModule, type ModuleScope } from "@/data/dataModule";
 import type { DbLike } from "@/data/dataModule";
+import type {
+  NotebookFile,
+  NotebookRecord,
+} from "@/data/modules/notebook/schema";
 import { fileContentSchema, type FileContentRecord } from "./schema";
 
 function nowIso() {
@@ -9,6 +13,57 @@ function nowIso() {
 function countLines(content: string) {
   if (content.length === 0) return 0;
   return content.split("\n").length;
+}
+
+export function createEmptyFileContentRecord(file: NotebookFile) {
+  return fileContentSchema.parse({
+    key: file.id,
+    id: file.id,
+    content: "",
+    charCount: 0,
+    lineCount: 0,
+    byteSize: 0,
+    createdAt: file.createdAt,
+    updatedAt: file.updatedAt,
+  });
+}
+
+export function createFileContentRecord(
+  fileId: string,
+  content: string,
+  createdAt: string,
+  updatedAt: string,
+) {
+  return fileContentSchema.parse({
+    key: fileId,
+    id: fileId,
+    content,
+    charCount: content.length,
+    lineCount: countLines(content),
+    byteSize: new TextEncoder().encode(content).length,
+    createdAt,
+    updatedAt,
+  });
+}
+
+export function normalizeNotebookFileContents(
+  notebook: NotebookRecord,
+  fileContents: FileContentRecord[],
+) {
+  const contentsById = new Map(
+    fileContents.map((record) => [record.id, fileContentSchema.parse(record)]),
+  );
+
+  return notebook.files.map((file) => {
+    const existing = contentsById.get(file.id);
+    if (!existing) return createEmptyFileContentRecord(file);
+
+    return fileContentSchema.parse({
+      ...existing,
+      key: file.id,
+      id: file.id,
+    });
+  });
 }
 
 export class FileContentModule extends DataModule<FileContentRecord> {
@@ -40,6 +95,10 @@ export class FileContentModule extends DataModule<FileContentRecord> {
 
     await this.saveRecord(next, scope);
     return next;
+  }
+
+  async importRecord(record: FileContentRecord, scope?: ModuleScope) {
+    return this.saveRecord(record, scope);
   }
 
   async deleteById(fileId: string, scope?: ModuleScope) {
