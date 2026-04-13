@@ -12,6 +12,7 @@ import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { AppFile, FileType } from "@/data/modules/notebook/client-types";
+import { useFileSelection } from "@/data/file-selection";
 import { useNotebooks } from "@/hooks/use-notebooks";
 import { buildNotebookUrl } from "@/lib/notebook-url";
 import { Input } from "@/components/ui/input";
@@ -44,6 +45,7 @@ type DropTarget = {
 
 export function FileTree({ notebookId, files, activeFileId }: Props) {
   const router = useRouter();
+  const { selectFile, clearSelection } = useFileSelection();
   const {
     notebooks,
     createFile,
@@ -169,7 +171,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
       return;
     }
 
-    router.push(buildNotebookUrl(notebookId, { fileId: file.id }));
+    selectFile(file.id);
   };
 
   const handleCreate = async (
@@ -197,7 +199,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
 
     startRename(createdFile);
     toast.success("File created");
-    router.push(buildNotebookUrl(notebookId, { fileId: createdFile.id }));
+    selectFile(createdFile.id);
   };
 
   const handleRenameNotebook = async () => {
@@ -270,7 +272,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
     toast.success("Duplicated");
 
     if (duplicatedFile.metadata.type !== "folder") {
-      router.push(buildNotebookUrl(notebookId, { fileId: duplicatedFile.id }));
+      selectFile(duplicatedFile.id);
     }
   };
 
@@ -279,7 +281,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
     toast.success("Deleted");
 
     if (activeFileId === file.id) {
-      router.push(buildNotebookUrl(notebookId));
+      clearSelection();
     }
   };
 

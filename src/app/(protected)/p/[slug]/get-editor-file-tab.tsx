@@ -11,6 +11,7 @@ import { getTextStats } from "@/components/editor/utils";
 import { updateFooter } from "@/components/footer/index";
 import type { TabsViewTab } from "@/components/tabs";
 import type { AppFile } from "@/data/modules/notebook/client-types";
+import { useFileSelection } from "@/data/file-selection";
 import { useNotebooks } from "@/hooks/use-notebooks";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 
@@ -19,7 +20,6 @@ import { getUnsupportedFileState, NotebookEmptyState } from "./helper";
 type EditorTabContentProps = {
   tabId: string;
   file: AppFile;
-  isActive: boolean;
   cursorMetaRef: RefObject<Record<string, CursorMeta>>;
   notebookFiles: AppFile[];
   selectedNotebook: { id: string; name: string };
@@ -29,28 +29,22 @@ type EditorTabContentProps = {
 function EditorTabContent({
   tabId,
   file,
-  isActive,
   cursorMetaRef,
   notebookFiles,
   selectedNotebook,
   navigateToFile,
 }: EditorTabContentProps) {
+  const { selectedFileId, selectedTabMode } = useFileSelection();
+  const isActive = selectedFileId === file.id && selectedTabMode === "editor";
   const { updateFileContent, getFileContent } = useNotebooks();
 
-  const [content, setContent] = useState(file.content);
+  const [content, setContent] = useState("");
   const [cursorMeta, setCursorMeta] = useState<CursorMeta>(
     cursorMetaRef.current[tabId] ?? DEFAULT_CURSOR_META,
   );
 
   const latestSaveRequestRef = useRef(0);
   const userChangedContentRef = useRef(false);
-
-  useEffect(() => {
-    setContent(file.content);
-    setCursorMeta(cursorMetaRef.current[tabId] ?? DEFAULT_CURSOR_META);
-    latestSaveRequestRef.current = 0;
-    userChangedContentRef.current = false;
-  }, [cursorMetaRef, file.content, tabId]);
 
   // Hydrate from content store once when opening file if user has not edited yet.
   useEffect(() => {
@@ -139,7 +133,6 @@ function EditorTabContent({
 type GetEditorFileTabParams = {
   tabId: string;
   file: AppFile;
-  isActive: boolean;
   cursorMetaRef: RefObject<Record<string, CursorMeta>>;
   notebookFiles: AppFile[];
   selectedNotebook: { id: string; name: string };
@@ -149,7 +142,6 @@ type GetEditorFileTabParams = {
 export const getEditorFileTab = ({
   tabId,
   file,
-  isActive,
   cursorMetaRef,
   notebookFiles,
   selectedNotebook,
@@ -193,7 +185,6 @@ export const getEditorFileTab = ({
         key={tabId}
         tabId={tabId}
         file={file}
-        isActive={isActive}
         cursorMetaRef={cursorMetaRef}
         notebookFiles={notebookFiles}
         selectedNotebook={selectedNotebook}

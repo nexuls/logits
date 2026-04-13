@@ -6,7 +6,10 @@ import {
   createFileContentRecord,
   normalizeNotebookFileContents,
 } from "@/data/modules/fileContent/functions";
-import { type FileContentRecord, fileContentSchema } from "@/data/modules/fileContent/schema";
+import {
+  type FileContentRecord,
+  fileContentSchema,
+} from "@/data/modules/fileContent/schema";
 import {
   notebookFileSchema,
   notebookSchema,
@@ -101,7 +104,10 @@ export function notebookFromJson(json: string) {
     ...payload.meta,
     files: payload.files,
   });
-  const fileContents = normalizeNotebookFileContents(notebook, payload.fileContents);
+  const fileContents = normalizeNotebookFileContents(
+    notebook,
+    payload.fileContents,
+  );
 
   return { notebook, fileContents };
 }
@@ -155,14 +161,15 @@ export function cloneImportedNotebookBundle(
     const source = sourceContentById.get(sourceFile.id);
     const nextFile = files.find((file) => file.id === nextFileId);
 
-    if (!source || !nextFile) return createEmptyFileContentRecord({
-      ...sourceFile,
-      id: nextFileId,
-      parentId:
-        sourceFile.parentId === input.notebook.id
-          ? nextNotebookId
-          : (fileIdMap.get(sourceFile.parentId) ?? nextNotebookId),
-    });
+    if (!source || !nextFile)
+      return createEmptyFileContentRecord({
+        ...sourceFile,
+        id: nextFileId,
+        parentId:
+          sourceFile.parentId === input.notebook.id
+            ? nextNotebookId
+            : (fileIdMap.get(sourceFile.parentId) ?? nextNotebookId),
+      });
 
     return createFileContentRecord(
       nextFile.id,

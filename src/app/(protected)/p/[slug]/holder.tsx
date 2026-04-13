@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import { TriangleAlertIcon } from "lucide-react";
 
 import {
@@ -13,11 +12,9 @@ import Header from "@/components/tabs/header";
 import { Spinner } from "@/components/ui/spinner";
 import TabsView from "@/components/tabs";
 import type { TabsViewTab } from "@/components/tabs";
-import { getTextStats } from "@/components/editor/utils";
-
 import { useNotebooks } from "@/hooks/use-notebooks";
+import { useFileSelection } from "@/data/file-selection";
 import type { AppFile } from "@/data/modules/notebook/client-types";
-import { buildNotebookUrl } from "@/lib/notebook-url";
 
 import { getEditorFileTab } from "./get-editor-file-tab";
 import { getEditorFilePreviewTab } from "./get-editor-file-preview-tab";
@@ -90,8 +87,8 @@ function readStoredTabIds(notebookId: string) {
 }
 
 export default function Holder({ slug }: { slug: string }) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const { selectedFileId, selectedTabMode, selectFile, clearSelection } =
+    useFileSelection();
   const { notebooks, isHydrating, getNotebookFiles } = useNotebooks();
 
   const [openTabIds, setOpenTabIds] = useState<string[]>([]);
@@ -118,10 +115,6 @@ export default function Holder({ slug }: { slug: string }) {
     return { notebookFiles, openableFiles, firstOpenableFile };
   }, [getNotebookFiles, selectedNotebook]);
 
-  // Derive selected file from query param for direct linking and navigation.
-  const selectedFileId = searchParams.get("file") ?? "";
-  const isPreviewTabView = searchParams.has("preview");
-  const selectedTabMode: TabViewMode = isPreviewTabView ? "preview" : "editor";
   const selectedTabId = selectedFileId
     ? getTabId(selectedFileId, selectedTabMode)
     : "";
@@ -153,34 +146,18 @@ export default function Holder({ slug }: { slug: string }) {
   const navigateToFile = useCallback(
     (fileId: string, mode?: TabViewMode) => {
       if (!selectedNotebook) return;
-
-      const nextParams = new URLSearchParams(searchParams.toString());
-      const targetMode = mode ?? selectedTabMode;
-
-      if (targetMode === "preview") {
-        nextParams.set("preview", "1");
-      } else {
-        nextParams.delete("preview");
-      }
-
-      router.push(
-        buildNotebookUrl(selectedNotebook.id, {
-          fileId,
-          searchParams: nextParams,
-        }),
-      );
+      selectFile(fileId, mode);
     },
-    [router, searchParams, selectedNotebook, selectedTabMode],
+    [selectFile, selectedNotebook],
   );
 
   const navigateToTab = useCallback(
     (tabId: string) => {
       const parsed = parseTabId(tabId);
       if (!parsed) return;
-
-      navigateToFile(parsed.fileId, parsed.mode);
+      selectFile(parsed.fileId, parsed.mode);
     },
-    [navigateToFile],
+    [selectFile],
   );
 
   // Restore persisted tabs for notebook.
@@ -231,40 +208,26 @@ export default function Holder({ slug }: { slug: string }) {
     );
   }, [isHydrating, loadedTabsSlug, selectedFile, selectedTabId, slug]);
 
-  // Redirect to a fallback file when query param points to a missing file.
+  // Select a fallback file when current selection points to a missing file.
   useEffect(() => {
-    if (!selectedNotebook || selectedFile) {
-      return;
-    }
+    if (!selectedNotebook || selectedFile) return;
 
     const fallbackTabId =
       openTabIds[openTabIds.length - 1] ??
       (firstOpenableFile ? getTabId(firstOpenableFile.id, "editor") : "");
 
-    if (!fallbackTabId) {
-      return;
-    }
+    if (!fallbackTabId) return;
 
     const parsedFallback = parseTabId(fallbackTabId);
     if (!parsedFallback) return;
 
-    const nextParams = new URLSearchParams(searchParams.toString());
-    if (parsedFallback.mode === "preview") nextParams.set("preview", "1");
-    else nextParams.delete("preview");
-
-    router.replace(
-      buildNotebookUrl(selectedNotebook.id, {
-        fileId: parsedFallback.fileId,
-        searchParams: nextParams,
-      }),
-    );
+    selectFile(parsedFallback.fileId, parsedFallback.mode);
   }, [
     firstOpenableFile,
     openTabIds,
-    router,
+    selectFile,
     selectedFile,
     selectedNotebook,
-    searchParams,
   ]);
 
   useEffect(() => {
@@ -327,7 +290,6 @@ export default function Holder({ slug }: { slug: string }) {
             return getEditorFileTab({
               tabId: tab.tabId,
               file: tab.file,
-              isActive: tab.tabId === selectedTabId,
               cursorMetaRef,
               selectedNotebook,
               notebookFiles,
@@ -335,14 +297,9 @@ export default function Holder({ slug }: { slug: string }) {
             });
           })
         : [],
-    [navigateToFile, notebookFiles, openTabs, selectedNotebook, selectedTabId],
+    [navigateToFile, notebookFiles, openTabs, selectedNotebook],
   );
 
-  const activeDraftContent = selectedFile?.content ?? "";
-  const markdownStats = useMemo(
-    () => getTextStats(activeDraftContent),
-    [activeDraftContent],
-  );
   const activeCursorMeta =
     cursorMetaRef.current[selectedTabId] ?? DEFAULT_CURSOR_META;
 
@@ -393,9 +350,10 @@ export default function Holder({ slug }: { slug: string }) {
           currentTabs[currentIndex + 1] ?? currentTabs[currentIndex - 1] ?? "";
 
         if (fallbackTabId) {
-          navigateToTab(fallbackTabId);
+          const parsed = parseTabId(fallbackTabId);
+          if (parsed) selectFile(parsed.fileId, parsed.mode);
         } else {
-          router.push(buildNotebookUrl(selectedNotebook.id));
+          clearSelection();
         }
       }
 
@@ -457,6 +415,7 @@ export default function Holder({ slug }: { slug: string }) {
           <TabsView
             tabs={tabs}
             activeTabId={selectedTabId}
+            inactiveTabMode="keep-mounted"
             defaultActiveTabId={
               firstOpenableFile
                 ? getTabId(firstOpenableFile.id, "editor")
@@ -474,7 +433,9 @@ export default function Holder({ slug }: { slug: string }) {
         markdownMeta={
           selectedFile?.metadata.type === "file"
             ? {
-                ...markdownStats,
+                lines: 0,
+                chars: 0,
+                words: 0,
                 line: activeCursorMeta.line,
                 col: activeCursorMeta.col,
                 tabSize: activeCursorMeta.tabSize,

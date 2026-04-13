@@ -22,11 +22,7 @@ function PreviewTabContent({
   navigateToFile,
 }: PreviewTabContentProps) {
   const { getFileContent } = useNotebooks();
-  const [content, setContent] = useState(file.content);
-
-  useEffect(() => {
-    setContent(file.content);
-  }, [file.content]);
+  const [content, setContent] = useState("");
 
   useEffect(() => {
     let isCancelled = false;

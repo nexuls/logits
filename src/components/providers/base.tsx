@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { ThemeProvider, useTheme } from "next-themes";
 import { useUserSettings } from "@/hooks/use-user-settings";
 import {
@@ -21,6 +22,7 @@ import {
 } from "@/color-schemes";
 import { writeResolvedSystemThemeToCookie } from "@/data/modules/app/cookie";
 import { DataStoreProvider } from "@/data/context";
+import { FileSelectionProvider } from "@/data/file-selection";
 import { SidebarProvider } from "../ui/sidebar";
 import { Toaster } from "../ui/sonner";
 import { TooltipProvider } from "../ui/tooltip";
@@ -103,6 +105,10 @@ function SettingsThemeSync() {
 
 export default function BaseProvider({ children, initialSettings }: Props) {
   const defaultTheme = initialSettings?.appearance?.theme ?? "system";
+  const pathname = usePathname();
+  const notebookId = pathname.startsWith("/p/")
+    ? decodeURIComponent(pathname.split("/")[2] ?? "")
+    : "";
 
   return (
     <ThemeProvider
@@ -116,9 +122,11 @@ export default function BaseProvider({ children, initialSettings }: Props) {
         <DataStoreProvider initialSettings={initialSettings}>
           <SettingsThemeSync />
           <SidebarProvider>
-            <AppSidebar />
-            {children}
-            <Toaster />
+            <FileSelectionProvider notebookId={notebookId}>
+              <AppSidebar />
+              {children}
+              <Toaster />
+            </FileSelectionProvider>
           </SidebarProvider>
         </DataStoreProvider>
       </TooltipProvider>

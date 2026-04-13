@@ -32,7 +32,6 @@ export type FileMetadata = {
 export type AppFile = {
   id: string;
   name: string;
-  content: string;
   metadata: FileMetadata;
 };
 
@@ -49,11 +48,10 @@ export function toClientNotebook(record: NotebookRecord): Notebook {
   };
 }
 
-export function toClientFile(file: NotebookFile, content: string): AppFile {
+export function toClientFile(file: NotebookFile): AppFile {
   return {
     id: file.id,
     name: file.name,
-    content,
     metadata: {
       url: file.url,
       size: file.size,

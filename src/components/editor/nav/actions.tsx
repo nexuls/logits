@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
 import { Ellipsis, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +11,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { buildNotebookUrl } from "@/lib/notebook-url";
+import { useFileSelection } from "@/data/file-selection";
 
 type Props = {
   notebookId: string;
@@ -27,22 +26,12 @@ export function NotebookActions(props: Props) {
   );
 }
 
-function EditorMenu({ notebookId, activeFileId }: Props) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+function EditorMenu({ activeFileId }: Props) {
+  const { selectFile } = useFileSelection();
 
   const openPreviewInTabView = () => {
     if (!activeFileId) return;
-
-    const nextParams = new URLSearchParams(searchParams.toString());
-    nextParams.set("preview", "1");
-
-    router.push(
-      buildNotebookUrl(notebookId, {
-        fileId: activeFileId,
-        searchParams: nextParams,
-      }),
-    );
+    selectFile(activeFileId, "preview");
   };
 
   return (

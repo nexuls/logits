@@ -1,4 +1,10 @@
-import { Download, EllipsisIcon, FolderPlus, Plus, Settings2 } from "lucide-react";
+import {
+  Download,
+  EllipsisIcon,
+  FolderPlus,
+  Plus,
+  Settings2,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import {
   FileTreeContextActionMenu,

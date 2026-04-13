@@ -31,13 +31,12 @@ export function useNotebooks() {
 
     for (const notebook of notebookRecords) {
       for (const file of notebook.files) {
-        const content = fileContents.get(file.id)?.content ?? "";
-        items.push(toClientFile(file, content));
+        items.push(toClientFile(file));
       }
     }
 
     return items;
-  }, [fileContents, notebookRecords]);
+  }, [notebookRecords]);
 
   const getNotebookFiles = useCallback(
     (notebookId: string) => {
@@ -72,8 +71,7 @@ export function useNotebooks() {
         const nextFile = byId.get(nextId);
         if (!nextFile) continue;
 
-        const content = fileContents.get(nextFile.id)?.content ?? "";
-        visibleFiles.push(toClientFile(nextFile, content));
+        visibleFiles.push(toClientFile(nextFile));
 
         const children = sortFiles(childrenByParent.get(nextFile.id) ?? []);
         for (const child of children) {
@@ -83,7 +81,7 @@ export function useNotebooks() {
 
       return visibleFiles;
     },
-    [fileContents, notebookRecords],
+    [notebookRecords],
   );
 
   const getFileContent = useCallback(
@@ -194,7 +192,7 @@ export function useNotebooks() {
         return next;
       });
 
-      return toClientFile(created.file, "");
+      return toClientFile(created.file);
     },
     [setFileContents, store],
   );
@@ -261,7 +259,7 @@ export function useNotebooks() {
           await store.fileContent.upsert(clonedId, duplicatedRootContent);
         }
 
-        duplicated = toClientFile(result.file, duplicatedRootContent);
+        duplicated = toClientFile(result.file);
       });
 
       return duplicated;
