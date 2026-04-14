@@ -163,7 +163,7 @@ export function NotebookBreadcrumbs({
       <Breadcrumb>
         <BreadcrumbList className="flex-nowrap gap-1 sm:gap-1">
           <BreadcrumbItem className="shrink-0 gap-1">
-            <BreadcrumbPage className="max-w-72 truncate text-xs">
+            <BreadcrumbPage className="max-w-72 truncate text-xs text-muted-foreground/80">
               {notebookName}
             </BreadcrumbPage>
           </BreadcrumbItem>
@@ -178,7 +178,7 @@ export function NotebookBreadcrumbs({
                       <Button
                         variant="link"
                         size="xs"
-                        className="h-6 max-w-52 gap-1 px-0! text-muted-foreground hover:text-foreground data-[state=open]:text-foreground"
+                        className="h-6 max-w-52 gap-1 px-0! text-muted-foreground/80 hover:text-foreground data-[state=open]:text-foreground"
                       >
                         <FolderOpen className="size-3.5 shrink-0" />
                         <span className="truncate">{segment.file.name}</span>
@@ -197,12 +197,12 @@ export function NotebookBreadcrumbs({
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : segment.isCurrent ? (
-                  <BreadcrumbPage className="max-w-72 truncate text-xs">
+                  <BreadcrumbPage className="max-w-72 truncate text-xs text-muted-foreground/80">
                     {segment.file.name}
                   </BreadcrumbPage>
                 ) : (
                   <BreadcrumbLink
-                    className="max-w-52 truncate text-xs"
+                    className="max-w-52 truncate text-xs text-muted-foreground/80 hover:text-foreground"
                     onClick={() => onNavigateToFile(segment.file.id)}
                   >
                     {segment.file.name}
