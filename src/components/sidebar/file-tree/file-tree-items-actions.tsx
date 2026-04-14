@@ -123,7 +123,7 @@ export function FileTreeItemActions(props: SharedProps) {
     <FileTreeDropdownActionMenu
       ariaLabel={`${props.file.name} actions`}
       trigger={<EllipsisVertical className="size-4" />}
-      buttonClassName="size-7 shrink-0 rounded-md text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-sidebar-accent hover:text-foreground"
+      buttonClassName="size-7 shrink-0 rounded-md text-muted-foreground md:opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 hover:bg-sidebar-accent hover:text-foreground"
       renderActions={({ Item, Separator }) => (
         <FileTreeActionItems {...props} Item={Item} Separator={Separator} />
       )}
