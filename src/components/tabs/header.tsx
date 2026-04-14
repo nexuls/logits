@@ -50,9 +50,13 @@ export default function Header(props: HeaderProps) {
           <div className="min-w-0 flex-1" />
         ) : (
           <>
+            <div className="flex min-w-0 flex-1 items-center justify-center truncate px-2 text-sm font-medium md:hidden">
+              {orderedTabs.find((tab) => tab.isActive)?.name ?? ""}
+            </div>
+
             <div
               ref={setContainerRef}
-              className="relative flex w-full min-w-0 grow max-w-full gap-1 -mb-0.5"
+              className="relative hidden w-full min-w-0 grow max-w-full gap-1 -mb-0.5 md:flex"
             >
               {orderedTabs.map((tab) => {
                 const Icon = getTabIcon(tab.type);
