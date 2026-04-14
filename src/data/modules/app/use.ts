@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo } from "react";
 import { useDataStore } from "../../context";
-import type { UserSettings } from "./settings";
+import { normalizeUserSettings, type UserSettings } from "./settings";
 
 export function useAppModule() {
   const { store, isHydrating } = useDataStore();
@@ -13,7 +13,8 @@ export function useAppModule() {
 
   const setSettings = useCallback(
     async (settings: UserSettings) => {
-      return store.app.setSettings(settings);
+      const result = await store.app.setSettings(settings);
+      return normalizeUserSettings(result.record.settings);
     },
     [store],
   );
@@ -22,7 +23,8 @@ export function useAppModule() {
     async (
       updater: (currentSettings: UserSettings) => Partial<UserSettings>,
     ) => {
-      return store.app.updateSettings(updater);
+      const result = await store.app.updateSettings(updater);
+      return normalizeUserSettings(result.record.settings);
     },
     [store],
   );

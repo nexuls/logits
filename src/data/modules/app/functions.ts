@@ -1,6 +1,7 @@
 import { DataModule, type ModuleScope } from "@/data/dataModule";
 import { appRecordId, appRecordSchema, type AppRecord } from "./schema";
 import {
+  areUserSettingsEqual,
   createInitialUserSettings,
   normalizeUserSettings,
   type UserSettings,
@@ -9,6 +10,12 @@ import {
 function nowIso() {
   return new Date().toISOString();
 }
+
+export type SettingsMutationResult = {
+  record: AppRecord;
+  settings: UserSettings;
+  changed: boolean;
+};
 
 export class AppModule extends DataModule<AppRecord> {
   constructor(getDb: () => Promise<import("@/data/dataModule").DbLike>) {
@@ -39,15 +46,30 @@ export class AppModule extends DataModule<AppRecord> {
 
   async setSettings(nextSettings: UserSettings, scope?: ModuleScope) {
     const record = await this.getRecord(scope);
+    const normalizedSettings = normalizeUserSettings(nextSettings);
 
-    return this.saveRecord(
+    if (areUserSettingsEqual(record.settings, normalizedSettings)) {
+      return {
+        record,
+        settings: normalizeUserSettings(record.settings),
+        changed: false,
+      } satisfies SettingsMutationResult;
+    }
+
+    const savedRecord = await this.saveRecord(
       {
         ...record,
-        settings: normalizeUserSettings(nextSettings),
+        settings: normalizedSettings,
         updatedAt: nowIso(),
       },
       scope,
     );
+
+    return {
+      record: savedRecord,
+      settings: normalizeUserSettings(savedRecord.settings),
+      changed: true,
+    } satisfies SettingsMutationResult;
   }
 
   async updateSettings(

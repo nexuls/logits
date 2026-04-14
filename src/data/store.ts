@@ -6,6 +6,10 @@ import {
 } from "../lib/broadcast";
 import type { DbLike } from "./dataModule";
 import { AppModule } from "./modules/app/functions";
+import {
+  normalizeUserSettings,
+  type UserSettings,
+} from "./modules/app/settings";
 import type { AppRecord } from "./modules/app/schema";
 import { FileContentModule } from "./modules/fileContent/functions";
 import type { FileContentRecord } from "./modules/fileContent/schema";
@@ -46,7 +50,11 @@ export interface LogitsDbSchema extends DBSchema {
 
 export type DataStoreEvent =
   | { type: "structure-changed" }
-  | { type: "settings-updated" }
+  | {
+      type: "settings-updated";
+      settings: UserSettings;
+      updatedAt: string;
+    }
   | { type: "file-content-updated"; notebookId: string; fileId: string };
 
 const DB_NAME = "logits";
@@ -55,6 +63,10 @@ const DB_VERSION = 3;
 type StoreName = "appPreferences" | "notebooks" | "fileContents" | "meta";
 
 let dbPromise: Promise<IDBPDatabase<LogitsDbSchema>> | null = null;
+type DataStoreEventResolver<T> =
+  | DataStoreEvent
+  | null
+  | ((result: T) => DataStoreEvent | null);
 
 function ensureStore(
   database: IDBPDatabase<LogitsDbSchema>,
@@ -115,6 +127,15 @@ export class DataStore {
     }
 
     this.releaseBroadcastSubscription = subscribeToDataStoreEvents((event) => {
+      if (event.type === "settings-updated") {
+        this.notifyListeners({
+          type: "settings-updated",
+          settings: normalizeUserSettings(event.settings),
+          updatedAt: event.updatedAt,
+        });
+        return;
+      }
+
       this.notifyListeners(event);
     });
 
@@ -131,19 +152,31 @@ export class DataStore {
 
   async enqueueWrite<T>(
     operation: () => Promise<T>,
-    event: DataStoreEvent = { type: "structure-changed" },
+    event: DataStoreEventResolver<T> = { type: "structure-changed" },
   ) {
     const queued = this.pendingWritePromise.then(
       async () => {
         const result = await operation();
-        this.notifyListeners(event);
-        broadcastDataStoreEvent(event);
+        const resolvedEvent =
+          typeof event === "function" ? event(result) : event;
+
+        if (resolvedEvent) {
+          this.notifyListeners(resolvedEvent);
+          broadcastDataStoreEvent(resolvedEvent);
+        }
+
         return result;
       },
       async () => {
         const result = await operation();
-        this.notifyListeners(event);
-        broadcastDataStoreEvent(event);
+        const resolvedEvent =
+          typeof event === "function" ? event(result) : event;
+
+        if (resolvedEvent) {
+          this.notifyListeners(resolvedEvent);
+          broadcastDataStoreEvent(resolvedEvent);
+        }
+
         return result;
       },
     );

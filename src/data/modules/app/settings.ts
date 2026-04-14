@@ -187,3 +187,10 @@ export function normalizeUserSettings(value: unknown): UserSettings {
 
   return {};
 }
+
+export function areUserSettingsEqual(left: UserSettings, right: UserSettings) {
+  return (
+    JSON.stringify(normalizeUserSettings(left)) ===
+    JSON.stringify(normalizeUserSettings(right))
+  );
+}

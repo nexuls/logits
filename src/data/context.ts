@@ -7,12 +7,14 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type Dispatch,
   type ReactNode,
   type SetStateAction,
 } from "react";
 import {
+  areUserSettingsEqual,
   createInitialUserSettings,
   normalizeUserSettings,
   type UserSettings,
@@ -80,6 +82,32 @@ export function DataStoreProvider({
   const [settings, setSettingsState] = useState<UserSettings>(
     normalizedInitialSettings,
   );
+  const settingsUpdatedAtRef = useRef<string | null>(null);
+
+  const applySettingsSnapshot = useCallback(
+    (nextSettings: UserSettings, updatedAt?: string | null) => {
+      const normalized = normalizeUserSettings(nextSettings);
+
+      if (
+        updatedAt &&
+        settingsUpdatedAtRef.current &&
+        updatedAt < settingsUpdatedAtRef.current
+      ) {
+        return normalized;
+      }
+
+      if (updatedAt) {
+        settingsUpdatedAtRef.current = updatedAt;
+      }
+
+      setSettingsState((current) =>
+        areUserSettingsEqual(current, normalized) ? current : normalized,
+      );
+      writeUserSettingsToCookie(normalized);
+      return normalized;
+    },
+    [],
+  );
 
   const reloadNotebooks = useCallback(async () => {
     const nextNotebooks = await store.listNotebooks();
@@ -89,16 +117,13 @@ export function DataStoreProvider({
   }, [store]);
 
   const reloadSettings = useCallback(async () => {
-    const next = await store.app.getSettings();
-    setSettingsState(next);
-    writeUserSettingsToCookie(next);
-    return next;
-  }, [store]);
+    const record = await store.app.getRecord();
+    return applySettingsSnapshot(record.settings, record.updatedAt);
+  }, [applySettingsSnapshot, store]);
 
   useEffect(() => {
-    setSettingsState(normalizedInitialSettings);
-    writeUserSettingsToCookie(normalizedInitialSettings);
-  }, [normalizedInitialSettings]);
+    applySettingsSnapshot(normalizedInitialSettings, null);
+  }, [applySettingsSnapshot, normalizedInitialSettings]);
 
   useEffect(() => {
     let isMounted = true;
@@ -133,7 +158,7 @@ export function DataStoreProvider({
       }
 
       if (event.type === "settings-updated") {
-        void reloadSettings();
+        applySettingsSnapshot(event.settings, event.updatedAt);
         return;
       }
 
@@ -160,7 +185,7 @@ export function DataStoreProvider({
         })();
       }
     });
-  }, [reloadNotebooks, reloadSettings, store]);
+  }, [applySettingsSnapshot, reloadNotebooks, store]);
 
   const value = useMemo(
     () => ({

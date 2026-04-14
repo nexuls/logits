@@ -3,33 +3,41 @@ const DATA_STORE_STORAGE_KEY = "logits:data-store:event";
 const MAX_SEEN_MESSAGE_IDS = 512;
 
 export type BroadcastDataStoreEvent =
-	| { type: "structure-changed" }
-	| { type: "settings-updated" }
-	| { type: "file-content-updated"; notebookId: string; fileId: string };
+  | { type: "structure-changed" }
+  | {
+      type: "settings-updated";
+      settings: unknown;
+      updatedAt: string;
+    }
+  | { type: "file-content-updated"; notebookId: string; fileId: string };
 
 type BroadcastEnvelopeBase = {
-	messageId: string;
-	sourceId: string;
-	sentAt: number;
+  messageId: string;
+  sourceId: string;
+  sentAt: number;
 };
 
 export type DataStoreBroadcastMessage =
-	| (BroadcastEnvelopeBase & { type: "structure-changed" })
-	| (BroadcastEnvelopeBase & { type: "settings-updated" })
-	| (BroadcastEnvelopeBase & {
-			type: "file-content-updated";
-			notebookId: string;
-			fileId: string;
-		});
+  | (BroadcastEnvelopeBase & { type: "structure-changed" })
+  | (BroadcastEnvelopeBase & {
+      type: "settings-updated";
+      settings: unknown;
+      updatedAt: string;
+    })
+  | (BroadcastEnvelopeBase & {
+      type: "file-content-updated";
+      notebookId: string;
+      fileId: string;
+    });
 
 export type ServiceWorkerBroadcastMessage = BroadcastEnvelopeBase & {
-	type: "service-worker-message";
-	payload: unknown;
+  type: "service-worker-message";
+  payload: unknown;
 };
 
 export type CrossTabMessage =
-	| DataStoreBroadcastMessage
-	| ServiceWorkerBroadcastMessage;
+  | DataStoreBroadcastMessage
+  | ServiceWorkerBroadcastMessage;
 
 const tabSourceId = createSourceId();
 const seenMessageIds = new Set<string>();
@@ -38,262 +46,289 @@ let dataStoreChannel: BroadcastChannel | null = null;
 let localStorageSupported: boolean | null = null;
 
 function createSourceId() {
-	if (
-		typeof globalThis !== "undefined" &&
-		typeof globalThis.crypto?.randomUUID === "function"
-	) {
-		return globalThis.crypto.randomUUID();
-	}
+  if (
+    typeof globalThis !== "undefined" &&
+    typeof globalThis.crypto?.randomUUID === "function"
+  ) {
+    return globalThis.crypto.randomUUID();
+  }
 
-	return `tab-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  return `tab-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === "object";
+  return value !== null && typeof value === "object";
 }
 
 function getChannel() {
-	if (typeof globalThis === "undefined") return null;
-	if (typeof globalThis.BroadcastChannel !== "function") return null;
+  if (typeof globalThis === "undefined") return null;
+  if (typeof globalThis.BroadcastChannel !== "function") return null;
 
-	if (!dataStoreChannel) {
-		dataStoreChannel = new globalThis.BroadcastChannel(DATA_STORE_CHANNEL_NAME);
-	}
+  if (!dataStoreChannel) {
+    dataStoreChannel = new globalThis.BroadcastChannel(DATA_STORE_CHANNEL_NAME);
+  }
 
-	return dataStoreChannel;
+  return dataStoreChannel;
 }
 
 function canUseLocalStorage() {
-	if (localStorageSupported !== null) return localStorageSupported;
-	if (typeof globalThis === "undefined") {
-		localStorageSupported = false;
-		return localStorageSupported;
-	}
+  if (localStorageSupported !== null) return localStorageSupported;
+  if (typeof globalThis === "undefined") {
+    localStorageSupported = false;
+    return localStorageSupported;
+  }
 
-	try {
-		localStorageSupported = typeof globalThis.localStorage !== "undefined";
-	} catch {
-		localStorageSupported = false;
-	}
+  try {
+    localStorageSupported = typeof globalThis.localStorage !== "undefined";
+  } catch {
+    localStorageSupported = false;
+  }
 
-	return localStorageSupported;
+  return localStorageSupported;
 }
 
 function postMessageWithFallback(message: CrossTabMessage) {
-	rememberMessage(message.messageId);
+  rememberMessage(message.messageId);
 
-	const channel = getChannel();
-	if (channel) {
-		channel.postMessage(message);
-		return;
-	}
+  const channel = getChannel();
+  if (channel) {
+    channel.postMessage(message);
+    return;
+  }
 
-	if (!canUseLocalStorage()) return;
+  if (!canUseLocalStorage()) return;
 
-	const envelope = {
-		nonce: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-		message,
-	};
+  const envelope = {
+    nonce: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    message,
+  };
 
-	try {
-		globalThis.localStorage.setItem(
-			DATA_STORE_STORAGE_KEY,
-			JSON.stringify(envelope),
-		);
-	} catch {
-		// Ignore storage write failures in restricted environments.
-	}
+  try {
+    globalThis.localStorage.setItem(
+      DATA_STORE_STORAGE_KEY,
+      JSON.stringify(envelope),
+    );
+  } catch {
+    // Ignore storage write failures in restricted environments.
+  }
 }
 
 function toEnvelopeBase(): BroadcastEnvelopeBase {
-	return {
-		messageId: createMessageId(),
-		sourceId: tabSourceId,
-		sentAt: Date.now(),
-	};
+  return {
+    messageId: createMessageId(),
+    sourceId: tabSourceId,
+    sentAt: Date.now(),
+  };
 }
 
 function createMessageId() {
-	return `${tabSourceId}:${Date.now()}:${Math.random().toString(16).slice(2)}`;
+  return `${tabSourceId}:${Date.now()}:${Math.random().toString(16).slice(2)}`;
 }
 
 function rememberMessage(messageId: string) {
-	seenMessageIds.add(messageId);
+  seenMessageIds.add(messageId);
 
-	if (seenMessageIds.size <= MAX_SEEN_MESSAGE_IDS) return;
+  if (seenMessageIds.size <= MAX_SEEN_MESSAGE_IDS) return;
 
-	const overflowCount = seenMessageIds.size - MAX_SEEN_MESSAGE_IDS;
-	for (let index = 0; index < overflowCount; index += 1) {
-		const oldest = seenMessageIds.values().next();
-		if (oldest.done) return;
+  const overflowCount = seenMessageIds.size - MAX_SEEN_MESSAGE_IDS;
+  for (let index = 0; index < overflowCount; index += 1) {
+    const oldest = seenMessageIds.values().next();
+    if (oldest.done) return;
 
-		seenMessageIds.delete(oldest.value);
-	}
+    seenMessageIds.delete(oldest.value);
+  }
 }
 
 function hasSeenMessage(messageId: string) {
-	return seenMessageIds.has(messageId);
+  return seenMessageIds.has(messageId);
 }
 
 function toDataStoreBroadcastMessage(
-	event: BroadcastDataStoreEvent,
+  event: BroadcastDataStoreEvent,
 ): DataStoreBroadcastMessage {
-	if (event.type === "file-content-updated") {
-		return {
-			...toEnvelopeBase(),
-			type: "file-content-updated",
-			notebookId: event.notebookId,
-			fileId: event.fileId,
-		};
-	}
+  if (event.type === "settings-updated") {
+    return {
+      ...toEnvelopeBase(),
+      type: "settings-updated",
+      settings: event.settings,
+      updatedAt: event.updatedAt,
+    };
+  }
 
-	return {
-		...toEnvelopeBase(),
-		type: event.type,
-	};
+  if (event.type === "file-content-updated") {
+    return {
+      ...toEnvelopeBase(),
+      type: "file-content-updated",
+      notebookId: event.notebookId,
+      fileId: event.fileId,
+    };
+  }
+
+  return {
+    ...toEnvelopeBase(),
+    type: event.type,
+  };
 }
 
-function isBroadcastEnvelopeBase(value: unknown): value is BroadcastEnvelopeBase {
-	if (!isObject(value)) return false;
+function isBroadcastEnvelopeBase(
+  value: unknown,
+): value is BroadcastEnvelopeBase {
+  if (!isObject(value)) return false;
 
-	return (
-		typeof value.messageId === "string" &&
-		typeof value.sourceId === "string" &&
-		typeof value.sentAt === "number" &&
-		Number.isFinite(value.sentAt)
-	);
+  return (
+    typeof value.messageId === "string" &&
+    typeof value.sourceId === "string" &&
+    typeof value.sentAt === "number" &&
+    Number.isFinite(value.sentAt)
+  );
 }
 
 function isDataStoreBroadcastMessage(
-	value: unknown,
+  value: unknown,
 ): value is DataStoreBroadcastMessage {
-	if (!isBroadcastEnvelopeBase(value) || !isObject(value)) return false;
+  if (!isBroadcastEnvelopeBase(value) || !isObject(value)) return false;
 
-	const record = value as Record<string, unknown>;
-	const type = record.type;
+  const record = value as Record<string, unknown>;
+  const type = record.type;
 
-	if (type === "structure-changed") return true;
-	if (type === "settings-updated") return true;
+  if (type === "structure-changed") return true;
+  if (
+    type === "settings-updated" &&
+    typeof record.updatedAt === "string" &&
+    record.updatedAt.length > 0
+  ) {
+    return true;
+  }
 
-	return (
-		type === "file-content-updated" &&
-		typeof record.notebookId === "string" &&
-		typeof record.fileId === "string"
-	);
+  return (
+    type === "file-content-updated" &&
+    typeof record.notebookId === "string" &&
+    typeof record.fileId === "string"
+  );
 }
 
 function isServiceWorkerBroadcastMessage(
-	value: unknown,
+  value: unknown,
 ): value is ServiceWorkerBroadcastMessage {
-	if (!isBroadcastEnvelopeBase(value) || !isObject(value)) return false;
+  if (!isBroadcastEnvelopeBase(value) || !isObject(value)) return false;
 
-	const record = value as Record<string, unknown>;
+  const record = value as Record<string, unknown>;
 
-	return (
-		record.type === "service-worker-message"
-	);
+  return record.type === "service-worker-message";
 }
 
 export function isCrossTabMessage(value: unknown): value is CrossTabMessage {
-	return (
-		isDataStoreBroadcastMessage(value) || isServiceWorkerBroadcastMessage(value)
-	);
+  return (
+    isDataStoreBroadcastMessage(value) || isServiceWorkerBroadcastMessage(value)
+  );
 }
 
 export function broadcastDataStoreEvent(event: BroadcastDataStoreEvent) {
-	postMessageWithFallback(toDataStoreBroadcastMessage(event));
+  postMessageWithFallback(toDataStoreBroadcastMessage(event));
 }
 
 export function subscribeToDataStoreEvents(
-	listener: (event: BroadcastDataStoreEvent) => void,
+  listener: (event: BroadcastDataStoreEvent) => void,
 ) {
-	const handleMessage = (message: unknown) => {
-		if (!isDataStoreBroadcastMessage(message)) return;
-		if (message.sourceId === tabSourceId) return;
-		if (hasSeenMessage(message.messageId)) return;
+  const handleMessage = (message: unknown) => {
+    if (!isDataStoreBroadcastMessage(message)) return;
+    if (message.sourceId === tabSourceId) return;
+    if (hasSeenMessage(message.messageId)) return;
 
-		rememberMessage(message.messageId);
+    rememberMessage(message.messageId);
 
-		if (message.type === "file-content-updated") {
-			listener({
-				type: "file-content-updated",
-				notebookId: message.notebookId,
-				fileId: message.fileId,
-			});
-			return;
-		}
+    if (message.type === "file-content-updated") {
+      listener({
+        type: "file-content-updated",
+        notebookId: message.notebookId,
+        fileId: message.fileId,
+      });
+      return;
+    }
 
-		listener({ type: message.type });
-	};
+    if (message.type === "settings-updated") {
+      listener({
+        type: "settings-updated",
+        settings: message.settings,
+        updatedAt: message.updatedAt,
+      });
+      return;
+    }
 
-	const channel = getChannel();
-	const releaseCallbacks: Array<() => void> = [];
+    listener({ type: "structure-changed" });
+  };
 
-	if (channel) {
-		const onChannelMessage = (event: MessageEvent<unknown>) => {
-			handleMessage(event.data);
-		};
+  const channel = getChannel();
+  const releaseCallbacks: Array<() => void> = [];
 
-		channel.addEventListener("message", onChannelMessage);
-		releaseCallbacks.push(() => {
-			channel.removeEventListener("message", onChannelMessage);
-		});
-	}
+  if (channel) {
+    const onChannelMessage = (event: MessageEvent<unknown>) => {
+      handleMessage(event.data);
+    };
 
-	if (canUseLocalStorage() && typeof globalThis.addEventListener === "function") {
-		const onStorage = (event: StorageEvent) => {
-			if (event.key !== DATA_STORE_STORAGE_KEY) return;
-			if (!event.newValue) return;
-			if (event.storageArea !== globalThis.localStorage) return;
+    channel.addEventListener("message", onChannelMessage);
+    releaseCallbacks.push(() => {
+      channel.removeEventListener("message", onChannelMessage);
+    });
+  }
 
-			try {
-				const parsed = JSON.parse(event.newValue) as {
-					message?: unknown;
-				};
+  if (
+    canUseLocalStorage() &&
+    typeof globalThis.addEventListener === "function"
+  ) {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== DATA_STORE_STORAGE_KEY) return;
+      if (!event.newValue) return;
+      if (event.storageArea !== globalThis.localStorage) return;
 
-				handleMessage(parsed.message);
-			} catch {
-				// Ignore malformed payloads.
-			}
-		};
+      try {
+        const parsed = JSON.parse(event.newValue) as {
+          message?: unknown;
+        };
 
-		globalThis.addEventListener("storage", onStorage);
-		releaseCallbacks.push(() => {
-			globalThis.removeEventListener("storage", onStorage);
-		});
-	}
+        handleMessage(parsed.message);
+      } catch {
+        // Ignore malformed payloads.
+      }
+    };
 
-	if (releaseCallbacks.length === 0) return () => {};
+    globalThis.addEventListener("storage", onStorage);
+    releaseCallbacks.push(() => {
+      globalThis.removeEventListener("storage", onStorage);
+    });
+  }
 
-	return () => {
-		for (const release of releaseCallbacks) {
-			release();
-		}
-	};
+  if (releaseCallbacks.length === 0) return () => {};
+
+  return () => {
+    for (const release of releaseCallbacks) {
+      release();
+    }
+  };
 }
 
 export function broadcastServiceWorkerMessage(payload: unknown) {
-	postMessageWithFallback({
-		...toEnvelopeBase(),
-		type: "service-worker-message",
-		payload,
-	} satisfies ServiceWorkerBroadcastMessage);
+  postMessageWithFallback({
+    ...toEnvelopeBase(),
+    type: "service-worker-message",
+    payload,
+  } satisfies ServiceWorkerBroadcastMessage);
 }
 
 export function bindServiceWorkerToBroadcast() {
-	if (typeof globalThis === "undefined") return () => {};
-	if (!("navigator" in globalThis)) return () => {};
+  if (typeof globalThis === "undefined") return () => {};
+  if (!("navigator" in globalThis)) return () => {};
 
-	const { serviceWorker } = globalThis.navigator;
-	if (!serviceWorker) return () => {};
+  const { serviceWorker } = globalThis.navigator;
+  if (!serviceWorker) return () => {};
 
-	const onServiceWorkerMessage = (event: MessageEvent<unknown>) => {
-		broadcastServiceWorkerMessage(event.data);
-	};
+  const onServiceWorkerMessage = (event: MessageEvent<unknown>) => {
+    broadcastServiceWorkerMessage(event.data);
+  };
 
-	serviceWorker.addEventListener("message", onServiceWorkerMessage);
+  serviceWorker.addEventListener("message", onServiceWorkerMessage);
 
-	return () => {
-		serviceWorker.removeEventListener("message", onServiceWorkerMessage);
-	};
+  return () => {
+    serviceWorker.removeEventListener("message", onServiceWorkerMessage);
+  };
 }

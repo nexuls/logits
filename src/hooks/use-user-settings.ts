@@ -3,6 +3,7 @@
 import { useCallback, useMemo } from "react";
 import { useDataStore } from "@/data/context";
 import {
+  areUserSettingsEqual,
   createInitialUserSettings,
   normalizeUserSettings,
 } from "@/data/modules/app/settings";
@@ -24,11 +25,20 @@ export function useUserSettings() {
     ) => {
       const saved = await store.enqueueWrite(
         () => store.app.setSettings(nextSettings),
-        { type: "settings-updated" },
+        (result) =>
+          result.changed
+            ? {
+                type: "settings-updated",
+                settings: result.settings,
+                updatedAt: result.record.updatedAt,
+              }
+            : null,
       );
 
       const normalized = normalizeUserSettings(saved.settings);
-      setSettingsState(normalized);
+      setSettingsState((current) =>
+        areUserSettingsEqual(current, normalized) ? current : normalized,
+      );
       writeUserSettingsToCookie(normalized);
       return normalized;
     },
@@ -43,11 +53,20 @@ export function useUserSettings() {
     ) => {
       const saved = await store.enqueueWrite(
         () => store.app.updateSettings(updater),
-        { type: "settings-updated" },
+        (result) =>
+          result.changed
+            ? {
+                type: "settings-updated",
+                settings: result.settings,
+                updatedAt: result.record.updatedAt,
+              }
+            : null,
       );
 
       const normalized = normalizeUserSettings(saved.settings);
-      setSettingsState(normalized);
+      setSettingsState((current) =>
+        areUserSettingsEqual(current, normalized) ? current : normalized,
+      );
       writeUserSettingsToCookie(normalized);
       return normalized;
     },

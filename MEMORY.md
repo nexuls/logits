@@ -32,6 +32,7 @@
 - Data writes are queued through a promise chain to preserve ordering under rapid UI updates.
 - New modular store path started: a `DataStore` queue now serializes module-level write operations to preserve ordering guarantees for cross-store transactions.
 - User settings are persisted to both IndexedDB and cookies to keep SSR/CSR appearance state aligned.
+- Cross-tab settings sync now carries the normalized settings payload plus `updatedAt`, so tabs apply fresh settings directly without a follow-up IndexedDB read and can ignore stale out-of-order updates.
 - Local storage is used for notebook-scoped ephemeral UI state (open tabs), separate from canonical notebook/file data.
 
 ## Error Handling Decisions
