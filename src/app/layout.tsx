@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import type { CSSProperties } from "react";
 import BaseProvider from "@/components/providers/base";
@@ -30,6 +30,15 @@ export const metadata: Metadata = {
   title: "Logits",
   description:
     "A modern notebook workspace for writing, organizing, and editing notes.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  minimumScale: 1,
+  userScalable: false,
+  interactiveWidget: "resizes-content",
 };
 
 export default async function RootLayout({
@@ -90,10 +99,6 @@ export default async function RootLayout({
     >
       <head>
         <style id="logits-color-schemes">{colorSchemeStylesheet}</style>
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, interactive-widget=resizes-content"
-        ></meta>
         <meta name="theme-color" content={themeColor} />
         <link
           rel="manifest"
