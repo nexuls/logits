@@ -1,4 +1,9 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
+import {
+  bindServiceWorkerToBroadcast,
+  broadcastDataStoreEvent,
+  subscribeToDataStoreEvents,
+} from "../lib/broadcast";
 import type { DbLike } from "./dataModule";
 import { AppModule } from "./modules/app/functions";
 import type { AppRecord } from "./modules/app/schema";
@@ -86,6 +91,8 @@ export class DataStore {
 
   private pendingWritePromise: Promise<unknown> = Promise.resolve();
   private readonly listeners = new Set<(event: DataStoreEvent) => void>();
+  private releaseBroadcastSubscription: (() => void) | null = null;
+  private releaseServiceWorkerBridge: (() => void) | null = null;
 
   subscribe(listener: (event: DataStoreEvent) => void) {
     this.listeners.add(listener);
@@ -101,7 +108,22 @@ export class DataStore {
     }
   }
 
+  private setupCrossTabSync() {
+    if (typeof window === "undefined") return;
+    if (this.releaseBroadcastSubscription && this.releaseServiceWorkerBridge) {
+      return;
+    }
+
+    this.releaseBroadcastSubscription = subscribeToDataStoreEvents((event) => {
+      this.notifyListeners(event);
+    });
+
+    this.releaseServiceWorkerBridge = bindServiceWorkerToBroadcast();
+  }
+
   async initialize() {
+    this.setupCrossTabSync();
+
     (async () => {
       await getDb();
     })();
@@ -115,11 +137,13 @@ export class DataStore {
       async () => {
         const result = await operation();
         this.notifyListeners(event);
+        broadcastDataStoreEvent(event);
         return result;
       },
       async () => {
         const result = await operation();
         this.notifyListeners(event);
+        broadcastDataStoreEvent(event);
         return result;
       },
     );
