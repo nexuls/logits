@@ -11,6 +11,8 @@ import {
 } from "@/data/modules/app/cookie";
 import { buildNotebookUrl } from "@/lib/notebook-url";
 
+export const dynamic = "force-dynamic";
+
 export const revalidate = 0;
 
 const MAX_MANIFEST_SHORTCUTS = 4;
@@ -22,7 +24,7 @@ function toManifestShortcutName(notebookName: string) {
   return `${normalized.slice(0, 27)}...`;
 }
 
-export default async function manifest(): Promise<MetadataRoute.Manifest> {
+export async function GET(): Promise<Response> {
   const cookieStore = await cookies();
 
   const settings = retrieveUserSettingsFromCookieValue(
@@ -62,7 +64,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
         ],
       }));
 
-  return {
+  const manifest: MetadataRoute.Manifest = {
     name: "Logits",
     short_name: "Logits",
     description:
@@ -80,4 +82,11 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     ],
     shortcuts: recentNotebookShortcuts,
   };
+
+  return new Response(JSON.stringify(manifest), {
+    headers: {
+      "Content-Type": "application/manifest+json; charset=utf-8",
+      "Cache-Control": "no-store",
+    },
+  });
 }
