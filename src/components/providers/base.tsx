@@ -35,7 +35,7 @@ type Props = {
 
 function SettingsThemeSync() {
   const { settings } = useUserSettings();
-  const { resolvedTheme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme, theme: activeTheme } = useTheme();
   const theme = settings.appearance?.theme ?? "system";
   const colorScheme = settings.appearance?.colorScheme;
   const fontSize =
@@ -47,8 +47,9 @@ function SettingsThemeSync() {
     settings.appearance?.monospaceFont ?? DEFAULT_MONOSPACE_FONT;
 
   useEffect(() => {
+    if (activeTheme === theme) return;
     setTheme(theme);
-  }, [setTheme, theme]);
+  }, [activeTheme, setTheme, theme]);
 
   useEffect(() => {
     if (theme !== "system") return;
@@ -74,6 +75,8 @@ function SettingsThemeSync() {
     const mode = resolvedTheme === "dark" ? "dark" : "light";
     const colorSchemeClass = getColorSchemeClassName(colorScheme, mode);
     const rootElement = document.documentElement;
+
+    if (rootElement.classList.contains(colorSchemeClass)) return;
 
     rootElement.classList.remove(...ALL_COLOR_SCHEME_CLASSES);
     rootElement.classList.add(colorSchemeClass);
