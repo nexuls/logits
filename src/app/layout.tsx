@@ -89,7 +89,11 @@ export default async function RootLayout({
           name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, interactive-widget=resizes-content"
         ></meta>
-        <link rel="manifest" href="/manifest.webmanifest" crossOrigin="use-credentials" />
+        <link
+          rel="manifest"
+          href="/manifest.webmanifest"
+          crossOrigin="use-credentials"
+        />
       </head>
 
       <body className="font-geist antialiased">
