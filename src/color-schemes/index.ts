@@ -1,6 +1,7 @@
 import type { Extension } from "@codemirror/state";
 import { createTheme } from "@uiw/codemirror-themes";
 import { StyleModule } from "style-mod";
+import { formatHex, oklch } from "culori";
 import { CATPPUCCIN_COLOR_SCHEME } from "@/color-schemes/catppuccin";
 import { GITHUB_COLOR_SCHEME } from "@/color-schemes/github";
 import { LOGITS_COLOR_SCHEME } from "@/color-schemes/logits";
@@ -129,6 +130,10 @@ export function getManifestThemeColor(
   colorScheme: ColorSchemeName | undefined,
   mode: ResolvedAppearanceMode,
 ) {
-  return getColorSchemeDefinition(colorScheme)[mode].codeMirror.settings
-    .background;
+  const { cssVariables } = getColorSchemeDefinition(colorScheme)[mode];
+
+  return {
+    themeColor: formatHex(oklch(cssVariables["--sidebar"])),
+    backgroundColor: formatHex(oklch(cssVariables["--background"])),
+  };
 }

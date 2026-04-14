@@ -21,6 +21,7 @@ import {
 import {
   getColorSchemeClassName,
   getColorSchemeStylesheetText,
+  getManifestThemeColor,
 } from "@/color-schemes";
 import { classNamesForFontVariables } from "./fonts";
 import "./globals.css";
@@ -75,6 +76,10 @@ export default async function RootLayout({
     .filter(Boolean)
     .join(" ");
   const colorSchemeStylesheet = getColorSchemeStylesheetText();
+  const { themeColor } = getManifestThemeColor(
+    initialSettings.appearance?.colorScheme,
+    isDark ? "dark" : "light",
+  );
 
   return (
     <html
@@ -89,6 +94,7 @@ export default async function RootLayout({
           name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, interactive-widget=resizes-content"
         ></meta>
+        <meta name="theme-color" content={themeColor} />
         <link
           rel="manifest"
           href="/manifest.webmanifest"

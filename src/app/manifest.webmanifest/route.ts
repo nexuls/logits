@@ -40,7 +40,7 @@ export async function GET(): Promise<Response> {
       ? (resolvedSystemTheme ?? "light")
       : configuredTheme;
   const mode = effectiveTheme === "dark" ? "dark" : "light";
-  const themeColor = getManifestThemeColor(
+  const { themeColor, backgroundColor } = getManifestThemeColor(
     settings.appearance?.colorScheme,
     mode,
   );
@@ -71,7 +71,7 @@ export async function GET(): Promise<Response> {
       "A modern notebook workspace for writing, organizing, and editing notes.",
     start_url: "/",
     display: "standalone",
-    background_color: themeColor,
+    background_color: backgroundColor,
     theme_color: themeColor,
     icons: [
       {
