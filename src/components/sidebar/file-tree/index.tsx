@@ -17,6 +17,7 @@ import { useNotebooks } from "@/hooks/use-notebooks";
 import { buildNotebookUrl } from "@/lib/notebook-url";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useSidebar } from "@/components/ui/sidebar";
 import {
   FileTreeActions,
   FileTreeActionsContextMenu,
@@ -45,6 +46,7 @@ type DropTarget = {
 
 export function FileTree({ notebookId, files, activeFileId }: Props) {
   const router = useRouter();
+  const { isMobile, setOpenMobile } = useSidebar();
   const { selectFile, clearSelection } = useFileSelection();
   const {
     notebooks,
@@ -168,6 +170,12 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
   const openFile = (file: AppFile) => {
     if (file.metadata.type === "folder") {
       toggleFolder(file.id);
+      return;
+    }
+
+    if (isMobile) {
+      setOpenMobile(false);
+      setTimeout(() => selectFile(file.id), 250);
       return;
     }
 
