@@ -22,6 +22,7 @@ import type { TabsViewTab } from "@/components/tabs";
 import Header from "@/components/tabs/header";
 import type { HeaderDragState } from "@/components/tabs/header-types";
 import type { FileType } from "@/data/modules/notebook/client-types";
+import { useUserSettings } from "@/hooks/use-user-settings";
 import { cn } from "@/lib/utils";
 
 type SplitDirection = "horizontal" | "vertical";
@@ -262,6 +263,26 @@ function replacePaneWithSplit(
 
 function getFirstPaneId(layout: WorkspaceLayout | null): string | null {
   return getPaneIds(layout)[0] ?? null;
+}
+
+// For a horizontal split, "first" is the left child and "second" is the right.
+// For a vertical split, both children share the same left/right edge, so we
+// pick the top child (first) for stability.
+function getEdgePaneId(
+  layout: WorkspaceLayout | null,
+  edge: "left" | "right",
+): string | null {
+  if (!layout) return null;
+  if (layout.type === "pane") return layout.id;
+
+  if (layout.direction === "horizontal") {
+    return getEdgePaneId(
+      edge === "left" ? layout.first : layout.second,
+      edge,
+    );
+  }
+
+  return getEdgePaneId(layout.first, edge);
 }
 
 function getNextActiveTabId(
@@ -615,6 +636,7 @@ function renderLayoutTree<TMeta>({
   dragState,
   hoverTarget,
   focusedPaneId,
+  toggleButtonPaneId,
   setPaneRef,
   setHeaderRef,
   onPaneFocus,
@@ -628,6 +650,7 @@ function renderLayoutTree<TMeta>({
   dragState: WorkspaceDragState | null;
   hoverTarget: HoverTarget | null;
   focusedPaneId: string | null;
+  toggleButtonPaneId: string | null;
   setPaneRef: (paneId: string, node: HTMLDivElement | null) => void;
   setHeaderRef: (paneId: string, node: HTMLDivElement | null) => void;
   onPaneFocus: (paneId: string) => void;
@@ -652,6 +675,7 @@ function renderLayoutTree<TMeta>({
             dragState,
             hoverTarget,
             focusedPaneId,
+            toggleButtonPaneId,
             setPaneRef,
             setHeaderRef,
             onPaneFocus,
@@ -671,6 +695,7 @@ function renderLayoutTree<TMeta>({
             dragState,
             hoverTarget,
             focusedPaneId,
+            toggleButtonPaneId,
             setPaneRef,
             setHeaderRef,
             onPaneFocus,
@@ -711,7 +736,7 @@ function renderLayoutTree<TMeta>({
       <div ref={(node) => setHeaderRef(layout.id, node)} className="relative">
         <Header
           placeholder={false}
-          showSidebarToggle={false}
+          showSidebarToggle={layout.id === toggleButtonPaneId}
           tabs={getHeaderTabs(paneTabs, activeTab?.id ?? null)}
           onTabSelect={(tabId) => onTabSelect(layout.id, tabId)}
           onTabClose={(tabId) => onTabClose(layout.id, tabId)}
@@ -750,7 +775,11 @@ export default function Workspace<TMeta = unknown>({
   onTabClose,
   onLayoutChange,
 }: WorkspaceProps<TMeta>) {
+  const { settings } = useUserSettings();
+  const sidebarPosition = settings.appearance?.sidebarPosition ?? "left";
   const controlledActiveTabId = activeTabId ?? defaultActiveTabId ?? null;
+  // Only the pane on the same side as the sidebar shows the toggle button.
+
   const tabsById = useMemo(
     () => new Map(tabs.map((tab) => [tab.id, tab])),
     [tabs],
@@ -779,6 +808,8 @@ export default function Workspace<TMeta = unknown>({
       null,
     ),
   );
+
+  const toggleButtonPaneId = getEdgePaneId(layout, sidebarPosition);
 
   useEffect(() => {
     setLayout((currentLayout) =>
@@ -1016,6 +1047,7 @@ export default function Workspace<TMeta = unknown>({
             dragState,
             hoverTarget,
             focusedPaneId,
+            toggleButtonPaneId,
             setPaneRef,
             setHeaderRef,
             onPaneFocus: handlePaneFocus,
