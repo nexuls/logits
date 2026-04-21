@@ -20,7 +20,7 @@ const MAX_WALK_DEPTH = 8;
  */
 export function generateSyntaxThemeCSS(
   syntaxTheme: SyntaxThemeInput | SyntaxThemeInput[] | undefined,
-  _wrapperClass: string,
+  wrapperClass: string,
 ): string {
   if (!syntaxTheme) return "";
 
@@ -32,12 +32,31 @@ export function generateSyntaxThemeCSS(
   for (const style of styles) {
     const rules = style.module?.getRules();
     if (!rules) continue;
-    cssChunks.push(rules);
+    cssChunks.push(scopeCssToWrapper(rules, wrapperClass));
   }
 
   if (!cssChunks.length) return "";
 
   return Array.from(new Set(cssChunks)).join("\n");
+}
+
+function scopeCssToWrapper(css: string, wrapperClass: string): string {
+  const wrapperSelector = `.${wrapperClass}`;
+
+  return css.replaceAll(
+    /(^|})\s*([^@{}][^{}]*)\s*\{/g,
+    (match, boundary: string, selectorGroup: string) => {
+      const scopedSelectors = selectorGroup
+        .split(",")
+        .map((selector) => selector.trim())
+        .filter(Boolean)
+        .map((selector) => `${wrapperSelector} ${selector}`)
+        .join(", ");
+
+      if (!scopedSelectors) return match;
+      return `${boundary}\n${scopedSelectors} {`;
+    },
+  );
 }
 
 export function resolveSyntaxHighlighters(
