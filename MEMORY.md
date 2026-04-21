@@ -26,6 +26,7 @@
 - Domain update helpers in `src/data/*` to keep mutation logic centralized.
 - Pure domain transforms in `src/data/notebooks.ts` keep notebook/file mutation logic deterministic and testable.
 - Feature hooks (`src/hooks/use-notebooks.ts`, `src/hooks/use-user-settings.ts`) expose stable APIs over provider state.
+- Notebook workspaces now use a pane-tree split layout manager in `src/components/workspace/index.tsx`, while `holder.tsx` remains the notebook-specific source of truth for open tabs and tab content generation.
 
 ## Persistence and State Flow
 - `DataProvider` is the single write boundary for app data and user settings.
@@ -34,6 +35,7 @@
 - User settings are persisted to both IndexedDB and cookies to keep SSR/CSR appearance state aligned.
 - Cross-tab settings sync now carries the normalized settings payload plus `updatedAt`, so tabs apply fresh settings directly without a follow-up IndexedDB read and can ignore stale out-of-order updates.
 - Local storage is used for notebook-scoped ephemeral UI state (open tabs), separate from canonical notebook/file data.
+- Workspace pane layouts are also persisted in notebook-scoped local storage so split-window arrangements survive reloads independently from the open-tab list.
 
 ## Error Handling Decisions
 - IO boundaries (IndexedDB reads/writes and hydration) should use `try/catch` and structured error logs.

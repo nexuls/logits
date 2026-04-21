@@ -8,10 +8,9 @@ import {
   type CursorMeta,
 } from "@/components/editor/markdown-editor";
 import Footer, { updateFooter } from "@/components/footer/index";
-import Header from "@/components/tabs/header";
-import { Spinner } from "@/components/ui/spinner";
-import TabsView from "@/components/tabs";
 import type { TabsViewTab } from "@/components/tabs";
+import { Spinner } from "@/components/ui/spinner";
+import Workspace, { type WorkspaceLayout } from "@/components/workspace";
 import { updateRecentNotebookShortcutsCookie } from "@/data/modules/app/cookie";
 import { useNotebooks } from "@/hooks/use-notebooks";
 import { useFileSelection } from "@/data/file-selection";
@@ -32,6 +31,8 @@ const getNotebookTree = (files: AppFile[]) =>
 
 const getNotebookTabStorageKey = (notebookId: string) =>
   `logits:open-tabs:${notebookId}`;
+const getNotebookWorkspaceStorageKey = (notebookId: string) =>
+  `logits:workspace-layout:${notebookId}`;
 
 type TabViewMode = "editor" | "preview";
 type OpenTab = {
@@ -87,12 +88,34 @@ function readStoredTabIds(notebookId: string) {
   }
 }
 
+function readStoredWorkspaceLayout(notebookId: string): WorkspaceLayout | null {
+  if (typeof window === "undefined") return null;
+
+  const storedLayout = window.localStorage.getItem(
+    getNotebookWorkspaceStorageKey(notebookId),
+  );
+
+  if (!storedLayout) return null;
+
+  try {
+    const parsedLayout = JSON.parse(storedLayout);
+
+    if (!parsedLayout || typeof parsedLayout !== "object") return null;
+
+    return parsedLayout as WorkspaceLayout;
+  } catch {
+    return null;
+  }
+}
+
 export default function Holder({ slug }: { slug: string }) {
   const { selectedFileId, selectedTabMode, selectFile, clearSelection } =
     useFileSelection();
   const { notebooks, isHydrating, getNotebookFiles } = useNotebooks();
 
   const [openTabIds, setOpenTabIds] = useState<string[]>([]);
+  const [workspaceLayout, setWorkspaceLayout] =
+    useState<WorkspaceLayout | null>(null);
   const [loadedTabsSlug, setLoadedTabsSlug] = useState<string | null>(null);
   const cursorMetaRef = useRef<Record<string, CursorMeta>>({});
 
@@ -173,6 +196,7 @@ export default function Holder({ slug }: { slug: string }) {
   // Restore persisted tabs for notebook.
   useEffect(() => {
     setOpenTabIds(readStoredTabIds(slug));
+    setWorkspaceLayout(readStoredWorkspaceLayout(slug));
     setLoadedTabsSlug(slug);
   }, [slug]);
 
@@ -187,6 +211,22 @@ export default function Holder({ slug }: { slug: string }) {
       JSON.stringify(openTabIds),
     );
   }, [loadedTabsSlug, openTabIds, slug]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || loadedTabsSlug !== slug) {
+      return;
+    }
+
+    if (!workspaceLayout) {
+      window.localStorage.removeItem(getNotebookWorkspaceStorageKey(slug));
+      return;
+    }
+
+    window.localStorage.setItem(
+      getNotebookWorkspaceStorageKey(slug),
+      JSON.stringify(workspaceLayout),
+    );
+  }, [loadedTabsSlug, slug, workspaceLayout]);
 
   // Keep local refs and tabs aligned with available files.
   useEffect(() => {
@@ -326,7 +366,6 @@ export default function Holder({ slug }: { slug: string }) {
   if (!selectedNotebook) {
     return (
       <div className="relative h-dvh w-full bg-background">
-        <Header placeholder />
         <NotebookEmptyState
           icon={<TriangleAlertIcon />}
           title="Notebook not found."
@@ -343,99 +382,52 @@ export default function Holder({ slug }: { slug: string }) {
     openTabs.map((tab) => tab.file),
   );
 
-  const closeTab = (tabId: string) => {
+  const closeTab = (tabId: string, nextActiveTabId: string | null) => {
     setOpenTabIds((currentTabs) => {
-      const currentIndex = currentTabs.indexOf(tabId);
+      if (!currentTabs.includes(tabId)) return currentTabs;
 
-      if (currentIndex === -1) {
-        return currentTabs;
-      }
-
-      const nextTabs = currentTabs.filter(
-        (currentTabId) => currentTabId !== tabId,
-      );
-
-      if (selectedTabId === tabId) {
-        const fallbackTabId =
-          currentTabs[currentIndex + 1] ?? currentTabs[currentIndex - 1] ?? "";
-
-        if (fallbackTabId) {
-          const parsed = parseTabId(fallbackTabId);
-          if (parsed) selectFile(parsed.fileId, parsed.mode);
-        } else {
-          clearSelection();
-        }
-      }
-
-      return nextTabs;
+      return currentTabs.filter((currentTabId) => currentTabId !== tabId);
     });
-  };
 
-  const reorderTabs = (nextTabIds: string[]) => {
-    setOpenTabIds((currentTabIds) => {
-      if (currentTabIds.length !== nextTabIds.length) {
-        return currentTabIds;
+    if (selectedTabId !== tabId) return;
+
+    if (nextActiveTabId) {
+      const parsed = parseTabId(nextActiveTabId);
+      if (parsed) {
+        selectFile(parsed.fileId, parsed.mode);
+        return;
       }
+    }
 
-      const currentIdSet = new Set(currentTabIds);
-      if (nextTabIds.some((tabId) => !currentIdSet.has(tabId))) {
-        return currentTabIds;
-      }
-
-      const hasOrderChanged = nextTabIds.some(
-        (tabId, index) => currentTabIds[index] !== tabId,
-      );
-
-      if (!hasOrderChanged) {
-        return currentTabIds;
-      }
-
-      return nextTabIds;
-    });
+    clearSelection();
   };
 
   return (
     <div className="relative h-dvh w-[calc(100%-var(--sidebar-width))] flex-1 flex flex-col bg-background">
       <main className="min-h-0 w-full flex-1">
-        {emptyState ? (
-          <>
-            <Header
-              placeholder={false}
-              tabs={openTabs.map((file) => ({
-                id: file.tabId,
-                name:
-                  file.mode === "preview"
-                    ? `${file.file.name} (Preview)`
-                    : file.file.name,
-                type: file.file.metadata.type,
-                isActive: file.tabId === selectedTabId,
-              }))}
-              onTabSelect={navigateToTab}
-              onTabClose={closeTab}
-              onTabReorder={reorderTabs}
-            />
-
-            <NotebookEmptyState
-              icon={emptyState.icon}
-              title={emptyState.title}
-              description={emptyState.description}
-            />
-          </>
-        ) : (
-          <TabsView
-            tabs={tabs}
-            activeTabId={selectedTabId}
-            inactiveTabMode="keep-mounted"
-            defaultActiveTabId={
-              firstOpenableFile
-                ? getTabId(firstOpenableFile.id, "editor")
-                : undefined
-            }
-            onTabSelect={navigateToTab}
-            onTabClose={closeTab}
-            onTabReorder={reorderTabs}
-          />
-        )}
+        <Workspace
+          key={`${slug}:${loadedTabsSlug ?? "pending"}`}
+          tabs={tabs}
+          activeTabId={selectedTabId || undefined}
+          defaultActiveTabId={
+            firstOpenableFile
+              ? getTabId(firstOpenableFile.id, "editor")
+              : undefined
+          }
+          initialLayout={workspaceLayout}
+          emptyState={
+            emptyState ? (
+              <NotebookEmptyState
+                icon={emptyState.icon}
+                title={emptyState.title}
+                description={emptyState.description}
+              />
+            ) : undefined
+          }
+          onTabSelect={navigateToTab}
+          onTabClose={closeTab}
+          onLayoutChange={setWorkspaceLayout}
+        />
       </main>
 
       <Footer

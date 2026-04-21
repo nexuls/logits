@@ -31,7 +31,10 @@ export default function Header(props: HeaderProps) {
   } = useHeaderTabReorder({
     tabs: interactiveProps?.tabs ?? [],
     onTabReorder: interactiveProps?.onTabReorder,
+    onTabDragStateChange: interactiveProps?.onTabDragStateChange,
   });
+
+  const showSidebarToggle = interactiveProps?.showSidebarToggle ?? true;
 
   return (
     <div
@@ -41,10 +44,16 @@ export default function Header(props: HeaderProps) {
       )}
     >
       <div className="flex h-10 w-full items-center gap-2">
-        <Button variant="ghost" size="icon-sm" onClick={() => toggleSidebar()}>
-          <PanelLeftIcon />
-          <span className="sr-only">Toggle Sidebar</span>
-        </Button>
+        {showSidebarToggle ? (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => toggleSidebar()}
+          >
+            <PanelLeftIcon />
+            <span className="sr-only">Toggle Sidebar</span>
+          </Button>
+        ) : null}
 
         {!interactiveProps ? (
           <div className="min-w-0 flex-1" />

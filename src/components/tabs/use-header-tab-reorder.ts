@@ -7,7 +7,11 @@ import {
   useRef,
   useState,
 } from "react";
-import type { HeaderPointerState, HeaderTab } from "./header-types";
+import type {
+  HeaderDragState,
+  HeaderPointerState,
+  HeaderTab,
+} from "./header-types";
 import { areOrdersEqual, moveTab } from "./header-utils";
 
 /**
@@ -27,6 +31,7 @@ import { areOrdersEqual, moveTab } from "./header-utils";
 type UseHeaderTabReorderParams = {
   tabs: HeaderTab[];
   onTabReorder?: (tabIds: string[]) => void;
+  onTabDragStateChange?: (state: HeaderDragState | null) => void;
 };
 
 type UseHeaderTabReorderResult = {
@@ -52,6 +57,7 @@ type UseHeaderTabReorderResult = {
 export function useHeaderTabReorder({
   tabs,
   onTabReorder,
+  onTabDragStateChange,
 }: UseHeaderTabReorderParams): UseHeaderTabReorderResult {
   // Drag visual state only. Source-of-truth order remains external until
   // reorder is committed via `onTabReorder`.
@@ -69,7 +75,9 @@ export function useHeaderTabReorder({
   const suppressClickRef = useRef(false);
 
   // Reordering is disabled if there is no handler or only one tab.
-  const canReorder = Boolean(onTabReorder) && tabs.length > 1;
+  const canCommitReorder = Boolean(onTabReorder) && tabs.length > 1;
+  const canReorder =
+    (Boolean(onTabReorder) || Boolean(onTabDragStateChange)) && tabs.length > 0;
 
   useEffect(() => {
     // While dragging, we keep the visual order stable and ignore external order
@@ -118,6 +126,45 @@ export function useHeaderTabReorder({
     return offsetX;
   }, []);
 
+  const getIsOutsideHeader = useCallback((clientX: number, clientY: number) => {
+    const containerElement = containerRef.current;
+    if (!containerElement) return false;
+
+    const bounds = containerElement.getBoundingClientRect();
+    return (
+      clientX < bounds.left ||
+      clientX > bounds.right ||
+      clientY < bounds.top ||
+      clientY > bounds.bottom
+    );
+  }, []);
+
+  const emitDragState = useCallback(
+    (pointerState: HeaderPointerState | null) => {
+      if (!onTabDragStateChange) return;
+      if (!pointerState) {
+        onTabDragStateChange(null);
+        return;
+      }
+
+      onTabDragStateChange({
+        tabId: pointerState.tabId,
+        pointerX: pointerState.lastClientX,
+        pointerY: pointerState.lastClientY,
+        hasMoved: pointerState.hasMoved,
+        isOutsideHeader: getIsOutsideHeader(
+          pointerState.lastClientX,
+          pointerState.lastClientY,
+        ),
+        pointerOffsetX: pointerState.pointerOffsetX,
+        pointerOffsetY: pointerState.pointerOffsetY,
+        tabWidth: pointerState.tabWidth,
+        tabHeight: pointerState.tabHeight,
+      });
+    },
+    [getIsOutsideHeader, onTabDragStateChange],
+  );
+
   const finishSliding = useCallback(() => {
     // Finalize drag lifecycle and release pointer capture if still active.
     const pointerState = pointerStateRef.current;
@@ -134,6 +181,7 @@ export function useHeaderTabReorder({
     setSlidingTabId(null);
     setDraggingTabId(null);
     setSlideOffsetX(0);
+    emitDragState(null);
 
     // Commit reorder only when an actual drag occurred and order changed.
     if (
@@ -151,7 +199,7 @@ export function useHeaderTabReorder({
     window.setTimeout(() => {
       suppressClickRef.current = false;
     }, 0);
-  }, [onTabReorder]);
+  }, [emitDragState, onTabReorder]);
 
   useLayoutEffect(() => {
     // Compute current layout positions and animate tabs into new slots.
@@ -207,21 +255,34 @@ export function useHeaderTabReorder({
 
       // Continuous drag offset from original pointer-down anchor.
       const rawDeltaX = event.clientX - pointerState.startClientX;
-      const deltaX = clampSlideOffset(pointerState.tabId, rawDeltaX);
-      setSlideOffsetX(deltaX);
+      const rawDeltaY = event.clientY - pointerState.startClientY;
+      pointerState.lastClientX = event.clientX;
+      pointerState.lastClientY = event.clientY;
 
       // Dragging state starts only after threshold movement from pointer down.
       // We use raw cursor distance so "grabbing" is based on user intent,
       // independent of clamping at container boundaries.
-      if (Math.abs(rawDeltaX) > 16 && !pointerState.hasMoved) {
+      if ((Math.abs(rawDeltaX) > 16 || Math.abs(rawDeltaY) > 16) && !pointerState.hasMoved) {
         pointerState.hasMoved = true;
         setDraggingTabId(pointerState.tabId);
       }
 
+      const isOutsideHeader = getIsOutsideHeader(event.clientX, event.clientY);
+      // Freeze the source tab in the header while the pointer is outside it.
+      // The floating ghost handles the drag visual; moving the real tab would
+      // cause header reflow on every pointer tick.
+      const deltaX =
+        !isOutsideHeader && canCommitReorder
+          ? clampSlideOffset(pointerState.tabId, rawDeltaX)
+          : 0;
+
+      setSlideOffsetX(deltaX);
+      emitDragState(pointerState);
+
       // We gate swaps with a movement threshold so tiny cursor jitters do not
       // cause rapid tab-order churn while dragging across tight hit targets.
       const swapDistance = Math.abs(event.clientX - pointerState.swapAnchorX);
-      if (swapDistance < 8) return;
+      if (swapDistance < 8 || isOutsideHeader || !canCommitReorder) return;
 
       const currentOrder = orderRef.current;
       const currentIndex = currentOrder.indexOf(pointerState.tabId);
@@ -263,7 +324,7 @@ export function useHeaderTabReorder({
       pointerState.swapAnchorX = event.clientX;
       setVisualTabOrder(nextOrder);
     },
-    [clampSlideOffset],
+    [canCommitReorder, clampSlideOffset, emitDragState, getIsOutsideHeader],
   );
 
   useEffect(() => {
@@ -325,6 +386,7 @@ export function useHeaderTabReorder({
         visualTabOrder.length === tabs.length
           ? visualTabOrder
           : tabs.map((tab) => tab.id);
+      const tabRect = event.currentTarget.getBoundingClientRect();
 
       orderRef.current = initialOrder;
       setVisualTabOrder(initialOrder);
@@ -333,17 +395,25 @@ export function useHeaderTabReorder({
         tabId,
         initialOrder,
         startClientX: event.clientX,
+        startClientY: event.clientY,
         pointerId: event.pointerId,
         swapAnchorX: event.clientX,
         hasMoved: false,
+        lastClientX: event.clientX,
+        lastClientY: event.clientY,
+        pointerOffsetX: event.clientX - tabRect.left,
+        pointerOffsetY: event.clientY - tabRect.top,
+        tabWidth: tabRect.width,
+        tabHeight: tabRect.height,
       };
 
       setSlidingTabId(tabId);
       setDraggingTabId(null);
       setSlideOffsetX(0);
       event.currentTarget.setPointerCapture(event.pointerId);
+      emitDragState(pointerStateRef.current);
     },
-    [canReorder, tabs, visualTabOrder],
+    [canReorder, emitDragState, tabs, visualTabOrder],
   );
 
   // Stable callback to register/unregister tab DOM refs from item components.

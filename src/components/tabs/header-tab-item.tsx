@@ -32,6 +32,7 @@ export function HeaderTabItem({
   return (
     <div
       ref={setRef}
+      data-tab-id={tab.id}
       onPointerDown={onPointerDown}
       className={cn(
         "relative flex grow shrink max-w-64 min-w-0 pt-1 transition-transform",
