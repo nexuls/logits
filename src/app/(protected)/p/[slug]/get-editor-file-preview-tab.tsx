@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
-import NavBar from "@/components/editor/nav";
-import Preview from "@/components/editor/markdown-editor/preview";
+import NavBar from "@/components/workspace-components/nav";
+import Preview from "@/workspace-views/markdown-editor/preview";
 import type { TabsViewTab } from "@/components/workspace";
 import type { AppFile } from "@/data/modules/notebook/client-types";
 import { useNotebooks } from "@/hooks/use-notebooks";

@@ -4,10 +4,10 @@ import type { RefObject } from "react";
 import {
   DEFAULT_CURSOR_META,
   type CursorMeta,
-} from "@/components/editor/markdown-editor";
-import Editor from "@/components/editor/markdown-editor";
-import NavBar from "@/components/editor/nav";
-import { getTextStats } from "@/components/editor/markdown-editor/utils";
+} from "@/workspace-views/markdown-editor";
+import Editor from "@/workspace-views/markdown-editor";
+import NavBar from "@/components/workspace-components/nav";
+import { getTextStats } from "@/workspace-views/markdown-editor/utils";
 import { updateFooter } from "@/components/footer/index";
 import type { TabsViewTab } from "@/components/workspace";
 import type { AppFile } from "@/data/modules/notebook/client-types";
