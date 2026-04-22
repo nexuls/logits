@@ -14,22 +14,18 @@ import {
 import { useFileSelection } from "@/data/file-selection";
 import { useWorkspaceCommands } from "@/components/workspace/commands";
 
-type Props = {
-  notebookId: string;
-  activeFileId?: string;
-};
-
-export function NotebookActions(props: Props) {
+export function NotebookActions() {
   return (
     <div className="ml-3 flex shrink-0 items-center gap-1.5">
-      <EditorMenu {...props} />
+      <EditorMenu />
     </div>
   );
 }
 
-function EditorMenu({ activeFileId }: Props) {
-  const { selectFile } = useFileSelection();
+function EditorMenu() {
+  const { selectedFileId, selectFile } = useFileSelection();
   const workspaceCommands = useWorkspaceCommands();
+  const activeFileId = selectedFileId || undefined;
 
   const openPreviewInTabView = () => {
     if (!activeFileId) return;

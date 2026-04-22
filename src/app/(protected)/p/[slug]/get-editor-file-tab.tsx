@@ -6,7 +6,6 @@ import {
   type CursorMeta,
 } from "@/workspace-views/markdown-editor";
 import Editor from "@/workspace-views/markdown-editor";
-import NavBar from "@/components/workspace-components/nav";
 import { getTextStats } from "@/workspace-views/markdown-editor/utils";
 import { updateFooter } from "@/components/footer/index";
 import type { TabsViewTab } from "@/components/workspace";
@@ -21,18 +20,12 @@ type EditorTabContentProps = {
   tabId: string;
   file: AppFile;
   cursorMetaRef: RefObject<Record<string, CursorMeta>>;
-  notebookFiles: AppFile[];
-  selectedNotebook: { id: string; name: string };
-  navigateToFile: (fileId: string) => void;
 };
 
 function EditorTabContent({
   tabId,
   file,
   cursorMetaRef,
-  notebookFiles,
-  selectedNotebook,
-  navigateToFile,
 }: EditorTabContentProps) {
   const { selectedFileId, selectedTabMode } = useFileSelection();
   const isActive = selectedFileId === file.id && selectedTabMode === "editor";
@@ -111,22 +104,12 @@ function EditorTabContent({
   }
 
   return (
-    <div className="h-full flex flex-col">
-      <NavBar
-        notebookId={selectedNotebook.id}
-        notebookName={selectedNotebook.name}
-        files={notebookFiles}
-        activeFileId={file.id}
-        onNavigateToFile={navigateToFile}
-      />
-
-      <Editor
-        mode="markdown"
-        content={content}
-        onEditorMetaChange={editorMetaChangeHandler}
-        onContentChange={updateContent}
-      />
-    </div>
+    <Editor
+      mode="markdown"
+      content={content}
+      onEditorMetaChange={editorMetaChangeHandler}
+      onContentChange={updateContent}
+    />
   );
 }
 
@@ -134,18 +117,12 @@ type GetEditorFileTabParams = {
   tabId: string;
   file: AppFile;
   cursorMetaRef: RefObject<Record<string, CursorMeta>>;
-  notebookFiles: AppFile[];
-  selectedNotebook: { id: string; name: string };
-  navigateToFile: (fileId: string) => void;
 };
 
 export const getEditorFileTab = ({
   tabId,
   file,
   cursorMetaRef,
-  notebookFiles,
-  selectedNotebook,
-  navigateToFile,
 }: GetEditorFileTabParams): TabsViewTab<{
   type: AppFile["metadata"]["type"];
   view: "editor";
@@ -186,9 +163,6 @@ export const getEditorFileTab = ({
         tabId={tabId}
         file={file}
         cursorMetaRef={cursorMetaRef}
-        notebookFiles={notebookFiles}
-        selectedNotebook={selectedNotebook}
-        navigateToFile={navigateToFile}
       />
     ),
   };

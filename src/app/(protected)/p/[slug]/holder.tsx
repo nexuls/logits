@@ -181,14 +181,6 @@ export default function Holder({ slug }: { slug: string }) {
       .filter((tab): tab is OpenTab => Boolean(tab));
   }, [openTabIds, openableFiles]);
 
-  const navigateToFile = useCallback(
-    (fileId: string, mode?: TabViewMode) => {
-      if (!selectedNotebook) return;
-      selectFile(fileId, mode);
-    },
-    [selectFile, selectedNotebook],
-  );
-
   const openInSplit = useCallback((fileId: string, mode: TabViewMode) => {
     const tabId = getTabId(fileId, mode);
     setOpenTabIds((currentTabIds) =>
@@ -339,16 +331,10 @@ export default function Holder({ slug }: { slug: string }) {
     () =>
       selectedNotebook
         ? openTabs.map((tab) => {
-            const navigateByTabMode = (fileId: string) =>
-              navigateToFile(fileId, tab.mode);
-
             if (tab.mode === "preview") {
               return getEditorFilePreviewTab({
                 tabId: tab.tabId,
                 file: tab.file,
-                selectedNotebook,
-                notebookFiles,
-                navigateToFile: navigateByTabMode,
               });
             }
 
@@ -356,13 +342,10 @@ export default function Holder({ slug }: { slug: string }) {
               tabId: tab.tabId,
               file: tab.file,
               cursorMetaRef,
-              selectedNotebook,
-              notebookFiles,
-              navigateToFile: navigateByTabMode,
             });
           })
         : [],
-    [navigateToFile, notebookFiles, openTabs, selectedNotebook],
+    [openTabs, selectedNotebook],
   );
 
   const activeCursorMeta =

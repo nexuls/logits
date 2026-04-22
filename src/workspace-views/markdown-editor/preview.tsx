@@ -10,6 +10,7 @@ import {
   ThemeEnum,
 } from "@/components/draftly";
 import { DEFAULT_COLOR_SCHEME, getCodeMirrorTheme } from "@/color-schemes";
+import NavBar from "@/components/workspace-components/nav";
 import { useUserSettings } from "@/hooks/use-user-settings";
 
 type Props = {
@@ -67,14 +68,17 @@ export default function Preview({ content }: Props) {
   }, [content, resolvedTheme, colorSchemeCodeMirrorTheme]);
 
   return (
-    <div className="relative w-full min-h-0 flex-1">
-      <style>{previewStyles}</style>
-      <div
-        className="w-full h-full overflow-y-auto **:select-text"
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-8 bg-linear-to-b from-background to-transparent" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-8 bg-linear-to-t from-background to-transparent" />
+    <div className="h-full flex flex-col">
+      <NavBar />
+      <div className="relative w-full min-h-0 flex-1">
+        <style>{previewStyles}</style>
+        <div
+          className="w-full h-full overflow-y-auto **:select-text"
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-8 bg-linear-to-b from-background to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-8 bg-linear-to-t from-background to-transparent" />
+      </div>
     </div>
   );
 }

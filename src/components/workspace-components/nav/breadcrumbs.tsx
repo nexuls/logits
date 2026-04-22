@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { ChevronDown, FolderOpen } from "lucide-react";
 import type { AppFile } from "@/data/modules/notebook/client-types";
+import { useFileSelection } from "@/data/file-selection";
+import { useNotebooks } from "@/hooks/use-notebooks";
 import { Button } from "@/components/ui/button";
 import {
   Breadcrumb,
@@ -23,14 +25,6 @@ import {
   getFileIcon,
   sortChildren,
 } from "@/components/sidebar/file-tree/file-tree-utils";
-
-type Props = {
-  notebookId: string;
-  notebookName: string;
-  files: AppFile[];
-  activeFileId?: string;
-  onNavigateToFile: (fileId: string) => void;
-};
 
 type BreadcrumbSegment = {
   file: AppFile;
@@ -96,13 +90,23 @@ function FolderMenuItems({
   );
 }
 
-export function NotebookBreadcrumbs({
-  notebookId,
-  notebookName,
-  files,
-  activeFileId,
-  onNavigateToFile,
-}: Props) {
+export function NotebookBreadcrumbs() {
+  const { notebookId, selectedFileId, selectFile } = useFileSelection();
+  const { notebooks, getNotebookFiles } = useNotebooks();
+
+  const notebookName = useMemo(
+    () => notebooks.find((notebook) => notebook.id === notebookId)?.name ?? "",
+    [notebooks, notebookId],
+  );
+
+  const files = useMemo(
+    () => getNotebookFiles(notebookId),
+    [getNotebookFiles, notebookId],
+  );
+
+  const activeFileId = selectedFileId || undefined;
+  const onNavigateToFile = selectFile;
+
   const filesById = useMemo(
     () => new Map(files.map((file) => [file.id, file])),
     [files],

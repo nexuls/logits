@@ -3,6 +3,7 @@ import { useTheme } from "next-themes";
 
 import { allPlugins, draftly, ThemeEnum } from "@/components/draftly";
 import { DEFAULT_COLOR_SCHEME, getCodeMirrorTheme } from "@/color-schemes";
+import NavBar from "@/components/workspace-components/nav";
 import { useUserSettings } from "@/hooks/use-user-settings";
 import CodeMirror, { type Extension } from "@uiw/react-codemirror";
 import type { ViewUpdate } from "@codemirror/view";
@@ -69,53 +70,57 @@ export default function Editor({
   );
 
   return (
-    <div className="relative w-full min-h-0 flex-1">
-      <CodeMirror
-        key={`draftly-editor-${mode}`}
-        id={"draftly-editor"}
-        // ref={editor}
-        autoFocus={false}
-        className={"h-full w-full"}
-        height="100%"
-        width="100%"
-        value={content}
-        placeholder={"Write something..."}
-        onChange={onContentChange}
-        onUpdate={(update: ViewUpdate) => {
-          if (!onEditorMetaChange) return;
+    <div className="h-full flex flex-col">
+      <NavBar />
+      <div className="relative w-full min-h-0 flex-1">
+        <CodeMirror
+          key={`draftly-editor-${mode}`}
+          id={"draftly-editor"}
+          // ref={editor}
+          autoFocus={false}
+          className={"h-full w-full"}
+          height="100%"
+          width="100%"
+          value={content}
+          placeholder={"Write something..."}
+          onChange={onContentChange}
+          onUpdate={(update: ViewUpdate) => {
+            if (!onEditorMetaChange) return;
 
-          if (
-            !update.selectionSet &&
-            !update.docChanged &&
-            !update.viewportChanged
-          )
-            return;
+            if (
+              !update.selectionSet &&
+              !update.docChanged &&
+              !update.viewportChanged
+            )
+              return;
 
-          const head = update.state.selection.main.head;
-          const line = update.state.doc.lineAt(head);
+            const head = update.state.selection.main.head;
+            const line = update.state.doc.lineAt(head);
 
-          onEditorMetaChange({
-            line: line.number,
-            col: head - line.from + 1,
-            tabSize: update.state.tabSize,
-            selection: Math.abs(
-              update.state.selection.main.to - update.state.selection.main.from,
-            ),
-          });
-        }}
-        theme={colorSchemeCodeMirrorTheme}
-        extensions={[...defaultExtensions]}
-        basicSetup={{
-          lineNumbers: mode === "code",
-          foldGutter: mode === "code",
-          highlightActiveLine: mode === "code",
-          highlightActiveLineGutter: mode === "code",
-          highlightSelectionMatches: mode === "code",
-          drawSelection: false,
-        }}
-      />
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-8 bg-linear-to-b from-background to-transparent" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-8 bg-linear-to-t from-background to-transparent" />
+            onEditorMetaChange({
+              line: line.number,
+              col: head - line.from + 1,
+              tabSize: update.state.tabSize,
+              selection: Math.abs(
+                update.state.selection.main.to -
+                  update.state.selection.main.from,
+              ),
+            });
+          }}
+          theme={colorSchemeCodeMirrorTheme}
+          extensions={[...defaultExtensions]}
+          basicSetup={{
+            lineNumbers: mode === "code",
+            foldGutter: mode === "code",
+            highlightActiveLine: mode === "code",
+            highlightActiveLineGutter: mode === "code",
+            highlightSelectionMatches: mode === "code",
+            drawSelection: false,
+          }}
+        />
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-8 bg-linear-to-b from-background to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-8 bg-linear-to-t from-background to-transparent" />
+      </div>
     </div>
   );
 }

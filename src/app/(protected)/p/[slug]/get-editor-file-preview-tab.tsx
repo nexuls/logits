@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 
-import NavBar from "@/components/workspace-components/nav";
 import Preview from "@/workspace-views/markdown-editor/preview";
 import type { TabsViewTab } from "@/components/workspace";
 import type { AppFile } from "@/data/modules/notebook/client-types";
@@ -10,17 +9,9 @@ import { getUnsupportedFileState, NotebookEmptyState } from "./helper";
 
 type PreviewTabContentProps = {
   file: AppFile;
-  notebookFiles: AppFile[];
-  selectedNotebook: { id: string; name: string };
-  navigateToFile: (fileId: string) => void;
 };
 
-function PreviewTabContent({
-  file,
-  notebookFiles,
-  selectedNotebook,
-  navigateToFile,
-}: PreviewTabContentProps) {
+function PreviewTabContent({ file }: PreviewTabContentProps) {
   const { getFileContent } = useNotebooks();
   const [content, setContent] = useState("");
 
@@ -40,35 +31,17 @@ function PreviewTabContent({
     };
   }, [file.id, getFileContent]);
 
-  return (
-    <div className="h-full flex flex-col">
-      <NavBar
-        notebookId={selectedNotebook.id}
-        notebookName={selectedNotebook.name}
-        files={notebookFiles}
-        activeFileId={file.id}
-        onNavigateToFile={navigateToFile}
-      />
-
-      <Preview content={content} />
-    </div>
-  );
+  return <Preview content={content} />;
 }
 
 type GetEditorFilePreviewTabParams = {
   tabId: string;
   file: AppFile;
-  notebookFiles: AppFile[];
-  selectedNotebook: { id: string; name: string };
-  navigateToFile: (fileId: string) => void;
 };
 
 export const getEditorFilePreviewTab = ({
   tabId,
   file,
-  notebookFiles,
-  selectedNotebook,
-  navigateToFile,
 }: GetEditorFilePreviewTabParams): TabsViewTab<{
   type: AppFile["metadata"]["type"];
   view: "preview";
@@ -103,14 +76,6 @@ export const getEditorFilePreviewTab = ({
       view: "preview",
       fileId: file.id,
     },
-    content: (
-      <PreviewTabContent
-        key={tabId}
-        file={file}
-        notebookFiles={notebookFiles}
-        selectedNotebook={selectedNotebook}
-        navigateToFile={navigateToFile}
-      />
-    ),
+    content: <PreviewTabContent key={tabId} file={file} />,
   };
 };

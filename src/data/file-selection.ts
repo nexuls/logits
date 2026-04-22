@@ -15,6 +15,7 @@ import { buildNotebookUrl } from "@/lib/notebook-url";
 type TabViewMode = "editor" | "preview";
 
 type FileSelectionContextValue = {
+  notebookId: string;
   selectedFileId: string;
   selectedTabMode: TabViewMode;
   selectFile: (fileId: string, mode?: TabViewMode) => void;
@@ -92,8 +93,14 @@ export function FileSelectionProvider({
   }, []);
 
   const value = useMemo(
-    () => ({ selectedFileId, selectedTabMode, selectFile, clearSelection }),
-    [selectedFileId, selectedTabMode, selectFile, clearSelection],
+    () => ({
+      notebookId,
+      selectedFileId,
+      selectedTabMode,
+      selectFile,
+      clearSelection,
+    }),
+    [notebookId, selectedFileId, selectedTabMode, selectFile, clearSelection],
   );
 
   return createElement(FileSelectionContext.Provider, { value }, children);
