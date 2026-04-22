@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
   type HTMLAttributes,
+  type MutableRefObject,
   type ReactNode,
 } from "react";
 
@@ -60,6 +61,10 @@ type HoverTarget = {
   index?: number;
 };
 
+export type WorkspaceHandle = {
+  openInSplit: (tabId: string, side?: Exclude<DropSide, "center">) => void;
+};
+
 type WorkspaceProps<TMeta = unknown> = {
   tabs: TabsViewTab<TMeta>[];
   activeTabId?: string;
@@ -67,6 +72,7 @@ type WorkspaceProps<TMeta = unknown> = {
   initialLayout?: WorkspaceLayout | null;
   emptyState?: ReactNode;
   className?: string;
+  handleRef?: MutableRefObject<WorkspaceHandle | null>;
   onTabSelect?: (tabId: string) => void;
   onTabClose?: (tabId: string, nextActiveTabId: string | null) => void;
   onLayoutChange?: (layout: WorkspaceLayout | null) => void;
@@ -771,6 +777,7 @@ export default function Workspace<TMeta = unknown>({
   initialLayout,
   emptyState,
   className,
+  handleRef,
   onTabSelect,
   onTabClose,
   onLayoutChange,
@@ -1028,6 +1035,50 @@ export default function Workspace<TMeta = unknown>({
     },
     [layout, onTabClose],
   );
+
+  const openInSplit = useCallback(
+    (tabId: string, side: Exclude<DropSide, "center"> = "right") => {
+      setLayout((currentLayout) => {
+        const hintPaneId =
+          focusedPaneId && findPane(currentLayout, focusedPaneId)
+            ? focusedPaneId
+            : getFirstPaneId(currentLayout);
+
+        const stripped = normalizeLayout(
+          removeTabFromLayout(currentLayout, tabId),
+        );
+        const base = stripped ?? createPane();
+
+        const targetPaneId =
+          hintPaneId && findPane(base, hintPaneId)
+            ? hintPaneId
+            : getFirstPaneId(base);
+
+        if (!targetPaneId) return createPane([tabId], tabId);
+
+        const newPane = createPane([tabId], tabId);
+        const nextLayout = replacePaneWithSplit(
+          base,
+          targetPaneId,
+          side,
+          newPane,
+        );
+
+        return (normalizeLayout(nextLayout) ??
+          currentLayout) as WorkspaceLayout;
+      });
+    },
+    [focusedPaneId],
+  );
+
+  useEffect(() => {
+    if (!handleRef) return;
+    handleRef.current = { openInSplit };
+
+    return () => {
+      handleRef.current = null;
+    };
+  }, [handleRef, openInSplit]);
 
   if (tabs.length === 0) {
     return (

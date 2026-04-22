@@ -10,7 +10,11 @@ import {
 import Footer, { updateFooter } from "@/components/footer/index";
 import type { TabsViewTab } from "@/components/tabs";
 import { Spinner } from "@/components/ui/spinner";
-import Workspace, { type WorkspaceLayout } from "@/components/workspace";
+import Workspace, {
+  type WorkspaceHandle,
+  type WorkspaceLayout,
+} from "@/components/workspace";
+import { WorkspaceCommandsProvider } from "@/components/workspace/commands";
 import { updateRecentNotebookShortcutsCookie } from "@/data/modules/app/cookie";
 import { useNotebooks } from "@/hooks/use-notebooks";
 import { useFileSelection } from "@/data/file-selection";
@@ -118,6 +122,7 @@ export default function Holder({ slug }: { slug: string }) {
     useState<WorkspaceLayout | null>(null);
   const [loadedTabsSlug, setLoadedTabsSlug] = useState<string | null>(null);
   const cursorMetaRef = useRef<Record<string, CursorMeta>>({});
+  const workspaceHandleRef = useRef<WorkspaceHandle | null>(null);
 
   const selectedNotebook = useMemo(
     () => notebooks.find((notebook) => notebook.id === slug) ?? null,
@@ -183,6 +188,16 @@ export default function Holder({ slug }: { slug: string }) {
     },
     [selectFile, selectedNotebook],
   );
+
+  const openInSplit = useCallback((fileId: string, mode: TabViewMode) => {
+    const tabId = getTabId(fileId, mode);
+    setOpenTabIds((currentTabIds) =>
+      currentTabIds.includes(tabId) ? currentTabIds : [...currentTabIds, tabId],
+    );
+    workspaceHandleRef.current?.openInSplit(tabId, "right");
+  }, []);
+
+  const workspaceCommands = useMemo(() => ({ openInSplit }), [openInSplit]);
 
   const navigateToTab = useCallback(
     (tabId: string) => {
@@ -405,29 +420,32 @@ export default function Holder({ slug }: { slug: string }) {
   return (
     <div className="relative h-dvh w-[calc(100%-var(--sidebar-width))] flex-1 flex flex-col bg-background">
       <main className="min-h-0 w-full flex-1">
-        <Workspace
-          key={`${slug}:${loadedTabsSlug ?? "pending"}`}
-          tabs={tabs}
-          activeTabId={selectedTabId || undefined}
-          defaultActiveTabId={
-            firstOpenableFile
-              ? getTabId(firstOpenableFile.id, "editor")
-              : undefined
-          }
-          initialLayout={workspaceLayout}
-          emptyState={
-            emptyState ? (
-              <NotebookEmptyState
-                icon={emptyState.icon}
-                title={emptyState.title}
-                description={emptyState.description}
-              />
-            ) : undefined
-          }
-          onTabSelect={navigateToTab}
-          onTabClose={closeTab}
-          onLayoutChange={setWorkspaceLayout}
-        />
+        <WorkspaceCommandsProvider value={workspaceCommands}>
+          <Workspace
+            key={`${slug}:${loadedTabsSlug ?? "pending"}`}
+            tabs={tabs}
+            activeTabId={selectedTabId || undefined}
+            defaultActiveTabId={
+              firstOpenableFile
+                ? getTabId(firstOpenableFile.id, "editor")
+                : undefined
+            }
+            initialLayout={workspaceLayout}
+            handleRef={workspaceHandleRef}
+            emptyState={
+              emptyState ? (
+                <NotebookEmptyState
+                  icon={emptyState.icon}
+                  title={emptyState.title}
+                  description={emptyState.description}
+                />
+              ) : undefined
+            }
+            onTabSelect={navigateToTab}
+            onTabClose={closeTab}
+            onLayoutChange={setWorkspaceLayout}
+          />
+        </WorkspaceCommandsProvider>
       </main>
 
       <Footer

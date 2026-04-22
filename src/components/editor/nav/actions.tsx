@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useFileSelection } from "@/data/file-selection";
+import { useWorkspaceCommands } from "@/components/workspace/commands";
 
 type Props = {
   notebookId: string;
@@ -28,10 +29,16 @@ export function NotebookActions(props: Props) {
 
 function EditorMenu({ activeFileId }: Props) {
   const { selectFile } = useFileSelection();
+  const workspaceCommands = useWorkspaceCommands();
 
   const openPreviewInTabView = () => {
     if (!activeFileId) return;
     selectFile(activeFileId, "preview");
+  };
+
+  const openPreviewInSplitView = () => {
+    if (!activeFileId) return;
+    workspaceCommands?.openInSplit(activeFileId, "preview");
   };
 
   return (
@@ -54,7 +61,12 @@ function EditorMenu({ activeFileId }: Props) {
             >
               Open in tab view
             </DropdownMenuItem>
-            <DropdownMenuItem>Open in split view</DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={!activeFileId || !workspaceCommands}
+              onSelect={openPreviewInSplitView}
+            >
+              Open in split view
+            </DropdownMenuItem>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
       </DropdownMenuContent>
