@@ -19,9 +19,9 @@ import {
   Separator as ResizableHandle,
 } from "react-resizable-panels";
 
-import type { TabsViewTab } from "@/components/tabs";
-import Header from "@/components/tabs/header";
-import type { HeaderDragState } from "@/components/tabs/header-types";
+import type { TabsViewTab } from "@/components/workspace/tabs";
+import Header from "@/components/workspace/tabs/header";
+import type { HeaderDragState } from "@/components/workspace/tabs/header-types";
 import type { FileType } from "@/data/modules/notebook/client-types";
 import { useUserSettings } from "@/hooks/use-user-settings";
 import { cn } from "@/lib/utils";

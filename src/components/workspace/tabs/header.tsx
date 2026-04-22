@@ -6,8 +6,8 @@ import { HeaderTabItem } from "./header-tab-item";
 import type { HeaderInteractiveProps, HeaderProps } from "./header-types";
 import { getTabIcon } from "./header-utils";
 import { useHeaderTabReorder } from "./use-header-tab-reorder";
-import { Button } from "../ui/button";
-import { useSidebar } from "../ui/sidebar";
+import { Button } from "../../ui/button";
+import { useSidebar } from "../../ui/sidebar";
 
 function getInteractiveProps(
   props: HeaderProps,
