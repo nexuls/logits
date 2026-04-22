@@ -10,7 +10,7 @@ import {
 import { cn } from "@/lib/utils";
 
 import { Pane } from "./pane";
-import type { WorkspaceLayout } from "./types";
+import type { WorkspaceLayout } from "../types";
 
 /**
  * Divider between two children of a split. Thin hit area with a bigger
