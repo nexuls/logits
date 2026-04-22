@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 
-import { useTabs, useWorkspace } from "./context";
+import { useTabs, useWorkspace } from "../context";
 
 type TabViewProps = {
   paneId: string;

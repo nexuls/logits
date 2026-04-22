@@ -1,5 +1,3 @@
-"use client";
-
 import {
   createContext,
   useCallback,
@@ -30,8 +28,8 @@ import {
   replacePaneWithSplit,
   syncLayoutWithTabs,
   updatePane,
-} from "./layout-operations";
-import { getPreviewRect, resolveHoverTarget } from "./drag-geometry";
+} from "./layout/layout-operations";
+import { getPreviewRect, resolveHoverTarget } from "./layout/drag-geometry";
 import type {
   DropSide,
   HeaderDragState,

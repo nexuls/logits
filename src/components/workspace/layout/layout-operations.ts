@@ -1,4 +1,4 @@
-import type { DropSide, WorkspaceLayout, WorkspacePaneNode } from "./types";
+import type { DropSide, WorkspaceLayout, WorkspacePaneNode } from "../types";
 
 // Default percentage share assigned to the first child of a fresh split.
 export const DEFAULT_SPLIT_SIZE = 50;

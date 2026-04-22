@@ -4,7 +4,7 @@ import type {
   PreviewRect,
   WorkspaceDragState,
   WorkspaceLayout,
-} from "./types";
+} from "../types";
 import { getPaneIds } from "./layout-operations";
 
 // Proportion of a pane's side, counted from the edge, that counts as the

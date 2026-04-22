@@ -2,10 +2,10 @@
 
 import { cn } from "@/lib/utils";
 
-import { useWorkspace } from "./context";
-import TabHeader from "./tab-header";
+import { useWorkspace } from "../context";
+import TabHeader from "../tab-header";
 import { TabView } from "./tab-view";
-import type { WorkspacePaneNode } from "./types";
+import type { WorkspacePaneNode } from "../types";
 
 type PaneProps = {
   pane: WorkspacePaneNode;

@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/lib/utils";
 
 import { useWorkspace, WorkspaceProvider } from "./context";
-import { LayoutTree } from "./layout-tree";
+import { LayoutTree } from "./layout/layout-tree";
 import type { WorkspaceProps } from "./types";
 
 /**
