@@ -1,10 +1,11 @@
 import type { MouseEvent, PointerEvent as ReactPointerEvent } from "react";
 import type { LucideIcon } from "lucide-react";
 import { XIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
-import type { HeaderTab } from "./header-types";
 
-type HeaderTabItemProps = {
+import { cn } from "@/lib/utils";
+import type { HeaderTab } from "../types";
+
+type TabHeaderItemProps = {
   tab: HeaderTab;
   icon: LucideIcon;
   isSliding: boolean;
@@ -17,7 +18,12 @@ type HeaderTabItemProps = {
   onClose: (event: MouseEvent<HTMLButtonElement>) => void;
 };
 
-export function HeaderTabItem({
+/**
+ * Single tab pill rendered inside a TabHeader. Purely presentational —
+ * all pointer / keyboard wiring is driven by the parent header via the
+ * callback props.
+ */
+export function TabHeaderItem({
   tab,
   icon: Icon,
   isSliding,
@@ -28,7 +34,7 @@ export function HeaderTabItem({
   onSelectClick,
   onSelectKeyUp,
   onClose,
-}: HeaderTabItemProps) {
+}: TabHeaderItemProps) {
   return (
     <div
       ref={setRef}

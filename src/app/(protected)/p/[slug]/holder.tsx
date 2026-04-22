@@ -8,9 +8,9 @@ import {
   type CursorMeta,
 } from "@/components/editor/markdown-editor";
 import Footer, { updateFooter } from "@/components/footer/index";
-import type { TabsViewTab } from "@/components/workspace/tabs";
 import { Spinner } from "@/components/ui/spinner";
 import Workspace, {
+  type TabsViewTab,
   type WorkspaceHandle,
   type WorkspaceLayout,
 } from "@/components/workspace";

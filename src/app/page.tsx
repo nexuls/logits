@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { BookOpenText } from "lucide-react";
 import { useNotebooks } from "@/hooks/use-notebooks";
 import { buildNotebookUrl } from "@/lib/notebook-url";
-import Header from "@/components/workspace/tabs/header";
+import { TabHeader } from "@/components/workspace";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -27,7 +27,7 @@ export default function Home() {
 
   return (
     <div className="relative h-dvh w-full bg-background">
-      <Header placeholder className="relative border-b" />
+      <TabHeader placeholder className="relative border-b" />
       <main className="flex h-full items-center justify-center px-6 pt-16">
         <Empty className="max-w-lg border-border">
           <EmptyHeader>

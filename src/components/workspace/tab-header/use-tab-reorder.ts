@@ -7,34 +7,32 @@ import {
   useRef,
   useState,
 } from "react";
-import type {
-  HeaderDragState,
-  HeaderPointerState,
-  HeaderTab,
-} from "./header-types";
-import { areOrdersEqual, moveTab } from "./header-utils";
+
+import type { HeaderDragState, HeaderPointerState, HeaderTab } from "../types";
+import { areOrdersEqual, moveTab } from "./utils";
 
 /**
- * Hook that owns interactive tab reordering behavior.
+ * Hook that owns interactive tab-reordering behavior inside a TabHeader.
  *
  * Process overview:
- * 1. Keep a visual order that can diverge from incoming `tabs` while dragging.
+ * 1. Keep a visual order that can diverge from the incoming `tabs` while
+ *    a drag is in progress.
  * 2. Track pointer state to compute drag distance and swap decisions.
- * 3. Animate sibling tabs when order changes.
- * 4. Commit reorder only after drag ends and the order actually changed.
+ * 3. Animate sibling tabs when order changes (FLIP-style).
+ * 4. Commit the reorder only after drag ends and the order changed.
  *
  * Constraints:
- * - Preserve tab selection behavior (pointer down still selects immediately).
- * - Avoid accidental reorders from tiny pointer jitter.
- * - Keep DOM reads and writes stable enough for smooth dragging.
+ * - Pointer down still selects the tab immediately.
+ * - Avoid reorders from tiny pointer jitter (swap threshold).
+ * - Keep DOM reads/writes stable enough for smooth dragging.
  */
-type UseHeaderTabReorderParams = {
+type UseTabReorderParams = {
   tabs: HeaderTab[];
   onTabReorder?: (tabIds: string[]) => void;
   onTabDragStateChange?: (state: HeaderDragState | null) => void;
 };
 
-type UseHeaderTabReorderResult = {
+type UseTabReorderResult = {
   canReorder: boolean;
   orderedTabs: HeaderTab[];
   slidingTabId: string | null;
@@ -54,11 +52,11 @@ type UseHeaderTabReorderResult = {
   ) => void;
 };
 
-export function useHeaderTabReorder({
+export function useTabReorder({
   tabs,
   onTabReorder,
   onTabDragStateChange,
-}: UseHeaderTabReorderParams): UseHeaderTabReorderResult {
+}: UseTabReorderParams): UseTabReorderResult {
   // Drag visual state only. Source-of-truth order remains external until
   // reorder is committed via `onTabReorder`.
   const [slidingTabId, setSlidingTabId] = useState<string | null>(null);
@@ -66,7 +64,7 @@ export function useHeaderTabReorder({
   const [slideOffsetX, setSlideOffsetX] = useState(0);
   const [visualTabOrder, setVisualTabOrder] = useState<string[]>([]);
 
-  // Refs are used for high-frequency pointer operations to avoid extra renders.
+  // Refs for high-frequency pointer operations (avoid extra renders).
   const containerRef = useRef<HTMLDivElement | null>(null);
   const tabRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const orderRef = useRef<string[]>([]);
@@ -74,14 +72,13 @@ export function useHeaderTabReorder({
   const pointerStateRef = useRef<HeaderPointerState | null>(null);
   const suppressClickRef = useRef(false);
 
-  // Reordering is disabled if there is no handler or only one tab.
   const canCommitReorder = Boolean(onTabReorder) && tabs.length > 1;
   const canReorder =
     (Boolean(onTabReorder) || Boolean(onTabDragStateChange)) && tabs.length > 0;
 
   useEffect(() => {
-    // While dragging, we keep the visual order stable and ignore external order
-    // changes to avoid mid-drag jumps.
+    // While dragging, keep the visual order stable and ignore external
+    // order changes to avoid mid-drag jumps.
     if (slidingTabId) return;
 
     const nextOrder = tabs.map((tab) => tab.id);
@@ -92,13 +89,12 @@ export function useHeaderTabReorder({
   }, [tabs, slidingTabId]);
 
   const orderedTabs = useMemo(() => {
-    // Build lookup map once per render to resolve tabs from current visual order.
     const tabsById = new Map(tabs.map((tab) => [tab.id, tab]));
     const hasValidVisualOrder =
       visualTabOrder.length === tabs.length &&
       visualTabOrder.every((tabId) => tabsById.has(tabId));
 
-    // Constraint: if visual order is stale (tab closed/opened), fall back to
+    // If the visual order is stale (tab closed/opened), fall back to the
     // canonical incoming order so rendering never references missing tabs.
     const sourceOrder = hasValidVisualOrder
       ? visualTabOrder
@@ -114,8 +110,7 @@ export function useHeaderTabReorder({
     const containerElement = containerRef.current;
     if (!draggedElement || !containerElement) return offsetX;
 
-    // Boundaries are computed against the tab strip viewport so the dragged
-    // tab always remains fully visible inside the header container.
+    // Clamp so the dragged tab stays fully within the header viewport.
     const minOffset = -draggedElement.offsetLeft;
     const maxOffset =
       containerElement.clientWidth -
@@ -129,7 +124,6 @@ export function useHeaderTabReorder({
   const getIsOutsideHeader = useCallback((clientX: number, clientY: number) => {
     const containerElement = containerRef.current;
     if (!containerElement) return false;
-
     const bounds = containerElement.getBoundingClientRect();
     return (
       clientX < bounds.left ||
@@ -146,7 +140,6 @@ export function useHeaderTabReorder({
         onTabDragStateChange(null);
         return;
       }
-
       onTabDragStateChange({
         tabId: pointerState.tabId,
         pointerX: pointerState.lastClientX,
@@ -166,7 +159,6 @@ export function useHeaderTabReorder({
   );
 
   const finishSliding = useCallback(() => {
-    // Finalize drag lifecycle and release pointer capture if still active.
     const pointerState = pointerStateRef.current;
     const nextOrder = orderRef.current;
 
@@ -183,7 +175,6 @@ export function useHeaderTabReorder({
     setSlideOffsetX(0);
     emitDragState(null);
 
-    // Commit reorder only when an actual drag occurred and order changed.
     if (
       pointerState?.hasMoved &&
       onTabReorder &&
@@ -193,8 +184,8 @@ export function useHeaderTabReorder({
 
     if (!pointerState?.hasMoved) return;
 
-    // Prevent the synthetic click that may follow pointerup after drag,
-    // otherwise a reorder can unintentionally trigger a select action.
+    // Prevent the synthetic click after drag that would otherwise fire a
+    // tab-select immediately after reorder.
     suppressClickRef.current = true;
     window.setTimeout(() => {
       suppressClickRef.current = false;
@@ -202,16 +193,14 @@ export function useHeaderTabReorder({
   }, [emitDragState, onTabReorder]);
 
   useLayoutEffect(() => {
-    // Compute current layout positions and animate tabs into new slots.
-    // useLayoutEffect keeps reads/writes before paint to avoid visible flicker.
+    // FLIP-style animations: compute positions pre-paint so siblings
+    // glide into place without a visible jump.
     const nextTabLeftById: Record<string, number> = {};
 
     for (const tab of orderedTabs) {
       const element = tabRefs.current[tab.id];
       if (!element) continue;
 
-      // offsetLeft ignores active translateX transforms, so we can calculate
-      // stable geometry while animating sibling tabs during reordering.
       const nextLeft = element.offsetLeft;
       nextTabLeftById[tab.id] = nextLeft;
 
@@ -219,7 +208,8 @@ export function useHeaderTabReorder({
       if (previousLeft === undefined || previousLeft === nextLeft) continue;
 
       if (tab.id === slidingTabId) {
-        // Keep pointer and dragged element in sync when DOM order changes.
+        // Keep the pointer and dragged element in sync when DOM order
+        // changes during a swap.
         const domShift = nextLeft - previousLeft;
         if (pointerStateRef.current)
           pointerStateRef.current.startClientX += domShift;
@@ -228,20 +218,13 @@ export function useHeaderTabReorder({
       }
 
       const deltaX = previousLeft - nextLeft;
-
-      element.getAnimations().forEach((animation) => {
-        animation.cancel();
-      });
-
+      for (const animation of element.getAnimations()) animation.cancel();
       element.animate(
         [
           { transform: `translateX(${deltaX}px)` },
           { transform: "translateX(0)" },
         ],
-        {
-          duration: 180,
-          easing: "cubic-bezier(0.2, 0, 0, 1)",
-        },
+        { duration: 180, easing: "cubic-bezier(0.2, 0, 0, 1)" },
       );
     }
 
@@ -253,24 +236,24 @@ export function useHeaderTabReorder({
       const pointerState = pointerStateRef.current;
       if (!pointerState) return;
 
-      // Continuous drag offset from original pointer-down anchor.
       const rawDeltaX = event.clientX - pointerState.startClientX;
       const rawDeltaY = event.clientY - pointerState.startClientY;
       pointerState.lastClientX = event.clientX;
       pointerState.lastClientY = event.clientY;
 
-      // Dragging state starts only after threshold movement from pointer down.
-      // We use raw cursor distance so "grabbing" is based on user intent,
-      // independent of clamping at container boundaries.
-      if ((Math.abs(rawDeltaX) > 16 || Math.abs(rawDeltaY) > 16) && !pointerState.hasMoved) {
+      // "Dragging" begins only after the pointer moves past a small
+      // threshold so a plain click never feels draggy.
+      if (
+        (Math.abs(rawDeltaX) > 16 || Math.abs(rawDeltaY) > 16) &&
+        !pointerState.hasMoved
+      ) {
         pointerState.hasMoved = true;
         setDraggingTabId(pointerState.tabId);
       }
 
       const isOutsideHeader = getIsOutsideHeader(event.clientX, event.clientY);
-      // Freeze the source tab in the header while the pointer is outside it.
-      // The floating ghost handles the drag visual; moving the real tab would
-      // cause header reflow on every pointer tick.
+      // Freeze the source tab in the header while the pointer is outside
+      // of it — the floating ghost handles the visual.
       const deltaX =
         !isOutsideHeader && canCommitReorder
           ? clampSlideOffset(pointerState.tabId, rawDeltaX)
@@ -279,8 +262,8 @@ export function useHeaderTabReorder({
       setSlideOffsetX(deltaX);
       emitDragState(pointerState);
 
-      // We gate swaps with a movement threshold so tiny cursor jitters do not
-      // cause rapid tab-order churn while dragging across tight hit targets.
+      // Gate swaps with a movement threshold so tiny cursor jitters do
+      // not cause rapid tab-order churn during long drags.
       const swapDistance = Math.abs(event.clientX - pointerState.swapAnchorX);
       if (swapDistance < 8 || isOutsideHeader || !canCommitReorder) return;
 
@@ -295,16 +278,11 @@ export function useHeaderTabReorder({
       const draggedProbeX =
         deltaX >= 0 ? draggedLeftX + draggedElement.offsetWidth : draggedLeftX;
 
-      // Recompute insertion index by counting candidate tab centers crossed by
-      // the dragged probe point.
       let nextIndex = 0;
-
       for (const candidateTabId of currentOrder) {
         if (candidateTabId === pointerState.tabId) continue;
-
         const element = tabRefs.current[candidateTabId];
         if (!element) continue;
-
         const candidateCenterX = element.offsetLeft + element.offsetWidth / 2;
         if (draggedProbeX > candidateCenterX) nextIndex += 1;
       }
@@ -315,11 +293,8 @@ export function useHeaderTabReorder({
       const hasOrderChanged = nextOrder.some(
         (tabId, index) => currentOrder[index] !== tabId,
       );
-
       if (!hasOrderChanged) return;
 
-      // Update visual order and move swap anchor forward so swaps are progressive
-      // and less noisy during long drags.
       orderRef.current = nextOrder;
       pointerState.swapAnchorX = event.clientX;
       setVisualTabOrder(nextOrder);
@@ -328,13 +303,11 @@ export function useHeaderTabReorder({
   );
 
   useEffect(() => {
-    // Subscribe to global pointer lifecycle only during active drag.
-    // This guarantees drag completion even if pointer leaves tab bounds.
+    // Global pointer lifecycle only during active drag. Guarantees drag
+    // completion even if the pointer leaves tab bounds.
     if (!slidingTabId) return;
 
-    const handleWindowPointerUp = () => {
-      finishSliding();
-    };
+    const handleWindowPointerUp = () => finishSliding();
 
     window.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("pointerup", handleWindowPointerUp);
@@ -355,13 +328,11 @@ export function useHeaderTabReorder({
       tabId: string,
       onTabSelect: (tabId: string) => void,
     ) => {
-      // A click immediately after drag-end is ignored by design.
       if (suppressClickRef.current) {
         event.preventDefault();
         event.stopPropagation();
         return;
       }
-
       onTabSelect(tabId);
     },
     [],
@@ -373,15 +344,13 @@ export function useHeaderTabReorder({
       event: ReactPointerEvent<HTMLDivElement>,
       onTabSelect: (tabId: string) => void,
     ) => {
-      // Left button only; right/middle clicks must not start drag interactions.
       if (event.button !== 0) return;
 
-      // Select first so keyboard/editor state tracks the user's target tab,
-      // even when reorder mode is not available.
+      // Select first so keyboard/editor state tracks the user's intent
+      // even when reorder is not available.
       onTabSelect(tabId);
       if (!canReorder) return;
 
-      // Start reorder gesture from current visual order snapshot.
       const initialOrder =
         visualTabOrder.length === tabs.length
           ? visualTabOrder
@@ -416,7 +385,6 @@ export function useHeaderTabReorder({
     [canReorder, emitDragState, tabs, visualTabOrder],
   );
 
-  // Stable callback to register/unregister tab DOM refs from item components.
   const setTabRef = useCallback(
     (tabId: string, node: HTMLDivElement | null) => {
       tabRefs.current[tabId] = node;
