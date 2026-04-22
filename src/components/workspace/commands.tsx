@@ -6,6 +6,7 @@ type TabViewMode = "editor" | "preview";
 
 type WorkspaceCommandsContextValue = {
   openInSplit: (fileId: string, mode: TabViewMode) => void;
+  replaceCurrentTab: (fileId: string, mode?: TabViewMode) => void;
 };
 
 const WorkspaceCommandsContext =

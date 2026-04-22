@@ -388,6 +388,35 @@ export function WorkspaceProvider<TMeta>({
   // --------------------------------------------------------------------
   // Imperative split API exposed through handleRef
   // --------------------------------------------------------------------
+  const replaceTab = useCallback((oldTabId: string, newTabId: string) => {
+    if (oldTabId === newTabId) return;
+
+    setLayout((currentLayout) => {
+      const owningPane = findPaneContainingTab(currentLayout, oldTabId);
+      if (!owningPane) return currentLayout;
+
+      const layoutWithoutNewTab = (removeTabFromLayout(
+        currentLayout,
+        newTabId,
+      ) ?? currentLayout) as WorkspaceLayout;
+
+      const targetPane = findPaneContainingTab(layoutWithoutNewTab, oldTabId);
+      if (!targetPane) return currentLayout;
+
+      const index = targetPane.tabIds.indexOf(oldTabId);
+      if (index === -1) return currentLayout;
+
+      const nextTabIds = [...targetPane.tabIds];
+      nextTabIds.splice(index, 1, newTabId);
+
+      return (updatePane(layoutWithoutNewTab, targetPane.id, (pane) => ({
+        ...pane,
+        tabIds: nextTabIds,
+        activeTabId: newTabId,
+      })) ?? layoutWithoutNewTab) as WorkspaceLayout;
+    });
+  }, []);
+
   const openInSplit = useCallback(
     (tabId: string, side: Exclude<DropSide, "center"> = "right") => {
       setLayout((currentLayout) => {
@@ -423,11 +452,11 @@ export function WorkspaceProvider<TMeta>({
 
   useEffect(() => {
     if (!handleRef) return;
-    handleRef.current = { openInSplit };
+    handleRef.current = { openInSplit, replaceTab };
     return () => {
       handleRef.current = null;
     };
-  }, [handleRef, openInSplit]);
+  }, [handleRef, openInSplit, replaceTab]);
 
   // --------------------------------------------------------------------
   // Pane → tab derivations

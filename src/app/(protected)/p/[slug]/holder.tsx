@@ -189,7 +189,48 @@ export default function Holder({ slug }: { slug: string }) {
     workspaceHandleRef.current?.openInSplit(tabId, "right");
   }, []);
 
-  const workspaceCommands = useMemo(() => ({ openInSplit }), [openInSplit]);
+  const selectedTabIdRef = useRef(selectedTabId);
+  useEffect(() => {
+    selectedTabIdRef.current = selectedTabId;
+  }, [selectedTabId]);
+
+  const replaceCurrentTab = useCallback(
+    (fileId: string, mode: TabViewMode = "editor") => {
+      const nextTabId = getTabId(fileId, mode);
+      const currentTabId = selectedTabIdRef.current;
+
+      setOpenTabIds((currentTabIds) => {
+        if (!currentTabId || currentTabId === nextTabId) {
+          return currentTabIds.includes(nextTabId)
+            ? currentTabIds
+            : [...currentTabIds, nextTabId];
+        }
+
+        if (currentTabIds.includes(nextTabId)) {
+          return currentTabIds.filter((tabId) => tabId !== currentTabId);
+        }
+
+        const currentIndex = currentTabIds.indexOf(currentTabId);
+        if (currentIndex === -1) return [...currentTabIds, nextTabId];
+
+        const nextTabs = [...currentTabIds];
+        nextTabs.splice(currentIndex, 1, nextTabId);
+        return nextTabs;
+      });
+
+      if (currentTabId && currentTabId !== nextTabId) {
+        workspaceHandleRef.current?.replaceTab(currentTabId, nextTabId);
+      }
+
+      selectFile(fileId, mode);
+    },
+    [selectFile],
+  );
+
+  const workspaceCommands = useMemo(
+    () => ({ openInSplit, replaceCurrentTab }),
+    [openInSplit, replaceCurrentTab],
+  );
 
   const navigateToTab = useCallback(
     (tabId: string) => {

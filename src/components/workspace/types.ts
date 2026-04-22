@@ -144,6 +144,7 @@ export type PreviewRect = {
  */
 export type WorkspaceHandle = {
   openInSplit: (tabId: string, side?: Exclude<DropSide, "center">) => void;
+  replaceTab: (oldTabId: string, newTabId: string) => void;
 };
 
 /**

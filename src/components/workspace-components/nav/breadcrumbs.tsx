@@ -3,6 +3,7 @@ import { ChevronDown, FolderOpen } from "lucide-react";
 import type { AppFile } from "@/data/modules/notebook/client-types";
 import { useFileSelection } from "@/data/file-selection";
 import { useNotebooks } from "@/hooks/use-notebooks";
+import { useWorkspaceCommands } from "@/components/workspace/commands";
 import { Button } from "@/components/ui/button";
 import {
   Breadcrumb,
@@ -93,6 +94,7 @@ function FolderMenuItems({
 export function NotebookBreadcrumbs() {
   const { notebookId, selectedFileId, selectFile } = useFileSelection();
   const { notebooks, getNotebookFiles } = useNotebooks();
+  const workspaceCommands = useWorkspaceCommands();
 
   const notebookName = useMemo(
     () => notebooks.find((notebook) => notebook.id === notebookId)?.name ?? "",
@@ -105,7 +107,13 @@ export function NotebookBreadcrumbs() {
   );
 
   const activeFileId = selectedFileId || undefined;
-  const onNavigateToFile = selectFile;
+  const onNavigateToFile = useMemo(
+    () =>
+      workspaceCommands
+        ? (fileId: string) => workspaceCommands.replaceCurrentTab(fileId)
+        : selectFile,
+    [workspaceCommands, selectFile],
+  );
 
   const filesById = useMemo(
     () => new Map(files.map((file) => [file.id, file])),
