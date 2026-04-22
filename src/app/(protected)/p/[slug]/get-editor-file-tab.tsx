@@ -7,7 +7,7 @@ import {
 } from "@/components/editor/markdown-editor";
 import Editor from "@/components/editor/markdown-editor";
 import NavBar from "@/components/editor/nav";
-import { getTextStats } from "@/components/editor/utils";
+import { getTextStats } from "@/components/editor/markdown-editor/utils";
 import { updateFooter } from "@/components/footer/index";
 import type { TabsViewTab } from "@/components/workspace";
 import type { AppFile } from "@/data/modules/notebook/client-types";
