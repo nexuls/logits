@@ -12,13 +12,13 @@ import {
 } from "react";
 import { buildNotebookUrl } from "@/lib/notebook-url";
 
-type TabViewMode = "editor" | "preview";
+const DEFAULT_VIEW_NAME = "editor";
 
 type FileSelectionContextValue = {
   notebookId: string;
   selectedFileId: string;
-  selectedTabMode: TabViewMode;
-  selectFile: (fileId: string, mode?: TabViewMode) => void;
+  selectedViewName: string;
+  selectFile: (fileId: string, viewName?: string) => void;
   clearSelection: () => void;
 };
 
@@ -31,11 +31,14 @@ function readFileIdFromUrl() {
   return new URLSearchParams(window.location.search).get("file") ?? "";
 }
 
-function readTabModeFromUrl(): TabViewMode {
-  if (typeof window === "undefined") return "editor";
-  return new URLSearchParams(window.location.search).has("preview")
-    ? "preview"
-    : "editor";
+function readViewNameFromUrl(): string {
+  if (typeof window === "undefined") return DEFAULT_VIEW_NAME;
+  const params = new URLSearchParams(window.location.search);
+  const view = params.get("view");
+  if (view) return view;
+  // Backwards compatibility for the legacy `?preview=1` flag.
+  if (params.has("preview")) return "preview";
+  return DEFAULT_VIEW_NAME;
 }
 
 export function FileSelectionProvider({
@@ -46,25 +49,25 @@ export function FileSelectionProvider({
   notebookId: string;
 }) {
   const [selectedFileId, setSelectedFileId] = useState(readFileIdFromUrl);
-  const [selectedTabMode, setSelectedTabMode] =
-    useState<TabViewMode>(readTabModeFromUrl);
+  const [selectedViewName, setSelectedViewName] =
+    useState<string>(readViewNameFromUrl);
 
-  // Re-sync when navigating to a different notebook via Next.js router
-  // biome-ignore lint/correctness/useExhaustiveDependencies: we only want to re-run this when the notebookId changes, not when the URL changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-sync only on notebookId change
   useEffect(() => {
     setSelectedFileId(readFileIdFromUrl());
-    setSelectedTabMode(readTabModeFromUrl());
+    setSelectedViewName(readViewNameFromUrl());
   }, [notebookId]);
 
   const selectFile = useCallback(
-    (fileId: string, mode?: TabViewMode) => {
-      const targetMode = mode ?? "editor";
+    (fileId: string, viewName?: string) => {
+      const targetView = viewName ?? DEFAULT_VIEW_NAME;
       setSelectedFileId(fileId);
-      setSelectedTabMode(targetMode);
+      setSelectedViewName(targetView);
 
       const params = new URLSearchParams(window.location.search);
-      if (targetMode === "preview") params.set("preview", "1");
-      else params.delete("preview");
+      params.delete("preview");
+      if (targetView !== DEFAULT_VIEW_NAME) params.set("view", targetView);
+      else params.delete("view");
 
       window.history.replaceState(
         null,
@@ -77,15 +80,14 @@ export function FileSelectionProvider({
 
   const clearSelection = useCallback(() => {
     setSelectedFileId("");
-    setSelectedTabMode("editor");
+    setSelectedViewName(DEFAULT_VIEW_NAME);
     window.history.replaceState(null, "", buildNotebookUrl(notebookId));
   }, [notebookId]);
 
-  // Sync on browser back/forward
   useEffect(() => {
     const onPopState = () => {
       setSelectedFileId(readFileIdFromUrl());
-      setSelectedTabMode(readTabModeFromUrl());
+      setSelectedViewName(readViewNameFromUrl());
     };
 
     window.addEventListener("popstate", onPopState);
@@ -96,11 +98,11 @@ export function FileSelectionProvider({
     () => ({
       notebookId,
       selectedFileId,
-      selectedTabMode,
+      selectedViewName,
       selectFile,
       clearSelection,
     }),
-    [notebookId, selectedFileId, selectedTabMode, selectFile, clearSelection],
+    [notebookId, selectedFileId, selectedViewName, selectFile, clearSelection],
   );
 
   return createElement(FileSelectionContext.Provider, { value }, children);
@@ -117,5 +119,3 @@ export function useFileSelection() {
 
   return context;
 }
-
-export type { TabViewMode };

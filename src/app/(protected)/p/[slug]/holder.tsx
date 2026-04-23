@@ -3,29 +3,41 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TriangleAlertIcon } from "lucide-react";
 
-import {
-  DEFAULT_CURSOR_META,
-  type CursorMeta,
-} from "@/components/markdown-editor/editor";
-import Footer, { updateFooter } from "@/components/footer/index";
 import { Spinner } from "@/components/ui/spinner";
+import Footer, { updateFooter } from "@/components/footer/index";
 import Workspace, {
   type TabsViewTab,
   type WorkspaceHandle,
   type WorkspaceLayout,
 } from "@/components/workspace";
-import { WorkspaceCommandsProvider } from "@/components/workspace/commands";
-import { updateRecentNotebookShortcutsCookie } from "@/data/modules/app/cookie";
-import { useNotebooks } from "@/hooks/use-notebooks";
-import { useFileSelection } from "@/data/file-selection";
 import type { AppFile } from "@/data/modules/notebook/client-types";
 
-import { getEditorFileTab } from "./get-editor-file-tab";
-import { getEditorFilePreviewTab } from "./get-editor-file-preview-tab";
-import { NotebookEmptyState, renderEmptyState } from "./state-views";
-import { parseTabId, readStoredTabIds, readStoredWorkspaceLayout } from "./utils";
+import { buildTabId, parseTabId } from "@/workspace-views/tab-id";
+import { DEFAULT_WORKSPACE_VIEW } from "@/workspace-views/registry";
+import type { WorkspaceViewMeta } from "@/workspace-views/types";
+import { buildWorkspaceViewTab } from "@/workspace-views/host";
+import {
+  NotebookEmptyState,
+  renderEmptyState,
+} from "@/workspace-views/empty-states";
 
-// Keep file ordering stable and predictable in tab/open file logic.
+import {
+  CursorMetaProvider,
+  useCursorMetaStore,
+} from "@/components/markdown-editor/cursor-meta";
+import { WorkspaceCommandsProvider } from "@/components/workspace/commands";
+import { useFileSelection } from "@/data/file-selection";
+import { useNotebooks } from "@/hooks/use-notebooks";
+
+import { DEFAULT_CURSOR_META } from "@/components/markdown-editor/editor";
+import { updateRecentNotebookShortcutsCookie } from "@/data/modules/app/cookie";
+import {
+  getNotebookTabStorageKey,
+  getNotebookWorkspaceStorageKey,
+  readStoredTabIds,
+  readStoredWorkspaceLayout,
+} from "./storage";
+
 const getNotebookTree = (files: AppFile[]) =>
   [...files].sort((first, second) => {
     if (first.metadata.fileOrder !== second.metadata.fileOrder)
@@ -34,36 +46,24 @@ const getNotebookTree = (files: AppFile[]) =>
     return first.name.localeCompare(second.name);
   });
 
-type TabViewMode = "editor" | "preview";
-type OpenTab = {
-  tabId: string;
-  file: AppFile;
-  mode: TabViewMode;
-};
-
-type MixedTabMeta = {
-  type: AppFile["metadata"]["type"];
-  view: TabViewMode;
-  fileId: string;
-};
-
-export const getNotebookTabStorageKey = (notebookId: string) =>
-  `logits:open-tabs:${notebookId}`;
-export const getNotebookWorkspaceStorageKey = (notebookId: string) =>
-  `logits:workspace-layout:${notebookId}`;
-export const getTabId = (fileId: string, mode: TabViewMode) =>
-  `${mode}:${fileId}`;
-
 export default function Holder({ slug }: { slug: string }) {
-  const { selectedFileId, selectedTabMode, selectFile, clearSelection } =
+  return (
+    <CursorMetaProvider>
+      <HolderInner slug={slug} />
+    </CursorMetaProvider>
+  );
+}
+
+function HolderInner({ slug }: { slug: string }) {
+  const { selectedFileId, selectedViewName, selectFile, clearSelection } =
     useFileSelection();
   const { notebooks, isHydrating, getNotebookFiles } = useNotebooks();
+  const cursorMetaStore = useCursorMetaStore();
 
   const [openTabIds, setOpenTabIds] = useState<string[]>([]);
   const [workspaceLayout, setWorkspaceLayout] =
     useState<WorkspaceLayout | null>(null);
   const [loadedTabsSlug, setLoadedTabsSlug] = useState<string | null>(null);
-  const cursorMetaRef = useRef<Record<string, CursorMeta>>({});
   const workspaceHandleRef = useRef<WorkspaceHandle | null>(null);
 
   const selectedNotebook = useMemo(
@@ -80,13 +80,11 @@ export default function Holder({ slug }: { slug: string }) {
     });
   }, [selectedNotebook]);
 
-  // Derive files for current notebook and openable files for tab logic.
   const { notebookFiles, openableFiles, firstOpenableFile } = useMemo(() => {
     if (!selectedNotebook)
       return { notebookFiles: [], openableFiles: [], firstOpenableFile: null };
 
     const notebookFiles = getNotebookFiles(selectedNotebook.id);
-
     const openableFiles = notebookFiles.filter(
       (file) => file.metadata.type !== "folder",
     );
@@ -96,35 +94,20 @@ export default function Holder({ slug }: { slug: string }) {
   }, [getNotebookFiles, selectedNotebook]);
 
   const selectedTabId = selectedFileId
-    ? getTabId(selectedFileId, selectedTabMode)
+    ? buildTabId(selectedViewName, selectedFileId)
     : "";
   const selectedFile = useMemo(
     () => notebookFiles.find((file) => file.id === selectedFileId) ?? null,
     [notebookFiles, selectedFileId],
   );
 
-  const openTabs = useMemo<OpenTab[]>(() => {
-    const filesById = new Map(openableFiles.map((file) => [file.id, file]));
+  const openableFilesById = useMemo(
+    () => new Map(openableFiles.map((file) => [file.id, file])),
+    [openableFiles],
+  );
 
-    return openTabIds
-      .map((tabId) => {
-        const parsed = parseTabId(tabId);
-        if (!parsed) return null;
-
-        const file = filesById.get(parsed.fileId);
-        if (!file) return null;
-
-        return {
-          tabId,
-          file,
-          mode: parsed.mode,
-        };
-      })
-      .filter((tab): tab is OpenTab => Boolean(tab));
-  }, [openTabIds, openableFiles]);
-
-  const openInSplit = useCallback((fileId: string, mode: TabViewMode) => {
-    const tabId = getTabId(fileId, mode);
+  const openInSplit = useCallback((fileId: string, viewName: string) => {
+    const tabId = buildTabId(viewName, fileId);
     setOpenTabIds((currentTabIds) =>
       currentTabIds.includes(tabId) ? currentTabIds : [...currentTabIds, tabId],
     );
@@ -137,8 +120,8 @@ export default function Holder({ slug }: { slug: string }) {
   }, [selectedTabId]);
 
   const replaceCurrentTab = useCallback(
-    (fileId: string, mode: TabViewMode = "editor") => {
-      const nextTabId = getTabId(fileId, mode);
+    (fileId: string, viewName: string = DEFAULT_WORKSPACE_VIEW) => {
+      const nextTabId = buildTabId(viewName, fileId);
       const currentTabId = selectedTabIdRef.current;
 
       setOpenTabIds((currentTabIds) => {
@@ -164,7 +147,7 @@ export default function Holder({ slug }: { slug: string }) {
         workspaceHandleRef.current?.replaceTab(currentTabId, nextTabId);
       }
 
-      selectFile(fileId, mode);
+      selectFile(fileId, viewName);
     },
     [selectFile],
   );
@@ -178,23 +161,19 @@ export default function Holder({ slug }: { slug: string }) {
     (tabId: string) => {
       const parsed = parseTabId(tabId);
       if (!parsed) return;
-      selectFile(parsed.fileId, parsed.mode);
+      selectFile(parsed.fileId, parsed.viewName);
     },
     [selectFile],
   );
 
-  // Restore persisted tabs for notebook.
   useEffect(() => {
     setOpenTabIds(readStoredTabIds(slug));
     setWorkspaceLayout(readStoredWorkspaceLayout(slug));
     setLoadedTabsSlug(slug);
   }, [slug]);
 
-  // Persist tabs after restoring initial state for current notebook.
   useEffect(() => {
-    if (typeof window === "undefined" || loadedTabsSlug !== slug) {
-      return;
-    }
+    if (typeof window === "undefined" || loadedTabsSlug !== slug) return;
 
     window.localStorage.setItem(
       getNotebookTabStorageKey(slug),
@@ -203,9 +182,7 @@ export default function Holder({ slug }: { slug: string }) {
   }, [loadedTabsSlug, openTabIds, slug]);
 
   useEffect(() => {
-    if (typeof window === "undefined" || loadedTabsSlug !== slug) {
-      return;
-    }
+    if (typeof window === "undefined" || loadedTabsSlug !== slug) return;
 
     if (!workspaceLayout) {
       window.localStorage.removeItem(getNotebookWorkspaceStorageKey(slug));
@@ -218,7 +195,6 @@ export default function Holder({ slug }: { slug: string }) {
     );
   }, [loadedTabsSlug, slug, workspaceLayout]);
 
-  // Keep local refs and tabs aligned with available files.
   useEffect(() => {
     if (isHydrating || loadedTabsSlug !== slug) return;
 
@@ -228,18 +204,14 @@ export default function Holder({ slug }: { slug: string }) {
       currentTabs.filter((tabId) => {
         const parsed = parseTabId(tabId);
         if (!parsed) return false;
-
         return validFileIds.has(parsed.fileId);
       }),
     );
   }, [isHydrating, loadedTabsSlug, openableFiles, slug]);
 
-  // Ensure URL-selected tab exists; if not, prepend it so URL intent stays primary.
   useEffect(() => {
     if (isHydrating || loadedTabsSlug !== slug) return;
-    if (!selectedFile || selectedFile.metadata.type === "folder") {
-      return;
-    }
+    if (!selectedFile || selectedFile.metadata.type === "folder") return;
 
     setOpenTabIds((currentTabs) =>
       currentTabs.includes(selectedTabId)
@@ -248,20 +220,21 @@ export default function Holder({ slug }: { slug: string }) {
     );
   }, [isHydrating, loadedTabsSlug, selectedFile, selectedTabId, slug]);
 
-  // Select a fallback file when current selection points to a missing file.
   useEffect(() => {
     if (!selectedNotebook || selectedFile) return;
 
     const fallbackTabId =
       openTabIds[openTabIds.length - 1] ??
-      (firstOpenableFile ? getTabId(firstOpenableFile.id, "editor") : "");
+      (firstOpenableFile
+        ? buildTabId(DEFAULT_WORKSPACE_VIEW, firstOpenableFile.id)
+        : "");
 
     if (!fallbackTabId) return;
 
     const parsedFallback = parseTabId(fallbackTabId);
     if (!parsedFallback) return;
 
-    selectFile(parsedFallback.fileId, parsedFallback.mode);
+    selectFile(parsedFallback.fileId, parsedFallback.viewName);
   }, [
     firstOpenableFile,
     openTabIds,
@@ -271,68 +244,47 @@ export default function Holder({ slug }: { slug: string }) {
   ]);
 
   useEffect(() => {
-    updateFooter("cursor", {
-      line: 1,
-      col: 1,
-      selection: 0,
-    });
-    updateFooter("others", {
-      tabSize: 2,
-      saveStatus: "saved",
-    });
+    updateFooter("cursor", { line: 1, col: 1, selection: 0 });
+    updateFooter("others", { tabSize: 2, saveStatus: "saved" });
   }, []);
 
   useEffect(() => {
     if (!selectedTabId) {
-      const fallbackCursorMeta = DEFAULT_CURSOR_META;
-
+      const fallback = DEFAULT_CURSOR_META;
       updateFooter("cursor", {
-        line: fallbackCursorMeta.line,
-        col: fallbackCursorMeta.col,
-        selection: fallbackCursorMeta.selection,
+        line: fallback.line,
+        col: fallback.col,
+        selection: fallback.selection,
       });
-      updateFooter("others", {
-        tabSize: fallbackCursorMeta.tabSize,
-      });
+      updateFooter("others", { tabSize: fallback.tabSize });
       return;
     }
 
-    const activeCursorMeta =
-      cursorMetaRef.current[selectedTabId] ?? DEFAULT_CURSOR_META;
-
+    const activeCursorMeta = cursorMetaStore.read(selectedTabId);
     updateFooter("cursor", {
       line: activeCursorMeta.line,
       col: activeCursorMeta.col,
       selection: activeCursorMeta.selection,
     });
-    updateFooter("others", {
-      tabSize: activeCursorMeta.tabSize,
+    updateFooter("others", { tabSize: activeCursorMeta.tabSize });
+  }, [selectedTabId, cursorMetaStore]);
+
+  const tabs = useMemo<TabsViewTab<WorkspaceViewMeta>[]>(() => {
+    if (!selectedNotebook) return [];
+
+    return openTabIds.flatMap((tabId) => {
+      const parsed = parseTabId(tabId);
+      if (!parsed) return [];
+
+      const file = openableFilesById.get(parsed.fileId);
+      if (!file) return [];
+
+      const tab = buildWorkspaceViewTab(tabId, file);
+      return tab ? [tab] : [];
     });
-  }, [selectedTabId]);
+  }, [openTabIds, openableFilesById, selectedNotebook]);
 
-  const tabs = useMemo<TabsViewTab<MixedTabMeta>[]>(
-    () =>
-      selectedNotebook
-        ? openTabs.map((tab) => {
-            if (tab.mode === "preview") {
-              return getEditorFilePreviewTab({
-                tabId: tab.tabId,
-                file: tab.file,
-              });
-            }
-
-            return getEditorFileTab({
-              tabId: tab.tabId,
-              file: tab.file,
-              cursorMetaRef,
-            });
-          })
-        : [],
-    [openTabs, selectedNotebook],
-  );
-
-  const activeCursorMeta =
-    cursorMetaRef.current[selectedTabId] ?? DEFAULT_CURSOR_META;
+  const activeCursorMeta = cursorMetaStore.read(selectedTabId);
 
   if (isHydrating) {
     return (
@@ -357,16 +309,19 @@ export default function Holder({ slug }: { slug: string }) {
   }
 
   const hasAnyFiles = notebookFiles.length > 0;
-  const emptyState = renderEmptyState(
-    hasAnyFiles,
-    selectedFile,
-    openTabs.map((tab) => tab.file),
-  );
+  const openTabFiles = openTabIds
+    .map((tabId) => {
+      const parsed = parseTabId(tabId);
+      if (!parsed) return null;
+      return openableFilesById.get(parsed.fileId) ?? null;
+    })
+    .filter((file): file is AppFile => Boolean(file));
+
+  const emptyState = renderEmptyState(hasAnyFiles, selectedFile, openTabFiles);
 
   const closeTab = (tabId: string, nextActiveTabId: string | null) => {
     setOpenTabIds((currentTabs) => {
       if (!currentTabs.includes(tabId)) return currentTabs;
-
       return currentTabs.filter((currentTabId) => currentTabId !== tabId);
     });
 
@@ -375,7 +330,7 @@ export default function Holder({ slug }: { slug: string }) {
     if (nextActiveTabId) {
       const parsed = parseTabId(nextActiveTabId);
       if (parsed) {
-        selectFile(parsed.fileId, parsed.mode);
+        selectFile(parsed.fileId, parsed.viewName);
         return;
       }
     }
@@ -393,7 +348,7 @@ export default function Holder({ slug }: { slug: string }) {
             activeTabId={selectedTabId || undefined}
             defaultActiveTabId={
               firstOpenableFile
-                ? getTabId(firstOpenableFile.id, "editor")
+                ? buildTabId(DEFAULT_WORKSPACE_VIEW, firstOpenableFile.id)
                 : undefined
             }
             initialLayout={workspaceLayout}

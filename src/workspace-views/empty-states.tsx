@@ -1,10 +1,21 @@
+/**
+ * Shared empty / unsupported-state UI for workspace views.
+ *
+ * Two layers live here:
+ *   - `NotebookEmptyState` — the visual shell, used both inside view bodies
+ *     (via `host.tsx`) and as the workspace-level empty state.
+ *   - File-type fallbacks (`getTextFileUnsupportedState`) and the
+ *     workspace-level fallback selector (`renderEmptyState`), which both the
+ *     editor and preview views share since they accept the same file types.
+ */
+
 import {
   FileImage,
   FilePenLine,
   FolderClosed,
   NotebookText,
 } from "lucide-react";
-import type { AppFile } from "@/hooks/use-notebooks";
+
 import {
   Empty,
   EmptyDescription,
@@ -12,8 +23,17 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import type { AppFile } from "@/data/modules/notebook/client-types";
 
-export function getUnsupportedFileState(fileType: AppFile["metadata"]["type"]) {
+import type { ViewUnsupportedState } from "./types";
+
+/**
+ * Fallback for views that only handle text files. Returns `null` for `"file"`
+ * (the supported case) so callers can early-return on `null`.
+ */
+export function getTextFileUnsupportedState(
+  fileType: AppFile["metadata"]["type"],
+): ViewUnsupportedState | null {
   if (fileType === "folder") {
     return {
       icon: <FolderClosed />,
@@ -65,13 +85,20 @@ export function NotebookEmptyState({
   );
 }
 
+/**
+ * Picks the right workspace-level empty state for the holder.
+ *
+ * Returns `null` when the workspace should render its tabs normally (e.g.
+ * a supported file is selected, or there are still other tabs open even if
+ * the current selection is unsupported).
+ */
 export const renderEmptyState = (
   hasAnyFiles: boolean,
   selectedFile: AppFile | null,
   openTabs: AppFile[],
 ) => {
   const unsupportedState = selectedFile
-    ? getUnsupportedFileState(selectedFile.metadata.type)
+    ? getTextFileUnsupportedState(selectedFile.metadata.type)
     : null;
 
   if (!hasAnyFiles) {
@@ -90,6 +117,8 @@ export const renderEmptyState = (
     };
   }
 
+  // Only show the unsupported full-page state when there's nothing else open;
+  // otherwise the existing tabs already provide context.
   if (unsupportedState && openTabs.length === 0) {
     return unsupportedState;
   }

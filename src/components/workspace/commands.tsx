@@ -2,11 +2,9 @@
 
 import { createContext, useContext, type ReactNode } from "react";
 
-type TabViewMode = "editor" | "preview";
-
 type WorkspaceCommandsContextValue = {
-  openInSplit: (fileId: string, mode: TabViewMode) => void;
-  replaceCurrentTab: (fileId: string, mode?: TabViewMode) => void;
+  openInSplit: (fileId: string, viewName: string) => void;
+  replaceCurrentTab: (fileId: string, viewName?: string) => void;
 };
 
 const WorkspaceCommandsContext =

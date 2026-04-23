@@ -1,52 +1,61 @@
-import { useEffect, useRef, useState } from "react";
-import type { RefObject } from "react";
+"use client";
 
-import {
+/**
+ * Markdown editor workspace view.
+ *
+ * Owns the lifecycle of a single open editor tab:
+ *   - hydrates content from IDB once per file id (and skips the rehydrate if
+ *     the user has already typed, so we never clobber unsaved edits);
+ *   - debounces writes back through `useNotebooks().updateFileContent`;
+ *   - mirrors the active tab's cursor/stats/save status into the footer;
+ *   - persists cursor meta via the shared {@link useCursorMetaStore} so the
+ *     footer can keep displaying the last-known cursor when this component
+ *     unmounts (tab switch, split close).
+ */
+
+import { useEffect, useRef, useState } from "react";
+
+import Editor, {
   DEFAULT_CURSOR_META,
   type CursorMeta,
 } from "@/components/markdown-editor/editor";
-import Editor from "@/components/markdown-editor/editor";
 import { getTextStats } from "@/components/markdown-editor/utils";
 import { updateFooter } from "@/components/footer/index";
-import type { TabsViewTab } from "@/components/workspace";
-import type { AppFile } from "@/data/modules/notebook/client-types";
 import { useFileSelection } from "@/data/file-selection";
 import { useNotebooks } from "@/hooks/use-notebooks";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 
-import { getUnsupportedFileState, NotebookEmptyState } from "./state-views";
+import { useCursorMetaStore } from "../../components/markdown-editor/cursor-meta";
+import { getTextFileUnsupportedState } from "../empty-states";
+import type { WorkspaceView, WorkspaceViewProps } from "../types";
 
-type EditorTabContentProps = {
-  tabId: string;
-  file: AppFile;
-  cursorMetaRef: RefObject<Record<string, CursorMeta>>;
-};
+const VIEW_NAME = "editor";
 
-function EditorTabContent({
-  tabId,
-  file,
-  cursorMetaRef,
-}: EditorTabContentProps) {
-  const { selectedFileId, selectedTabMode } = useFileSelection();
-  const isActive = selectedFileId === file.id && selectedTabMode === "editor";
+function EditorViewContent({ tabId, fileId }: WorkspaceViewProps) {
+  const cursorMetaStore = useCursorMetaStore();
+  const { selectedFileId, selectedViewName } = useFileSelection();
+  const isActive = selectedFileId === fileId && selectedViewName === VIEW_NAME;
+
   const { updateFileContent, getFileContent } = useNotebooks();
 
   const [content, setContent] = useState("");
-  const [cursorMeta, setCursorMeta] = useState<CursorMeta>(
-    cursorMetaRef.current[tabId] ?? DEFAULT_CURSOR_META,
+  const [cursorMeta, setCursorMeta] = useState<CursorMeta>(() =>
+    cursorMetaStore.read(tabId),
   );
 
+  // Bumped on every keystroke; used to discard stale debounced saves so a
+  // late-resolving write can't flip the footer back to "saved" after a newer
+  // edit started.
   const latestSaveRequestRef = useRef(0);
+  // Once the user types we must not overwrite their buffer with a slow IDB
+  // read that started before they edited.
   const userChangedContentRef = useRef(false);
 
-  // Hydrate from content store once when opening file if user has not edited yet.
   useEffect(() => {
     let isCancelled = false;
-    const fileIdAtRequestTime = file.id;
 
-    void getFileContent(file.id).then((storedContent) => {
+    void getFileContent(fileId).then((storedContent) => {
       if (isCancelled) return;
-      if (file.id !== fileIdAtRequestTime) return;
       if (userChangedContentRef.current) return;
 
       setContent(storedContent);
@@ -55,12 +64,12 @@ function EditorTabContent({
     return () => {
       isCancelled = true;
     };
-  }, [file.id, getFileContent]);
+  }, [fileId, getFileContent]);
 
   const { debounced: debouncedSave, flush: flushDebouncedSave } =
     useDebouncedCallback(
       async (nextContent: string, requestId: number) => {
-        await updateFileContent(file.id, nextContent);
+        await updateFileContent(fileId, nextContent);
 
         if (latestSaveRequestRef.current !== requestId) return;
 
@@ -80,7 +89,7 @@ function EditorTabContent({
   useEffect(() => () => flushDebouncedSave(), [flushDebouncedSave]);
 
   function editorMetaChangeHandler(meta: CursorMeta) {
-    cursorMetaRef.current[tabId] = meta;
+    cursorMetaStore.write(tabId, meta);
     setCursorMeta(meta);
 
     if (!isActive) return;
@@ -113,57 +122,12 @@ function EditorTabContent({
   );
 }
 
-type GetEditorFileTabParams = {
-  tabId: string;
-  file: AppFile;
-  cursorMetaRef: RefObject<Record<string, CursorMeta>>;
+export const editorView: WorkspaceView = {
+  name: VIEW_NAME,
+  getTitle: (file) => file.name,
+  getUnsupportedState: (file) =>
+    getTextFileUnsupportedState(file.metadata.type),
+  Component: EditorViewContent,
 };
 
-export const getEditorFileTab = ({
-  tabId,
-  file,
-  cursorMetaRef,
-}: GetEditorFileTabParams): TabsViewTab<{
-  type: AppFile["metadata"]["type"];
-  view: "editor";
-  fileId: string;
-}> => {
-  const unsupportedFileState = getUnsupportedFileState(file.metadata.type);
-
-  if (unsupportedFileState)
-    return {
-      id: tabId,
-      title: file.name,
-      meta: {
-        type: file.metadata.type,
-        view: "editor",
-        fileId: file.id,
-      },
-      content: (
-        <NotebookEmptyState
-          key={tabId}
-          icon={unsupportedFileState.icon}
-          title={unsupportedFileState.title}
-          description={unsupportedFileState.description}
-        />
-      ),
-    };
-
-  return {
-    id: tabId,
-    title: file.name,
-    meta: {
-      type: file.metadata.type,
-      view: "editor",
-      fileId: file.id,
-    },
-    content: (
-      <EditorTabContent
-        key={tabId}
-        tabId={tabId}
-        file={file}
-        cursorMetaRef={cursorMetaRef}
-      />
-    ),
-  };
-};
+export { DEFAULT_CURSOR_META };
