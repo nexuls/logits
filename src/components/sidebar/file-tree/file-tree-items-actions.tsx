@@ -3,6 +3,7 @@ import {
   CopyPlus,
   Download,
   EllipsisVertical,
+  FileDown,
   FolderPlus,
   Link2,
   Pencil,
@@ -34,6 +35,7 @@ type Props = {
   onRename: (file: AppFile) => void;
   onDuplicate: (file: AppFile) => void;
   onDelete: (file: AppFile) => void;
+  onConvertToPdf: (file: AppFile) => void;
 };
 
 export function FileTreeActionItems({
@@ -45,8 +47,10 @@ export function FileTreeActionItems({
   onRename,
   onDuplicate,
   onDelete,
+  onConvertToPdf,
 }: Props) {
   const isFolder = file.metadata.type === "folder";
+  const isTextFile = file.metadata.type === "file";
 
   return (
     <>
@@ -76,6 +80,12 @@ export function FileTreeActionItems({
         <CopyPlus className="size-4" />
         Duplicate
       </Item>
+      {isTextFile ? (
+        <Item onSelect={() => onConvertToPdf(file)}>
+          <FileDown className="size-4" />
+          Convert to PDF
+        </Item>
+      ) : null}
       <Item disabled>
         <Download className="size-4" />
         Download
@@ -100,6 +110,7 @@ type SharedProps = {
   onRename: (file: AppFile) => void;
   onDuplicate: (file: AppFile) => void;
   onDelete: (file: AppFile) => void;
+  onConvertToPdf: (file: AppFile) => void;
 };
 
 type ContextProps = SharedProps & {

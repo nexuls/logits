@@ -34,6 +34,7 @@ type Props = {
   onCopyLink: (file: AppFile) => void;
   onDuplicate: (file: AppFile) => void;
   onDelete: (file: AppFile) => void;
+  onConvertToPdf: (file: AppFile) => void;
   onDragStart: (fileId: string) => void;
   onDragHover: (file: AppFile, event: DragEvent<HTMLDivElement>) => void;
   onDrop: (file: AppFile) => void;
@@ -59,6 +60,7 @@ export function FileTreeNode({
   onCopyLink,
   onDuplicate,
   onDelete,
+  onConvertToPdf,
   onDragStart,
   onDragHover,
   onDrop,
@@ -157,6 +159,7 @@ export function FileTreeNode({
           onRename={onStartRename}
           onDuplicate={onDuplicate}
           onDelete={onDelete}
+          onConvertToPdf={onConvertToPdf}
         >
           <div
             draggable={!isRenaming}
@@ -248,6 +251,7 @@ export function FileTreeNode({
               onRename={onStartRename}
               onDuplicate={onDuplicate}
               onDelete={onDelete}
+              onConvertToPdf={onConvertToPdf}
             />
           </div>
         </FileTreeItemContextMenu>

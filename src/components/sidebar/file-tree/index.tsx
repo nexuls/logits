@@ -48,6 +48,11 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
   const router = useRouter();
   const { isMobile, setOpenMobile } = useSidebar();
   const { selectFile, clearSelection } = useFileSelection();
+
+  const onConvertToPdf = (file: AppFile) => {
+    if (file.metadata.type !== "file") return;
+    selectFile(file.id, "pdf");
+  };
   const {
     notebooks,
     createFile,
@@ -553,6 +558,7 @@ export function FileTree({ notebookId, files, activeFileId }: Props) {
             onDelete={(fileToDelete) => {
               void onDelete(fileToDelete);
             }}
+            onConvertToPdf={onConvertToPdf}
             onDragStart={handleDragStart}
             onDragHover={handleDragHover}
             onDrop={(targetFile) => {

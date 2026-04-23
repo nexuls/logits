@@ -13,9 +13,10 @@
 
 import type { WorkspaceView } from "./types";
 import { editorView } from "./views/editor-view";
+import { pdfView } from "./views/pdf-view";
 import { previewView } from "./views/preview-view";
 
-const views: WorkspaceView[] = [editorView, previewView];
+const views: WorkspaceView[] = [editorView, previewView, pdfView];
 
 export const workspaceViews: Record<string, WorkspaceView> = Object.fromEntries(
   views.map((view) => [view.name, view]),
