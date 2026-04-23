@@ -5,7 +5,7 @@ import type { TabsViewTab } from "@/components/workspace";
 import type { AppFile } from "@/data/modules/notebook/client-types";
 import { useNotebooks } from "@/hooks/use-notebooks";
 
-import { getUnsupportedFileState, NotebookEmptyState } from "./helper";
+import { getUnsupportedFileState, NotebookEmptyState } from "./state-views";
 
 type PreviewTabContentProps = {
   file: AppFile;

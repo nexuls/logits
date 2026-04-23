@@ -14,7 +14,7 @@ import { useFileSelection } from "@/data/file-selection";
 import { useNotebooks } from "@/hooks/use-notebooks";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 
-import { getUnsupportedFileState, NotebookEmptyState } from "./helper";
+import { getUnsupportedFileState, NotebookEmptyState } from "./state-views";
 
 type EditorTabContentProps = {
   tabId: string;
