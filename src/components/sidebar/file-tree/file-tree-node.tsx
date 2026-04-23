@@ -175,7 +175,7 @@ export function FileTreeNode({
             }}
             onDragEnd={onDragEnd}
             className={cn(
-              "group flex items-center gap-2 rounded-md px-2 py-0.5 text-sm outline-none",
+              "group flex items-center gap-2 rounded-md px-2 py-0.5 text-sm outline-none cursor-pointer",
               "transition-colors hover:transition-none hover:bg-sidebar-accent/50",
               "text-muted-foreground/80 hover:text-sidebar-foreground",
               isActive && "bg-sidebar-accent/70 text-sidebar-accent-foreground",
