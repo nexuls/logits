@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import Preview from "@/workspace-views/markdown-editor/preview";
+import Preview from "@/components/markdown-editor/preview";
 import type { TabsViewTab } from "@/components/workspace";
 import type { AppFile } from "@/data/modules/notebook/client-types";
 import { useNotebooks } from "@/hooks/use-notebooks";

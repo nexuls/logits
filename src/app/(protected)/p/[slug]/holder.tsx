@@ -6,7 +6,7 @@ import { TriangleAlertIcon } from "lucide-react";
 import {
   DEFAULT_CURSOR_META,
   type CursorMeta,
-} from "@/workspace-views/markdown-editor/editor";
+} from "@/components/markdown-editor/editor";
 import Footer, { updateFooter } from "@/components/footer/index";
 import { Spinner } from "@/components/ui/spinner";
 import Workspace, {

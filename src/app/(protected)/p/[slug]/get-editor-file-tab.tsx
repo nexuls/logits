@@ -4,9 +4,9 @@ import type { RefObject } from "react";
 import {
   DEFAULT_CURSOR_META,
   type CursorMeta,
-} from "@/workspace-views/markdown-editor/editor";
-import Editor from "@/workspace-views/markdown-editor/editor";
-import { getTextStats } from "@/workspace-views/markdown-editor/utils";
+} from "@/components/markdown-editor/editor";
+import Editor from "@/components/markdown-editor/editor";
+import { getTextStats } from "@/components/markdown-editor/utils";
 import { updateFooter } from "@/components/footer/index";
 import type { TabsViewTab } from "@/components/workspace";
 import type { AppFile } from "@/data/modules/notebook/client-types";
