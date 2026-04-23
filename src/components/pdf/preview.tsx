@@ -105,10 +105,19 @@ export function PdfPreview({
     // Reserve a small gutter so the fitted page doesn't touch scroll edges.
     const horizontalPadding = 16;
     const verticalPadding = 24;
-    const availableWidth = Math.max(container.clientWidth - horizontalPadding, 1);
-    const availableHeight = Math.max(container.clientHeight - verticalPadding, 1);
+    const availableWidth = Math.max(
+      container.clientWidth - horizontalPadding,
+      1,
+    );
+    const availableHeight = Math.max(
+      container.clientHeight - verticalPadding,
+      1,
+    );
     const nextZoom = clampZoom(
-      Math.min(availableWidth / basePageWidth, availableHeight / basePageHeight),
+      Math.min(
+        availableWidth / basePageWidth,
+        availableHeight / basePageHeight,
+      ),
     );
 
     setZoom(nextZoom);
@@ -201,7 +210,9 @@ export function PdfPreview({
                 size="icon-sm"
                 onClick={onToggleControlsAction}
                 aria-expanded={controlsOpen}
-                aria-label={controlsOpen ? "Hide PDF controls" : "Show PDF controls"}
+                aria-label={
+                  controlsOpen ? "Hide PDF controls" : "Show PDF controls"
+                }
                 className="@5xl:hidden"
               >
                 <SlidersHorizontal className="size-3.5" />
