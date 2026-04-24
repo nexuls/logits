@@ -213,7 +213,6 @@ export function PdfPreview({
                 aria-label={
                   controlsOpen ? "Hide PDF controls" : "Show PDF controls"
                 }
-                className="@5xl:hidden"
               >
                 <SlidersHorizontal className="size-3.5" />
               </Button>

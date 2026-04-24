@@ -176,15 +176,21 @@ function PdfViewContent({ fileId }: WorkspaceViewProps) {
 
   return (
     <div className="@container relative h-full min-h-0 w-full">
-      <div className="grid h-full min-h-0 w-full @5xl:grid-cols-[320px_minmax(0,1fr)]">
-        <aside className="hidden min-h-0 bg-background @5xl:block">
+      <div className="flex h-full min-h-0 w-full">
+        <aside
+          className={`hidden w-80 shrink-0 min-h-0 bg-background transition-[transform,margin,opacity] duration-300 ease-out @5xl:block ${
+            !isControlsOpen
+              ? "translate-x-0 ml-0"
+              : "-translate-x-full -ml-80 pointer-events-none"
+          }`}
+        >
           <PdfControls
             options={options}
             onChangeAction={setOptions}
             onExportAction={handleExport}
           />
         </aside>
-        <section className="relative min-h-0 min-w-0 overflow-hidden bg-muted/40">
+        <section className="relative min-h-0 min-w-0 flex-1 overflow-hidden bg-muted/40">
           <PdfPreview
             contentHtml={html}
             contentCss={contentCss}
