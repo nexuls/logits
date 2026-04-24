@@ -1,4 +1,4 @@
-import type { PageSize, PdfOptions } from "./types";
+import type { BandOptions, PageSize, PdfOptions } from "./types";
 
 export const PAGE_SIZES_MM: Record<
   PageSize,
@@ -19,15 +19,32 @@ export const PAGE_SIZE_OPTIONS: PageSize[] = [
   "A5",
 ];
 
+const DEFAULT_HEADER: BandOptions = {
+  text: "",
+  align: "center",
+  fontSize: 9,
+  border: true,
+  padding: 6,
+};
+
+const DEFAULT_FOOTER: BandOptions = {
+  text: "",
+  align: "center",
+  fontSize: 9,
+  border: true,
+  padding: 6,
+};
+
 export const DEFAULT_PDF_OPTIONS: PdfOptions = {
   title: "Document",
   pageSize: "A4",
   orientation: "portrait",
   margin: { top: 10, right: 20, bottom: 10, left: 20 },
-  pageNumbers: "bottom-center",
+  header: DEFAULT_HEADER,
+  footer: DEFAULT_FOOTER,
+  pageNumberPlacement: "footer",
+  pageNumberAlign: "center",
   pageNumberFormat: "{n} / {total}",
-  headerText: "",
-  footerText: "",
   contentScale: 100,
   accentColor: "#111827",
   visualizeLayout: false,

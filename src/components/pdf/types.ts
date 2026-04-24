@@ -2,14 +2,7 @@ export type PageSize = "A4" | "Letter" | "Legal" | "A3" | "A5";
 
 export type PageOrientation = "portrait" | "landscape";
 
-export type PageNumberPosition =
-  | "none"
-  | "top-left"
-  | "top-center"
-  | "top-right"
-  | "bottom-left"
-  | "bottom-center"
-  | "bottom-right";
+export type HorizontalAlign = "left" | "center" | "right";
 
 export type EdgeInset = {
   top: number;
@@ -17,6 +10,23 @@ export type EdgeInset = {
   bottom: number;
   left: number;
 };
+
+/**
+ * Shared options for the header and footer bands. Text styling and layout
+ * live here so both surfaces expose the same controls.
+ */
+export type BandOptions = {
+  text: string;
+  align: HorizontalAlign;
+  /** Font size in points. */
+  fontSize: number;
+  /** Whether to draw a separator line between the band and the content. */
+  border: boolean;
+  /** Padding between the page edge and the band, in millimetres. */
+  padding: number;
+};
+
+export type PageNumberPlacement = "none" | "header" | "footer";
 
 /**
  * User-configurable options for a PDF render.
@@ -30,10 +40,13 @@ export type PdfOptions = {
   pageSize: PageSize;
   orientation: PageOrientation;
   margin: EdgeInset;
-  pageNumbers: PageNumberPosition;
+  header: BandOptions;
+  footer: BandOptions;
+  /** Where the page number lives — inline with the header, footer, or hidden. */
+  pageNumberPlacement: PageNumberPlacement;
+  /** Alignment of the page number within its host band. */
+  pageNumberAlign: HorizontalAlign;
   pageNumberFormat: string;
-  headerText: string;
-  footerText: string;
   /**
    * Base font-size applied to `<html>` inside the preview/export document.
    * Content styles use rem units, so this scales the whole document.
@@ -41,8 +54,8 @@ export type PdfOptions = {
   contentScale: number;
   accentColor: string;
   /**
-   * When true, renders dashed outlines around the margin band to help
-   * the user see how the layout is spaced.
+   * When true, overlays guides that show the page size, content area,
+   * and header/footer bands.
    */
   visualizeLayout: boolean;
 };

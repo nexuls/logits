@@ -1,5 +1,10 @@
 import { getPageDimensions } from "./constants";
-import type { PageNumberPosition, PdfOptions, PdfTheme } from "./types";
+import type {
+  BandOptions,
+  HorizontalAlign,
+  PdfOptions,
+  PdfTheme,
+} from "./types";
 
 type BuildArgs = {
   /** Rendered markdown HTML (or any sanitized HTML) that becomes the page body. */
@@ -121,16 +126,11 @@ function buildThemeBridgeCss(theme: PdfTheme): string {
 }`;
 }
 
-function pageNumberCorner(position: PageNumberPosition): {
-  vertical: "top" | "bottom";
-  horizontal: "left" | "center" | "right";
-} | null {
-  if (position === "none") return null;
-  const [vertical, horizontal] = position.split("-") as [
-    "top" | "bottom",
-    "left" | "center" | "right",
-  ];
-  return { vertical, horizontal };
+function bandHasContent(
+  band: BandOptions,
+  includesPageNumber: boolean,
+): boolean {
+  return Boolean(band.text) || includesPageNumber;
 }
 
 /**
@@ -156,7 +156,12 @@ export function buildPdfDocumentHtml({
   const contentWidth = pageWidth - options.margin.left - options.margin.right;
   const contentHeight = pageHeight - options.margin.top - options.margin.bottom;
 
-  const corner = pageNumberCorner(options.pageNumbers);
+  const { header, footer } = options;
+  const pageNumberInHeader = options.pageNumberPlacement === "header";
+  const pageNumberInFooter = options.pageNumberPlacement === "footer";
+
+  const headerVisible = bandHasContent(header, pageNumberInHeader);
+  const footerVisible = bandHasContent(footer, pageNumberInFooter);
 
   const previewChrome = forPreview
     ? `
@@ -221,43 +226,120 @@ export function buildPdfDocumentHtml({
       width: ${contentWidth}mm;
       will-change: transform;
     }
-    .pdf-header, .pdf-footer {
+    .pdf-band {
       position: absolute;
       left: ${options.margin.left}mm;
       right: ${options.margin.right}mm;
-      font-size: 9pt;
       color: #555;
+      min-height: 1lh;
+    }
+    .pdf-band > .pdf-band-slot {
+      position: absolute;
+      top: 0;
       display: flex;
       align-items: center;
+      min-width: 0;
+      max-width: calc(100% - 2mm);
     }
-    .pdf-header { top: ${Math.max(options.margin.top / 2, 5)}mm; justify-content: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 2mm; }
-    .pdf-footer { bottom: ${Math.max(options.margin.bottom / 2, 5)}mm; justify-content: center; border-top: 1px solid #e5e7eb; padding-top: 2mm; }
-    .pdf-page-number {
-      position: absolute;
-      font-size: 9pt;
-      color: #555;
-      pointer-events: none;
+    .pdf-band > .pdf-band-slot[data-align="left"] {
+      left: 0;
+      justify-content: flex-start;
+      text-align: left;
     }
-    .pdf-page-number[data-v="top"] { top: 6mm; }
-    .pdf-page-number[data-v="bottom"] { bottom: 6mm; }
-    .pdf-page-number[data-h="left"] { left: ${options.margin.left}mm; text-align: left; }
-    .pdf-page-number[data-h="right"] { right: ${options.margin.right}mm; text-align: right; }
-    .pdf-page-number[data-h="center"] { left: 0; right: 0; text-align: center; }
+    .pdf-band > .pdf-band-slot[data-align="center"] {
+      left: 50%;
+      transform: translateX(-50%);
+      justify-content: center;
+      text-align: center;
+    }
+    .pdf-band > .pdf-band-slot[data-align="right"] {
+      right: 0;
+      justify-content: flex-end;
+      text-align: right;
+    }
+    .pdf-band .pdf-band-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pdf-band .pdf-page-number { white-space: nowrap; }
+    .pdf-header {
+      top: ${header.padding}mm;
+      font-size: ${header.fontSize}pt;
+      ${header.border ? "border-bottom: 1px solid #e5e7eb; padding-bottom: 1.5mm;" : ""}
+    }
+    .pdf-footer {
+      bottom: ${footer.padding}mm;
+      font-size: ${footer.fontSize}pt;
+      ${footer.border ? "border-top: 1px solid #e5e7eb; padding-top: 1.5mm;" : ""}
+    }
     .pdf-layout-guide {
       position: absolute;
       pointer-events: none;
-      border: 1px dashed transparent;
     }
     .pdf-layout-guide[data-kind="margin"] {
       inset: ${options.margin.top}mm ${options.margin.right}mm ${options.margin.bottom}mm ${options.margin.left}mm;
-      border-color: rgba(59, 130, 246, 0.8);
+      border: 1px dashed rgba(59, 130, 246, 0.8);
       background: rgba(59, 130, 246, 0.04);
+    }
+    .pdf-layout-guide[data-kind="header-band"] {
+      top: ${Math.max(header.padding - 2, 0)}mm;
+      left: ${options.margin.left}mm;
+      right: ${options.margin.right}mm;
+      height: ${Math.max(header.fontSize * 0.5, 6)}mm;
+      border: 1px dashed rgba(16, 185, 129, 0.9);
+      background: rgba(16, 185, 129, 0.1);
+    }
+    .pdf-layout-guide[data-kind="footer-band"] {
+      bottom: ${Math.max(footer.padding - 2, 0)}mm;
+      left: ${options.margin.left}mm;
+      right: ${options.margin.right}mm;
+      height: ${Math.max(footer.fontSize * 0.5, 6)}mm;
+      border: 1px dashed rgba(217, 70, 239, 0.9);
+      background: rgba(217, 70, 239, 0.08);
+    }
+    .pdf-layout-label {
+      position: absolute;
+      font-family: var(--user-interface-font, system-ui, sans-serif);
+      font-size: 8pt;
+      letter-spacing: 0.02em;
+      padding: 1mm 2mm;
+      border-radius: 2mm;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .pdf-layout-label[data-kind="page"] {
+      top: 3mm;
+      left: 3mm;
+      color: #1d4ed8;
+      background: rgba(59, 130, 246, 0.12);
+      border: 1px solid rgba(59, 130, 246, 0.45);
+    }
+    .pdf-layout-label[data-kind="content"] {
+      top: calc(${options.margin.top}mm + 1mm);
+      left: calc(${options.margin.left}mm + 1mm);
+      color: #047857;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.5);
+    }
+    .pdf-layout-label[data-kind="header"] {
+      top: ${Math.max(header.padding - 2, 0)}mm;
+      right: ${options.margin.right}mm;
+      transform: translateY(-110%);
+      color: #047857;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.5);
+    }
+    .pdf-layout-label[data-kind="footer"] {
+      bottom: ${Math.max(footer.padding - 2, 0)}mm;
+      right: ${options.margin.right}mm;
+      transform: translateY(110%);
+      color: #a21caf;
+      background: rgba(217, 70, 239, 0.12);
+      border: 1px solid rgba(217, 70, 239, 0.5);
     }
     ${previewChrome}
     @media print {
       body { background: white; padding: 0; }
       #pdf-pages { margin: 0; }
       .pdf-page { box-shadow: none; margin: 0; }
+      .pdf-layout-guide, .pdf-layout-label { display: none !important; }
     }
     @page { size: ${pageWidth}mm ${pageHeight}mm; margin: 0; }
   `;
@@ -266,23 +348,34 @@ export function buildPdfDocumentHtml({
   // outside so the template doesn't have to worry about escaping user input.
   const scriptConfig = {
     contentHeightMm: contentHeight,
+    pageWidthMm: pageWidth,
+    pageHeightMm: pageHeight,
+    contentWidthMm: contentWidth,
     marginTopMm: options.margin.top,
     marginRightMm: options.margin.right,
     marginBottomMm: options.margin.bottom,
     marginLeftMm: options.margin.left,
-    headerText: options.headerText,
-    footerText: options.footerText,
-    pageNumberFormat: options.pageNumberFormat,
-    showPageNumbers: corner !== null,
-    pageNumberVertical: corner?.vertical ?? "bottom",
-    pageNumberHorizontal: corner?.horizontal ?? "center",
+    header: {
+      text: header.text,
+      align: header.align as HorizontalAlign,
+      visible: headerVisible,
+    },
+    footer: {
+      text: footer.text,
+      align: footer.align as HorizontalAlign,
+      visible: footerVisible,
+    },
+    pageNumber: {
+      placement: options.pageNumberPlacement,
+      align: options.pageNumberAlign as HorizontalAlign,
+      format: options.pageNumberFormat,
+    },
     visualizeLayout: options.visualizeLayout,
   };
 
   const paginationScript = `
     (function() {
       var cfg = JSON.parse("${escapeJs(JSON.stringify(scriptConfig))}");
-      var MM_PER_IN = 25.4;
       function mmToPx(mm) {
         var probe = document.createElement("div");
         probe.style.cssText = "position:absolute;visibility:hidden;height:100mm;";
@@ -290,6 +383,85 @@ export function buildPdfDocumentHtml({
         var px = probe.getBoundingClientRect().height / 100;
         probe.remove();
         return mm * px;
+      }
+      function makeSlot(align) {
+        var slot = document.createElement("div");
+        slot.className = "pdf-band-slot";
+        slot.setAttribute("data-align", align);
+        return slot;
+      }
+      function ensureSlot(slots, align) {
+        if (!slots[align]) {
+          slots[align] = makeSlot(align);
+        }
+        return slots[align];
+      }
+      function buildBand(kind, bandCfg, attachPageNumber, pageNumberCfg, pageIndex, pageCount) {
+        var band = document.createElement("div");
+        band.className = "pdf-band pdf-" + kind;
+        var slots = { left: null, center: null, right: null };
+        if (bandCfg.text) {
+          var textSlot = ensureSlot(slots, bandCfg.align);
+          var textEl = document.createElement("span");
+          textEl.className = "pdf-band-text";
+          textEl.textContent = bandCfg.text;
+          textSlot.appendChild(textEl);
+        }
+        if (attachPageNumber) {
+          var numberSlot = ensureSlot(slots, pageNumberCfg.align);
+          var badge = document.createElement("span");
+          badge.className = "pdf-page-number";
+          badge.textContent = pageNumberCfg.format
+            .replace(/\\{n\\}/g, String(pageIndex + 1))
+            .replace(/\\{total\\}/g, String(pageCount));
+          numberSlot.appendChild(badge);
+        }
+        ["left", "center", "right"].forEach(function(align) {
+          var slot = slots[align] || makeSlot(align);
+          band.appendChild(slot);
+        });
+        return band;
+      }
+      function addVisualization(page) {
+        var marginGuide = document.createElement("div");
+        marginGuide.className = "pdf-layout-guide";
+        marginGuide.setAttribute("data-kind", "margin");
+        page.appendChild(marginGuide);
+        if (cfg.header.visible) {
+          var headerGuide = document.createElement("div");
+          headerGuide.className = "pdf-layout-guide";
+          headerGuide.setAttribute("data-kind", "header-band");
+          page.appendChild(headerGuide);
+          var headerLabel = document.createElement("div");
+          headerLabel.className = "pdf-layout-label";
+          headerLabel.setAttribute("data-kind", "header");
+          headerLabel.textContent = "Header";
+          page.appendChild(headerLabel);
+        }
+        if (cfg.footer.visible) {
+          var footerGuide = document.createElement("div");
+          footerGuide.className = "pdf-layout-guide";
+          footerGuide.setAttribute("data-kind", "footer-band");
+          page.appendChild(footerGuide);
+          var footerLabel = document.createElement("div");
+          footerLabel.className = "pdf-layout-label";
+          footerLabel.setAttribute("data-kind", "footer");
+          footerLabel.textContent = "Footer";
+          page.appendChild(footerLabel);
+        }
+        var pageLabel = document.createElement("div");
+        pageLabel.className = "pdf-layout-label";
+        pageLabel.setAttribute("data-kind", "page");
+        pageLabel.textContent = "Page " + formatMm(cfg.pageWidthMm) + " × " + formatMm(cfg.pageHeightMm) + " mm";
+        page.appendChild(pageLabel);
+        var contentLabel = document.createElement("div");
+        contentLabel.className = "pdf-layout-label";
+        contentLabel.setAttribute("data-kind", "content");
+        contentLabel.textContent = "Content " + formatMm(cfg.contentWidthMm) + " × " + formatMm(cfg.contentHeightMm) + " mm";
+        page.appendChild(contentLabel);
+      }
+      function formatMm(value) {
+        return (Math.round(value * 10) / 10).toString();
       }
       // Collect candidate break offsets (top of each block element) so
       // pagination snaps to element boundaries instead of slicing through
@@ -349,33 +521,12 @@ export function buildPdfDocumentHtml({
         for (var i = 0; i < pageCount; i++) {
           var page = document.createElement("div");
           page.className = "pdf-page";
-          if (cfg.visualizeLayout) {
-            var marginGuide = document.createElement("div");
-            marginGuide.className = "pdf-layout-guide";
-            marginGuide.setAttribute("data-kind", "margin");
-            page.appendChild(marginGuide);
+          if (cfg.visualizeLayout) addVisualization(page);
+          if (cfg.header.visible) {
+            page.appendChild(buildBand("header", cfg.header, cfg.pageNumber.placement === "header", cfg.pageNumber, i, pageCount));
           }
-          if (cfg.headerText) {
-            var header = document.createElement("div");
-            header.className = "pdf-header";
-            header.textContent = cfg.headerText;
-            page.appendChild(header);
-          }
-          if (cfg.footerText) {
-            var footer = document.createElement("div");
-            footer.className = "pdf-footer";
-            footer.textContent = cfg.footerText;
-            page.appendChild(footer);
-          }
-          if (cfg.showPageNumbers) {
-            var badge = document.createElement("div");
-            badge.className = "pdf-page-number";
-            badge.setAttribute("data-v", cfg.pageNumberVertical);
-            badge.setAttribute("data-h", cfg.pageNumberHorizontal);
-            badge.textContent = cfg.pageNumberFormat
-              .replace(/\\{n\\}/g, String(i + 1))
-              .replace(/\\{total\\}/g, String(pageCount));
-            page.appendChild(badge);
+          if (cfg.footer.visible) {
+            page.appendChild(buildBand("footer", cfg.footer, cfg.pageNumber.placement === "footer", cfg.pageNumber, i, pageCount));
           }
           var marginBox = document.createElement("div");
           marginBox.className = "pdf-margin-box";

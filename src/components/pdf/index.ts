@@ -8,8 +8,10 @@ export { buildPdfDocumentHtml } from "./render";
 export { PdfPreview } from "./preview";
 export { PdfControls } from "./controls";
 export type {
+  BandOptions,
   EdgeInset,
-  PageNumberPosition,
+  HorizontalAlign,
+  PageNumberPlacement,
   PageOrientation,
   PdfTheme,
   PageSize,
