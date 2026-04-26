@@ -6,6 +6,7 @@ import {
   Bell,
   ChevronsUpDown,
   CreditCard,
+  Keyboard,
   Settings,
   LogOut,
   Sparkles,
@@ -28,6 +29,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { AppSettingsDialog } from "@/components/settings/app-settings-dialog";
+import { KEYBOARD_SHORTCUTS_EVENT } from "@/components/shortcuts/keyboard-shortcuts-dialog";
 
 export function NavUser({
   user,
@@ -96,6 +98,14 @@ export function NavUser({
                 >
                   <Settings />
                   Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={() => {
+                    window.dispatchEvent(new Event(KEYBOARD_SHORTCUTS_EVENT));
+                  }}
+                >
+                  <Keyboard />
+                  Keyboard shortcuts
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <BadgeCheck />

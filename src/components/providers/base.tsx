@@ -27,6 +27,7 @@ import { SidebarProvider } from "../ui/sidebar";
 import { Toaster } from "../ui/sonner";
 import { TooltipProvider } from "../ui/tooltip";
 import { AppSidebar } from "../sidebar/app-sidebar";
+import { KeyboardShortcutsDialog } from "../shortcuts/keyboard-shortcuts-dialog";
 
 type Props = {
   children?: ReactNode;
@@ -128,6 +129,7 @@ export default function BaseProvider({ children, initialSettings }: Props) {
             <FileSelectionProvider notebookId={notebookId}>
               <AppSidebar />
               {children}
+              <KeyboardShortcutsDialog />
               <Toaster />
             </FileSelectionProvider>
           </SidebarProvider>
