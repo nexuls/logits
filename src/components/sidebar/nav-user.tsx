@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BadgeCheck,
   Bell,
@@ -30,6 +30,10 @@ import {
 } from "@/components/ui/sidebar";
 import { AppSettingsDialog } from "@/components/settings/app-settings-dialog";
 import { KEYBOARD_SHORTCUTS_EVENT } from "@/components/shortcuts/keyboard-shortcuts-dialog";
+import {
+  AppearanceKeyboardShortcuts,
+  OPEN_SETTINGS_EVENT,
+} from "@/components/settings/pages/appearance-settings-page";
 
 export function NavUser({
   user,
@@ -42,6 +46,12 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar();
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  useEffect(() => {
+    const open = () => setSettingsOpen(true);
+    window.addEventListener(OPEN_SETTINGS_EVENT, open);
+    return () => window.removeEventListener(OPEN_SETTINGS_EVENT, open);
+  }, []);
 
   return (
     <>
@@ -131,6 +141,7 @@ export function NavUser({
       </SidebarMenu>
 
       <AppSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <AppearanceKeyboardShortcuts />
     </>
   );
 }

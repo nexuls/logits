@@ -12,6 +12,8 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { allPlugins } from "@/components/draftly/plugins";
 import type { DraftlyPlugin } from "@/components/draftly/editor/plugin";
+import { APPEARANCE_KEYBOARD_SHORTCUTS } from "@/components/settings/pages/appearance-settings-page";
+import { EDITOR_MENU_KEYBOARD_SHORTCUTS } from "@/components/workspace-components/nav/actions";
 
 /**
  * Window event name used to programmatically open the shortcuts dialog
@@ -48,6 +50,36 @@ const interfaceShortcuts: ShortcutEntry[] = [
     key: "Mod-Shift-/",
     name: "Show keyboard shortcuts",
     description: "Open this keyboard shortcuts panel",
+  },
+  {
+    key: APPEARANCE_KEYBOARD_SHORTCUTS.openSettings,
+    name: "Open settings",
+    description: "Open the user settings dialog",
+  },
+  {
+    key: APPEARANCE_KEYBOARD_SHORTCUTS.toggleTheme,
+    name: "Toggle light/dark",
+    description: "Switch between the light and dark theme",
+  },
+  {
+    key: APPEARANCE_KEYBOARD_SHORTCUTS.toggleSidebarPosition,
+    name: "Switch sidebar position",
+    description: "Move the sidebar between the left and right edge",
+  },
+  {
+    key: EDITOR_MENU_KEYBOARD_SHORTCUTS.openPreviewInTab,
+    name: "Open preview (new tab)",
+    description: "Open a preview of the active file in a new tab",
+  },
+  {
+    key: EDITOR_MENU_KEYBOARD_SHORTCUTS.openPreviewInSplit,
+    name: "Open preview (split)",
+    description: "Open a preview of the active file in a split pane",
+  },
+  {
+    key: EDITOR_MENU_KEYBOARD_SHORTCUTS.openPdfEditor,
+    name: "Open PDF editor",
+    description: "Open the PDF editor for the active file",
   },
 ];
 
@@ -162,7 +194,7 @@ function ShortcutList({ entries }: { entries: ShortcutEntry[] }) {
           <div className="flex min-w-0 flex-col">
             <span className="text-foreground">{entry.name}</span>
             {entry.description && (
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground/70">
                 {entry.description}
               </span>
             )}
@@ -226,7 +258,7 @@ export function KeyboardShortcutsDialog() {
 
         <ScrollArea className="h-full min-h-0">
           <div className="columns-1 gap-x-8 p-6 sm:columns-2 lg:columns-3">
-            <section className="mb-8 break-inside-avoid">
+            <section className="mb-8">
               <h3 className="mb-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                 Interface
               </h3>

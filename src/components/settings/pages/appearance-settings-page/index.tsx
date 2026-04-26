@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Paintbrush, PilcrowIcon, SlidersHorizontal } from "lucide-react";
 import { COLOR_SCHEMES } from "@/color-schemes";
+import { useUserSettings } from "@/hooks/use-user-settings";
 import type {
   AppearanceColorScheme,
   AppearanceFontSize,
@@ -36,6 +37,78 @@ import { FontFamilySelect } from "./font-family-select";
 import { colorSchemeLabel, themes, withSelectedLocalFont } from "./helpers";
 import { SettingsSection } from "../helper/settings-section";
 import { SettingsSelectRow } from "../helper/settings-select-row";
+
+/**
+ * Window event used to open the App Settings dialog from a global keyboard
+ * shortcut. Dispatched by {@link AppearanceKeyboardShortcuts} and listened to
+ * by the component that owns the dialog state.
+ */
+export const OPEN_SETTINGS_EVENT = "logits:open-settings";
+
+/**
+ * Global keyboard shortcuts owned by the appearance/settings surface.
+ * Listed here so the shortcut dialog and the listener share a single source.
+ */
+export const APPEARANCE_KEYBOARD_SHORTCUTS = {
+  openSettings: "Mod-,",
+  toggleTheme: "Mod-Shift-l",
+  toggleSidebarPosition: "Mod-Alt-b",
+} as const;
+
+/**
+ * Mounts the global appearance/settings keyboard shortcuts:
+ *  - {@link APPEARANCE_KEYBOARD_SHORTCUTS.openSettings} → dispatches
+ *    {@link OPEN_SETTINGS_EVENT}.
+ *  - {@link APPEARANCE_KEYBOARD_SHORTCUTS.toggleTheme} → flips between
+ *    light and dark (does not change color scheme).
+ *  - {@link APPEARANCE_KEYBOARD_SHORTCUTS.toggleSidebarPosition} → flips the
+ *    sidebar between the left and right edges.
+ *
+ * Mount once at the app shell.
+ */
+export function AppearanceKeyboardShortcuts() {
+  const { settings, updateSettings } = useUserSettings();
+
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      const isMod = event.ctrlKey || event.metaKey;
+      if (!isMod) return;
+
+      const key = event.key.toLowerCase();
+
+      if (!event.shiftKey && !event.altKey && event.key === ",") {
+        event.preventDefault();
+        window.dispatchEvent(new Event(OPEN_SETTINGS_EVENT));
+        return;
+      }
+
+      if (event.shiftKey && !event.altKey && key === "l") {
+        event.preventDefault();
+        const current = settings.appearance?.theme ?? "system";
+        const next: AppearanceTheme = current === "dark" ? "light" : "dark";
+        void updateSettings((currentSettings) => ({
+          appearance: { ...currentSettings.appearance, theme: next },
+        }));
+        return;
+      }
+
+      if (event.altKey && !event.shiftKey && key === "b") {
+        event.preventDefault();
+        const current = settings.appearance?.sidebarPosition ?? "left";
+        const next = current === "left" ? "right" : "left";
+        void updateSettings((currentSettings) => ({
+          appearance: { ...currentSettings.appearance, sidebarPosition: next },
+        }));
+        return;
+      }
+    };
+
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [settings, updateSettings]);
+
+  return null;
+}
 
 export function AppearanceSettingsPage({
   theme,

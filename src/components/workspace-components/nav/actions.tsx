@@ -1,6 +1,7 @@
 "use client";
 
-import { Ellipsis, Eye } from "lucide-react";
+import { useEffect } from "react";
+import { Ellipsis, Eye, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,6 +14,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useFileSelection } from "@/data/file-selection";
 import { useWorkspaceCommands } from "@/components/workspace/commands";
+
+/**
+ * Active-file keyboard shortcuts owned by the editor menu. Listed here
+ * (and re-exported through the keyboard-shortcuts dialog) so the dialog
+ * and the listener share a single source.
+ */
+export const EDITOR_MENU_KEYBOARD_SHORTCUTS = {
+  openPreviewInTab: "Mod-Shift-v",
+  openPreviewInSplit: "Mod-Alt-v",
+  openPdfEditor: "Mod-Shift-d",
+} as const;
 
 export function NotebookActions() {
   return (
@@ -36,6 +48,38 @@ function EditorMenu() {
     if (!activeFileId) return;
     workspaceCommands?.openInSplit(activeFileId, "preview");
   };
+
+  const openPdfEditor = () => {
+    if (!activeFileId) return;
+    selectFile(activeFileId, "pdf");
+  };
+
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      const isMod = event.ctrlKey || event.metaKey;
+      if (!isMod || !activeFileId) return;
+
+      const key = event.key.toLowerCase();
+
+      if (event.shiftKey && !event.altKey && key === "v") {
+        event.preventDefault();
+        selectFile(activeFileId, "preview");
+        return;
+      }
+      if (event.altKey && !event.shiftKey && key === "v") {
+        event.preventDefault();
+        workspaceCommands?.openInSplit(activeFileId, "preview");
+        return;
+      }
+      if (event.shiftKey && !event.altKey && key === "d") {
+        event.preventDefault();
+        selectFile(activeFileId, "pdf");
+        return;
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [activeFileId, selectFile, workspaceCommands]);
 
   return (
     <DropdownMenu>
@@ -65,6 +109,10 @@ function EditorMenu() {
             </DropdownMenuItem>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
+        <DropdownMenuItem disabled={!activeFileId} onSelect={openPdfEditor}>
+          <FileText className="size-4" />
+          Open PDF editor
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
