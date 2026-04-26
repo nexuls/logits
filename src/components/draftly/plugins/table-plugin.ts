@@ -11,7 +11,6 @@ import {
   BlockWrapper,
   Decoration,
   EditorView,
-  type KeyBinding,
   WidgetType,
   keymap,
 } from "@codemirror/view";
@@ -22,6 +21,7 @@ import type { DraftlyConfig } from "../editor/draftly";
 import {
   type DecorationContext,
   DecorationPlugin,
+  type DescribedKeyBinding,
   type PluginContext,
 } from "../editor/plugin";
 import { ThemeEnum } from "../editor/utils";
@@ -941,62 +941,118 @@ export class TablePlugin extends DecorationPlugin {
     ];
   }
 
-  /** Provides the table-specific keyboard shortcuts and navigation. */
-  override getKeymap(): KeyBinding[] {
-    return [];
+  /**
+   * Provides the table-specific keyboard shortcuts and navigation.
+   *
+   * Table shortcuts are also registered with the highest precedence via
+   * {@link buildTableKeymap}; the handlers return `false` when the cursor is
+   * not inside a table, so exposing them here for documentation does not
+   * cause duplicate behavior.
+   */
+  override getKeymap(): DescribedKeyBinding[] {
+    return this.buildTableKeymap();
   }
 
   /** Builds the high-priority key bindings used inside tables. */
-  private buildTableKeymap(): KeyBinding[] {
+  private buildTableKeymap(): DescribedKeyBinding[] {
     return [
       {
+        name: "Insert table",
+        description: "Insert a new markdown table at the cursor",
         key: "Mod-Shift-t",
         run: (view) => this.insertTable(view),
         preventDefault: true,
       },
       {
+        name: "Add row",
+        description: "Add a new row below the current row in the table",
         key: "Mod-Alt-ArrowDown",
         run: (view) => this.addRow(view),
         preventDefault: true,
       },
       {
+        name: "Add column",
+        description: "Add a new column to the right of the current column",
         key: "Mod-Alt-ArrowRight",
         run: (view) => this.addColumn(view),
         preventDefault: true,
       },
       {
+        name: "Remove row",
+        description: "Delete the current row in the table",
         key: "Mod-Alt-Backspace",
         run: (view) => this.removeRow(view),
         preventDefault: true,
       },
       {
+        name: "Remove column",
+        description: "Delete the current column in the table",
         key: "Mod-Alt-Delete",
         run: (view) => this.removeColumn(view),
         preventDefault: true,
       },
-      { key: "Tab", run: (view) => this.handleTab(view, false) },
-      { key: "Shift-Tab", run: (view) => this.handleTab(view, true) },
       {
+        name: "Next cell",
+        description: "Move to the next table cell",
+        key: "Tab",
+        run: (view) => this.handleTab(view, false),
+      },
+      {
+        name: "Previous cell",
+        description: "Move to the previous table cell",
+        key: "Shift-Tab",
+        run: (view) => this.handleTab(view, true),
+      },
+      {
+        name: "Cell left",
+        description: "Move the cursor to the cell on the left",
         key: "ArrowLeft",
         run: (view) => this.handleArrowHorizontal(view, false),
       },
       {
+        name: "Cell right",
+        description: "Move the cursor to the cell on the right",
         key: "ArrowRight",
         run: (view) => this.handleArrowHorizontal(view, true),
       },
-      { key: "ArrowUp", run: (view) => this.handleArrowVertical(view, false) },
-      { key: "ArrowDown", run: (view) => this.handleArrowVertical(view, true) },
-      { key: "Enter", run: (view) => this.handleEnter(view) },
       {
+        name: "Cell up",
+        description: "Move the cursor to the cell above",
+        key: "ArrowUp",
+        run: (view) => this.handleArrowVertical(view, false),
+      },
+      {
+        name: "Cell down",
+        description: "Move the cursor to the cell below",
+        key: "ArrowDown",
+        run: (view) => this.handleArrowVertical(view, true),
+      },
+      {
+        name: "New row / exit",
+        description:
+          "Insert a new row below, or exit the table when on a trailing empty row",
+        key: "Enter",
+        run: (view) => this.handleEnter(view),
+      },
+      {
+        name: "Line break in cell",
+        description: "Insert a <br> line break inside the current cell",
         key: "Shift-Enter",
         run: (view) => this.insertBreakTag(view),
         preventDefault: true,
       },
       {
+        name: "Delete back",
+        description: "Delete the previous character or table break tag",
         key: "Backspace",
         run: (view) => this.handleBreakDeletion(view, false),
       },
-      { key: "Delete", run: (view) => this.handleBreakDeletion(view, true) },
+      {
+        name: "Delete forward",
+        description: "Delete the next character or table break tag",
+        key: "Delete",
+        run: (view) => this.handleBreakDeletion(view, true),
+      },
     ];
   }
 

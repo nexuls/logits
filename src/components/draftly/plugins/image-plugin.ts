@@ -1,11 +1,14 @@
 import {
   Decoration,
   type EditorView,
-  type KeyBinding,
   WidgetType,
 } from "@codemirror/view";
 import { syntaxTree } from "@codemirror/language";
-import { type DecorationContext, DecorationPlugin } from "../editor/plugin";
+import {
+  type DecorationContext,
+  DecorationPlugin,
+  type DescribedKeyBinding,
+} from "../editor/plugin";
 import { createTheme } from "../editor";
 import type { SyntaxNode } from "@lezer/common";
 
@@ -156,9 +159,11 @@ export class ImagePlugin extends DecorationPlugin {
   /**
    * Keyboard shortcuts for image formatting
    */
-  override getKeymap(): KeyBinding[] {
+  override getKeymap(): DescribedKeyBinding[] {
     return [
       {
+        name: "Image",
+        description: "Toggle a markdown image around the selection",
         key: "Mod-Shift-i",
         run: (view) => this.toggleImage(view),
         preventDefault: true,

@@ -1,11 +1,14 @@
 import {
   Decoration,
   type EditorView,
-  type KeyBinding,
   WidgetType,
 } from "@codemirror/view";
 import { syntaxTree } from "@codemirror/language";
-import { type DecorationContext, DecorationPlugin } from "../editor/plugin";
+import {
+  type DecorationContext,
+  DecorationPlugin,
+  type DescribedKeyBinding,
+} from "../editor/plugin";
 import { createTheme } from "../editor";
 import type { Range } from "@codemirror/state";
 import type { SyntaxNode } from "@lezer/common";
@@ -122,19 +125,25 @@ export class ListPlugin extends DecorationPlugin {
   /**
    * Keyboard shortcuts for list formatting
    */
-  override getKeymap(): KeyBinding[] {
+  override getKeymap(): DescribedKeyBinding[] {
     return [
       {
+        name: "Bulleted list",
+        description: "Toggle a bulleted list on the current lines",
         key: "Mod-Shift-8",
         run: (view) => this.toggleListOnLines(view, "- "),
         preventDefault: true,
       },
       {
+        name: "Numbered list",
+        description: "Toggle a numbered list on the current lines",
         key: "Mod-Shift-7",
         run: (view) => this.toggleListOnLines(view, "1. "),
         preventDefault: true,
       },
       {
+        name: "Task list",
+        description: "Toggle a task (checkbox) list on the current lines",
         key: "Mod-Shift-9",
         run: (view) => this.toggleListOnLines(view, "- [ ] "),
         preventDefault: true,

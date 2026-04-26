@@ -1,6 +1,10 @@
-import { Decoration, type KeyBinding } from "@codemirror/view";
+import { Decoration } from "@codemirror/view";
 import { syntaxTree } from "@codemirror/language";
-import { type DecorationContext, DecorationPlugin } from "../editor/plugin";
+import {
+  type DecorationContext,
+  DecorationPlugin,
+  type DescribedKeyBinding,
+} from "../editor/plugin";
 import { createTheme } from "../editor";
 import type { SyntaxNode } from "@lezer/common";
 import { toggleMarkdownStyle } from "../editor/utils";
@@ -130,34 +134,46 @@ export class InlinePlugin extends DecorationPlugin {
   /**
    * Keyboard shortcuts for inline formatting
    */
-  override getKeymap(): KeyBinding[] {
+  override getKeymap(): DescribedKeyBinding[] {
     return [
       {
+        name: "Bold",
+        description: "Toggle bold (**text**) on the selection",
         key: "Mod-b",
         run: toggleMarkdownStyle("**"),
         preventDefault: true,
       },
       {
+        name: "Italic",
+        description: "Toggle italic (*text*) on the selection",
         key: "Mod-i",
         run: toggleMarkdownStyle("*"),
         preventDefault: true,
       },
       {
+        name: "Strikethrough",
+        description: "Toggle strikethrough (~~text~~) on the selection",
         key: "Mod-Shift-s",
         run: toggleMarkdownStyle("~~"),
         preventDefault: true,
       },
       {
+        name: "Subscript",
+        description: "Toggle subscript (~text~) on the selection",
         key: "Mod-,",
         run: toggleMarkdownStyle("~"),
         preventDefault: true,
       },
       {
+        name: "Superscript",
+        description: "Toggle superscript (^text^) on the selection",
         key: "Mod-.",
         run: toggleMarkdownStyle("^"),
         preventDefault: true,
       },
       {
+        name: "Highlight",
+        description: "Toggle highlight (==text==) on the selection",
         key: "Mod-Shift-h",
         run: toggleMarkdownStyle("=="),
         preventDefault: true,

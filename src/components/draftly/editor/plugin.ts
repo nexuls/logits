@@ -13,6 +13,21 @@ import { createTheme, type ThemeEnum, type ThemeStyle } from "./utils";
 import { StyleModule } from "style-mod";
 
 /**
+ * A CodeMirror {@link KeyBinding} augmented with documentation metadata.
+ *
+ * Plugins return these from {@link DraftlyPlugin.getKeymap} so the keyboard
+ * shortcut UI can display a friendly name and description alongside the raw
+ * key combo. Because it extends {@link KeyBinding}, it is consumed by
+ * CodeMirror without modification.
+ */
+export interface DescribedKeyBinding extends KeyBinding {
+  /** Short, human-readable action name (e.g. "Bold"). */
+  name: string;
+  /** One-line description of what the shortcut does. */
+  description: string;
+}
+
+/**
  * Context passed to plugin lifecycle methods
  */
 export interface PluginContext {
@@ -123,7 +138,7 @@ export abstract class DraftlyPlugin {
    * Return keybindings for this plugin
    * Override to add custom keyboard shortcuts
    */
-  getKeymap(): KeyBinding[] {
+  getKeymap(): DescribedKeyBinding[] {
     return [];
   }
 

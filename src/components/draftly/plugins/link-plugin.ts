@@ -1,11 +1,14 @@
 import {
   Decoration,
   type EditorView,
-  type KeyBinding,
   WidgetType,
 } from "@codemirror/view";
 import { syntaxTree } from "@codemirror/language";
-import { type DecorationContext, DecorationPlugin } from "../editor/plugin";
+import {
+  type DecorationContext,
+  DecorationPlugin,
+  type DescribedKeyBinding,
+} from "../editor/plugin";
 import { createTheme } from "../editor";
 import type { SyntaxNode } from "@lezer/common";
 
@@ -140,9 +143,11 @@ export class LinkPlugin extends DecorationPlugin {
   /**
    * Keyboard shortcuts for link formatting
    */
-  override getKeymap(): KeyBinding[] {
+  override getKeymap(): DescribedKeyBinding[] {
     return [
       {
+        name: "Link",
+        description: "Toggle a markdown link around the selection",
         key: "Mod-k",
         run: (view) => this.toggleLink(view),
         preventDefault: true,
