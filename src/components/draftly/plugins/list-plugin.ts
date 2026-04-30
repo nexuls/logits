@@ -247,7 +247,12 @@ export class ListPlugin extends DecorationPlugin {
             break;
 
           case "ListMark":
-            this.decorateListMark(node, line, decorations, cursorInLine);
+            this.decorateListMark(
+              node,
+              line,
+              decorations,
+              ctx.cursorInRange(from, to + 1),
+            );
             break;
 
           case "TaskMarker":
@@ -322,13 +327,13 @@ export class ListPlugin extends DecorationPlugin {
     >[0],
     line: { from: number; to: number },
     decorations: Range<Decoration>[],
-    cursorInLine: boolean,
+    cursorOnMark: boolean,
   ): void {
     const { from, to } = node;
     const parent = node.node.parent;
     const grandparent = parent?.parent;
     const listType = grandparent?.name;
-    const activeClass = cursorInLine ? classes.active : "";
+    const activeClass = cursorOnMark ? classes.active : "";
 
     // Add indent decoration for nested items
     if (from > line.from) {
