@@ -1,8 +1,4 @@
-import {
-  Decoration,
-  type EditorView,
-  WidgetType,
-} from "@codemirror/view";
+import { Decoration, type EditorView, WidgetType } from "@codemirror/view";
 import { syntaxTree } from "@codemirror/language";
 import {
   type DecorationContext,
@@ -522,23 +518,32 @@ const theme = createTheme({
       display: "block",
       paddingLeft: "1.5rem",
       margin: "0.5rem 0",
-    },
-    ".cm-draftly-preview li": {
-      display: "list-item",
-      marginBottom: "0.25rem",
-    },
-    "ul.cm-draftly-preview": {
-      listStyleType: "disc",
-    },
-    "ol.cm-draftly-preview": {
-      listStyleType: "decimal",
-    },
-    // Hide list marker for task items
-    ".cm-draftly-preview li:has(.cm-draftly-task-checkbox)": {
-      listStyleType: "none",
-    },
-    ".cm-draftly-preview li .cm-draftly-paragraph": {
-      padding: "0",
+
+      "&.cm-draftly-list-line-ul, &.cm-draftly-list-line-ol": {
+        paddingLeft: "calc(1rem + (1rem * (var(--depth, 0) + 1))) !important",
+      },
+
+      "& li": {
+        display: "list-item",
+        marginBottom: "0.25rem",
+      },
+
+      "&:is(ul)": {
+        listStyleType: "disc",
+      },
+      "&:is(ol)": {
+        listStyleType: "decimal",
+      },
+      // Hide list marker for task items
+      "& li:has(.cm-draftly-task-checkbox)": {
+        listStyleType: "none",
+      },
+      "& li > span": {
+        display: "inline-block",
+      },
+      "& li .cm-draftly-paragraph": {
+        padding: "0",
+      },
     },
   },
 });
