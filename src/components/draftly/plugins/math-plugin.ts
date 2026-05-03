@@ -3,8 +3,8 @@ import type { Extension } from "@codemirror/state";
 import { syntaxTree } from "@codemirror/language";
 import { type DecorationContext, DecorationPlugin } from "../editor/plugin";
 import { createTheme } from "../editor";
-import type { SyntaxNode } from "@lezer/common";
-import { tags } from "@lezer/highlight";
+import { parseMixed, type SyntaxNode } from "@lezer/common";
+import { styleTags, tags } from "@lezer/highlight";
 import type {
   MarkdownConfig,
   InlineParser,
@@ -12,6 +12,40 @@ import type {
   Line,
   BlockContext,
 } from "@lezer/markdown";
+import { latexLanguage } from "codemirror-lang-latex";
+
+/**
+ * The latex parser specializes many control sequences (e.g. `\text`,
+ * `\hbox`, `\href`, sectioning, list, table, color macros, …) into named
+ * node types that are NOT covered by the package's built-in styleTags.
+ * Reconfigure the parser to tag those nodes so they are highlighted
+ * consistently with the generic `CtrlSeq` token.
+ */
+const tagMissingLatexNodes =
+  "MathTextCtrlSeq HboxCtrlSeq DefCtrlSeq LetCtrlSeq LeftCtrlSeq " +
+  "RightCtrlSeq ItemCtrlSeq CenteringCtrlSeq MaketitleCtrlSeq " +
+  "HrefCtrlSeq UrlCtrlSeq VerbCtrlSeq LstInlineCtrlSeq " +
+  "IncludeGraphicsCtrlSeq IncludeSvgCtrlSeq CaptionCtrlSeq " +
+  "InputCtrlSeq IncludeCtrlSeq SubfileCtrlSeq " +
+  "NewCommandCtrlSeq RenewCommandCtrlSeq " +
+  "NewEnvironmentCtrlSeq RenewEnvironmentCtrlSeq " +
+  "NewTheoremCtrlSeq TheoremStyleCtrlSeq " +
+  "HLineCtrlSeq TopRuleCtrlSeq MidRuleCtrlSeq BottomRuleCtrlSeq " +
+  "MultiColumnCtrlSeq ParBoxCtrlSeq TextColorCtrlSeq ColorBoxCtrlSeq " +
+  "TextMediumCtrlSeq TextSansSerifCtrlSeq TextSuperscriptCtrlSeq " +
+  "TextSubscriptCtrlSeq TextStrikeOutCtrlSeq " +
+  "SetLengthCtrlSeq FootnoteCtrlSeq EndnoteCtrlSeq " +
+  "AffilCtrlSeq AffiliationCtrlSeq";
+
+const latexMathParser = latexLanguage.parser.configure({
+  props: [
+    styleTags({
+      [tagMissingLatexNodes]: tags.keyword,
+      "OpenParenCtrlSym CloseParenCtrlSym OpenBracketCtrlSym CloseBracketCtrlSym LineBreakCtrlSym":
+        tags.operator,
+    }),
+  ],
+});
 import katex from "katex";
 import { createWrapSelectionInputHandler } from "../lib";
 // @ts-expect-error - raw import for CSS as string
@@ -231,42 +265,39 @@ const inlineMathParser: InlineParser = {
 const mathBlockParser: BlockParser = {
   name: "MathBlock",
   parse(cx: BlockContext, line: Line) {
-    // Check if line starts with $$
+    // Line must start with $$ (after optional leading whitespace)
     const text = line.text;
-    const trimmed = text.slice(line.pos).trimStart();
+    const openIdx = text.indexOf("$$", line.pos);
+    if (openIdx === -1) return false;
+    if (text.slice(line.pos, openIdx).trim() !== "") return false;
 
-    if (!trimmed.startsWith("$$")) return false;
-
-    // Find the end of the math block
     const startLine = cx.lineStart;
+    const openMarkStart = startLine + openIdx;
+    const openMarkEnd = openMarkStart + 2;
+
+    // Check for a closing $$ on the same line (inline form: $$...$$)
+    const sameLineClose = text.indexOf("$$", openIdx + 2);
     let endPos = -1;
-    let lastLineEnd = startLine + line.text.length;
 
-    // Move past the opening line
-    while (cx.nextLine()) {
-      const currentText = line.text;
-      lastLineEnd = cx.lineStart + currentText.length;
-
-      // Check if this line contains closing $$
-      if (currentText.trimEnd().endsWith("$$")) {
-        endPos = lastLineEnd;
-        // Move past the closing line so subsequent markdown gets parsed
-        cx.nextLine();
-        break;
+    if (sameLineClose !== -1) {
+      endPos = startLine + sameLineClose + 2;
+      cx.nextLine();
+    } else {
+      // Multi-line: scan forward for a line ending with $$
+      while (cx.nextLine()) {
+        const currentText = line.text;
+        const lineEnd = cx.lineStart + currentText.length;
+        if (currentText.trimEnd().endsWith("$$")) {
+          endPos = lineEnd;
+          cx.nextLine();
+          break;
+        }
       }
     }
 
-    if (endPos === -1) {
-      // No closing found, treat as regular paragraph
-      return false;
-    }
+    if (endPos === -1) return false;
 
-    // Create the math block element
-    const openMark = cx.elt(
-      "MathBlockMark",
-      startLine,
-      startLine + text.indexOf("$$") + 2,
-    );
+    const openMark = cx.elt("MathBlockMark", openMarkStart, openMarkEnd);
     const closeMark = cx.elt("MathBlockMark", endPos - 2, endPos);
     cx.addElement(
       cx.elt("MathBlock", startLine, endPos, [openMark, closeMark]),
@@ -331,6 +362,20 @@ export class MathPlugin extends DecorationPlugin {
       ],
       parseInline: [inlineMathParser],
       parseBlock: [mathBlockParser],
+      // Apply LaTeX parser only to the inner content of math nodes
+      // (between the $/$$ markers) so highlighting is scoped to math.
+      wrap: parseMixed((node) => {
+        if (node.name !== "InlineMath" && node.name !== "MathBlock") {
+          return null;
+        }
+        // Include the $/$$ markers in the overlay so the latex parser
+        // enters math mode and tokenizes operators/identifiers/numbers
+        // as MathSpecialChar/MathChar/Number rather than plain Normal text.
+        return {
+          parser: latexMathParser,
+          overlay: [{ from: node.from, to: node.to }],
+        };
+      }),
     };
   }
 
@@ -508,14 +553,11 @@ const theme = createTheme({
       fontFamily: "var(--user-monospace-font)",
     },
 
-    ".cm-draftly-math-block br": {
-      display: "none",
-    },
-
     // Math markers ($ $$)
     ".cm-draftly-math-marker": {
       color: "var(--draftly-color-muted)",
       fontFamily: "var(--user-monospace-font)",
+      opacity: "0.7",
     },
 
     // Inline math styling when editing
