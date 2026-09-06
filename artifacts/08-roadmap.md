@@ -10,7 +10,7 @@ boxes is an incomplete phase.
 - [x] Next.js + Tailwind v4 + shadcn set up
 - [x] Infinite canvas: pan, zoom, grid, minimap
 - [x] `useDebouncedCallback`
-- [ ] Replace the create-next-app starter [page.tsx](../src/app/page.tsx) with the editor shell
+- [ ] Replace the create-next-app starter [page.tsx](../src/app/page.tsx) with the editor shell — it now owns the active project and wires the sidebar to storage; the editor surface itself is Phase 3
 - [ ] Set app metadata in [layout.tsx](../src/app/layout.tsx) (still "Create Next App")
 - [ ] Define `--logit-cursor-*` custom properties in [globals.css](../src/app/globals.css) — the canvas already consumes them and they do not exist
 - [ ] Add a test runner (Vitest) and wire `bun run test`; the domain layer is untestable until this lands
@@ -63,5 +63,6 @@ boxes is an incomplete phase.
 | `CanvasViewer` hardcodes a 360×120 content footprint | [canvas-viewer.tsx](../src/components/canvas/canvas-viewer.tsx) |
 | `T_Node` in `canvas-type.ts` is a leftover placeholder, unrelated to the real node model | [canvas-type.ts](../src/components/canvas/canvas-type.ts) |
 | No test runner configured | `package.json` |
-| Projects sidebar lists sample data and has no persistence, rename/delete or routing | [projects/projects.ts](../src/components/projects/projects.ts) |
-| `Project` duplicates `ProjectMeta` and stores a pre-formatted `updatedLabel`; switch it to `readProjects()` and format `updatedAt` client-side | [projects/projects.ts](../src/components/projects/projects.ts) → [state/storage.ts](../src/state/storage.ts) |
+| Projects sidebar has no routing — the open project lives in React state, so it is lost on reload and has no URL | [app/page.tsx](../src/app/page.tsx) |
+| Canvas header menu (New / Rename / Duplicate / Export / Delete) is still disabled; the store actions exist but delete needs the confirm dialog lifted out of the sidebar, and export needs a download flow | [canvas/components/header.tsx](../src/components/canvas/components/header.tsx) |
+| `SidebarMenuSkeleton` picks a random width and cannot be server-rendered without a hydration mismatch; the sidebar hand-rolls its placeholders instead | [ui/sidebar.tsx](../src/components/ui/sidebar.tsx) |

@@ -1,10 +1,26 @@
 "use client";
 
-import { CircuitBoardIcon, PinIcon, PlusIcon, SearchIcon } from "lucide-react";
+import { CircuitBoardIcon, PlusIcon, SearchIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import EditableText from "@/components/ui/editable-text";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { Kbd } from "@/components/ui/kbd";
 import {
   Sidebar,
@@ -16,141 +32,108 @@ import {
   SidebarHeader,
   SidebarInput,
   SidebarMenu,
-  SidebarMenuBadge,
-  SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
-import { type Project, SAMPLE_PROJECTS } from "./projects";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { ProjectMeta } from "@/lib/circuit/schema";
+import {
+  createProject,
+  deleteProject,
+  pinProject,
+  renameProject,
+  useHydrated,
+  useProjects,
+} from "@/state/projects-store";
+import ProjectItem from "./project-item";
 
 type Props = {
-  projects?: Project[];
   activeProjectId?: string;
   onSelectProject?: (projectId: string) => void;
-  onCreateProject?: () => void;
-  onRenameProject?: (projectId: string, name: string) => void;
 };
 
 export default function ProjectsSidebar({
-  projects = SAMPLE_PROJECTS,
   activeProjectId,
   onSelectProject,
-  onCreateProject,
-  onRenameProject,
 }: Props) {
+  const projects = useProjects();
+  const hydrated = useHydrated();
+
   const [query, setQuery] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
-  // Sample projects are read-only, so renames live here until a store exists.
-  const [renames, setRenames] = useState<Record<string, string>>({});
-  const [selectedId, setSelectedId] = useState(
-    activeProjectId ?? projects[0]?.id,
-  );
-
-  const activeId = activeProjectId ?? selectedId;
+  const [pendingDelete, setPendingDelete] = useState<ProjectMeta | null>(null);
+  // Storage can refuse a write — a full quota, or a browser blocking it. The
+  // list would then silently not change, so the reason has to be visible.
+  const [error, setError] = useState<string | null>(null);
 
   const matches = useMemo(() => {
-    const named = projects.map((project) => ({
-      ...project,
-      name: renames[project.id] ?? project.name,
-    }));
     const needle = query.trim().toLowerCase();
+    if (needle.length === 0) return projects;
 
-    if (needle.length === 0) {
-      return named;
-    }
-
-    return named.filter((project) =>
+    return projects.filter((project) =>
       project.name.toLowerCase().includes(needle),
     );
-  }, [projects, query, renames]);
+  }, [projects, query]);
 
   const pinned = matches.filter((project) => project.pinned);
   const rest = matches.filter((project) => !project.pinned);
 
-  const selectProject = (projectId: string) => {
-    setSelectedId(projectId);
-    onSelectProject?.(projectId);
+  const report = (result: { ok: boolean; error?: string }) => {
+    setError(result.ok ? null : (result.error ?? "Could not save"));
   };
 
-  const renameProject = (projectId: string, name: string) => {
-    setRenames((prev) => ({ ...prev, [projectId]: name }));
-    onRenameProject?.(projectId, name);
-  };
-
-  const renderGroup = (label: string, items: Project[], showPin = false) => {
-    if (items.length === 0) {
-      return null;
+  const create = () => {
+    const result = createProject();
+    if (!result.ok) {
+      setError(result.error);
+      return;
     }
+
+    setError(null);
+    setQuery("");
+    onSelectProject?.(result.id);
+    // Straight into a rename: a new circuit's name is the first thing you want
+    // to change, and it saves a trip to the menu.
+    setEditingId(result.id);
+  };
+
+  const confirmDelete = () => {
+    if (!pendingDelete) return;
+
+    report(deleteProject(pendingDelete.id));
+    if (pendingDelete.id === activeProjectId) {
+      const next = projects.find((project) => project.id !== pendingDelete.id);
+      onSelectProject?.(next?.id ?? "");
+    }
+    setPendingDelete(null);
+  };
+
+  const renderGroup = (label: string, items: ProjectMeta[]) => {
+    if (items.length === 0) return null;
 
     return (
       <SidebarGroup>
         <SidebarGroupLabel>{label}</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
-            {items.map((project) => {
-              const isEditing = project.id === editingId;
-              const icon = showPin ? (
-                <PinIcon className="text-sidebar-primary" />
-              ) : (
-                <CircuitBoardIcon />
-              );
-
-              return (
-                <SidebarMenuItem key={project.id}>
-                  {isEditing ? (
-                    // Swapped for a non-button row while renaming: an editor may
-                    // not live inside a button. The row carries the highlight so
-                    // the whole item reads as the thing being edited.
-                    <SidebarMenuButton
-                      render={<div />}
-                      isActive={project.id === activeId}
-                      className="bg-sidebar-accent pr-10 text-sidebar-accent-foreground ring-3"
-                    >
-                      {icon}
-                      <EditableText
-                        value={project.name}
-                        onChange={(name) => renameProject(project.id, name)}
-                        label="Project name"
-                        editing
-                        onEditingChange={(editing) => {
-                          if (!editing) {
-                            setEditingId(null);
-                          }
-                        }}
-                        className="min-w-0 flex-1 bg-transparent font-medium ring-0"
-                      />
-                    </SidebarMenuButton>
-                  ) : (
-                    <SidebarMenuButton
-                      isActive={project.id === activeId}
-                      onClick={() => selectProject(project.id)}
-                      onDoubleClick={() => setEditingId(project.id)}
-                      onKeyDown={(event) => {
-                        if (event.key === "F2") {
-                          event.preventDefault();
-                          setEditingId(project.id);
-                        }
-                      }}
-                      aria-current={
-                        project.id === activeId ? "true" : undefined
-                      }
-                      aria-keyshortcuts="F2"
-                      className="pr-10"
-                    >
-                      {icon}
-                      <EditableText
-                        value={project.name}
-                        onChange={(name) => renameProject(project.id, name)}
-                        label="Project name"
-                        className="min-w-0 flex-1 font-medium"
-                      />
-                    </SidebarMenuButton>
-                  )}
-                  <SidebarMenuBadge>{project.nodeCount}</SidebarMenuBadge>
-                </SidebarMenuItem>
-              );
-            })}
+            {items.map((project) => (
+              <ProjectItem
+                key={project.id}
+                project={project}
+                isActive={project.id === activeProjectId}
+                isEditing={project.id === editingId}
+                onSelect={() => onSelectProject?.(project.id)}
+                onEditingChange={(editing) =>
+                  setEditingId(editing ? project.id : null)
+                }
+                onRename={(name) => report(renameProject(project.id, name))}
+                onTogglePin={() =>
+                  report(pinProject(project.id, !project.pinned))
+                }
+                onRequestDelete={() => setPendingDelete(project)}
+              />
+            ))}
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
@@ -182,10 +165,52 @@ export default function ProjectsSidebar({
       <SidebarSeparator className="mx-0" />
 
       <SidebarContent>
-        {renderGroup("Pinned", pinned, true)}
-        {renderGroup("All projects", rest)}
+        {/* Nothing is readable until the client has storage, so the first paint
+            shows placeholders rather than flashing "no projects yet". */}
+        {!hydrated && (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {/* Fixed widths, not `SidebarMenuSkeleton`: that one picks a
+                    random width, which differs between the server and client
+                    renders and trips a hydration mismatch. */}
+                {[70, 55, 62].map((width) => (
+                  <SidebarMenuItem key={width}>
+                    <div className="flex h-12 items-center gap-2 px-3">
+                      <Skeleton className="size-4 rounded-xl" />
+                      <div className="flex flex-1 flex-col gap-1.5">
+                        <Skeleton
+                          className="h-3.5"
+                          style={{ width: `${width}%` }}
+                        />
+                        <Skeleton className="h-3 w-2/5" />
+                      </div>
+                    </div>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
-        {matches.length === 0 && (
+        {hydrated && renderGroup("Pinned", pinned)}
+        {hydrated && renderGroup("All projects", rest)}
+
+        {hydrated && projects.length === 0 && (
+          <Empty className="px-4">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <CircuitBoardIcon />
+              </EmptyMedia>
+              <EmptyTitle>No circuits yet</EmptyTitle>
+              <EmptyDescription>
+                Create one to start placing gates.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        )}
+
+        {hydrated && projects.length > 0 && matches.length === 0 && (
           <p className="px-4 py-6 text-center text-sm text-muted-foreground">
             No projects match “{query.trim()}”.
           </p>
@@ -193,21 +218,48 @@ export default function ProjectsSidebar({
       </SidebarContent>
 
       <SidebarFooter>
+        {error && (
+          <p role="alert" className="px-1 text-xs text-destructive">
+            {error}
+          </p>
+        )}
         <Button
           variant="outline"
           className="w-full justify-start"
-          onClick={onCreateProject}
+          onClick={create}
         >
           <PlusIcon />
           New project
         </Button>
-        <p className="px-1 text-xs text-center text-muted-foreground">
+        <p className="px-1 text-center text-xs text-muted-foreground">
           {projects.length} project{projects.length === 1 ? "" : "s"} ·{" "}
           <Kbd>⌘B</Kbd> to toggle
         </p>
       </SidebarFooter>
 
       <SidebarRail />
+
+      <AlertDialog
+        open={pendingDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete “{pendingDelete?.name}”?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes the circuit from this browser. It cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={confirmDelete}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sidebar>
   );
 }

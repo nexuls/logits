@@ -142,12 +142,19 @@ export function readProjects(): ProjectMeta[] {
   );
 }
 
-export function setProjectPinned(id: string, pinned: boolean): StorageResult {
-  const projects = readProjects();
-  const project = projects.find((entry) => entry.id === id);
+/**
+ * Patches an index entry without touching the document — for changes the
+ * document does not own, like pinning. A rename goes through `writeDocument`
+ * instead, because the document is the source of truth for a project's name.
+ */
+export function updateProjectMeta(
+  id: string,
+  patch: Partial<Omit<ProjectMeta, "id">>,
+): StorageResult {
+  const project = readProjects().find((entry) => entry.id === id);
   if (!project) return { ok: false, error: `Unknown project "${id}"` };
 
-  return upsertProject({ ...project, pinned: pinned || undefined });
+  return upsertProject({ ...project, ...patch });
 }
 
 function upsertProject(meta: ProjectMeta): StorageResult {

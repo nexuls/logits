@@ -148,7 +148,7 @@ export default function EditableText({
           onBlur={commit}
           onDoubleClick={(event) => event.stopPropagation()}
           className={cn(
-            "block max-w-full overflow-x-auto rounded-sm bg-input/50 px-1 whitespace-nowrap outline-none ring-3 ring-ring/30",
+            "block max-w-full overflow-x-auto rounded-sm bg-input/50 px-1 whitespace-nowrap outline-none",
             className,
           )}
         />
