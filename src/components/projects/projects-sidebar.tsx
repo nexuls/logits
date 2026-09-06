@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  CircuitBoardIcon,
-  PanelLeftIcon,
-  PinIcon,
-  PlusIcon,
-  SearchIcon,
-} from "lucide-react";
+import { CircuitBoardIcon, PinIcon, PlusIcon, SearchIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -26,9 +20,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
   SidebarSeparator,
-  useSidebar,
 } from "@/components/ui/sidebar";
-import { cn } from "@/lib/utils";
 import { type Project, SAMPLE_PROJECTS } from "./projects";
 
 type Props = {
@@ -44,7 +36,6 @@ export default function ProjectsSidebar({
   onSelectProject,
   onCreateProject,
 }: Props) {
-  const { toggleSidebar } = useSidebar();
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState(
     activeProjectId ?? projects[0]?.id,
@@ -117,16 +108,8 @@ export default function ProjectsSidebar({
   return (
     <Sidebar side="left" collapsible="offcanvas">
       <SidebarHeader className="gap-3">
-        <div className="flex items-center justify-between gap-2 px-1">
+        <div className="flex items-center gap-2 px-1">
           <span className="text-sm font-semibold">Projects</span>
-          <Button
-            variant="ghost"
-            size="icon-lg"
-            onClick={toggleSidebar}
-            aria-label="Collapse projects sidebar"
-          >
-            <PanelLeftIcon />
-          </Button>
         </div>
 
         <div className="relative">
@@ -174,32 +157,5 @@ export default function ProjectsSidebar({
 
       <SidebarRail />
     </Sidebar>
-  );
-}
-
-/**
- * Floating way back into an off-canvas sidebar. It fades rather than unmounts,
- * so it is taken out of the tab order while it is invisible.
- */
-export function ProjectsSidebarTrigger() {
-  const { open, isMobile, openMobile, toggleSidebar } = useSidebar();
-  const hide = isMobile ? openMobile : open;
-
-  return (
-    <Button
-      variant="outline"
-      size="icon-lg"
-      onClick={toggleSidebar}
-      aria-label="Show projects"
-      tabIndex={hide ? -1 : undefined}
-      className={cn(
-        "absolute top-3 left-3 z-20 bg-background transition-opacity",
-        {
-          "opacity-0 pointer-events-none": hide,
-        },
-      )}
-    >
-      <PanelLeftIcon />
-    </Button>
   );
 }

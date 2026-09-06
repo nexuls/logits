@@ -9,18 +9,20 @@ import {
 } from "react";
 
 import CanvasGrid from "./canvas-grid";
-import CanvasViewer from "./canvas-viewer";
+import Header from "./components/header";
+import Minimap from "./components/minimap";
 import { useCanvasMouseActions } from "./use-canvas-mouse-actions";
 
 type Props = {
   content: string;
+  title?: string;
   onContentChange?: (newContent: string) => void;
 };
 
 const MIN_SCALE = 0.05;
 const MAX_SCALE = 8;
 
-export default function Canvas({ content }: Props) {
+export default function Canvas({ content, title = "Untitled circuit" }: Props) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const [viewportSize, setViewportSize] = useState({ width: 1, height: 1 });
   const {
@@ -124,7 +126,9 @@ export default function Canvas({ content }: Props) {
         </div>
       </div>
 
-      <CanvasViewer
+      <Header title={title} />
+
+      <Minimap
         scale={scale}
         offset={offset}
         viewportSize={viewportSize}

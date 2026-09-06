@@ -45,7 +45,7 @@ const VIEWER_PADDING = 5;
  * 2) optional content footprint,
  * 3) current viewport as a rounded overlay.
  */
-export default function CanvasViewer({
+export default function Minimap({
   scale,
   offset,
   viewportSize,
