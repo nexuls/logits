@@ -17,9 +17,9 @@ boxes is an incomplete phase.
 
 ## Phase 1 — Model and netlist
 
-- [ ] `src/lib/circuit/`: types, ids, coords, `buildNetlist`, diagnostics
+- [ ] `src/lib/circuit/`: types, ids, coords, `buildNetlist`, diagnostics — zod schemas and ids done; coords and netlist outstanding
 - [ ] `src/state/document.ts` with command-based mutations + undo/redo
-- [ ] Serialize / deserialize / migrate, `localStorage` autosave
+- [ ] Serialize / deserialize / migrate, `localStorage` autosave — `io.ts` and `src/state/storage.ts` done; the debounced autosave hook-up is outstanding
 - **Exit:** a hand-written JSON circuit loads and compiles to a netlist, with tests for union-find grouping, width mismatch, and multi-driver detection.
 
 ## Phase 2 — Engine
@@ -64,3 +64,4 @@ boxes is an incomplete phase.
 | `T_Node` in `canvas-type.ts` is a leftover placeholder, unrelated to the real node model | [canvas-type.ts](../src/components/canvas/canvas-type.ts) |
 | No test runner configured | `package.json` |
 | Projects sidebar lists sample data and has no persistence, rename/delete or routing | [projects/projects.ts](../src/components/projects/projects.ts) |
+| `Project` duplicates `ProjectMeta` and stores a pre-formatted `updatedLabel`; switch it to `readProjects()` and format `updatedAt` client-side | [projects/projects.ts](../src/components/projects/projects.ts) → [state/storage.ts](../src/state/storage.ts) |

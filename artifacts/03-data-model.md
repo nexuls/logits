@@ -3,6 +3,12 @@
 All types live in `src/lib/circuit/`. They are plain serialisable data — no
 class instances, no functions, no `Map`/`Set` inside the document.
 
+The **zod schemas in [schema.ts](../src/lib/circuit/schema.ts) are the source of
+truth**; every type below is `z.infer`red from its schema so the two cannot
+drift. The shapes are reproduced here as TypeScript for readability only. The
+one hand-written type is `CircuitDocument["subcircuits"]`, because the schema is
+recursive.
+
 ## Document
 
 ```ts
@@ -78,9 +84,20 @@ codebase to unit test, so test it.
 ## Validation
 
 Diagnostics are data, not exceptions. A circuit with errors still loads and
-still renders; the offending element is marked.
+still renders; the offending element is marked. Two kinds exist, and they are
+separate: **load issues** (`LoadIssue` in [io.ts](../src/lib/circuit/io.ts))
+describe a file that could not be read as written, and **circuit diagnostics**
+below describe a circuit that reads fine but does not make sense.
 
-| Code | Meaning |
+| Load issue | Meaning |
+| --- | --- |
+| `invalid-json` / `not-an-object` | Not a document at all |
+| `missing-version` / `unsupported-version` | No version, or newer than this build |
+| `invalid-document` | Envelope failed validation; nothing recoverable |
+| `invalid-node` / `invalid-wire` | One element dropped, the rest kept |
+| `dangling-wire` | Wire references a node that is not in the document |
+
+| Circuit diagnostic | Meaning |
 | --- | --- |
 | `width-mismatch` | Wire joins pins of different widths |
 | `multiple-drivers` | Two non-tri-state outputs on one net (net resolves to `X`) |
@@ -93,10 +110,17 @@ still renders; the offending element is marked.
 - File extension `.logits.json`; MIME `application/json`.
 - Autosave the working document to `localStorage` under `logits:doc:<id>`,
   debounced with [use-debounced-callback.ts](../src/hooks/use-debounced-callback.ts).
+  A project index for the sidebar lives under `logits:index` as
+  `{ version, projects: ProjectMeta[] }`, derived from documents on save.
 - `serialize` / `deserialize` live in `src/lib/circuit/io.ts` and are the only
-  code that knows about `version`.
+  code that knows about `version`. They are pure and take strings — the
+  `localStorage` calls live in [src/state/storage.ts](../src/state/storage.ts),
+  so replacing the store never touches the domain layer.
 - Every schema change adds a migration step `migrate_N_to_N+1`. Never change the
   meaning of an existing field in place.
 - Deserialisation is defensive: an untrusted file must not be able to crash the
-  editor. Unknown node types become placeholder nodes that preserve their params
-  so the document round-trips without data loss.
+  editor. `deserialize` never throws; it returns
+  `{ ok, document, issues }` and parses element by element, so one corrupt node
+  does not cost you the rest of the circuit. Unknown node types are preserved
+  verbatim and become placeholder nodes at the registry, not in the schema —
+  validating them away would discard params that must round-trip.
