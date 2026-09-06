@@ -1,4 +1,5 @@
 import { useId, useMemo } from "react";
+import { GRID_SIZE } from "@/lib/circuit/geometry";
 
 type Point = {
   x: number;
@@ -10,7 +11,6 @@ type Props = {
   offset: Point;
 };
 
-const GRID_SIZE = 10;
 const GRID_STEPS = [
   { min: -1, mid: 0.15, step: 64 },
   { min: 0.05, mid: 0.375, step: 16 },

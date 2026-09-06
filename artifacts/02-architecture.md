@@ -37,10 +37,10 @@ one, that is a design error — pass it in as an argument.
 | `src/components/nodes/` | React views for nodes that need custom rendering (scope, displays). | Planned |
 | `src/components/ui/` | shadcn primitives. Generated — see AGENTS.md. | Built |
 | `src/hooks/` | Generic React hooks (`use-mobile`, `use-debounced-callback`). | Built |
-| `src/lib/circuit/` | Document model, ids, netlist derivation, serialize/migrate. | Planned |
+| `src/lib/circuit/` | Document model, ids, geometry, wire routing, netlist derivation, serialize/migrate. | Partial — schema, ids, io, geometry, wire-path built; coords + netlist planned |
 | `src/lib/sim/` | Event queue, engine, four-valued logic, runner, waveform buffer. | Planned |
-| `src/lib/nodes/` | Node definitions + registry, one file per node type. | Planned |
-| `src/state/` | External stores bridging domain → React. | Planned |
+| `src/lib/nodes/` | Node definitions + registry, one file per node type. | Partial — the `NodeDefinition` shape the renderer needs is in `define.ts`; `defineNode`, `evaluate` and the registry are planned |
+| `src/state/` | External stores bridging domain → React, plus `storage.ts` and the derived `scene.ts`. | Partial — storage + scene built; document/history/viewport planned |
 | `artifacts/` | These design docs. | Built |
 
 ## Rendering model
@@ -50,11 +50,13 @@ layer using `--canvas-x`, `--canvas-y`, `--canvas-zoom`
 ([canvas/index.tsx](../src/components/canvas/index.tsx)). Build on it, do not
 introduce a second transform scheme.
 
-- **Nodes** render as absolutely-positioned DOM inside the transformed layer, at
-  world coordinates. DOM (not `<canvas>`) so nodes can use shadcn controls, text
-  inputs and focus/ARIA for free.
+- **Nodes** render from the derived scene ([scene.ts](../src/state/scene.ts),
+  [ADR 0004](decisions/0004-derived-scene-graph.md)) as absolutely-positioned
+  DOM inside the transformed layer, at world coordinates. DOM (not `<canvas>`)
+  so nodes can use shadcn controls, text inputs and focus/ARIA for free.
 - **Wires** render in one SVG overlay inside the same transformed layer, drawn
-  in world coordinates. One SVG for all wires, not one per wire.
+  in world coordinates from `ResolvedWire.points`. One SVG for all wires, not
+  one per wire.
 - **Overlays** that must not scale with zoom (selection handles, the in-progress
   wire, the minimap) render outside the transformed layer in screen space.
 

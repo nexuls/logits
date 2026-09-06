@@ -34,7 +34,7 @@ type Wire = {
   id: WireId;
   from: PinRef;                 // an output or inout pin
   to: PinRef;                   // an input or inout pin
-  waypoints?: Point[];          // optional manual routing
+  waypoints?: Point[];          // the user's bends, absolute world coords
 };
 
 type PinRef = { nodeId: NodeId; pinId: string };
@@ -44,8 +44,10 @@ Ids are opaque strings from `src/lib/circuit/ids.ts` (`nanoid`-style, no
 counters — counters collide on paste and merge).
 
 **Positions are world coordinates in canvas units**, not pixels; zoom does not
-change them. Nodes snap to a 10-unit grid, matching `GRID_SIZE` in
-[canvas-grid.tsx](../src/components/canvas/canvas-grid.tsx).
+change them. Nodes snap to a 10-unit grid: `GRID_SIZE` in
+[geometry.ts](../src/lib/circuit/geometry.ts), which
+[canvas-grid.tsx](../src/components/canvas/canvas-grid.tsx) imports. One
+definition — do not re-declare it.
 
 ## Pins
 
@@ -65,6 +67,25 @@ type PinSpec = {
 
 `pinId` values are part of the save format. Renaming one is a breaking change
 that needs a migration.
+
+## Geometry (derived, never stored)
+
+Sizes, pin world coordinates and bounding boxes are computed into a **scene**,
+never written to the document — see
+[ADR 0004](decisions/0004-derived-scene-graph.md) for why storing them fails.
+`pinOffsets` and friends in [geometry.ts](../src/lib/circuit/geometry.ts) are
+pure and position-independent; [scene.ts](../src/state/scene.ts) assembles
+`ResolvedNode` / `ResolvedWire` and owns the caches. Components render a
+`ResolvedNode` and never do the maths themselves.
+
+A wire stores only its **bends**. The polyline itself —
+`ResolvedWire.points`, built by
+[wire-path.ts](../src/lib/circuit/wire-path.ts) — is derived per render from
+the pins plus the waypoints, so it follows the nodes automatically. Waypoints
+are absolute and grid-snapped; a wire with none is auto-routed, and adding one
+is what makes it manually routed. Every segment is axis-aligned, and the router
+re-orthogonalises whatever it is given, so a saved path cannot come back
+diagonal after a node moves.
 
 ## Netlist (derived, never stored)
 

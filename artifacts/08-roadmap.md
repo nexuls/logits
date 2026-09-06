@@ -17,7 +17,7 @@ boxes is an incomplete phase.
 
 ## Phase 1 — Model and netlist
 
-- [ ] `src/lib/circuit/`: types, ids, coords, `buildNetlist`, diagnostics — zod schemas and ids done; coords and netlist outstanding
+- [ ] `src/lib/circuit/`: types, ids, coords, `buildNetlist`, diagnostics — zod schemas, ids and geometry done; `coords.ts` (world↔screen) and netlist outstanding
 - [ ] `src/state/document.ts` with command-based mutations + undo/redo
 - [ ] Serialize / deserialize / migrate, `localStorage` autosave — `io.ts` and `src/state/storage.ts` done; the debounced autosave hook-up is outstanding
 - **Exit:** a hand-written JSON circuit loads and compiles to a netlist, with tests for union-find grouping, width mismatch, and multi-driver detection.
@@ -32,8 +32,8 @@ boxes is an incomplete phase.
 
 ## Phase 3 — Editor
 
-- [ ] Node layer, wire layer, pin hit-testing, selection
-- [ ] Wiring gestures, rubber-band select, delete, duplicate, copy/paste
+- [ ] Node layer, wire layer, pin hit-testing, selection — the derived scene ([scene.ts](../src/state/scene.ts)) they render from is built
+- [ ] Wiring gestures, rubber-band select, delete, duplicate, copy/paste — wire routing and segment-bend maths ([wire-path.ts](../src/lib/circuit/wire-path.ts)) are built; the pointer handling that calls them is not
 - [ ] Palette + command menu, inspector driven by `paramsSchema`
 - [ ] Toolbar: run controls, zoom, save/load, diagnostics panel
 - **Exit:** a user builds a 4-bit adder from scratch with the mouse and sees it work.

@@ -35,6 +35,8 @@ standard keywords — see [08-roadmap.md](08-roadmap.md).
 | Drag from a pin | Start a wire; drop on a compatible pin to connect |
 | `Esc` while wiring | Cancel |
 | Click a wire | Select it; `Delete` removes it |
+| Drag a wire segment | Bend it. Moves along its one free axis only, snapped to the grid; the pin ends stay anchored, so dragging an end segment splits a new bend off it |
+| Drag a bend onto its neighbours | Straightens the wire — collinear points collapse, so a wire cannot accumulate invisible bends |
 | Double-click a node | Focus its primary parameter in the inspector |
 | Click an `io.switch` / `io.button` | Toggle / press (only while simulating) |
 | `R` | Rotate selection 90° |
@@ -61,7 +63,16 @@ that helper rather than writing a second one.
 - Connecting two pins of different widths is allowed but produces a
   `width-mismatch` diagnostic on the wire. Do not auto-truncate.
 - Wires route orthogonally (Manhattan) by default with a simple two-bend path;
-  manual waypoints override.
+  manual waypoints override. Storing a waypoint *is* what makes a wire manually
+  routed — there is no separate mode flag to fall out of step with the geometry.
+- When the target pin sits behind the source pin, the default route detours
+  around rather than doubling back across the node it just left. Feedback is
+  not an edge case in this app; every latch and oscillator has some.
+- The router has no obstacle avoidance: a wire may cross a node, and the fix is
+  for the user to bend it. Auto-routing around nodes is deliberately out of scope.
+- Waypoints are absolute world coordinates, so moving a node does not drag its
+  wires' bends along. The path re-orthogonalises itself instead — a hand-routed
+  wire stays legal after the node at one end moves, it just may not stay pretty.
 
 ## Feedback
 
