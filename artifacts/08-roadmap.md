@@ -63,3 +63,4 @@ boxes is an incomplete phase.
 | `CanvasViewer` hardcodes a 360×120 content footprint | [canvas-viewer.tsx](../src/components/canvas/canvas-viewer.tsx) |
 | `T_Node` in `canvas-type.ts` is a leftover placeholder, unrelated to the real node model | [canvas-type.ts](../src/components/canvas/canvas-type.ts) |
 | No test runner configured | `package.json` |
+| Projects sidebar lists sample data and has no persistence, rename/delete or routing | [projects/projects.ts](../src/components/projects/projects.ts) |

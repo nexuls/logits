@@ -131,4 +131,8 @@
   html {
     @apply font-sans;
   }
+  html,
+  body {
+    @apply h-full w-full;
+  }
 }
