@@ -1,10 +1,10 @@
 import {
+  type PointerEvent,
+  type RefObject,
   useCallback,
   useEffect,
   useRef,
   useState,
-  type PointerEvent,
-  type RefObject,
   type WheelEvent,
 } from "react";
 

@@ -1,11 +1,11 @@
 "use client";
 
 import {
+  type CSSProperties,
   useEffect,
   useMemo,
   useRef,
   useState,
-  type CSSProperties,
 } from "react";
 
 import CanvasGrid from "./canvas-grid";
@@ -16,13 +16,18 @@ import { useCanvasMouseActions } from "./use-canvas-mouse-actions";
 type Props = {
   content: string;
   title?: string;
+  onTitleChange?: (newTitle: string) => void;
   onContentChange?: (newContent: string) => void;
 };
 
 const MIN_SCALE = 0.05;
 const MAX_SCALE = 8;
 
-export default function Canvas({ content, title = "Untitled circuit" }: Props) {
+export default function Canvas({
+  content,
+  title = "Untitled circuit",
+  onTitleChange,
+}: Props) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const [viewportSize, setViewportSize] = useState({ width: 1, height: 1 });
   const {
@@ -126,7 +131,7 @@ export default function Canvas({ content, title = "Untitled circuit" }: Props) {
         </div>
       </div>
 
-      <Header title={title} />
+      <Header title={title} onTitleChange={onTitleChange} />
 
       <Minimap
         scale={scale}

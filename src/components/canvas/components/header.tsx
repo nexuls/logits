@@ -18,10 +18,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import EditableText from "@/components/ui/editable-text";
 import { useSidebar } from "@/components/ui/sidebar";
 
 type Props = {
   title: string;
+  onTitleChange?: (title: string) => void;
   onNewProject?: () => void;
   onRenameProject?: () => void;
   onDuplicateProject?: () => void;
@@ -37,6 +39,7 @@ type Props = {
  */
 export default function Header({
   title,
+  onTitleChange,
   onNewProject,
   onRenameProject,
   onDuplicateProject,
@@ -47,7 +50,7 @@ export default function Header({
   const isSidebarOpen = isMobile ? openMobile : open;
 
   return (
-    <div className="absolute left-0 top-0 z-20 flex max-w-[min(20rem,calc(100%-1rem))] items-center gap-4 rounded-br-lg bg-sidebar p-2">
+    <div className="absolute left-0 top-0 z-20 flex max-w-[min(20rem,calc(100%-1rem))] items-center gap-4 rounded-br-lg bg-sidebar px-2 py-1.5">
       <Button
         type="button"
         variant="ghost"
@@ -59,8 +62,15 @@ export default function Header({
         <PanelLeftIcon />
       </Button>
 
-      <h1 className="min-w-0 flex-1 truncate px-1 text-sm font-medium">
-        {title}
+      <h1 className="min-w-0 flex-1 text-sm font-medium">
+        <EditableText
+          value={title}
+          onChange={(next) => onTitleChange?.(next)}
+          label="Project name"
+          placeholder="Untitled circuit"
+          activateOnDoubleClick={onTitleChange !== undefined}
+          className="px-2 py-1"
+        />
       </h1>
 
       <DropdownMenu>

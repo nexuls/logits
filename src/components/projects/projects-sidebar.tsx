@@ -4,6 +4,7 @@ import { CircuitBoardIcon, PinIcon, PlusIcon, SearchIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import EditableText from "@/components/ui/editable-text";
 import { Kbd } from "@/components/ui/kbd";
 import {
   Sidebar,
@@ -28,6 +29,7 @@ type Props = {
   activeProjectId?: string;
   onSelectProject?: (projectId: string) => void;
   onCreateProject?: () => void;
+  onRenameProject?: (projectId: string, name: string) => void;
 };
 
 export default function ProjectsSidebar({
@@ -35,8 +37,12 @@ export default function ProjectsSidebar({
   activeProjectId,
   onSelectProject,
   onCreateProject,
+  onRenameProject,
 }: Props) {
   const [query, setQuery] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  // Sample projects are read-only, so renames live here until a store exists.
+  const [renames, setRenames] = useState<Record<string, string>>({});
   const [selectedId, setSelectedId] = useState(
     activeProjectId ?? projects[0]?.id,
   );
@@ -44,16 +50,20 @@ export default function ProjectsSidebar({
   const activeId = activeProjectId ?? selectedId;
 
   const matches = useMemo(() => {
+    const named = projects.map((project) => ({
+      ...project,
+      name: renames[project.id] ?? project.name,
+    }));
     const needle = query.trim().toLowerCase();
 
     if (needle.length === 0) {
-      return projects;
+      return named;
     }
 
-    return projects.filter((project) =>
+    return named.filter((project) =>
       project.name.toLowerCase().includes(needle),
     );
-  }, [projects, query]);
+  }, [projects, query, renames]);
 
   const pinned = matches.filter((project) => project.pinned);
   const rest = matches.filter((project) => !project.pinned);
@@ -61,6 +71,11 @@ export default function ProjectsSidebar({
   const selectProject = (projectId: string) => {
     setSelectedId(projectId);
     onSelectProject?.(projectId);
+  };
+
+  const renameProject = (projectId: string, name: string) => {
+    setRenames((prev) => ({ ...prev, [projectId]: name }));
+    onRenameProject?.(projectId, name);
   };
 
   const renderGroup = (label: string, items: Project[], showPin = false) => {
@@ -73,32 +88,69 @@ export default function ProjectsSidebar({
         <SidebarGroupLabel>{label}</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
-            {items.map((project) => (
-              <SidebarMenuItem key={project.id}>
-                <SidebarMenuButton
-                  size="lg"
-                  isActive={project.id === activeId}
-                  onClick={() => selectProject(project.id)}
-                  aria-current={project.id === activeId ? "true" : undefined}
-                  className="pr-10"
-                >
-                  {showPin ? (
-                    <PinIcon className="text-sidebar-primary" />
+            {items.map((project) => {
+              const isEditing = project.id === editingId;
+              const icon = showPin ? (
+                <PinIcon className="text-sidebar-primary" />
+              ) : (
+                <CircuitBoardIcon />
+              );
+
+              return (
+                <SidebarMenuItem key={project.id}>
+                  {isEditing ? (
+                    // Swapped for a non-button row while renaming: an editor may
+                    // not live inside a button. The row carries the highlight so
+                    // the whole item reads as the thing being edited.
+                    <SidebarMenuButton
+                      render={<div />}
+                      isActive={project.id === activeId}
+                      className="bg-sidebar-accent pr-10 text-sidebar-accent-foreground ring-3"
+                    >
+                      {icon}
+                      <EditableText
+                        value={project.name}
+                        onChange={(name) => renameProject(project.id, name)}
+                        label="Project name"
+                        editing
+                        onEditingChange={(editing) => {
+                          if (!editing) {
+                            setEditingId(null);
+                          }
+                        }}
+                        className="min-w-0 flex-1 bg-transparent font-medium ring-0"
+                      />
+                    </SidebarMenuButton>
                   ) : (
-                    <CircuitBoardIcon />
+                    <SidebarMenuButton
+                      isActive={project.id === activeId}
+                      onClick={() => selectProject(project.id)}
+                      onDoubleClick={() => setEditingId(project.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === "F2") {
+                          event.preventDefault();
+                          setEditingId(project.id);
+                        }
+                      }}
+                      aria-current={
+                        project.id === activeId ? "true" : undefined
+                      }
+                      aria-keyshortcuts="F2"
+                      className="pr-10"
+                    >
+                      {icon}
+                      <EditableText
+                        value={project.name}
+                        onChange={(name) => renameProject(project.id, name)}
+                        label="Project name"
+                        className="min-w-0 flex-1 font-medium"
+                      />
+                    </SidebarMenuButton>
                   )}
-                  <span className="flex min-w-0 flex-col">
-                    <span className="truncate font-medium">{project.name}</span>
-                    <span className="truncate text-xs text-muted-foreground">
-                      Edited {project.updatedLabel}
-                    </span>
-                  </span>
-                </SidebarMenuButton>
-                <SidebarMenuBadge className="">
-                  {project.nodeCount}
-                </SidebarMenuBadge>
-              </SidebarMenuItem>
-            ))}
+                  <SidebarMenuBadge>{project.nodeCount}</SidebarMenuBadge>
+                </SidebarMenuItem>
+              );
+            })}
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
