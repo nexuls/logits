@@ -8,15 +8,16 @@ import {
   type WheelEvent,
 } from "react";
 
-type Point = {
-  x: number;
-  y: number;
-};
+import {
+  clampScale,
+  panByScreen,
+  type Viewport,
+  zoomAt,
+} from "@/lib/circuit/coords";
+import type { Point } from "@/lib/circuit/schema";
 
-type ViewState = {
-  scale: number;
-  offset: Point;
-};
+/** The viewport transform, as `coords.ts` defines it. */
+type ViewState = Viewport;
 
 type UseCanvasMouseActionsParams = {
   viewportRef: RefObject<HTMLDivElement | null>;
@@ -42,28 +43,6 @@ function isLikelyTrackpadZoom(event: WheelEvent<HTMLDivElement>) {
   return (
     event.deltaMode === 0 && Math.abs(event.deltaY) < TRACKPAD_DELTA_THRESHOLD
   );
-}
-
-function getZoomedViewState(
-  prev: ViewState,
-  pointerX: number,
-  pointerY: number,
-  nextScale: number,
-) {
-  if (nextScale === prev.scale) {
-    return prev;
-  }
-
-  const worldX = (pointerX - prev.offset.x) / prev.scale;
-  const worldY = (pointerY - prev.offset.y) / prev.scale;
-
-  return {
-    scale: nextScale,
-    offset: {
-      x: pointerX - worldX * nextScale,
-      y: pointerY - worldY * nextScale,
-    },
-  };
 }
 
 export function useCanvasMouseActions({
@@ -184,13 +163,7 @@ export function useCanvasMouseActions({
           (event.shiftKey && event.deltaX === 0 ? event.deltaY : 0);
         const panY = event.shiftKey && event.deltaX === 0 ? 0 : event.deltaY;
 
-        setViewState((prev) => ({
-          ...prev,
-          offset: {
-            x: prev.offset.x - panX,
-            y: prev.offset.y - panY,
-          },
-        }));
+        setViewState((prev) => panByScreen(prev, -panX, -panY));
 
         return;
       }
@@ -210,15 +183,13 @@ export function useCanvasMouseActions({
           ? zoomIntensity * TRACKPAD_ZOOM_MULTIPLIER
           : zoomIntensity;
 
-        const nextScale = Math.min(
+        const nextScale = clampScale(
+          prev.scale * Math.exp(-event.deltaY * effectiveZoomIntensity),
+          minScale,
           maxScale,
-          Math.max(
-            minScale,
-            prev.scale * Math.exp(-event.deltaY * effectiveZoomIntensity),
-          ),
         );
 
-        return getZoomedViewState(prev, pointerX, pointerY, nextScale);
+        return zoomAt(prev, { x: pointerX, y: pointerY }, nextScale);
       });
     },
     [maxScale, minScale, viewportRef, zoomIntensity, isPanning],
@@ -236,12 +207,9 @@ export function useCanvasMouseActions({
       const pointerY = viewport.clientHeight / 2;
 
       setViewState((prev) => {
-        const nextScale = Math.min(
-          maxScale,
-          Math.max(minScale, prev.scale * factor),
-        );
+        const nextScale = clampScale(prev.scale * factor, minScale, maxScale);
 
-        return getZoomedViewState(prev, pointerX, pointerY, nextScale);
+        return zoomAt(prev, { x: pointerX, y: pointerY }, nextScale);
       });
     },
     [maxScale, minScale, viewportRef],
@@ -335,13 +303,7 @@ export function useCanvasMouseActions({
             const deltaX = point.x - previous.x;
             const deltaY = point.y - previous.y;
 
-            setViewState((prev) => ({
-              ...prev,
-              offset: {
-                x: prev.offset.x + deltaX,
-                y: prev.offset.y + deltaY,
-              },
-            }));
+            setViewState((prev) => panByScreen(prev, deltaX, deltaY));
           }
 
           lastPanPointRef.current = point;
@@ -373,25 +335,16 @@ export function useCanvasMouseActions({
             previousDistance && previousDistance > 0
               ? distance / previousDistance
               : 1;
-          const nextScale = Math.min(
+          const nextScale = clampScale(
+            prev.scale * scaleFactor,
+            minScale,
             maxScale,
-            Math.max(minScale, prev.scale * scaleFactor),
           );
 
-          const zoomed = getZoomedViewState(
-            prev,
-            pointerX,
-            pointerY,
-            nextScale,
-          );
-
-          return {
-            ...zoomed,
-            offset: {
-              x: zoomed.offset.x + panDeltaX,
-              y: zoomed.offset.y + panDeltaY,
-            },
-          };
+          // Pinch does both at once: zoom about the two fingers' midpoint,
+          // then follow that midpoint as it travels.
+          const zoomed = zoomAt(prev, { x: pointerX, y: pointerY }, nextScale);
+          return panByScreen(zoomed, panDeltaX, panDeltaY);
         });
 
         lastPanPointRef.current = null;
@@ -404,13 +357,9 @@ export function useCanvasMouseActions({
         return;
       }
 
-      setViewState((prev) => ({
-        ...prev,
-        offset: {
-          x: prev.offset.x + event.movementX,
-          y: prev.offset.y + event.movementY,
-        },
-      }));
+      setViewState((prev) =>
+        panByScreen(prev, event.movementX, event.movementY),
+      );
     },
     [isPanning, maxScale, minScale],
   );
