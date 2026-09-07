@@ -33,7 +33,6 @@ import {
   SidebarInput,
   SidebarMenu,
   SidebarMenuItem,
-  SidebarRail,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -236,8 +235,6 @@ export default function ProjectsSidebar({
           <Kbd>⌘B</Kbd> to toggle
         </p>
       </SidebarFooter>
-
-      <SidebarRail />
 
       <AlertDialog
         open={pendingDelete !== null}
