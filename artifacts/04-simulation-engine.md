@@ -13,9 +13,16 @@ export const X = 2;      // unknown / conflict
 export const Z = 3;      // high impedance (undriven)
 ```
 
-A signal of width `w` is a `Uint8Array(w)`, index 0 = LSB. Helpers in
-`src/lib/sim/logic.ts`: `toBits`, `fromBits`, `isKnown`, `resolve`, `and2`,
-`not1`, … Never encode a value as a JS `number` bitmask; you lose `X`/`Z`.
+A signal of width `w` is a `Uint8Array(w)`, index 0 = LSB. Never encode a value
+as a JS `number` bitmask; you lose `X`/`Z`.
+
+[logic.ts](../src/lib/sim/logic.ts) holds `toBits` / `fromBits`, `isKnown`,
+`formatSignal` / `parseSignal` (MSB-first text, `"01XZ"`, for hand-written
+fixtures), `fitSignal`, `resolveDrivers`, and `combine`. The two-input
+operations are `Uint8Array(16)` tables — `RESOLVE`, `AND2`, `OR2`, `XOR2` —
+indexed `a * 4 + b`, and each already bakes in its controlling value, so
+folding one pairwise across n inputs is correct with no special case. `combine`
+is that fold, and every gate in the catalog is one call to it.
 
 **Driver resolution** (applied per bit when a net has several drivers):
 
@@ -56,12 +63,30 @@ while (queue.peek().time <= untilTime) {
 - **Coalescing**: scheduling the same node at the same time replaces the pending
   event rather than queueing twice.
 - **Settling**: `runUntil(t)` returns when the queue has no event at or before
-  `t`. `step()` advances to the next event time. `stepCycle()` advances to the
-  next edge of the designated primary clock.
-- **Oscillation budget**: at most `MAX_EVENTS_PER_ADVANCE` (start at 100_000)
-  events per `runUntil` call. Exceeding it stops the run, emits an
-  `oscillation` diagnostic naming the most-active nets, and leaves them `X`.
-  It must never hang the tab.
+  `t`. `step()` advances to the next event time. `runToRisingEdge(netId, limit)`
+  is the spec's `stepCycle`, with the clock named by net rather than by a
+  "primary clock" setting — a document may have several, and the caller always
+  knows which one it means.
+- **Delay is reaction time**: a node's `delayNs` is applied when the engine
+  schedules its `evaluate` after an input changed, not to the write that
+  follows. `ctx.write(pin, value, delayNs)` adds further delay on top, for a
+  node that needs its outputs to move at different times.
+- **Params without a rebuild**: `setNodeParams(nodeId, params)` re-evaluates one
+  node with new params — how a switch gets flipped mid-run. A rebuild would
+  reset every net and forget every latched value. Params that change pin layout
+  or `delayNs` do need a rebuild; they are read when the engine is constructed.
+- **Two budgets, two meanings** — see
+  [ADR 0005](decisions/0005-oscillation-is-zero-delay-churn.md):
+  - `MAX_EVENTS_PER_ADVANCE` (100_000), and any smaller budget the caller
+    passes as `runUntil(t, maxEvents)`, is a **yield**. The advance returns
+    `settled: false` with no diagnostic and the caller resumes where it left
+    off. A ring oscillator is not broken just because it is fast.
+  - `MAX_EVENTS_PER_INSTANT` (50_000) events at *one timestamp* is an
+    **oscillation**: a zero-delay combinational loop, where simulated time can
+    never advance. It emits the diagnostic naming the most-active nets, forces
+    them to `X`, and clears the queue.
+
+  Between them the tab can never hang.
 
 ## Node evaluation contract
 
@@ -76,6 +101,13 @@ type EvalContext<P, S> = {
   emitSample?(channel: string, value: Uint8Array): void;  // instruments
 };
 ```
+
+`EvalContext`, `NodeState`, `evaluate`, `createState` and `delayNs` are
+declared on `NodeDefinition` in [define.ts](../src/lib/nodes/define.ts), not
+here, so a node file imports one module. `state` is deliberately
+`Record<string, unknown>` rather than a generic parameter: a generic would make
+the registry an array of mutually unassignable types, and a definition is the
+only code that ever reads its own state.
 
 Rules for `evaluate`:
 
@@ -97,12 +129,18 @@ reset line.
 
 ## Runner
 
-`src/lib/sim/runner.ts` is the only part that touches `requestAnimationFrame`.
+[runner.ts](../src/lib/sim/runner.ts) is the only part that touches
+`requestAnimationFrame` — and it takes a `FrameScheduler` rather than calling it
+directly, which is what keeps `src/lib/` runnable in a plain Node test.
 
-- Modes: `running`, `paused`, `stepping`.
-- Speed is a **simulated-time-per-real-second** factor (e.g. `1 MHz`), clamped so
-  a frame never simulates more than a fixed event budget. When the budget is hit,
-  report the achieved rate in the UI rather than freezing.
+- Modes: `running`, `paused`. Stepping is an action taken while paused
+  (`step`, `advance`), not a third mode to keep in sync.
+- Speed is a **simulated-time-per-real-second** factor (e.g. `1 MHz`). A frame
+  never simulates more than `eventBudgetPerFrame` events: the runner passes it
+  to `runUntil` as the caller budget, so a frame that cannot keep up simply
+  covers less ground and reports `achievedNsPerSecond` below the requested
+  speed, rather than freezing. A frame longer than 100 ms is a backgrounded tab
+  and is clamped, not simulated.
 - Each frame: `runUntil(simTime + dt * speed)`, then bump the version counter
   once and notify subscribers. One notification per frame, never per event.
 - The runner is the only writer of simulation state that React observes.

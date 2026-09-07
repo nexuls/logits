@@ -1,4 +1,5 @@
 import { defineNode, intParam } from "@/lib/nodes/define";
+import { toBits } from "@/lib/sim/logic";
 
 export const constantNode = defineNode({
   type: "io.constant",
@@ -18,4 +19,13 @@ export const constantNode = defineNode({
     },
   ],
   size: () => ({ width: 4, height: 4 }),
+  evaluate: (ctx) => {
+    ctx.write(
+      "out",
+      toBits(
+        intParam(ctx.params, "value", 0),
+        intParam(ctx.params, "width", 1),
+      ),
+    );
+  },
 });

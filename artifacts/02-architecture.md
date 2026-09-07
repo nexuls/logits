@@ -38,8 +38,8 @@ one, that is a design error — pass it in as an argument.
 | `src/components/ui/` | shadcn primitives. Generated — see AGENTS.md. | Built |
 | `src/hooks/` | Generic React hooks (`use-mobile`, `use-debounced-callback`). | Built |
 | `src/lib/circuit/` | Document model, ids, geometry, wire routing, netlist derivation, serialize/migrate. | Partial — schema, ids, io, geometry, wire-path, coords and commands built; netlist planned |
-| `src/lib/sim/` | Event queue, engine, four-valued logic, runner, waveform buffer. | Planned |
-| `src/lib/nodes/` | Node definitions + registry, one file per node type. | Partial — `defineNode`, the registry and the `gate.*` / `io.*` definitions are built, but pin layout only; `evaluate` and `paramsSchema` arrive with the engine |
+| `src/lib/sim/` | Event queue, engine, four-valued logic, runner, waveform buffer. | Partial — `logic.ts`, `queue.ts`, `engine.ts` and `runner.ts` built; the waveform ring buffer arrives with the instruments in phase 4 |
+| `src/lib/nodes/` | Node definitions + registry, one file per node type. | Partial — `defineNode`, the registry and the `gate.*` / `io.*` definitions are built with pin layout and `evaluate`; `paramsSchema` and `view` arrive with the inspector |
 | `src/state/` | External stores bridging domain → React, plus `storage.ts` and the derived `scene.ts`. | Partial — storage, scene, `editor-settings.ts`, `document.ts` and `history.ts` built; viewport planned |
 | `artifacts/` | These design docs. | Built |
 

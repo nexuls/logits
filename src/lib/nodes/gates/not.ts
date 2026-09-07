@@ -1,8 +1,9 @@
 import { unaryGate } from "./shared";
 
-export const notGate = unaryGate("gate.not", "NOT", "inverter", [
-  "not",
-  "inverter",
-  "invert",
-  "!",
-]);
+export const notGate = unaryGate({
+  type: "gate.not",
+  title: "NOT",
+  icon: "inverter",
+  keywords: ["not", "inverter", "invert", "!"],
+  invert: true,
+});

@@ -4,11 +4,13 @@ import {
   type NodeDefinition,
   type NodeParams,
 } from "@/lib/nodes/define";
+import { AND2, type BitTable, combine } from "@/lib/sim/logic";
 
 /**
  * The two gate shapes in the catalog: `in0`…`inN` → `out`, and `in` → `out`.
  * Every gate file passes its own type, title and keywords through one of
- * these, so the pin ids — which are save format — are written once.
+ * these, so the pin ids — which are save format — are written once, and so is
+ * the bit-lane fold that makes a gate a gate.
  * See artifacts/06-node-catalog.md.
  */
 
@@ -19,6 +21,21 @@ const MAX_INPUTS = 8;
 const PIN_PITCH = 2;
 
 export const GATE_WIDTH = 6;
+
+type GateSpec = {
+  type: string;
+  title: string;
+  icon: string;
+  keywords: readonly string[];
+  /**
+   * Bit table folded pairwise across the inputs. Each table already bakes in
+   * its controlling value, so an AND with one `0` input is `0` however many
+   * unknowns join it — no special case here.
+   */
+  op: BitTable;
+  /** NAND is AND inverted, NOR is OR inverted, NOT is a buffer inverted. */
+  invert?: boolean;
+};
 
 function outputPin(width: number, height: number): PinSpec {
   return {
@@ -41,12 +58,14 @@ function bodyHeight(inputs: number): number {
 }
 
 /** `gate.and` and friends: n inputs, one output. */
-export function symmetricGate(
-  type: string,
-  title: string,
-  icon: string,
-  keywords: readonly string[],
-): NodeDefinition {
+export function symmetricGate({
+  type,
+  title,
+  icon,
+  keywords,
+  op,
+  invert,
+}: GateSpec): NodeDefinition {
   return {
     type,
     title,
@@ -78,16 +97,25 @@ export function symmetricGate(
       width: GATE_WIDTH,
       height: bodyHeight(inputCount(params)),
     }),
+    evaluate: (ctx) => {
+      const width = intParam(ctx.params, "width", 1);
+      const inputs = Array.from(
+        { length: inputCount(ctx.params) },
+        (_, index) => ctx.read(`in${index}`),
+      );
+      ctx.write("out", combine(inputs, width, op, invert));
+    },
   };
 }
 
 /** `gate.not` and `gate.buffer`: one input, one output. */
-export function unaryGate(
-  type: string,
-  title: string,
-  icon: string,
-  keywords: readonly string[],
-): NodeDefinition {
+export function unaryGate({
+  type,
+  title,
+  icon,
+  keywords,
+  invert,
+}: Omit<GateSpec, "op">): NodeDefinition {
   return {
     type,
     title,
@@ -111,5 +139,11 @@ export function unaryGate(
       ];
     },
     size: () => ({ width: GATE_WIDTH, height: 4 }),
+    evaluate: (ctx) => {
+      const width = intParam(ctx.params, "width", 1);
+      // One input never reaches the fold, so the table is irrelevant — what a
+      // unary gate does is normalise Z to X and optionally invert.
+      ctx.write("out", combine([ctx.read("in")], width, AND2, invert));
+    },
   };
 }

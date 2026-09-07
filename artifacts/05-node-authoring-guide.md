@@ -32,13 +32,19 @@ export const andGate = defineNode({
     { id: "out", name: "Y", direction: "out", width, side: "right", offset: 1 },
   ],
   size: ({ inputs }) => ({ width: 6, height: Math.max(4, inputs * 2) }),
-  delayNs: 1,
+  delayNs: () => 1,                 // omit entirely for the 1 ns default
   evaluate: (ctx) => {
     const values = range(ctx.params.inputs).map((i) => ctx.read(`in${i}`));
-    ctx.write("out", andN(values));
+    ctx.write("out", combine(values, width, AND2));
   },
 });
 ```
+
+The gate families are already factored: `symmetricGate` and `unaryGate` in
+[gates/shared.ts](../src/lib/nodes/gates/shared.ts) take a bit table and an
+`invert` flag, so AND and NAND differ by one line and the pin ids — which are
+save format — are written once. Reach for `combine` from
+[sim/logic.ts](../src/lib/sim/logic.ts) before writing a bit loop by hand.
 
 Then add it to `src/lib/nodes/registry.ts`. The registry is an **explicit
 array** — never rely on import side effects or filesystem globbing, both of
@@ -61,7 +67,11 @@ which break tree-shaking and make ordering non-deterministic.
       work that out for itself.
 - [ ] `size()` is in grid units and leaves room for every pin.
 - [ ] Stateful nodes implement `createState`; state is JSON-serialisable and
-      never holds DOM refs or closures.
+      never holds DOM refs or closures. It is re-created on every reset, so a
+      latched value must not survive one.
+- [ ] `evaluate` writes only pins the definition declares as outputs, and
+      writes exactly the pin's width. The engine pads a short write with `Z`
+      rather than corrupting the net, but that is a safety net, not a licence.
 - [ ] Has a test: truth table for combinational, waveform for sequential.
 - [ ] Appears in the palette with a sensible `icon` and `keywords`, under a
       `category` that `nodeCategories` in the registry knows about. The palette

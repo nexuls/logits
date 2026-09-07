@@ -5,9 +5,9 @@ Pin ids are part of the save format — treat this table as frozen once a node
 ships. Everything here is **Planned** until the node exists in
 `src/lib/nodes/registry.ts`.
 
-`gate.*` and `io.*` are in the registry and appear in the palette, but only as
-pin layout and footprint: `evaluate` and `paramsSchema` land with the engine
-(Phase 2). Everything else in this file is still Planned.
+`gate.*` and `io.*` are in the registry, appear in the palette, and simulate:
+pin layout, footprint and `evaluate` are all built. `paramsSchema` lands with
+the inspector (Phase 3). Everything else in this file is still Planned.
 
 Conventions: inputs left, outputs right, `clk` bottom, `en`/`rst` top.
 `n` = the node's `width` parameter. All widths default to 1 unless noted.
@@ -25,7 +25,7 @@ Conventions: inputs left, outputs right, `clk` bottom, `en`/`rst` top.
 | type | pins | params / behaviour |
 | --- | --- | --- |
 | `io.switch` | `out` | `width`, state `value`; click toggles a bit |
-| `io.button` | `out` | momentary; high while pressed |
+| `io.button` | `out` | momentary; `pressed`, high while held |
 | `io.constant` | `out` | `width`, `value` |
 | `io.led` | `in` | `color`; renders off / on / `X` (red) / `Z` (grey) |
 | `io.probe` | `in` | shows the value as text in binary/hex/decimal |

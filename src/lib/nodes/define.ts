@@ -4,18 +4,46 @@ import type {
   CircuitNode,
   PinSpec,
 } from "@/lib/circuit/schema";
+import type { Signal } from "@/lib/sim/logic";
 
 /**
- * The node definition contract, cut down to the surface the renderer needs.
+ * The node definition contract: everything the app knows about a node type.
  *
- * This is intentionally partial: `evaluate`, `createState`, `delayNs`,
- * `paramsSchema` and `view` are Phase 2/3 and are left out rather than guessed
- * at, because their signatures depend on the engine's four-valued types, which
- * do not exist yet. Adding them must not change what is here.
- * See artifacts/05-node-authoring-guide.md.
+ * `paramsSchema` and `view` are still Phase 3 and are left out rather than
+ * guessed at. The behavioural half — `evaluate`, `createState`, `delayNs` —
+ * landed with the engine. See artifacts/05-node-authoring-guide.md.
  */
 
 export type NodeParams = CircuitNode["params"];
+
+/**
+ * Node-owned mutable state, surviving between evaluations and re-created by
+ * `createState` on reset. Deliberately untyped rather than a generic parameter
+ * on `NodeDefinition`: a generic would make `registry.ts` an array of mutually
+ * unassignable types, and each definition is the only code that ever reads its
+ * own state, so it is the only code a cast could mislead.
+ */
+export type NodeState = Record<string, unknown>;
+
+/**
+ * What `evaluate` is handed. Mirrors artifacts/04-simulation-engine.md.
+ *
+ * `read` returns a fresh copy sized to the pin, so a node may keep a reference
+ * to what it read — comparing this clock edge against the last one is the
+ * normal way to write a flip-flop — without aliasing the engine's net buffer.
+ */
+export type EvalContext = {
+  /** Integer nanoseconds. */
+  now: number;
+  params: NodeParams;
+  state: NodeState;
+  read: (pinId: string) => Signal;
+  /** `delayNs` here is extra, on top of the node's own reaction delay. */
+  write: (pinId: string, value: Signal, delayNs?: number) => void;
+  /** Re-evaluate this node later with no input change — clocks, one-shots. */
+  scheduleSelf: (delayNs: number) => void;
+  emitSample?: (channel: string, value: Signal) => void;
+};
 
 export type NodeDefinition = {
   /** Registry key, `"<family>.<name>"`. Stable forever — it is in save files. */
@@ -36,6 +64,21 @@ export type NodeDefinition = {
   pins: (params: NodeParams) => PinSpec[];
   /** In grid cells. Must leave room for every pin `pins()` returns. */
   size: (params: NodeParams) => Size;
+  /**
+   * Nanoseconds from an input changing to this node reacting. Omit for the
+   * engine's `DEFAULT_DELAY_NS`. A function of params because `time.delay`
+   * exists to make it one.
+   */
+  delayNs?: (params: NodeParams) => number;
+  /** Omit for a stateless node. Called on every reset, never mid-run. */
+  createState?: (params: NodeParams) => NodeState;
+  /**
+   * Reads inputs, writes outputs. Pure with respect to everything except
+   * `state` and `write`: no module-level mutables, no `Math.random`, no
+   * `Date`, no reaching into another node. Omit for a pure sink like an LED,
+   * whose value the UI reads off the net.
+   */
+  evaluate?: (ctx: EvalContext) => void;
 };
 
 /**
@@ -127,6 +170,15 @@ export function defineNode(definition: NodeDefinition): NodeDefinition {
  * rather than casting, so a bad value degrades to the default instead of
  * producing `NaN` pins.
  */
+export function boolParam(
+  params: NodeParams,
+  key: string,
+  fallback: boolean,
+): boolean {
+  const value = params[key];
+  return typeof value === "boolean" ? value : fallback;
+}
+
 export function intParam(
   params: NodeParams,
   key: string,

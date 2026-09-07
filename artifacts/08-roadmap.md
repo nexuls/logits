@@ -23,20 +23,20 @@ boxes is an incomplete phase.
 - [x] Serialize / deserialize / migrate, `localStorage` autosave — debounced in the store rather than a component, so an edit still reaches storage if the editor unmounts
 - **Exit:** a hand-written JSON circuit loads and compiles to a netlist, with tests for union-find grouping, width mismatch, and multi-driver detection. **Met** — [netlist.test.ts](../src/lib/circuit/netlist.test.ts).
 
-## Phase 2 — Engine
+## Phase 2 — Engine (done)
 
-- [ ] Four-valued logic + resolution table
-- [ ] Event queue, engine, reset, oscillation budget
-- [ ] Runner with play / pause / step / speed
-- [ ] Node registry, `defineNode`, the seven basic gates — `defineNode`, `registry.ts` and the `gate.*` / `io.*` definitions exist, but pin layout and footprint only; `evaluate` and `delayNs` are outstanding
-- **Exit:** a headless test simulates a ring oscillator and an SR latch with the expected waveforms, and an oscillating circuit terminates with a diagnostic instead of hanging.
+- [x] Four-valued logic + resolution table — [logic.ts](../src/lib/sim/logic.ts), with the two-input operations as lookup tables that bake in their controlling values
+- [x] Event queue, engine, reset, oscillation budget — [queue.ts](../src/lib/sim/queue.ts) orders by `(time, sequence)` and coalesces duplicate evals; [engine.ts](../src/lib/sim/engine.ts) separates a yield from a true oscillation per [ADR 0005](decisions/0005-oscillation-is-zero-delay-churn.md)
+- [x] Runner with play / pause / step / speed — [runner.ts](../src/lib/sim/runner.ts), one notification per frame, taking an injected `FrameScheduler` so it runs in a Node test
+- [x] Node registry, `defineNode`, the seven basic gates — `evaluate` and `delayNs` are on `NodeDefinition`, and every `gate.*` and `io.*` source simulates
+- **Exit:** a headless test simulates a ring oscillator and an SR latch with the expected waveforms, and an oscillating circuit terminates with a diagnostic instead of hanging. **Met** — [engine.test.ts](../src/lib/sim/engine.test.ts).
 
 ## Phase 3 — Editor
 
 - [ ] Node layer, wire layer, pin hit-testing, selection — the derived scene ([scene.ts](../src/state/scene.ts)) they render from is built
 - [ ] Wiring gestures, rubber-band select, delete, duplicate, copy/paste — wire routing and segment-bend maths ([wire-path.ts](../src/lib/circuit/wire-path.ts)) are built; the pointer handling that calls them is not
 - [ ] Palette + command menu, inspector driven by `paramsSchema` — the palette ([elements-sidebar.tsx](../src/components/editor/elements-sidebar.tsx)) is built and arms a node type; the command menu and inspector are outstanding
-- [ ] Toolbar: run controls, zoom, save/load, diagnostics panel
+- [ ] Toolbar: run controls, zoom, save/load, diagnostics panel — the `Runner` behind the run controls is built and exposes a `useSyncExternalStore` pair; nothing subscribes to it yet
 - **Exit:** a user builds a 4-bit adder from scratch with the mouse and sees it work.
 
 ## Phase 4 — The rest of the nodes
@@ -68,7 +68,10 @@ boxes is an incomplete phase.
 | The document store is not wired to the editor yet: `page.tsx` still renders from the project index, so nothing opens a document, nothing renders nodes, and the palette's armed type stays inert. Needs the node layer (Phase 3) | [app/page.tsx](../src/app/page.tsx), [state/document.ts](../src/state/document.ts) |
 | `renameProject` in the projects store rewrites the stored document from disk, which would discard unsaved edits if the document is open. Use `renameOpenDocument` for the open one; the two paths need merging when routing lands | [state/projects-store.ts](../src/state/projects-store.ts) |
 | `SidebarProvider` is hand-edited (a generated shadcn file) to take `cookieName` and `keyboardShortcut`, so the page's two sidebars do not share one cookie or both toggle on `⌘B`. A regeneration will drop it | [ui/sidebar.tsx](../src/components/ui/sidebar.tsx) |
-| `ResolvedPin.netId` is still always `null`; the scene has nowhere to get it from until something owns a compiled netlist per document. Wire it when the engine lands | [state/scene.ts](../src/state/scene.ts), [lib/circuit/netlist.ts](../src/lib/circuit/netlist.ts) |
+| `ResolvedPin.netId` is still always `null`. The engine exists now, but nothing owns an `Engine` per document — that store is Phase 3, and it is what will fill this in | [state/scene.ts](../src/state/scene.ts), [lib/sim/engine.ts](../src/lib/sim/engine.ts) |
+| Nothing constructs an `Engine` or a `Runner` yet: the editor has no simulation store, so no net values reach the canvas and the run controls have nothing to drive | [state/](../src/state/), [lib/sim/runner.ts](../src/lib/sim/runner.ts) |
+| A flipped switch needs `engine.setNodeParams` *and* the document command, or the engine and the document disagree. The Phase 3 store has to own both halves of that | [lib/sim/engine.ts](../src/lib/sim/engine.ts), [lib/circuit/commands.ts](../src/lib/circuit/commands.ts) |
+| `emitSample` is declared on `EvalContext` but no node emits and nothing collects; the waveform ring buffer lands with the oscilloscope in Phase 4 | [lib/nodes/define.ts](../src/lib/nodes/define.ts) |
 | Subcircuits are not flattened — `buildNetlist` compiles the top-level document only, which is correct until phase 4 introduces instancing | [lib/circuit/netlist.ts](../src/lib/circuit/netlist.ts) |
 | A stored `light` theme is applied on hydration, so the first paint is always dark — the alternative is a blocking script in the document head | [state/editor-settings.ts](../src/state/editor-settings.ts) |
 | `SidebarMenuSkeleton` picks a random width and cannot be server-rendered without a hydration mismatch; the sidebar hand-rolls its placeholders instead | [ui/sidebar.tsx](../src/components/ui/sidebar.tsx) |

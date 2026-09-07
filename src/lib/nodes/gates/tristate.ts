@@ -1,4 +1,5 @@
 import { defineNode, intParam } from "@/lib/nodes/define";
+import { AND2, combine, createSignal, HIGH, LOW, X, Z } from "@/lib/sim/logic";
 
 /**
  * The one gate that is not `symmetricGate`: `en` is always one bit wide no
@@ -39,4 +40,21 @@ export const tristateGate = defineNode({
     ];
   },
   size: () => ({ width: 6, height: 4 }),
+  evaluate: (ctx) => {
+    const width = intParam(ctx.params, "width", 1);
+    const enable = ctx.read("en")[0];
+
+    // Enabled, this is an ordinary buffer, which includes turning a floating
+    // input into X: passing the Z straight through would have an actively
+    // driving output claim to be switched off.
+    if (enable === HIGH) {
+      ctx.write("out", combine([ctx.read("in")], width, AND2));
+    } else if (enable === LOW) {
+      ctx.write("out", createSignal(width, Z));
+    } else {
+      // Whether this driver is on is exactly what nobody knows, so neither a
+      // value nor Z would be honest.
+      ctx.write("out", createSignal(width, X));
+    }
+  },
 });

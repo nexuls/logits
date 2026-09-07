@@ -1,4 +1,5 @@
-import { defineNode } from "@/lib/nodes/define";
+import { boolParam, defineNode } from "@/lib/nodes/define";
+import { createSignal, HIGH, LOW } from "@/lib/sim/logic";
 
 /** Momentary: high only while held, so it has no stored `value` param. */
 export const buttonNode = defineNode({
@@ -7,7 +8,7 @@ export const buttonNode = defineNode({
   icon: "push-button",
   category: "io",
   keywords: ["button", "momentary", "push", "input", "source"],
-  defaultParams: {},
+  defaultParams: { pressed: false },
   pins: () => [
     {
       id: "out",
@@ -19,4 +20,8 @@ export const buttonNode = defineNode({
     },
   ],
   size: () => ({ width: 4, height: 4 }),
+  evaluate: (ctx) => {
+    const pressed = boolParam(ctx.params, "pressed", false);
+    ctx.write("out", createSignal(1, pressed ? HIGH : LOW));
+  },
 });
