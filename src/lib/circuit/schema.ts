@@ -88,6 +88,13 @@ export const pinSpecSchema = z.object({
   side: z.literal(["left", "right", "top", "bottom"]),
   /** Position along that side, in grid units. */
   offset: z.number().finite(),
+  /**
+   * True when this output may drive `Z` — a bus driver, an open-drain pin.
+   * Declared here so `buildNetlist` can tell a legitimate shared bus from a
+   * short circuit without ever looking at a node `type`. `inout` pins are
+   * tri-state by definition and need not set it.
+   */
+  tristate: z.boolean().optional(),
 });
 export type PinSpec = z.infer<typeof pinSpecSchema>;
 

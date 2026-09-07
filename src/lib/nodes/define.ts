@@ -1,5 +1,9 @@
 import type { Size } from "@/lib/circuit/geometry";
-import type { CircuitNode, PinSpec } from "@/lib/circuit/schema";
+import type {
+  CircuitDocument,
+  CircuitNode,
+  PinSpec,
+} from "@/lib/circuit/schema";
 
 /**
  * The node definition contract, cut down to the surface the renderer needs.
@@ -57,6 +61,54 @@ export function placeholderDefinition(type: string): NodeDefinition {
     pins: () => [],
     size: () => PLACEHOLDER_SIZE,
   };
+}
+
+/**
+ * Which pin ids each node is wired to — the only clue a placeholder has about
+ * a vanished definition's pins. Sorted, so a placeholder's pin order does not
+ * depend on wire iteration order.
+ */
+export function referencedPinsByNode(
+  document: CircuitDocument,
+): Map<string, string[]> {
+  const byNode = new Map<string, string[]>();
+  for (const wire of Object.values(document.wires)) {
+    for (const ref of [wire.from, wire.to]) {
+      const pins = byNode.get(ref.nodeId);
+      if (!pins) byNode.set(ref.nodeId, [ref.pinId]);
+      else if (!pins.includes(ref.pinId)) pins.push(ref.pinId);
+    }
+  }
+  for (const pins of byNode.values()) pins.sort();
+  return byNode;
+}
+
+/** Reconstructs a plausible left-side pin strip for an unknown node type. */
+export function synthesizePins(pinIds: readonly string[]): PinSpec[] {
+  return pinIds.map((id, index) => ({
+    id,
+    name: id,
+    direction: "inout" as const,
+    width: 1,
+    side: "left" as const,
+    offset: index + 1,
+  }));
+}
+
+/**
+ * A node's pin layout, whether or not its type is still in the registry. The
+ * scene and the netlist must agree on this exactly — a wire the netlist ties
+ * into a net has to land on a pin the canvas also draws — so they share it.
+ */
+export function pinSpecsFor(
+  node: CircuitNode,
+  lookup: NodeLookup,
+  referencedPins?: readonly string[],
+): PinSpec[] {
+  const definition = lookup(node.type);
+  return definition
+    ? definition.pins(node.params)
+    : synthesizePins(referencedPins ?? []);
 }
 
 /**

@@ -16,12 +16,12 @@ boxes is an incomplete phase.
 - [x] Add a test runner (Vitest) and wire `bun run test` — node environment, `src/**/*.test.ts`, with the existing domain modules covered
 - **Exit:** `bun run test` and `bun run build` pass, `bun run lint` is clean outside the generated `src/components/ui/`, and the app boots to the editor shell rather than the starter page.
 
-## Phase 1 — Model and netlist
+## Phase 1 — Model and netlist (done)
 
-- [ ] `src/lib/circuit/`: types, ids, coords, `buildNetlist`, diagnostics — zod schemas, ids, geometry, [coords.ts](../src/lib/circuit/coords.ts) and [commands.ts](../src/lib/circuit/commands.ts) done; `buildNetlist` and its diagnostics outstanding
+- [x] `src/lib/circuit/`: types, ids, coords, `buildNetlist`, diagnostics — [netlist.ts](../src/lib/circuit/netlist.ts) compiles sorted-key union-find nets with `width-mismatch`, `multiple-drivers`, `undriven-input`, `unknown-node-type` and `unknown-pin` diagnostics
 - [x] `src/state/document.ts` with command-based mutations + undo/redo — snapshot history in [history.ts](../src/state/history.ts), with drag coalescing so a gesture undoes in one step
 - [x] Serialize / deserialize / migrate, `localStorage` autosave — debounced in the store rather than a component, so an edit still reaches storage if the editor unmounts
-- **Exit:** a hand-written JSON circuit loads and compiles to a netlist, with tests for union-find grouping, width mismatch, and multi-driver detection.
+- **Exit:** a hand-written JSON circuit loads and compiles to a netlist, with tests for union-find grouping, width mismatch, and multi-driver detection. **Met** — [netlist.test.ts](../src/lib/circuit/netlist.test.ts).
 
 ## Phase 2 — Engine
 
@@ -68,5 +68,7 @@ boxes is an incomplete phase.
 | The document store is not wired to the editor yet: `page.tsx` still renders from the project index, so nothing opens a document, nothing renders nodes, and the palette's armed type stays inert. Needs the node layer (Phase 3) | [app/page.tsx](../src/app/page.tsx), [state/document.ts](../src/state/document.ts) |
 | `renameProject` in the projects store rewrites the stored document from disk, which would discard unsaved edits if the document is open. Use `renameOpenDocument` for the open one; the two paths need merging when routing lands | [state/projects-store.ts](../src/state/projects-store.ts) |
 | `SidebarProvider` is hand-edited (a generated shadcn file) to take `cookieName` and `keyboardShortcut`, so the page's two sidebars do not share one cookie or both toggle on `⌘B`. A regeneration will drop it | [ui/sidebar.tsx](../src/components/ui/sidebar.tsx) |
+| `ResolvedPin.netId` is still always `null`; the scene has nowhere to get it from until something owns a compiled netlist per document. Wire it when the engine lands | [state/scene.ts](../src/state/scene.ts), [lib/circuit/netlist.ts](../src/lib/circuit/netlist.ts) |
+| Subcircuits are not flattened — `buildNetlist` compiles the top-level document only, which is correct until phase 4 introduces instancing | [lib/circuit/netlist.ts](../src/lib/circuit/netlist.ts) |
 | A stored `light` theme is applied on hydration, so the first paint is always dark — the alternative is a blocking script in the document head | [state/editor-settings.ts](../src/state/editor-settings.ts) |
 | `SidebarMenuSkeleton` picks a random width and cannot be server-rendered without a hydration mismatch; the sidebar hand-rolls its placeholders instead | [ui/sidebar.tsx](../src/components/ui/sidebar.tsx) |

@@ -55,6 +55,10 @@ which break tree-shaking and make ordering non-deterministic.
 - [ ] Handles `X` and `Z` inputs sensibly; implements controlling values where
       they apply (see [04-simulation-engine.md](04-simulation-engine.md)).
 - [ ] Works at any `width` it advertises, not just 1.
+- [ ] An output that can drive `Z` is marked `tristate: true` on its `PinSpec`.
+      Without it `buildNetlist` calls a legitimate shared bus a
+      `multiple-drivers` short — and it must never learn your node's `type` to
+      work that out for itself.
 - [ ] `size()` is in grid units and leaves room for every pin.
 - [ ] Stateful nodes implement `createState`; state is JSON-serialisable and
       never holds DOM refs or closures.

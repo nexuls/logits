@@ -32,6 +32,9 @@ export const tristateGate = defineNode({
         width,
         side: "right",
         offset: 2,
+        // The point of the gate: with `en` low it drives Z, so several of
+        // these may share a net without it being a multi-driver short.
+        tristate: true,
       },
     ];
   },

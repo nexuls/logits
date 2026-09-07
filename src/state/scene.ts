@@ -17,7 +17,9 @@ import { wirePath } from "@/lib/circuit/wire-path";
 import {
   type NodeDefinition,
   type NodeLookup,
+  pinSpecsFor,
   placeholderDefinition,
+  referencedPinsByNode,
 } from "@/lib/nodes/define";
 
 /**
@@ -40,7 +42,12 @@ export type ResolvedPin = {
   side: PinSpec["side"];
   /** World coordinates, node position already added. */
   world: Point;
-  /** Filled in by `buildNetlist` once it lands; null until then. */
+  /**
+   * Net this pin sits on, from `buildNetlist`. Still always null: nothing owns
+   * a compiled netlist per document until the engine lands, and the scene must
+   * not compile one itself — it is rebuilt far more often than the topology
+   * changes.
+   */
   netId: number | null;
 };
 
@@ -99,7 +106,7 @@ export function buildScene(
   document: CircuitDocument,
   lookup: NodeLookup,
 ): Scene {
-  const referencedPins = collectReferencedPins(document);
+  const referencedPins = referencedPinsByNode(document);
 
   const nodes: Record<string, ResolvedNode> = {};
   for (const [id, node] of Object.entries(document.nodes)) {
@@ -139,9 +146,7 @@ export function resolveNode(
   }
 
   const def = definition ?? placeholderDefinition(node.type);
-  const specs = definition
-    ? def.pins(node.params)
-    : synthesizePins(referencedPins ?? []);
+  const specs = pinSpecsFor(node, lookup, referencedPins);
 
   const rotation = node.rotation ?? 0;
   const key = definition
@@ -180,35 +185,6 @@ export function resolveNode(
 
   if (definition) resolvedCache.set(node, resolved);
   return resolved;
-}
-
-/** Which pin ids each node is wired to — the only clue a placeholder has. */
-function collectReferencedPins(
-  document: CircuitDocument,
-): Map<string, string[]> {
-  const byNode = new Map<string, string[]>();
-  for (const wire of Object.values(document.wires)) {
-    for (const ref of [wire.from, wire.to]) {
-      const pins = byNode.get(ref.nodeId);
-      if (!pins) byNode.set(ref.nodeId, [ref.pinId]);
-      else if (!pins.includes(ref.pinId)) pins.push(ref.pinId);
-    }
-  }
-  // Sorted so a placeholder's pin order does not depend on wire iteration order.
-  for (const pins of byNode.values()) pins.sort();
-  return byNode;
-}
-
-/** Reconstructs a plausible left-side pin strip for an unknown node type. */
-function synthesizePins(pinIds: readonly string[]): PinSpec[] {
-  return pinIds.map((id, index) => ({
-    id,
-    name: id,
-    direction: "inout" as const,
-    width: 1,
-    side: "left" as const,
-    offset: index + 1,
-  }));
 }
 
 /**
