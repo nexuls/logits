@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
   MinusIcon,
   PlusIcon,
 } from "lucide-react";
@@ -237,7 +237,7 @@ export default function Minimap({
           className="ml-auto"
           aria-label={isMinimapHidden ? "Show minimap" : "Hide minimap"}
         >
-          {isMinimapHidden ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+          {isMinimapHidden ? <ChevronUpIcon /> : <ChevronDownIcon />}
         </Button>
       </div>
       <div
