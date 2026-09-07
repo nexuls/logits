@@ -43,7 +43,6 @@ export default function Home() {
       <SidebarInset className="min-w-0 flex-row overflow-hidden">
         <div className="relative min-w-0 flex-1">
           <Canvas
-            content=""
             title={active?.name ?? "No circuit open"}
             showGrid={settings.showGrid}
             showMinimap={settings.showMinimap}

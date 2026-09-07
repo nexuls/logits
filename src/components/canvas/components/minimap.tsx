@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import type { Rect } from "@/lib/circuit/geometry";
 import { cn } from "@/lib/utils";
 
 type Point = {
@@ -24,7 +25,12 @@ type Props = {
   scale: number;
   offset: Point;
   viewportSize: Size;
-  hasContent: boolean;
+  /**
+   * World-space box around everything on the canvas, or null when it is empty.
+   * The minimap draws it as the content footprint and fits the preview around
+   * it, so panning away from the circuit still shows where the circuit is.
+   */
+  contentBounds: Rect | null;
   /**
    * Opaque repaint key. The minimap samples `--sidebar` / `--foreground` /
    * `--primary` imperatively, so a theme change is invisible to React and the
@@ -54,7 +60,7 @@ export default function Minimap({
   scale,
   offset,
   viewportSize,
-  hasContent,
+  contentBounds,
   themeKey,
   onZoomIn,
   onZoomOut,
@@ -80,10 +86,12 @@ export default function Minimap({
     const viewW = width / safeScale;
     const viewH = height / safeScale;
 
-    const contentW = hasContent ? 360 : 0;
-    const contentH = hasContent ? 120 : 0;
-    const contentX = hasContent ? 0 : viewX;
-    const contentY = hasContent ? 0 : viewY;
+    // With nothing on the canvas the footprint collapses onto the viewport, so
+    // the fit below is driven by the viewport alone.
+    const contentX = contentBounds?.x ?? viewX;
+    const contentY = contentBounds?.y ?? viewY;
+    const contentW = contentBounds?.width ?? 0;
+    const contentH = contentBounds?.height ?? 0;
 
     const minX = Math.min(viewX, contentX);
     const minY = Math.min(viewY, contentY);
@@ -109,7 +117,7 @@ export default function Minimap({
       },
     };
   }, [
-    hasContent,
+    contentBounds,
     offset.x,
     offset.y,
     scale,
@@ -178,7 +186,7 @@ export default function Minimap({
 
     // Show the content footprint in minimap space when content exists.
     ctx.globalAlpha = 0.5;
-    if (hasContent) {
+    if (contentBounds) {
       const contentX = worldToMiniX(worldView.content.x);
       const contentY = worldToMiniY(worldView.content.y);
       const contentW = Math.max(worldView.content.width * scaleToMini, 10);
@@ -200,7 +208,7 @@ export default function Minimap({
     ctx.roundRect(viewX, viewY, viewW, viewH, 4);
     ctx.fill();
     ctx.globalAlpha = 1;
-  }, [hasContent, worldView, themeKey]);
+  }, [contentBounds, worldView, themeKey]);
 
   return (
     <div className="absolute left-0 bottom-0 w-44 rounded-tr-lg bg-sidebar p-2">
