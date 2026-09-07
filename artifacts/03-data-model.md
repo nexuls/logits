@@ -130,7 +130,10 @@ below describe a circuit that reads fine but does not make sense.
 
 - File extension `.logits.json`; MIME `application/json`.
 - Autosave the working document to `localStorage` under `logits:doc:<id>`,
-  debounced with [use-debounced-callback.ts](../src/hooks/use-debounced-callback.ts).
+  debounced inside [document.ts](../src/state/document.ts) rather than with
+  `useDebouncedCallback`: a pending edit must still be written when the editor
+  unmounts, which a component-owned timer cannot promise. The store also
+  flushes on `beforeunload` and before it swaps documents.
   A project index for the sidebar lives under `logits:index` as
   `{ version, projects: ProjectMeta[] }`, derived from documents on save.
 - `serialize` / `deserialize` live in `src/lib/circuit/io.ts` and are the only

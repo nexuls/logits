@@ -37,10 +37,10 @@ one, that is a design error — pass it in as an argument.
 | `src/components/nodes/` | React views for nodes that need custom rendering (scope, displays), and the palette icon set. | Partial — `node-icons.tsx` built; views planned |
 | `src/components/ui/` | shadcn primitives. Generated — see AGENTS.md. | Built |
 | `src/hooks/` | Generic React hooks (`use-mobile`, `use-debounced-callback`). | Built |
-| `src/lib/circuit/` | Document model, ids, geometry, wire routing, netlist derivation, serialize/migrate. | Partial — schema, ids, io, geometry, wire-path built; coords + netlist planned |
+| `src/lib/circuit/` | Document model, ids, geometry, wire routing, netlist derivation, serialize/migrate. | Partial — schema, ids, io, geometry, wire-path, coords and commands built; netlist planned |
 | `src/lib/sim/` | Event queue, engine, four-valued logic, runner, waveform buffer. | Planned |
 | `src/lib/nodes/` | Node definitions + registry, one file per node type. | Partial — `defineNode`, the registry and the `gate.*` / `io.*` definitions are built, but pin layout only; `evaluate` and `paramsSchema` arrive with the engine |
-| `src/state/` | External stores bridging domain → React, plus `storage.ts` and the derived `scene.ts`. | Partial — storage, scene and `editor-settings.ts` built; document/history/viewport planned |
+| `src/state/` | External stores bridging domain → React, plus `storage.ts` and the derived `scene.ts`. | Partial — storage, scene, `editor-settings.ts`, `document.ts` and `history.ts` built; viewport planned |
 | `artifacts/` | These design docs. | Built |
 
 ## Rendering model
@@ -88,10 +88,17 @@ the simple thing first, measure before optimising.
 
 ## Undo / redo
 
-History lives in `src/state/history.ts` and stores *document* snapshots or
-inverse patches — never simulation state. Every mutation goes through a small
-set of commands (`addNode`, `moveNodes`, `connect`, `deleteSelection`, …) so
-that undo has exactly one place to hook into. Do not mutate the document from a
+History lives in [history.ts](../src/state/history.ts) and stores *document*
+snapshots — never simulation state. Snapshots rather than inverse patches
+because the commands already share the untouched parts of the document by
+reference, so a step costs one object; revisit that only with a measurement.
+Consecutive edits that share a label can coalesce, which is what makes a drag
+undo in one step instead of one per pointer event.
+
+The commands themselves are pure functions in
+[commands.ts](../src/lib/circuit/commands.ts) (`addNode`, `moveNodes`,
+`connect`, `deleteElements`, …); [document.ts](../src/state/document.ts) owns
+the open document and is the only caller. Do not mutate the document from a
 component.
 
 ## Performance guardrails

@@ -18,9 +18,9 @@ boxes is an incomplete phase.
 
 ## Phase 1 — Model and netlist
 
-- [ ] `src/lib/circuit/`: types, ids, coords, `buildNetlist`, diagnostics — zod schemas, ids and geometry done; `coords.ts` (world↔screen) and netlist outstanding
-- [ ] `src/state/document.ts` with command-based mutations + undo/redo
-- [ ] Serialize / deserialize / migrate, `localStorage` autosave — `io.ts` and `src/state/storage.ts` done; the debounced autosave hook-up is outstanding
+- [ ] `src/lib/circuit/`: types, ids, coords, `buildNetlist`, diagnostics — zod schemas, ids, geometry, [coords.ts](../src/lib/circuit/coords.ts) and [commands.ts](../src/lib/circuit/commands.ts) done; `buildNetlist` and its diagnostics outstanding
+- [x] `src/state/document.ts` with command-based mutations + undo/redo — snapshot history in [history.ts](../src/state/history.ts), with drag coalescing so a gesture undoes in one step
+- [x] Serialize / deserialize / migrate, `localStorage` autosave — debounced in the store rather than a component, so an edit still reaches storage if the editor unmounts
 - **Exit:** a hand-written JSON circuit loads and compiles to a netlist, with tests for union-find grouping, width mismatch, and multi-driver detection.
 
 ## Phase 2 — Engine
@@ -65,7 +65,8 @@ boxes is an incomplete phase.
 | Projects sidebar has no routing — the open project lives in React state, so it is lost on reload and has no URL | [app/page.tsx](../src/app/page.tsx) |
 | Canvas header menu (New / Rename / Duplicate / Export / Delete) is still disabled; the store actions exist but delete needs the confirm dialog lifted out of the sidebar, and export needs a download flow | [canvas/components/header.tsx](../src/components/canvas/components/header.tsx) |
 | `bun run lint` reports 24 pre-existing errors, all in generated shadcn primitives (mostly `a11y/useSemanticElements`); they need a biome override or a regeneration, not hand edits | [components/ui/](../src/components/ui/) |
-| The palette arms a node type but nothing consumes it — placement needs the document commands and canvas drop handling from Phase 1/3 | [app/page.tsx](../src/app/page.tsx), [editor/elements-sidebar.tsx](../src/components/editor/elements-sidebar.tsx) |
+| The document store is not wired to the editor yet: `page.tsx` still renders from the project index, so nothing opens a document, nothing renders nodes, and the palette's armed type stays inert. Needs the node layer (Phase 3) | [app/page.tsx](../src/app/page.tsx), [state/document.ts](../src/state/document.ts) |
+| `renameProject` in the projects store rewrites the stored document from disk, which would discard unsaved edits if the document is open. Use `renameOpenDocument` for the open one; the two paths need merging when routing lands | [state/projects-store.ts](../src/state/projects-store.ts) |
 | `SidebarProvider` is hand-edited (a generated shadcn file) to take `cookieName` and `keyboardShortcut`, so the page's two sidebars do not share one cookie or both toggle on `⌘B`. A regeneration will drop it | [ui/sidebar.tsx](../src/components/ui/sidebar.tsx) |
 | A stored `light` theme is applied on hydration, so the first paint is always dark — the alternative is a blocking script in the document head | [state/editor-settings.ts](../src/state/editor-settings.ts) |
 | `SidebarMenuSkeleton` picks a random width and cannot be server-rendered without a hydration mismatch; the sidebar hand-rolls its placeholders instead | [ui/sidebar.tsx](../src/components/ui/sidebar.tsx) |

@@ -123,6 +123,15 @@ export function pinProject(id: string, pinned: boolean): StorageResult {
   return result;
 }
 
+/**
+ * Re-reads the index after something outside this module wrote a document —
+ * the autosave in `document.ts`. Without it the sidebar would keep showing the
+ * name and node count from page load.
+ */
+export function refreshProjects(): void {
+  invalidate();
+}
+
 /** Loads a project's circuit. Null when it is missing. */
 export function openProject(id: string): CircuitDocument | null {
   const loaded = readDocument(id);
