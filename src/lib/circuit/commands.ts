@@ -297,6 +297,135 @@ export function deleteElements(
   return { ...document, nodes, wires };
 }
 
+export type Fragment = {
+  nodes: readonly CircuitNode[];
+  wires: readonly Wire[];
+};
+
+export type InsertResult = {
+  document: CircuitDocument;
+  /** The copies, for the editor to select — never the originals. */
+  selection: { nodeIds: string[]; wireIds: string[] };
+};
+
+/**
+ * Lifts a selection out of the document as standalone data.
+ *
+ * This, and not a list of ids, is what the clipboard holds: ids would go stale
+ * the moment the user cut the elements or opened another circuit, and a
+ * fragment can be pasted into a different document entirely.
+ *
+ * A wire comes along only when *both* its endpoints are in the selection.
+ * Copying a half-attached wire would either dangle or silently re-attach to
+ * the original, and neither is what "copy these gates" means.
+ */
+export function extractFragment(
+  document: CircuitDocument,
+  selection: Selection,
+): Fragment {
+  const nodeIds = (selection.nodeIds ?? []).filter(
+    (id) => id in document.nodes,
+  );
+  const kept = new Set(nodeIds);
+
+  // Sorted so a fragment is a pure function of the selection, not of the order
+  // the user happened to click things in.
+  const nodes = [...nodeIds].sort().map((id) => document.nodes[id]);
+
+  const wires = Object.values(document.wires)
+    .filter((wire) => kept.has(wire.from.nodeId) && kept.has(wire.to.nodeId))
+    .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+
+  return { nodes, wires };
+}
+
+/**
+ * Puts a fragment into the document at a world-space offset, with fresh ids.
+ *
+ * Paste and duplicate are the same operation — paste supplies the offset from
+ * the pointer, duplicate a fixed nudge — which is why there is one function.
+ * Ids are opaque and collision-resistant precisely so this cannot clash with
+ * what is already there (see `./ids`).
+ */
+export function insertFragment(
+  document: CircuitDocument,
+  fragment: Fragment,
+  offset: Point,
+  options: { snap?: boolean } = {},
+): InsertResult {
+  if (fragment.nodes.length === 0) {
+    return { document, selection: { nodeIds: [], wireIds: [] } };
+  }
+
+  const { snap = true } = options;
+  const dx = snap ? snapToGrid(offset.x) : offset.x;
+  const dy = snap ? snapToGrid(offset.y) : offset.y;
+
+  const nodes = { ...document.nodes };
+  const idMap = new Map<string, string>();
+
+  for (const source of fragment.nodes) {
+    const nodeId = createNodeId();
+    idMap.set(source.id, nodeId);
+    nodes[nodeId] = {
+      ...source,
+      id: nodeId,
+      position: { x: source.position.x + dx, y: source.position.y + dy },
+      // Params are JSON, so a shallow copy would share a nested value between
+      // the copy and the original and let one edit change both.
+      params: structuredClone(source.params),
+    };
+  }
+
+  const wires = { ...document.wires };
+  const wireIds: string[] = [];
+
+  for (const source of fragment.wires) {
+    const from = idMap.get(source.from.nodeId);
+    const to = idMap.get(source.to.nodeId);
+    if (!from || !to) continue;
+
+    const wireId = createWireId();
+    wireIds.push(wireId);
+    wires[wireId] = {
+      id: wireId,
+      from: { nodeId: from, pinId: source.from.pinId },
+      to: { nodeId: to, pinId: source.to.pinId },
+      ...(source.waypoints
+        ? {
+            waypoints: source.waypoints.map((point) => ({
+              x: point.x + dx,
+              y: point.y + dy,
+            })),
+          }
+        : {}),
+    };
+  }
+
+  return {
+    document: { ...document, nodes, wires },
+    selection: { nodeIds: [...idMap.values()], wireIds },
+  };
+}
+
+/** World-space box around the nodes of a fragment, for pasting at a point. */
+export function fragmentBounds(
+  fragment: Fragment,
+  lookup: NodeLookup,
+): { x: number; y: number; width: number; height: number } | null {
+  return boundsOf(
+    {
+      version: 1,
+      id: "fragment",
+      name: "fragment",
+      nodes: Object.fromEntries(fragment.nodes.map((node) => [node.id, node])),
+      wires: {},
+    },
+    lookup,
+    fragment.nodes.map((node) => node.id),
+  );
+}
+
 /** World-space box around a set of nodes — for "zoom to selection" and tests. */
 export function boundsOf(
   document: CircuitDocument,

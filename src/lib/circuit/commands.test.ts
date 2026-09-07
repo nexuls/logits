@@ -6,6 +6,9 @@ import {
   boundsOf,
   connect,
   deleteElements,
+  extractFragment,
+  fragmentBounds,
+  insertFragment,
   moveNodes,
   renameDocument,
   rotateNodes,
@@ -338,5 +341,97 @@ describe("boundsOf", () => {
     expect(box?.x).toBe(0);
     expect(box?.width).toBeGreaterThan(100);
     expect(boundsOf(document, lookupNode, ["nope"])).toBeNull();
+  });
+});
+
+describe("extractFragment", () => {
+  it("keeps a wire only when both of its endpoints came along", () => {
+    const { document, andId, ledId } = wiredPair();
+
+    expect(
+      extractFragment(document, { nodeIds: [andId, ledId] }).wires,
+    ).toHaveLength(1);
+    expect(extractFragment(document, { nodeIds: [andId] }).wires).toHaveLength(
+      0,
+    );
+  });
+
+  it("ignores ids the document does not have", () => {
+    const { document, andId } = wiredPair();
+    const fragment = extractFragment(document, { nodeIds: [andId, "nope"] });
+
+    expect(fragment.nodes).toHaveLength(1);
+    expect(fragment.nodes[0].id).toBe(andId);
+  });
+});
+
+describe("insertFragment", () => {
+  it("copies with fresh ids, leaving the originals untouched", () => {
+    const { document, andId, ledId } = wiredPair();
+    const fragment = extractFragment(document, { nodeIds: [andId, ledId] });
+    const result = insertFragment(document, fragment, { x: 40, y: 0 });
+
+    expect(Object.keys(result.document.nodes)).toHaveLength(4);
+    expect(Object.keys(result.document.wires)).toHaveLength(2);
+    expect(result.selection.nodeIds).toHaveLength(2);
+    expect(result.selection.nodeIds).not.toContain(andId);
+
+    // The originals must not have moved with their copies.
+    expect(result.document.nodes[andId].position).toEqual({ x: 0, y: 0 });
+  });
+
+  it("rewires the copies to each other, never back to the originals", () => {
+    const { document, andId, ledId } = wiredPair();
+    const fragment = extractFragment(document, { nodeIds: [andId, ledId] });
+    const result = insertFragment(document, fragment, { x: 40, y: 40 });
+
+    const copied = result.document.wires[result.selection.wireIds[0]];
+    expect(result.selection.nodeIds).toContain(copied.from.nodeId);
+    expect(result.selection.nodeIds).toContain(copied.to.nodeId);
+    expect(copied.from.pinId).toBe("out");
+  });
+
+  it("snaps the offset and shifts waypoints with the copy", () => {
+    const { document, andId, ledId, wireId } = wiredPair();
+    const bent = setWireWaypoints(document, wireId, [{ x: 50, y: 30 }]);
+    const fragment = extractFragment(bent, { nodeIds: [andId, ledId] });
+    const result = insertFragment(bent, fragment, { x: 13, y: 0 });
+
+    const copied = result.document.wires[result.selection.wireIds[0]];
+    // 13 snaps to 10, and the bend travels with the wire that owns it.
+    expect(copied.waypoints).toEqual([{ x: 60, y: 30 }]);
+  });
+
+  it("does not touch params shared with the original", () => {
+    const { document, andId } = wiredPair();
+    const fragment = extractFragment(document, { nodeIds: [andId] });
+    const result = insertFragment(document, fragment, { x: 40, y: 0 });
+
+    const copyId = result.selection.nodeIds[0];
+    expect(result.document.nodes[copyId].params).not.toBe(
+      document.nodes[andId].params,
+    );
+  });
+
+  it("returns the document it was given for an empty fragment", () => {
+    const { document } = wiredPair();
+    const result = insertFragment(
+      document,
+      { nodes: [], wires: [] },
+      { x: 10, y: 10 },
+    );
+
+    expect(result.document).toBe(document);
+    expect(result.selection.nodeIds).toEqual([]);
+  });
+});
+
+describe("fragmentBounds", () => {
+  it("spans the fragment's nodes, and is null when it has none", () => {
+    const { document, andId, ledId } = wiredPair();
+    const fragment = extractFragment(document, { nodeIds: [andId, ledId] });
+
+    expect(fragmentBounds(fragment, lookupNode)?.x).toBe(0);
+    expect(fragmentBounds({ nodes: [], wires: [] }, lookupNode)).toBeNull();
   });
 });
