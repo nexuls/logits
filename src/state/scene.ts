@@ -6,6 +6,7 @@ import {
   rotateSize,
   type Size,
 } from "@/lib/circuit/geometry";
+import { pinKey } from "@/lib/circuit/netlist";
 import type {
   CircuitDocument,
   CircuitNode,
@@ -43,10 +44,10 @@ export type ResolvedPin = {
   /** World coordinates, node position already added. */
   world: Point;
   /**
-   * Net this pin sits on, from `buildNetlist`. Still always null: nothing owns
-   * a compiled netlist per document until the engine lands, and the scene must
-   * not compile one itself — it is rebuilt far more often than the topology
-   * changes.
+   * Net this pin sits on, from the netlist the simulation store owns. Null
+   * when the scene was built without one — the scene must not compile a
+   * netlist itself, because it is rebuilt on every drag frame and the topology
+   * is not.
    */
   netId: number | null;
 };
@@ -99,18 +100,29 @@ const layoutCache = new Map<string, NodeLayout>();
  * Commands replace the node object on every edit, so object identity is an
  * exact "has this node changed?" test — and entries evict themselves when the
  * node is deleted, with no dirty flags to keep in sync.
+ *
+ * The entry remembers which `pinToNet` it was resolved against, because net
+ * ids are the one part of a `ResolvedNode` that can change without the node
+ * changing: recompiling the netlist renumbers nets under an untouched gate.
  */
-const resolvedCache = new WeakMap<CircuitNode, ResolvedNode>();
+const resolvedCache = new WeakMap<
+  CircuitNode,
+  { pinToNet: PinToNet | undefined; resolved: ResolvedNode }
+>();
+
+/** `pinKey(nodeId, pinId)` → net id, as `buildNetlist` produces it. */
+type PinToNet = Record<string, number>;
 
 export function buildScene(
   document: CircuitDocument,
   lookup: NodeLookup,
+  pinToNet?: PinToNet,
 ): Scene {
   const referencedPins = referencedPinsByNode(document);
 
   const nodes: Record<string, ResolvedNode> = {};
   for (const [id, node] of Object.entries(document.nodes)) {
-    nodes[id] = resolveNode(node, lookup, referencedPins.get(id));
+    nodes[id] = resolveNode(node, lookup, referencedPins.get(id), pinToNet);
   }
 
   const wires: Record<string, ResolvedWire> = {};
@@ -135,6 +147,7 @@ export function resolveNode(
   node: CircuitNode,
   lookup: NodeLookup,
   referencedPins?: readonly string[],
+  pinToNet?: PinToNet,
 ): ResolvedNode {
   const definition = lookup(node.type);
 
@@ -142,7 +155,7 @@ export function resolveNode(
   // layout is not a function of the node alone and must not be identity-cached.
   if (definition) {
     const hit = resolvedCache.get(node);
-    if (hit) return hit;
+    if (hit && hit.pinToNet === pinToNet) return hit.resolved;
   }
 
   const def = definition ?? placeholderDefinition(node.type);
@@ -167,7 +180,7 @@ export function resolveNode(
     spec: offset.spec,
     side: offset.side,
     world: { x: node.position.x + offset.dx, y: node.position.y + offset.dy },
-    netId: null,
+    netId: pinToNet?.[pinKey(node.id, offset.spec.id)] ?? null,
   }));
 
   const pinsById: Record<string, ResolvedPin> = {};
@@ -183,7 +196,7 @@ export function resolveNode(
     pinsById,
   };
 
-  if (definition) resolvedCache.set(node, resolved);
+  if (definition) resolvedCache.set(node, { pinToNet, resolved });
   return resolved;
 }
 
