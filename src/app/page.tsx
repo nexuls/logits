@@ -2,19 +2,19 @@
 
 import { useEffect, useState } from "react";
 
-import Canvas from "@/components/canvas";
+import Editor from "@/components/editor/editor";
 import ElementsSidebar from "@/components/editor/elements-sidebar";
 import ProjectsSidebar from "@/components/projects/projects-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useAppliedTheme, useEditorSettings } from "@/state/editor-settings";
-import { renameProject, useProjects } from "@/state/projects-store";
+import { useProjects } from "@/state/projects-store";
 
 export default function Home() {
   const projects = useProjects();
   const settings = useEditorSettings();
   const [activeId, setActiveId] = useState("");
-  // The node armed for placement. Nothing consumes it yet — the canvas gains
-  // placement in Phase 3 — but the palette owns the choice, not the canvas.
+  // The node type armed for placement. The palette owns the choice and the
+  // canvas consumes it, so neither has to know about the other.
   const [pendingType, setPendingType] = useState<string | null>(null);
 
   // Applied here rather than inside the settings panel: the panel unmounts
@@ -32,8 +32,6 @@ export default function Home() {
     );
   }, [projects]);
 
-  const active = projects.find((project) => project.id === activeId);
-
   return (
     <SidebarProvider className="h-svh min-h-0">
       <ProjectsSidebar
@@ -42,20 +40,13 @@ export default function Home() {
       />
       <SidebarInset className="min-w-0 flex-row overflow-hidden">
         <div className="relative min-w-0 flex-1">
-          <Canvas
-            title={active?.name ?? "No circuit open"}
+          <Editor
+            projectId={activeId}
             showGrid={settings.showGrid}
             showMinimap={settings.showMinimap}
             themeKey={theme}
-            // Renaming from the canvas header is the same rename as the
-            // sidebar's; both write the document, which owns the name.
-            onTitleChange={
-              active
-                ? (name) => {
-                    renameProject(active.id, name);
-                  }
-                : undefined
-            }
+            armedType={pendingType}
+            onDisarm={() => setPendingType(null)}
           />
         </div>
 
