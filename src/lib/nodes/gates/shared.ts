@@ -3,6 +3,7 @@ import {
   intParam,
   type NodeDefinition,
   type NodeParams,
+  type ParamSpec,
 } from "@/lib/nodes/define";
 import { AND2, type BitTable, combine } from "@/lib/sim/logic";
 
@@ -21,6 +22,28 @@ const MAX_INPUTS = 8;
 const PIN_PITCH = 2;
 
 export const GATE_WIDTH = 6;
+
+/**
+ * Both gate shapes are configured the same way, so the inspector schema is
+ * written once here rather than per gate file — a new gate inherits it by
+ * going through `symmetricGate` or `unaryGate`.
+ */
+const WIDTH_PARAM: ParamSpec = {
+  key: "width",
+  label: "Bit width",
+  kind: "int",
+  min: 1,
+  max: 64,
+  hint: "Lanes the gate operates on, bit for bit.",
+};
+
+const INPUTS_PARAM: ParamSpec = {
+  key: "inputs",
+  label: "Inputs",
+  kind: "int",
+  min: MIN_INPUTS,
+  max: MAX_INPUTS,
+};
 
 type GateSpec = {
   type: string;
@@ -73,6 +96,7 @@ export function symmetricGate({
     keywords,
     icon,
     defaultParams: { inputs: MIN_INPUTS, width: 1 },
+    paramsSchema: [INPUTS_PARAM, WIDTH_PARAM],
     pins: (params) => {
       const inputs = inputCount(params);
       const width = intParam(params, "width", 1);
@@ -123,6 +147,7 @@ export function unaryGate({
     keywords,
     icon,
     defaultParams: { width: 1 },
+    paramsSchema: [WIDTH_PARAM],
     pins: (params) => {
       const width = intParam(params, "width", 1);
 

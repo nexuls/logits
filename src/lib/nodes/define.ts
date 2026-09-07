@@ -9,12 +9,46 @@ import type { Signal } from "@/lib/sim/logic";
 /**
  * The node definition contract: everything the app knows about a node type.
  *
- * `paramsSchema` and `view` are still Phase 3 and are left out rather than
- * guessed at. The behavioural half — `evaluate`, `createState`, `delayNs` —
- * landed with the engine. See artifacts/05-node-authoring-guide.md.
+ * See artifacts/05-node-authoring-guide.md.
  */
 
 export type NodeParams = CircuitNode["params"];
+
+/**
+ * One editable parameter, as the inspector should present it.
+ *
+ * Declarative on purpose: the inspector renders whatever a definition lists
+ * and knows no node types, so a new node gains an editor without any component
+ * changing (Non-negotiable #3). It is deliberately a small closed set of kinds
+ * rather than a zod schema — the inspector has to pick a *control*, and a zod
+ * type does not say whether an integer wants a stepper or a slider.
+ */
+export type ParamSpec =
+  | {
+      key: string;
+      label: string;
+      kind: "int";
+      min?: number;
+      max?: number;
+      step?: number;
+      /** Shown under the control; keep it to a phrase. */
+      hint?: string;
+    }
+  | { key: string; label: string; kind: "bool"; hint?: string }
+  | {
+      key: string;
+      label: string;
+      kind: "text";
+      maxLength?: number;
+      hint?: string;
+    }
+  | {
+      key: string;
+      label: string;
+      kind: "select";
+      options: readonly { value: string; label: string }[];
+      hint?: string;
+    };
 
 /**
  * Node-owned mutable state, surviving between evaluations and re-created by
@@ -60,6 +94,20 @@ export type NodeDefinition = {
    */
   icon?: string;
   defaultParams: NodeParams;
+  /**
+   * The parameters the inspector offers, in the order it shows them. Omit for
+   * a node with nothing to configure; a param missing from this list is still
+   * honoured, it just has no editor.
+   */
+  paramsSchema?: readonly ParamSpec[];
+  /**
+   * Name of the custom renderer for this node, resolved by
+   * `src/components/nodes/node-views.tsx`. A name and not a component, for the
+   * same reason `icon` is: this layer must stay free of React. Omit for the
+   * generic renderer, which draws `title` and the pins — only a node that
+   * genuinely *displays* or *accepts* data needs one.
+   */
+  view?: string;
   /** Pin layout is derived from params, never stored in the document. */
   pins: (params: NodeParams) => PinSpec[];
   /** In grid cells. Must leave room for every pin `pins()` returns. */

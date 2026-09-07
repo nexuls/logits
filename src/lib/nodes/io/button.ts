@@ -9,6 +9,8 @@ export const buttonNode = defineNode({
   category: "io",
   keywords: ["button", "momentary", "push", "input", "source"],
   defaultParams: { pressed: false },
+  view: "push-button",
+  paramsSchema: [{ key: "pressed", label: "Pressed", kind: "bool" }],
   pins: () => [
     {
       id: "out",

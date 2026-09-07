@@ -8,6 +8,17 @@ export const switchNode = defineNode({
   category: "io",
   keywords: ["switch", "toggle", "input", "source", "dip"],
   defaultParams: { width: 1, value: 0 },
+  view: "toggle",
+  paramsSchema: [
+    { key: "width", label: "Bit width", kind: "int", min: 1, max: 64 },
+    {
+      key: "value",
+      label: "Value",
+      kind: "int",
+      min: 0,
+      hint: "Decimal; the switch body toggles bit 0 on click.",
+    },
+  ],
   pins: (params) => [
     {
       id: "out",

@@ -8,6 +8,11 @@ export const constantNode = defineNode({
   category: "io",
   keywords: ["constant", "literal", "vcc", "ground", "gnd", "tie", "source"],
   defaultParams: { width: 1, value: 1 },
+  view: "readout",
+  paramsSchema: [
+    { key: "width", label: "Bit width", kind: "int", min: 1, max: 64 },
+    { key: "value", label: "Value", kind: "int", min: 0, hint: "Decimal." },
+  ],
   pins: (params) => [
     {
       id: "out",

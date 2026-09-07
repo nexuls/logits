@@ -7,6 +7,20 @@ export const ledNode = defineNode({
   category: "io",
   keywords: ["led", "lamp", "light", "output", "sink", "indicator"],
   defaultParams: { color: "green" },
+  view: "lamp",
+  paramsSchema: [
+    {
+      key: "color",
+      label: "Colour",
+      kind: "select",
+      options: [
+        { value: "green", label: "Green" },
+        { value: "red", label: "Red" },
+        { value: "amber", label: "Amber" },
+        { value: "blue", label: "Blue" },
+      ],
+    },
+  ],
   pins: () => [
     {
       id: "in",

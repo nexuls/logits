@@ -7,6 +7,20 @@ export const probeNode = defineNode({
   category: "io",
   keywords: ["probe", "readout", "value", "monitor", "output", "sink"],
   defaultParams: { width: 1, radix: "binary" },
+  view: "readout",
+  paramsSchema: [
+    { key: "width", label: "Bit width", kind: "int", min: 1, max: 64 },
+    {
+      key: "radix",
+      label: "Radix",
+      kind: "select",
+      options: [
+        { value: "binary", label: "Binary" },
+        { value: "decimal", label: "Decimal" },
+        { value: "hex", label: "Hexadecimal" },
+      ],
+    },
+  ],
   pins: (params) => [
     {
       id: "in",

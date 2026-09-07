@@ -13,6 +13,9 @@ export const tristateGate = defineNode({
   category: "gates",
   keywords: ["tristate", "three state", "buffer", "enable", "z", "bus"],
   defaultParams: { width: 1 },
+  paramsSchema: [
+    { key: "width", label: "Bit width", kind: "int", min: 1, max: 64 },
+  ],
   pins: (params) => {
     const width = intParam(params, "width", 1);
 
