@@ -66,6 +66,9 @@ which break tree-shaking and make ordering non-deterministic.
       `multiple-drivers` short — and it must never learn your node's `type` to
       work that out for itself.
 - [ ] `size()` is in grid units and leaves room for every pin.
+- [ ] Every configurable param has a `paramsSchema` entry, so the inspector can
+      offer it. The `kind` picks the control (`int`, `bool`, `text`, `select`);
+      never edit the inspector to add a node.
 - [ ] Stateful nodes implement `createState`; state is JSON-serialisable and
       never holds DOM refs or closures. It is re-created on every reset, so a
       latched value must not survive one.
@@ -86,25 +89,46 @@ Only reach for a custom `view` when the node genuinely displays data — scope,
 7-segment, hex readout, LED, switch.
 
 ```ts
-view: () => import("@/components/nodes/seven-segment-view"),
+view: "readout",   // a *name*, resolved by src/components/nodes/node-views.tsx
 ```
 
-Views are lazy-imported React components in `src/components/nodes/`. They receive
-`{ node, params, state, readPin }` and must:
+`view` is a string for the same reason `icon` is: this layer may not import
+React. [node-views.tsx](../src/components/nodes/node-views.tsx) is the one place
+that maps names to components, and the keys name a **behaviour** — `"toggle"`,
+`"lamp"`, `"readout"` — never a node `type`. The probe and the constant share
+`"readout"`; a genuinely new behaviour is a component beside it and one line in
+that map.
+
+Views are React components in `src/components/nodes/`. They receive
+`NodeViewProps` — `{ node, def, readPin, setParams, interactive }` — and must:
 
 - subscribe only to the nets they display (see the boundary rules in
   [02-architecture.md](02-architecture.md));
 - draw with `<canvas>` or SVG if they update every frame — not React state;
 - stay interactive at any zoom (they live inside the transformed layer);
 - keep pointer events off the node body except on genuinely interactive parts,
-  so dragging the node still works.
+  so dragging the node still works. An interactive part also has to
+  `stopPropagation` on `pointerdown`, or the click starts a move gesture
+  instead — see [toggle-view.tsx](../src/components/nodes/toggle-view.tsx).
 
 ## Interactive nodes (switches, buttons)
 
-User input goes into node **state** through a command, so undo and autosave see
-it. A switch's `evaluate` reads `state.on`; the click handler dispatches
-`setNodeState(id, { on: !on })`, which wakes the node in the engine. A view must
-never call `ctx.write` itself.
+User input goes into node **params** through a command, so undo, autosave and
+the save file all see it. A switch's `evaluate` reads `params.value`; the click
+handler calls `setParams({ value })`, which goes through
+`updateNodeParams` → the document store → `syncDocument`, and from there to
+`engine.setNodeParams`. A view must never call `ctx.write` or touch the engine
+itself.
+
+Params rather than `state`: a switch's position is part of the circuit and has
+to survive a reload and undo with everything else, whereas `state` is re-created
+on every reset by design. Reserve `state` for what a reset should forget — a
+latched value, a counter.
+
+Note which params are *not* structural. `syncDocument` rebuilds the engine only
+when the pins, the wiring or a `delayNs` change; a param that only `evaluate`
+reads is pushed into the running engine instead, which is what lets a switch be
+flipped mid-run without wiping the circuit's state.
 
 ## Naming and file layout
 

@@ -31,13 +31,14 @@ boxes is an incomplete phase.
 - [x] Node registry, `defineNode`, the seven basic gates — `evaluate` and `delayNs` are on `NodeDefinition`, and every `gate.*` and `io.*` source simulates
 - **Exit:** a headless test simulates a ring oscillator and an SR latch with the expected waveforms, and an oscillating circuit terminates with a diagnostic instead of hanging. **Met** — [engine.test.ts](../src/lib/sim/engine.test.ts).
 
-## Phase 3 — Editor
+## Phase 3 — Editor (done)
 
-- [ ] Node layer, wire layer, pin hit-testing, selection — the derived scene ([scene.ts](../src/state/scene.ts)) they render from is built
-- [ ] Wiring gestures, rubber-band select, delete, duplicate, copy/paste — wire routing and segment-bend maths ([wire-path.ts](../src/lib/circuit/wire-path.ts)) are built; the pointer handling that calls them is not
-- [ ] Palette + command menu, inspector driven by `paramsSchema` — the palette ([elements-sidebar.tsx](../src/components/editor/elements-sidebar.tsx)) is built and arms a node type; the command menu and inspector are outstanding
-- [ ] Toolbar: run controls, zoom, save/load, diagnostics panel — the `Runner` behind the run controls is built and exposes a `useSyncExternalStore` pair; nothing subscribes to it yet
-- **Exit:** a user builds a 4-bit adder from scratch with the mouse and sees it work.
+- [x] Node layer, wire layer, pin hit-testing, selection — [node-layer.tsx](../src/components/editor/node-layer.tsx) and [circuit-node.tsx](../src/components/editor/circuit-node.tsx) draw DOM nodes at world coordinates, [wire-layer.tsx](../src/components/editor/wire-layer.tsx) draws every wire in one SVG, and picking is arithmetic against the scene in [hit-test.ts](../src/state/hit-test.ts) rather than DOM hit-testing, so a target stays the same size in screen pixels at every zoom
+- [x] Wiring gestures, rubber-band select, delete, duplicate, copy/paste — [use-editor-gestures.ts](../src/components/editor/use-editor-gestures.ts) and [use-editor-shortcuts.ts](../src/components/editor/use-editor-shortcuts.ts); the clipboard holds a document `Fragment`, not ids, so cut-then-paste works and a paste can cross documents
+- [x] Palette + command menu, inspector driven by `paramsSchema` — [command-menu.tsx](../src/components/editor/command-menu.tsx) and [inspector.tsx](../src/components/editor/inspector.tsx), both generated from the registry and from each definition's `paramsSchema`, so neither names a node type
+- [x] Toolbar: run controls, zoom, save/load, diagnostics panel — [run-controls.tsx](../src/components/editor/run-controls.tsx) and [diagnostics-panel.tsx](../src/components/editor/diagnostics-panel.tsx); zoom stays on the minimap where it already was
+- [x] The simulation store: [simulation.ts](../src/state/simulation.ts) owns an `Engine` and `Runner` per document and decides, per edit, between a rebuild and a live `setNodeParams` — which is what lets a switch be flipped mid-run without wiping the circuit's state
+- **Exit:** a user builds a 4-bit adder from scratch with the mouse and sees it work. **Met** — place from the palette or `⌘K`, drag pin to pin to wire, flip the switches, and the sums light the LEDs.
 
 ## Phase 4 — The rest of the nodes
 
@@ -50,7 +51,7 @@ boxes is an incomplete phase.
 ## Phase 5 — Polish
 
 - [ ] Example circuits shipped with the app
-- [ ] Import/export files, shareable URL encoding
+- [ ] Shareable URL encoding — file import/export landed with the phase 3 toolbar
 - [ ] Performance pass against the 2,000-node target
 - [ ] Keyboard-only walkthrough and a11y audit
 
@@ -58,20 +59,18 @@ boxes is an incomplete phase.
 
 | Issue | Where |
 | --- | --- |
-| `Canvas` takes a `content: string` placeholder prop and renders it as a box; replace with the node layer | [canvas/index.tsx](../src/components/canvas/index.tsx) |
-| `onContentChange` prop is declared but unused | same |
-| `CanvasViewer` hardcodes a 360×120 content footprint | [canvas-viewer.tsx](../src/components/canvas/canvas-viewer.tsx) |
-| `T_Node` in `canvas-type.ts` is a leftover placeholder, unrelated to the real node model | [canvas-type.ts](../src/components/canvas/canvas-type.ts) |
 | Projects sidebar has no routing — the open project lives in React state, so it is lost on reload and has no URL | [app/page.tsx](../src/app/page.tsx) |
-| Canvas header menu (New / Rename / Duplicate / Export / Delete) is still disabled; the store actions exist but delete needs the confirm dialog lifted out of the sidebar, and export needs a download flow | [canvas/components/header.tsx](../src/components/canvas/components/header.tsx) |
-| `bun run lint` reports 24 pre-existing errors, all in generated shadcn primitives (mostly `a11y/useSemanticElements`); they need a biome override or a regeneration, not hand edits | [components/ui/](../src/components/ui/) |
-| The document store is not wired to the editor yet: `page.tsx` still renders from the project index, so nothing opens a document, nothing renders nodes, and the palette's armed type stays inert. Needs the node layer (Phase 3) | [app/page.tsx](../src/app/page.tsx), [state/document.ts](../src/state/document.ts) |
+| Canvas header menu (New / Rename / Duplicate / Export / Delete) is still disabled. Export and import now exist on the editor toolbar; the menu still needs the confirm dialog lifted out of the projects sidebar before delete can be wired | [canvas/components/header.tsx](../src/components/canvas/components/header.tsx) |
+| `bun run lint` reports pre-existing errors, all in generated shadcn primitives (mostly `a11y/useSemanticElements`); they need a biome override or a regeneration, not hand edits | [components/ui/](../src/components/ui/) |
 | `renameProject` in the projects store rewrites the stored document from disk, which would discard unsaved edits if the document is open. Use `renameOpenDocument` for the open one; the two paths need merging when routing lands | [state/projects-store.ts](../src/state/projects-store.ts) |
 | `SidebarProvider` is hand-edited (a generated shadcn file) to take `cookieName` and `keyboardShortcut`, so the page's two sidebars do not share one cookie or both toggle on `⌘B`. A regeneration will drop it | [ui/sidebar.tsx](../src/components/ui/sidebar.tsx) |
-| `ResolvedPin.netId` is still always `null`. The engine exists now, but nothing owns an `Engine` per document — that store is Phase 3, and it is what will fill this in | [state/scene.ts](../src/state/scene.ts), [lib/sim/engine.ts](../src/lib/sim/engine.ts) |
-| Nothing constructs an `Engine` or a `Runner` yet: the editor has no simulation store, so no net values reach the canvas and the run controls have nothing to drive | [state/](../src/state/), [lib/sim/runner.ts](../src/lib/sim/runner.ts) |
-| A flipped switch needs `engine.setNodeParams` *and* the document command, or the engine and the document disagree. The Phase 3 store has to own both halves of that | [lib/sim/engine.ts](../src/lib/sim/engine.ts), [lib/circuit/commands.ts](../src/lib/circuit/commands.ts) |
 | `emitSample` is declared on `EvalContext` but no node emits and nothing collects; the waveform ring buffer lands with the oscilloscope in Phase 4 | [lib/nodes/define.ts](../src/lib/nodes/define.ts) |
 | Subcircuits are not flattened — `buildNetlist` compiles the top-level document only, which is correct until phase 4 introduces instancing | [lib/circuit/netlist.ts](../src/lib/circuit/netlist.ts) |
 | A stored `light` theme is applied on hydration, so the first paint is always dark — the alternative is a blocking script in the document head | [state/editor-settings.ts](../src/state/editor-settings.ts) |
 | `SidebarMenuSkeleton` picks a random width and cannot be server-rendered without a hydration mismatch; the sidebar hand-rolls its placeholders instead | [ui/sidebar.tsx](../src/components/ui/sidebar.tsx) |
+| Wire picking and rubber-band selection scan every wire per pointer event. Fine at the catalogue's scale, but the architecture calls for a spatial index; that is the phase 5 performance pass, with a measurement | [state/hit-test.ts](../src/state/hit-test.ts) |
+| Every node renders, on or off screen. Culling against the visible world rect is cheap to add and belongs with the same performance pass | [editor/node-layer.tsx](../src/components/editor/node-layer.tsx) |
+| The inspector edits one node at a time; a multi-node selection gets rotate and delete only. A merged parameter view needs a "mixed value" story first | [editor/inspector.tsx](../src/components/editor/inspector.tsx) |
+| `Ctrl+A` is deliberately unbound — select-all lands in phase 5 with the rest of the keyboard walkthrough | [editor/use-editor-shortcuts.ts](../src/components/editor/use-editor-shortcuts.ts) |
+| A paused edit advances simulated time by up to `SETTLE_NS` so the canvas shows settled values. It is honest but visible: the clock reads a few nanoseconds after placing a gate | [state/simulation.ts](../src/state/simulation.ts) |
+| Touch has pan and zoom but no editing gestures — a drag on a node pans the canvas. The pointer handlers are written against mouse semantics and need a tap/long-press story | [canvas/index.tsx](../src/components/canvas/index.tsx) |

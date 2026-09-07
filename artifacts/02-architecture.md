@@ -33,14 +33,14 @@ one, that is a design error — pass it in as an argument.
 | --- | --- | --- |
 | `src/app/` | Next.js App Router entry. The editor is one route; keep page files thin. | Built |
 | `src/components/canvas/` | Viewport only: pan, zoom, grid, minimap. Knows nothing about logic. | Built |
-| `src/components/editor/` | Palette, toolbar, inspector, node layer, wire layer, context menus. | Partial — the elements sidebar (node palette + workspace settings) is built; the rest is planned |
-| `src/components/nodes/` | React views for nodes that need custom rendering (scope, displays), and the palette icon set. | Partial — `node-icons.tsx` built; views planned |
+| `src/components/editor/` | Palette, toolbar, inspector, node layer, wire layer, gestures, command menu, diagnostics. | Built |
+| `src/components/nodes/` | React views for nodes that need custom rendering (scope, displays), and the palette icon set. | Built — `node-icons.tsx` plus `node-views.tsx` and the switch/button/lamp/readout views; the instrument views arrive in phase 4 |
 | `src/components/ui/` | shadcn primitives. Generated — see AGENTS.md. | Built |
 | `src/hooks/` | Generic React hooks (`use-mobile`, `use-debounced-callback`). | Built |
-| `src/lib/circuit/` | Document model, ids, geometry, wire routing, netlist derivation, serialize/migrate. | Partial — schema, ids, io, geometry, wire-path, coords and commands built; netlist planned |
+| `src/lib/circuit/` | Document model, ids, geometry, wire routing, netlist derivation, serialize/migrate. | Built |
 | `src/lib/sim/` | Event queue, engine, four-valued logic, runner, waveform buffer. | Partial — `logic.ts`, `queue.ts`, `engine.ts` and `runner.ts` built; the waveform ring buffer arrives with the instruments in phase 4 |
-| `src/lib/nodes/` | Node definitions + registry, one file per node type. | Partial — `defineNode`, the registry and the `gate.*` / `io.*` definitions are built with pin layout and `evaluate`; `paramsSchema` and `view` arrive with the inspector |
-| `src/state/` | External stores bridging domain → React, plus `storage.ts` and the derived `scene.ts`. | Partial — storage, scene, `editor-settings.ts`, `document.ts` and `history.ts` built; viewport planned |
+| `src/lib/nodes/` | Node definitions + registry, one file per node type. | Built — `defineNode`, the registry, `paramsSchema`, `view`, and the `gate.*` / `io.*` definitions; the rest of the catalog is phase 4 |
+| `src/state/` | External stores bridging domain → React, plus `storage.ts`, the derived `scene.ts` and `hit-test.ts`. | Built — storage, scene, hit-test, `editor-settings.ts`, `document.ts`, `history.ts`, `selection.ts` and `simulation.ts`. The viewport stayed in the canvas component and is published to the editor as a prop; see below |
 | `artifacts/` | These design docs. | Built |
 
 ## Rendering model
@@ -65,6 +65,23 @@ Two coordinate spaces exist and must never be mixed implicitly. Name variables
 `src/lib/circuit/coords.ts` rather than re-deriving `(p - offset) / scale`
 inline.
 
+The transform itself stays where it already was, in
+[use-canvas-mouse-actions.ts](../src/components/canvas/use-canvas-mouse-actions.ts),
+rather than moving into a store. The editor needs the same numbers to convert
+pointer positions, so `Canvas` publishes them through `onViewportChange` as a
+[`CanvasViewport`](../src/components/canvas/canvas-viewport.ts) — a prop and not
+a context, because the consumer is what supplies the canvas's children and so
+sits above any provider the canvas could render.
+
+**Picking is arithmetic, not hit-testing by the DOM.** Nodes and wires take no
+pointer events; `use-editor-gestures.ts` converts the pointer to world
+coordinates once and asks [hit-test.ts](../src/state/hit-test.ts) what is
+there. That is what keeps a hit target the same physical size at every zoom —
+a DOM target would shrink with the transform — and it is why every tolerance in
+that module is a world length converted from screen pixels. The exceptions that
+*do* take pointer events are the parts of a node view that genuinely accept
+input, and they stop the event so a click toggles rather than starting a drag.
+
 ## The React ↔ simulation boundary
 
 The engine ticks far faster than React should re-render. Therefore:
@@ -85,6 +102,27 @@ The document store (topology, positions, params) and the simulation state
 netlist; it must not reset the document. Rebuilds should be incremental where
 cheap, but a full rebuild under ~10 ms for a typical circuit is acceptable — do
 the simple thing first, measure before optimising.
+
+[simulation.ts](../src/state/simulation.ts) owns that boundary. Every document
+change is pushed in through `syncDocument`, which recompiles the netlist and
+compares a *topology signature* — node ids and types, the pins they present,
+what those pins are wired to, and each node's `delayNs`. Positions and a
+switch's `value` are deliberately not in it:
+
+- **Signature unchanged, params changed** → `engine.setNodeParams`. This is how
+  a switch gets flipped mid-run. A rebuild here would reset every net and
+  forget every latched value, so the circuit would lose its state each time the
+  user touched an input.
+- **Signature changed** → a new `Engine` and `Runner`. An edit made while
+  running keeps running.
+- **Nothing changed but positions** → the netlist is rebuilt and discarded.
+  This is the path a drag takes, once per frame.
+
+While paused, both paths then advance the engine on a short leash
+(`SETTLE_NS`), event by event until the queue drains. Without it a paused
+circuit would read `X` everywhere: nothing downstream of a source has run at
+`t = 0`, and an editor where wiring a gate visibly does nothing until you press
+play is not much of an editor.
 
 ## Undo / redo
 

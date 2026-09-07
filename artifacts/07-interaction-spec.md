@@ -1,7 +1,9 @@
 # Interaction spec
 
-The viewport gestures below are **Built** in
-[src/components/canvas/](../src/components/canvas/); everything else is Planned.
+Everything below is **built**: the viewport in
+[src/components/canvas/](../src/components/canvas/), the editing gestures in
+[use-editor-gestures.ts](../src/components/editor/use-editor-gestures.ts) and
+[use-editor-shortcuts.ts](../src/components/editor/use-editor-shortcuts.ts).
 Do not change a built gesture without an ADR — muscle memory is a feature.
 
 ## Viewport (built)
@@ -19,10 +21,11 @@ Do not change a built gesture without an ADR — muscle memory is a feature.
 Zoom is clamped to `0.05`–`8`. Native wheel is prevented on the viewport so the
 page never scrolls behind the canvas.
 
-Note: the canvas references `--logit-cursor-default`, `--logit-cursor-grab` and
-`--logit-cursor-grabbing`, which are **not defined** in
-[globals.css](../src/app/globals.css). Either define them or fall back to the
-standard keywords — see [08-roadmap.md](08-roadmap.md).
+The `--logit-cursor-*` custom properties the canvas uses are defined in
+[globals.css](../src/app/globals.css); each falls back to the standard keyword,
+so a browser that rejects the image cursor still shows the right shape. The
+editor adds `--logit-cursor-cross` while placing or wiring and
+`--logit-cursor-move` while dragging.
 
 ## Panels (built)
 
@@ -35,11 +38,11 @@ The two sidebars are independent — separate providers, separate cookies,
 separate shortcuts. Both are also reachable by pointer: the left one from the
 canvas header, the right one from the panel button in its own header.
 
-## Editing (planned)
+## Editing
 
 | Gesture | Action |
 | --- | --- |
-| Click a palette element, then click the canvas / `Ctrl+K` command menu | Place a node. The palette is built and arms a type; the canvas half is planned |
+| Click a palette element, then click the canvas / `Ctrl+K` command menu | Place a node. The command menu places at the last pointer position |
 | Left-drag on a node | Move (snapped to the 10-unit grid; hold `Alt` to bypass) |
 | Left-drag on empty canvas | Rubber-band select |
 | Shift/Ctrl + click | Add to / toggle selection |
@@ -48,15 +51,20 @@ canvas header, the right one from the panel button in its own header.
 | Click a wire | Select it; `Delete` removes it |
 | Drag a wire segment | Bend it. Moves along its one free axis only, snapped to the grid; the pin ends stay anchored, so dragging an end segment splits a new bend off it |
 | Drag a bend onto its neighbours | Straightens the wire — collinear points collapse, so a wire cannot accumulate invisible bends |
-| Double-click a node | Focus its primary parameter in the inspector |
-| Click an `io.switch` / `io.button` | Toggle / press (only while simulating) |
+| Click a node | Select it; its parameters appear in the inspector |
+| `Tab` | Move through node bodies and pins; focusing a node selects it |
+| `Enter` on a pin | Start a wire, then `Enter` on a second pin to finish it |
+| Click an `io.switch` / `io.button` | Toggle / press. It works while paused too — the engine settles the edit — and the position is a param, so it undoes |
 | `R` | Rotate selection 90° |
 | `Ctrl+D` | Duplicate |
 | `Ctrl+Z` / `Ctrl+Shift+Z` | Undo / redo |
 | `Ctrl+C` / `Ctrl+V` | Copy / paste (paste at pointer, new ids) |
-| `Space` (tap) | Play / pause simulation |
+| `Ctrl+X` | Cut |
+| `Space` (tap) | Play / pause simulation. A *held* space is the pan gesture; the tap is a short press with no pointer down during it |
 | `.` | Single step |
-| `Ctrl+S` | Save document |
+| `Ctrl+S` | Save document (it autosaves anyway; this flushes now) |
+| `Ctrl+K` | Command menu |
+| `Esc` | Cancel the armed node type, then a wire in progress, then the selection |
 
 Never bind a plain letter key while a text input or `contentEditable` has focus.
 `use-canvas-mouse-actions.ts` already has an `isEditableTarget` guard — reuse
@@ -69,8 +77,10 @@ that helper rather than writing a second one.
   (output/inout) where one is unambiguous.
 - While dragging, highlight compatible pins (matching width, opposite direction)
   and dim incompatible ones. Snap within ~10 screen px.
-- Dropping on empty canvas leaves the wire unconnected — show it as an error,
-  do not silently delete the user's work.
+- Dropping on empty canvas leaves the wire drawn and marked unresolved rather
+  than discarding it: the schema has no dangling wire, so it is not written to
+  the document, but it stays on screen in the error style until the user lands
+  it on a pin or presses `Esc`.
 - Connecting two pins of different widths is allowed but produces a
   `width-mismatch` diagnostic on the wire. Do not auto-truncate.
 - Wires route orthogonally (Manhattan) by default with a simple two-bend path;
@@ -89,8 +99,9 @@ that helper rather than writing a second one.
 
 - Wire colour encodes the resolved value: `0` dim, `1` bright/accent, `X` red,
   `Z` grey-dashed. Multi-bit buses draw thicker and show the value on hover.
-- Never rely on colour alone: `X` also gets a marker on the wire, and errors are
-  listed in a diagnostics panel that can focus the offending element.
+- Never rely on colour alone: `X` gets a `!` on the wire and a badge on the
+  node, a floating net gets `~`, and every diagnostic is a row in the
+  diagnostics panel that selects the element it is about when clicked.
 - Every action reachable by keyboard is also reachable by menu or toolbar.
 - Node bodies are focusable and expose `role`/`aria-label`; the canvas itself is
   `role="application"` (already set).
