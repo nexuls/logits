@@ -28,14 +28,14 @@ boxes is an incomplete phase.
 - [ ] Four-valued logic + resolution table
 - [ ] Event queue, engine, reset, oscillation budget
 - [ ] Runner with play / pause / step / speed
-- [ ] Node registry, `defineNode`, the seven basic gates
+- [ ] Node registry, `defineNode`, the seven basic gates — `defineNode`, `registry.ts` and the `gate.*` / `io.*` definitions exist, but pin layout and footprint only; `evaluate` and `delayNs` are outstanding
 - **Exit:** a headless test simulates a ring oscillator and an SR latch with the expected waveforms, and an oscillating circuit terminates with a diagnostic instead of hanging.
 
 ## Phase 3 — Editor
 
 - [ ] Node layer, wire layer, pin hit-testing, selection — the derived scene ([scene.ts](../src/state/scene.ts)) they render from is built
 - [ ] Wiring gestures, rubber-band select, delete, duplicate, copy/paste — wire routing and segment-bend maths ([wire-path.ts](../src/lib/circuit/wire-path.ts)) are built; the pointer handling that calls them is not
-- [ ] Palette + command menu, inspector driven by `paramsSchema`
+- [ ] Palette + command menu, inspector driven by `paramsSchema` — the palette ([elements-sidebar.tsx](../src/components/editor/elements-sidebar.tsx)) is built and arms a node type; the command menu and inspector are outstanding
 - [ ] Toolbar: run controls, zoom, save/load, diagnostics panel
 - **Exit:** a user builds a 4-bit adder from scratch with the mouse and sees it work.
 
@@ -65,4 +65,7 @@ boxes is an incomplete phase.
 | Projects sidebar has no routing — the open project lives in React state, so it is lost on reload and has no URL | [app/page.tsx](../src/app/page.tsx) |
 | Canvas header menu (New / Rename / Duplicate / Export / Delete) is still disabled; the store actions exist but delete needs the confirm dialog lifted out of the sidebar, and export needs a download flow | [canvas/components/header.tsx](../src/components/canvas/components/header.tsx) |
 | `bun run lint` reports 24 pre-existing errors, all in generated shadcn primitives (mostly `a11y/useSemanticElements`); they need a biome override or a regeneration, not hand edits | [components/ui/](../src/components/ui/) |
+| The palette arms a node type but nothing consumes it — placement needs the document commands and canvas drop handling from Phase 1/3 | [app/page.tsx](../src/app/page.tsx), [editor/elements-sidebar.tsx](../src/components/editor/elements-sidebar.tsx) |
+| `SidebarProvider` is hand-edited (a generated shadcn file) to take `cookieName` and `keyboardShortcut`, so the page's two sidebars do not share one cookie or both toggle on `⌘B`. A regeneration will drop it | [ui/sidebar.tsx](../src/components/ui/sidebar.tsx) |
+| A stored `light` theme is applied on hydration, so the first paint is always dark — the alternative is a blocking script in the document head | [state/editor-settings.ts](../src/state/editor-settings.ts) |
 | `SidebarMenuSkeleton` picks a random width and cannot be server-rendered without a hydration mismatch; the sidebar hand-rolls its placeholders instead | [ui/sidebar.tsx](../src/components/ui/sidebar.tsx) |

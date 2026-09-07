@@ -25,6 +25,12 @@ type Props = {
   offset: Point;
   viewportSize: Size;
   hasContent: boolean;
+  /**
+   * Opaque repaint key. The minimap samples `--sidebar` / `--foreground` /
+   * `--primary` imperatively, so a theme change is invisible to React and the
+   * canvas would keep the old palette until the next pan without this.
+   */
+  themeKey?: string;
   onZoomIn: () => void;
   onZoomOut: () => void;
   onResetView: () => void;
@@ -49,6 +55,7 @@ export default function Minimap({
   offset,
   viewportSize,
   hasContent,
+  themeKey,
   onZoomIn,
   onZoomOut,
   onResetView,
@@ -110,6 +117,7 @@ export default function Minimap({
     viewportSize.width,
   ]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `themeKey` is a repaint trigger, not a value this effect reads — the colours it stands for are sampled from CSS custom properties below.
   useEffect(() => {
     const canvas = canvasRef.current;
 
@@ -192,7 +200,7 @@ export default function Minimap({
     ctx.roundRect(viewX, viewY, viewW, viewH, 4);
     ctx.fill();
     ctx.globalAlpha = 1;
-  }, [hasContent, worldView]);
+  }, [hasContent, worldView, themeKey]);
 
   return (
     <div className="absolute left-0 bottom-0 w-44 rounded-tr-lg bg-sidebar p-2">

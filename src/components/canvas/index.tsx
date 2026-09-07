@@ -16,6 +16,10 @@ import { useCanvasMouseActions } from "./use-canvas-mouse-actions";
 type Props = {
   content: string;
   title?: string;
+  showGrid?: boolean;
+  showMinimap?: boolean;
+  /** Passed through to the minimap, which samples theme colours imperatively. */
+  themeKey?: string;
   onTitleChange?: (newTitle: string) => void;
   onContentChange?: (newContent: string) => void;
 };
@@ -26,6 +30,9 @@ const MAX_SCALE = 8;
 export default function Canvas({
   content,
   title = "Untitled circuit",
+  showGrid = true,
+  showMinimap = true,
+  themeKey,
   onTitleChange,
 }: Props) {
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -114,7 +121,7 @@ export default function Canvas({
         role="application"
         aria-label="Canvas with pan and zoom"
       >
-        <CanvasGrid scale={scale} offset={offset} />
+        {showGrid && <CanvasGrid scale={scale} offset={offset} />}
         <div
           className="absolute inset-0 select-none"
           style={{
@@ -133,17 +140,20 @@ export default function Canvas({
 
       <Header title={title} onTitleChange={onTitleChange} />
 
-      <Minimap
-        scale={scale}
-        offset={offset}
-        viewportSize={viewportSize}
-        hasContent={parsedContent.length > 0}
-        onZoomIn={zoomIn}
-        onZoomOut={zoomOut}
-        onResetView={resetView}
-        canZoomIn={scale < MAX_SCALE - 0.0001}
-        canZoomOut={scale > MIN_SCALE + 0.0001}
-      />
+      {showMinimap && (
+        <Minimap
+          scale={scale}
+          offset={offset}
+          viewportSize={viewportSize}
+          hasContent={parsedContent.length > 0}
+          themeKey={themeKey}
+          onZoomIn={zoomIn}
+          onZoomOut={zoomOut}
+          onResetView={resetView}
+          canZoomIn={scale < MAX_SCALE - 0.0001}
+          canZoomOut={scale > MIN_SCALE + 0.0001}
+        />
+      )}
     </div>
   );
 }

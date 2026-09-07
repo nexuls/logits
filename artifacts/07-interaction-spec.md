@@ -24,11 +24,22 @@ Note: the canvas references `--logit-cursor-default`, `--logit-cursor-grab` and
 [globals.css](../src/app/globals.css). Either define them or fall back to the
 standard keywords — see [08-roadmap.md](08-roadmap.md).
 
+## Panels (built)
+
+| Shortcut | Action |
+| --- | --- |
+| `Ctrl/Cmd + B` | Toggle the projects sidebar (left) |
+| `Ctrl/Cmd + J` | Toggle the elements sidebar (right), between full width and its icon rail |
+
+The two sidebars are independent — separate providers, separate cookies,
+separate shortcuts. Both are also reachable by pointer: the left one from the
+canvas header, the right one from the panel button in its own header.
+
 ## Editing (planned)
 
 | Gesture | Action |
 | --- | --- |
-| Drag from palette / `Ctrl+K` command menu | Place a node |
+| Click a palette element, then click the canvas / `Ctrl+K` command menu | Place a node. The palette is built and arms a type; the canvas half is planned |
 | Left-drag on a node | Move (snapped to the 10-unit grid; hold `Alt` to bypass) |
 | Left-drag on empty canvas | Rubber-band select |
 | Shift/Ctrl + click | Add to / toggle selection |

@@ -5,6 +5,10 @@ Pin ids are part of the save format — treat this table as frozen once a node
 ships. Everything here is **Planned** until the node exists in
 `src/lib/nodes/registry.ts`.
 
+`gate.*` and `io.*` are in the registry and appear in the palette, but only as
+pin layout and footprint: `evaluate` and `paramsSchema` land with the engine
+(Phase 2). Everything else in this file is still Planned.
+
 Conventions: inputs left, outputs right, `clk` bottom, `en`/`rst` top.
 `n` = the node's `width` parameter. All widths default to 1 unless noted.
 

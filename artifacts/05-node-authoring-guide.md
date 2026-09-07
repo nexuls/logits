@@ -14,8 +14,10 @@ import { defineNode } from "@/lib/nodes/define";
 export const andGate = defineNode({
   type: "gate.and",                 // "<family>.<name>", stable forever
   title: "AND",
-  category: "gates",
+  category: "gates",                // must be listed in `nodeCategories`
   keywords: ["and", "conjunction", "&"],
+  symbol: "&",                      // palette glyph — a string, never a
+                                    // component; this layer has no React
   defaultParams: { inputs: 2, width: 1 },
   paramsSchema: [
     { key: "inputs", label: "Inputs", kind: "int", min: 2, max: 8 },
@@ -56,7 +58,9 @@ which break tree-shaking and make ordering non-deterministic.
 - [ ] Stateful nodes implement `createState`; state is JSON-serialisable and
       never holds DOM refs or closures.
 - [ ] Has a test: truth table for combinational, waveform for sequential.
-- [ ] Appears in the palette with a sensible icon and `keywords`.
+- [ ] Appears in the palette with a sensible `symbol` and `keywords`, under a
+      `category` that `nodeCategories` in the registry knows about. The palette
+      reads all of that off the definition — never edit the palette to add a node.
 
 ## When a node needs custom rendering
 
