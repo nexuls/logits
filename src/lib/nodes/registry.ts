@@ -24,11 +24,11 @@ import { switchNode } from "./io/switch";
 export const nodeDefinitions: readonly NodeDefinition[] = [
   andGate,
   orGate,
+  notGate,
   nandGate,
   norGate,
   xorGate,
   xnorGate,
-  notGate,
   bufferGate,
   tristateGate,
   switchNode,

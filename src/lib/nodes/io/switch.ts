@@ -3,7 +3,7 @@ import { defineNode, intParam } from "@/lib/nodes/define";
 export const switchNode = defineNode({
   type: "io.switch",
   title: "Switch",
-  symbol: "SW",
+  icon: "toggle",
   category: "io",
   keywords: ["switch", "toggle", "input", "source", "dip"],
   defaultParams: { width: 1, value: 0 },

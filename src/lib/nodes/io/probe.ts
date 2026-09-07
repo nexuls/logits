@@ -3,7 +3,7 @@ import { defineNode, intParam } from "@/lib/nodes/define";
 export const probeNode = defineNode({
   type: "io.probe",
   title: "Probe",
-  symbol: "?",
+  icon: "gauge",
   category: "io",
   keywords: ["probe", "readout", "value", "monitor", "output", "sink"],
   defaultParams: { width: 1, radix: "binary" },

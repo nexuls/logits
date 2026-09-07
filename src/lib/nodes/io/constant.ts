@@ -3,7 +3,7 @@ import { defineNode, intParam } from "@/lib/nodes/define";
 export const constantNode = defineNode({
   type: "io.constant",
   title: "Constant",
-  symbol: "K",
+  icon: "binary",
   category: "io",
   keywords: ["constant", "literal", "vcc", "ground", "gnd", "tie", "source"],
   defaultParams: { width: 1, value: 1 },

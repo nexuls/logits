@@ -16,8 +16,9 @@ export const andGate = defineNode({
   title: "AND",
   category: "gates",                // must be listed in `nodeCategories`
   keywords: ["and", "conjunction", "&"],
-  symbol: "&",                      // palette glyph — a string, never a
-                                    // component; this layer has no React
+  icon: "and",                      // palette icon *name*, resolved by
+                                    // src/components/nodes/node-icons.tsx —
+                                    // a string, never a component: no React here
   defaultParams: { inputs: 2, width: 1 },
   paramsSchema: [
     { key: "inputs", label: "Inputs", kind: "int", min: 2, max: 8 },
@@ -58,9 +59,11 @@ which break tree-shaking and make ordering non-deterministic.
 - [ ] Stateful nodes implement `createState`; state is JSON-serialisable and
       never holds DOM refs or closures.
 - [ ] Has a test: truth table for combinational, waveform for sequential.
-- [ ] Appears in the palette with a sensible `symbol` and `keywords`, under a
+- [ ] Appears in the palette with a sensible `icon` and `keywords`, under a
       `category` that `nodeCategories` in the registry knows about. The palette
       reads all of that off the definition — never edit the palette to add a node.
+      Reuse an existing icon name where the shape fits; a genuinely new shape is
+      a third file, `node-icons.tsx`, and it is keyed by shape, never by `type`.
 
 ## When a node needs custom rendering
 

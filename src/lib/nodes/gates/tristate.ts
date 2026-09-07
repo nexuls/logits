@@ -8,7 +8,7 @@ import { defineNode, intParam } from "@/lib/nodes/define";
 export const tristateGate = defineNode({
   type: "gate.tristate",
   title: "Tri-state",
-  symbol: "▷",
+  icon: "tristate",
   category: "gates",
   keywords: ["tristate", "three state", "buffer", "enable", "z", "bus"],
   defaultParams: { width: 1 },

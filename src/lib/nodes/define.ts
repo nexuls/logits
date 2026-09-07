@@ -20,12 +20,13 @@ export type NodeDefinition = {
   category: string;
   keywords?: readonly string[];
   /**
-   * Short glyph the palette draws for this node — IEC-style (`&`, `≥1`, `=1`)
-   * or an abbreviation. A string, not a component, because this layer must
-   * stay free of React; the palette decides how to draw it. Optional: without
-   * one the palette falls back to the start of `title`.
+   * Name of the palette icon for this node, resolved by
+   * `src/components/nodes/node-icons.tsx`. A name and not a component, because
+   * this layer must stay free of React. Names a shape (`"and"`, `"lamp"`), so
+   * nodes that look alike share one; an unknown name falls back to a generic
+   * part rather than breaking the palette.
    */
-  symbol?: string;
+  icon?: string;
   defaultParams: NodeParams;
   /** Pin layout is derived from params, never stored in the document. */
   pins: (params: NodeParams) => PinSpec[];

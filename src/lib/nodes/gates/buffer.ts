@@ -1,6 +1,6 @@
 import { unaryGate } from "./shared";
 
-export const bufferGate = unaryGate("gate.buffer", "Buffer", "1", [
+export const bufferGate = unaryGate("gate.buffer", "Buffer", "buffer", [
   "buffer",
   "buf",
   "repeater",

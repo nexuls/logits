@@ -44,7 +44,7 @@ function bodyHeight(inputs: number): number {
 export function symmetricGate(
   type: string,
   title: string,
-  symbol: string,
+  icon: string,
   keywords: readonly string[],
 ): NodeDefinition {
   return {
@@ -52,7 +52,7 @@ export function symmetricGate(
     title,
     category: "gates",
     keywords,
-    symbol,
+    icon,
     defaultParams: { inputs: MIN_INPUTS, width: 1 },
     pins: (params) => {
       const inputs = inputCount(params);
@@ -85,7 +85,7 @@ export function symmetricGate(
 export function unaryGate(
   type: string,
   title: string,
-  symbol: string,
+  icon: string,
   keywords: readonly string[],
 ): NodeDefinition {
   return {
@@ -93,7 +93,7 @@ export function unaryGate(
     title,
     category: "gates",
     keywords,
-    symbol,
+    icon,
     defaultParams: { width: 1 },
     pins: (params) => {
       const width = intParam(params, "width", 1);

@@ -4,7 +4,7 @@ import { defineNode } from "@/lib/nodes/define";
 export const buttonNode = defineNode({
   type: "io.button",
   title: "Button",
-  symbol: "PB",
+  icon: "push-button",
   category: "io",
   keywords: ["button", "momentary", "push", "input", "source"],
   defaultParams: {},

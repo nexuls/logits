@@ -34,7 +34,7 @@ one, that is a design error — pass it in as an argument.
 | `src/app/` | Next.js App Router entry. The editor is one route; keep page files thin. | Built |
 | `src/components/canvas/` | Viewport only: pan, zoom, grid, minimap. Knows nothing about logic. | Built |
 | `src/components/editor/` | Palette, toolbar, inspector, node layer, wire layer, context menus. | Partial — the elements sidebar (node palette + workspace settings) is built; the rest is planned |
-| `src/components/nodes/` | React views for nodes that need custom rendering (scope, displays). | Planned |
+| `src/components/nodes/` | React views for nodes that need custom rendering (scope, displays), and the palette icon set. | Partial — `node-icons.tsx` built; views planned |
 | `src/components/ui/` | shadcn primitives. Generated — see AGENTS.md. | Built |
 | `src/hooks/` | Generic React hooks (`use-mobile`, `use-debounced-callback`). | Built |
 | `src/lib/circuit/` | Document model, ids, geometry, wire routing, netlist derivation, serialize/migrate. | Partial — schema, ids, io, geometry, wire-path built; coords + netlist planned |

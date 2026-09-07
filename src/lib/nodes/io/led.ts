@@ -3,7 +3,7 @@ import { defineNode } from "@/lib/nodes/define";
 export const ledNode = defineNode({
   type: "io.led",
   title: "LED",
-  symbol: "◉",
+  icon: "lamp",
   category: "io",
   keywords: ["led", "lamp", "light", "output", "sink", "indicator"],
   defaultParams: { color: "green" },
