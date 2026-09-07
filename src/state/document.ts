@@ -8,6 +8,9 @@ import {
   type ConnectResult,
   connect,
   deleteElements,
+  extractFragment,
+  type Fragment,
+  insertFragment,
   moveNodes,
   renameDocument,
   rotateNodes,
@@ -306,6 +309,43 @@ export function updateWireWaypoints(
 
 export function deleteSelection(selection: Selection): boolean {
   return apply("delete", (document) => deleteElements(document, selection));
+}
+
+/** The selection as standalone data, for the clipboard. Null with nothing open. */
+export function copySelection(selection: Selection): Fragment | null {
+  if (!history) return null;
+
+  const fragment = extractFragment(history.present, selection);
+  return fragment.nodes.length > 0 ? fragment : null;
+}
+
+/**
+ * Pastes a fragment and returns what to select — the copies, never the
+ * originals, so the user can immediately drag what they just pasted.
+ */
+export function pasteFragment(
+  fragment: Fragment,
+  offset: Point,
+): { nodeIds: string[]; wireIds: string[] } | null {
+  if (!history) return null;
+
+  let pasted: { nodeIds: string[]; wireIds: string[] } | null = null;
+  apply("paste", (document) => {
+    const result = insertFragment(document, fragment, offset);
+    pasted = result.selection;
+    return result.document;
+  });
+
+  return pasted;
+}
+
+/** `Ctrl+D`: copy in place, nudged off the original so both are visible. */
+export function duplicateSelection(
+  selection: Selection,
+  offset: Point,
+): { nodeIds: string[]; wireIds: string[] } | null {
+  const fragment = copySelection(selection);
+  return fragment ? pasteFragment(fragment, offset) : null;
 }
 
 /** Null until a document is opened, and on the server. */
