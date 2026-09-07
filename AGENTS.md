@@ -79,10 +79,15 @@ bun run dev       # next dev
 bun run build     # next build — run before claiming a change compiles
 bun run lint      # biome check
 bun run format    # biome format --write
+bun run test      # vitest run
+bun run test:watch
 ```
 
-Use `bun`, never `npm`/`yarn`/`pnpm`. There is no test runner yet; adding Vitest
-is a Phase 0 task in the roadmap. Until it exists, do not claim code is tested.
+Tests are Vitest, run in the `node` environment, and live beside the code they
+cover as `*.test.ts`. That environment is deliberate: anything in `src/lib/`
+that needs a DOM to be tested is in the wrong layer.
+
+Use `bun`, never `npm`/`yarn`/`pnpm`.
 
 ## Conventions
 

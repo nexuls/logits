@@ -5,15 +5,16 @@ criteria before starting the next; if you must go out of order, say so in the PR
 Update the status boxes here as part of the work — a merged phase with stale
 boxes is an incomplete phase.
 
-## Phase 0 — Foundations (in progress)
+## Phase 0 — Foundations (done)
 
 - [x] Next.js + Tailwind v4 + shadcn set up
 - [x] Infinite canvas: pan, zoom, grid, minimap
 - [x] `useDebouncedCallback`
-- [ ] Replace the create-next-app starter [page.tsx](../src/app/page.tsx) with the editor shell — it now owns the active project and wires the sidebar to storage; the editor surface itself is Phase 3
-- [ ] Set app metadata in [layout.tsx](../src/app/layout.tsx) (still "Create Next App")
-- [ ] Define `--logit-cursor-*` custom properties in [globals.css](../src/app/globals.css) — the canvas already consumes them and they do not exist
-- [ ] Add a test runner (Vitest) and wire `bun run test`; the domain layer is untestable until this lands
+- [x] Replace the create-next-app starter [page.tsx](../src/app/page.tsx) with the editor shell — it now owns the active project and wires the sidebar to storage; the editor surface itself is Phase 3
+- [x] Set app metadata in [layout.tsx](../src/app/layout.tsx)
+- [x] Define `--logit-cursor-*` custom properties in [globals.css](../src/app/globals.css)
+- [x] Add a test runner (Vitest) and wire `bun run test` — node environment, `src/**/*.test.ts`, with the existing domain modules covered
+- **Exit:** `bun run test` and `bun run build` pass, `bun run lint` is clean outside the generated `src/components/ui/`, and the app boots to the editor shell rather than the starter page.
 
 ## Phase 1 — Model and netlist
 
@@ -57,12 +58,11 @@ boxes is an incomplete phase.
 
 | Issue | Where |
 | --- | --- |
-| `--logit-cursor-*` referenced but undefined | [canvas/index.tsx](../src/components/canvas/index.tsx) → globals.css |
 | `Canvas` takes a `content: string` placeholder prop and renders it as a box; replace with the node layer | [canvas/index.tsx](../src/components/canvas/index.tsx) |
 | `onContentChange` prop is declared but unused | same |
 | `CanvasViewer` hardcodes a 360×120 content footprint | [canvas-viewer.tsx](../src/components/canvas/canvas-viewer.tsx) |
 | `T_Node` in `canvas-type.ts` is a leftover placeholder, unrelated to the real node model | [canvas-type.ts](../src/components/canvas/canvas-type.ts) |
-| No test runner configured | `package.json` |
 | Projects sidebar has no routing — the open project lives in React state, so it is lost on reload and has no URL | [app/page.tsx](../src/app/page.tsx) |
 | Canvas header menu (New / Rename / Duplicate / Export / Delete) is still disabled; the store actions exist but delete needs the confirm dialog lifted out of the sidebar, and export needs a download flow | [canvas/components/header.tsx](../src/components/canvas/components/header.tsx) |
+| `bun run lint` reports 24 pre-existing errors, all in generated shadcn primitives (mostly `a11y/useSemanticElements`); they need a biome override or a regeneration, not hand edits | [components/ui/](../src/components/ui/) |
 | `SidebarMenuSkeleton` picks a random width and cannot be server-rendered without a hydration mismatch; the sidebar hand-rolls its placeholders instead | [ui/sidebar.tsx](../src/components/ui/sidebar.tsx) |

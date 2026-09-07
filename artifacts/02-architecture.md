@@ -31,7 +31,7 @@ one, that is a design error — pass it in as an argument.
 
 | Path | Contents | Status |
 | --- | --- | --- |
-| `src/app/` | Next.js App Router entry. The editor is one route; keep page files thin. | Built (still the starter page) |
+| `src/app/` | Next.js App Router entry. The editor is one route; keep page files thin. | Built |
 | `src/components/canvas/` | Viewport only: pan, zoom, grid, minimap. Knows nothing about logic. | Built |
 | `src/components/editor/` | Palette, toolbar, inspector, node layer, wire layer, context menus. | Planned |
 | `src/components/nodes/` | React views for nodes that need custom rendering (scope, displays). | Planned |

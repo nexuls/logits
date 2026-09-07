@@ -119,6 +119,6 @@ reset line.
 ## Testing
 
 The engine is the part of this app that is worth testing properly. Every node
-definition ships with a truth-table or waveform test. If no test runner is
-configured yet, that is the first task of the phase that adds the engine — see
-[08-roadmap.md](08-roadmap.md).
+definition ships with a truth-table or waveform test. Vitest is configured
+(`bun run test`); tests sit beside the code as `*.test.ts` and run in the `node`
+environment, which the pure domain layer needs nothing more than.
