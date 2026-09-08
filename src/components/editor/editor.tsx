@@ -26,6 +26,7 @@ import DiagnosticsPanel from "./diagnostics-panel";
 import GhostLayer from "./ghost-layer";
 import NodeLayer from "./node-layer";
 import RunControls from "./run-controls";
+import SettingsDialog from "./settings-dialog";
 import { useEditorGestures } from "./use-editor-gestures";
 import { useEditorShortcuts } from "./use-editor-shortcuts";
 import WireLayer from "./wire-layer";
@@ -66,6 +67,7 @@ export default function Editor({
   const [notice, setNotice] = useState<string | null>(null);
   const [commandMenuOpen, setCommandMenuOpen] = useState(false);
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     if (!projectId) {
@@ -184,6 +186,7 @@ export default function Editor({
         onTitleChange={
           document ? (name) => renameOpenDocument(name) : undefined
         }
+        onOpenSettings={() => setSettingsOpen(true)}
         onContentPointerDown={gestures.onPointerDown}
         onContentPointerMove={(event) => {
           // Tracked on every move, not only during a gesture: paste and the
@@ -260,6 +263,8 @@ export default function Editor({
           onPinActivate={gestures.activatePin}
         />
       </Canvas>
+
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
 
       <CommandMenu
         open={commandMenuOpen}

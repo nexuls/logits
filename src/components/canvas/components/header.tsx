@@ -7,6 +7,7 @@ import {
   PanelLeftIcon,
   PencilIcon,
   PlusIcon,
+  SlidersHorizontalIcon,
   Trash2Icon,
 } from "lucide-react";
 
@@ -29,6 +30,8 @@ type Props = {
   onDuplicateProject?: () => void;
   onExportProject?: () => void;
   onDeleteProject?: () => void;
+  /** Opens the settings dialog. Absent leaves the menu item disabled. */
+  onOpenSettings?: () => void;
 };
 
 /**
@@ -45,6 +48,7 @@ export default function Header({
   onDuplicateProject,
   onExportProject,
   onDeleteProject,
+  onOpenSettings,
 }: Props) {
   const { open, openMobile, isMobile, toggleSidebar } = useSidebar();
   const isSidebarOpen = isMobile ? openMobile : open;
@@ -114,6 +118,10 @@ export default function Header({
           >
             <DownloadIcon />
             Export as JSON
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onOpenSettings} disabled={!onOpenSettings}>
+            <SlidersHorizontalIcon />
+            Settings
           </DropdownMenuItem>
 
           <DropdownMenuSeparator />

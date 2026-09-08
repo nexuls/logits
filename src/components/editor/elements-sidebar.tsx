@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  PanelRightIcon,
-  SearchIcon,
-  SlidersHorizontalIcon,
-} from "lucide-react";
+import { PanelRightIcon, SearchIcon } from "lucide-react";
 import { type CSSProperties, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -19,18 +15,14 @@ import {
   SidebarHeader,
   SidebarInput,
   SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarProvider,
   SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar";
 import type { NodeDefinition } from "@/lib/nodes/define";
 import { nodeCategories, nodeDefinitions } from "@/lib/nodes/registry";
-import EditorSettingsPanel from "./editor-settings-panel";
 import Inspector from "./inspector";
 import NodePaletteItem from "./node-palette-item";
-import ProjectSettingsPanel from "./project-settings-panel";
 
 type Props = {
   /** Registry `type` of the node armed for placement, if any. */
@@ -58,7 +50,7 @@ function matches(definition: NodeDefinition, needle: string): boolean {
 }
 
 function Body({ selectedType, selectedCount = 0, onAdjustCount }: Props) {
-  const { open, openMobile, isMobile, toggleSidebar, setOpen } = useSidebar();
+  const { open, openMobile, isMobile, toggleSidebar } = useSidebar();
   const isOpen = isMobile ? openMobile : open;
   const [query, setQuery] = useState("");
 
@@ -156,31 +148,9 @@ function Body({ selectedType, selectedCount = 0, onAdjustCount }: Props) {
               No elements match “{query.trim()}”.
             </p>
           )}
-
-          <SidebarSeparator className="mx-0 group-data-[collapsible=icon]:hidden" />
-
-          <ProjectSettingsPanel />
-
-          <EditorSettingsPanel />
         </SidebarContent>
 
         <SidebarFooter>
-          <SidebarMenu>
-            {/* Collapsed, the settings switches are hidden, so the rail needs a
-                way back to them: this button expands the sidebar. */}
-            <SidebarMenuItem className="hidden group-data-[collapsible=icon]:block">
-              <SidebarMenuButton
-                type="button"
-                onClick={() => setOpen(true)}
-                tooltip="Settings"
-                aria-label="Show settings"
-              >
-                <SlidersHorizontalIcon />
-                <span>Settings</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-
           <p className="px-1 text-center text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
             <Kbd>⌘J</Kbd> to toggle
           </p>
@@ -205,7 +175,7 @@ function Body({ selectedType, selectedCount = 0, onAdjustCount }: Props) {
 }
 
 /**
- * The right-hand dock: the node palette, and the workspace settings.
+ * The right-hand dock: the node palette and the selection inspector.
  *
  * It carries its own `SidebarProvider` because the page already has one for
  * the projects sidebar and the two open and close independently — hence the

@@ -4,11 +4,6 @@ import { useId } from "react";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-} from "@/components/ui/sidebar";
 import { DEFAULT_SCALE, MAX_SCALE, MIN_SCALE } from "@/lib/circuit/coords";
 import { setOpenDocumentDefaultZoom, useDocument } from "@/state/document";
 
@@ -40,45 +35,41 @@ export default function ProjectSettingsPanel() {
   };
 
   return (
-    <div className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroup>
-        <SidebarGroupLabel>Project</SidebarGroupLabel>
-        <SidebarGroupContent className="space-y-1.5 px-3 py-1">
-          <Label htmlFor={id} className="text-xs">
-            Default zoom
-          </Label>
-          <div className="flex items-center gap-2">
-            <Input
-              id={id}
-              type="number"
-              inputMode="numeric"
-              min={MIN_PERCENT}
-              max={MAX_PERCENT}
-              step={10}
-              // Uncontrolled, remounted when the stored value changes, so
-              // typing "5" on the way to "50" is not clamped to the minimum
-              // mid-keystroke. The key also picks up an undo of this edit.
-              key={`${document.id}:${percent}`}
-              defaultValue={percent}
-              onBlur={(event) => commit(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key !== "Enter") return;
-                event.preventDefault();
-                commit(event.currentTarget.value);
-              }}
-              className="h-8"
-              aria-describedby={`${id}-hint`}
-            />
-            <span aria-hidden className="text-xs text-muted-foreground">
-              %
-            </span>
-          </div>
-          <p id={`${id}-hint`} className="text-[11px] text-muted-foreground">
-            Scale this circuit opens at, and what “reset view” returns to. Saved
-            with the project.
-          </p>
-        </SidebarGroupContent>
-      </SidebarGroup>
-    </div>
+    <section className="space-y-1.5">
+      <h3 className="text-xs font-medium text-muted-foreground">Project</h3>
+      <Label htmlFor={id} className="text-xs">
+        Default zoom
+      </Label>
+      <div className="flex items-center gap-2">
+        <Input
+          id={id}
+          type="number"
+          inputMode="numeric"
+          min={MIN_PERCENT}
+          max={MAX_PERCENT}
+          step={10}
+          // Uncontrolled, remounted when the stored value changes, so
+          // typing "5" on the way to "50" is not clamped to the minimum
+          // mid-keystroke. The key also picks up an undo of this edit.
+          key={`${document.id}:${percent}`}
+          defaultValue={percent}
+          onBlur={(event) => commit(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key !== "Enter") return;
+            event.preventDefault();
+            commit(event.currentTarget.value);
+          }}
+          className="h-8"
+          aria-describedby={`${id}-hint`}
+        />
+        <span aria-hidden className="text-xs text-muted-foreground">
+          %
+        </span>
+      </div>
+      <p id={`${id}-hint`} className="text-[11px] text-muted-foreground">
+        Scale this circuit opens at, and what “reset view” returns to. Saved
+        with the project.
+      </p>
+    </section>
   );
 }

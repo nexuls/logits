@@ -53,7 +53,8 @@ clamps to, so a file cannot ask for a scale that will not render — and absent
 means 100%, so a circuit that never set one serialises exactly as it did
 before the field existed. Edited through `setDefaultZoom`, like any other
 command; the panel is
-[project-settings-panel.tsx](../src/components/editor/project-settings-panel.tsx).
+[project-settings-panel.tsx](../src/components/editor/project-settings-panel.tsx),
+inside the settings dialog opened from the canvas header menu.
 
 **Positions are world coordinates in canvas units**, not pixels; zoom does not
 change them. Nodes snap to a 10-unit grid: `GRID_SIZE` in

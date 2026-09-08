@@ -45,6 +45,8 @@ type Props = {
   /** Passed through to the minimap, which samples theme colours imperatively. */
   themeKey?: string;
   onTitleChange?: (newTitle: string) => void;
+  /** Passed to the header menu, which owns the only entry to the settings. */
+  onOpenSettings?: () => void;
   /**
    * Pointer handlers for the editing gestures. They run *before* the viewport's
    * own, and a handler that calls `preventDefault` stops the pan starting —
@@ -75,6 +77,7 @@ export default function Canvas({
   contentBounds = null,
   themeKey,
   onTitleChange,
+  onOpenSettings,
   onContentPointerDown,
   onContentPointerMove,
   onContentPointerUp,
@@ -212,7 +215,11 @@ export default function Canvas({
         {overlay}
       </div>
 
-      <Header title={title} onTitleChange={onTitleChange} />
+      <Header
+        title={title}
+        onTitleChange={onTitleChange}
+        onOpenSettings={onOpenSettings}
+      />
 
       {showMinimap && (
         <Minimap
