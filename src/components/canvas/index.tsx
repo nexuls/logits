@@ -80,7 +80,7 @@ export default function Canvas({
     onPointerMove,
     onPointerUp,
     onPointerCancel,
-    onDoubleClick,
+    // onDoubleClick,
     zoomIn,
     zoomOut,
     resetView,
@@ -168,7 +168,7 @@ export default function Canvas({
           onPointerCancel(event);
         }}
         onWheel={onWheel}
-        onDoubleClick={onDoubleClick}
+        // onDoubleClick={onDoubleClick}
         style={{
           overscrollBehavior: "none",
           cursor: isPanning
