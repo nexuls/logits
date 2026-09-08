@@ -1,4 +1,4 @@
-import { GRID_SIZE, snapToGrid } from "./geometry";
+import { GRID_SIZE } from "./geometry";
 import type { PinSpec, Point } from "./schema";
 
 /**
@@ -13,7 +13,9 @@ import type { PinSpec, Point } from "./schema";
  *
  * A wire with no waypoints is auto-routed. Storing a waypoint *is* what makes a
  * wire manually routed — there is no separate mode flag, so there is no way for
- * a mode and its geometry to disagree.
+ * a mode and its geometry to disagree. Editing one is editing that list
+ * directly — the polyline is never round-tripped back into waypoints, so a
+ * bend cannot drift by being read out and written back (ADR 0007).
  */
 
 type Side = PinSpec["side"];
@@ -41,7 +43,22 @@ function step(point: Point, side: Side, distance: number): Point {
 }
 
 /**
- * The full polyline for a wire, pin endpoints included, in world coordinates.
+ * A routed wire: the polyline to draw, and where a new bend dropped on each
+ * segment belongs in the document's waypoint list.
+ */
+export type RoutedWire = {
+  /** World coordinates, pin endpoints included. */
+  points: Point[];
+  /**
+   * `slots[i]` is the index a waypoint dropped on the segment
+   * `points[i] → points[i + 1]` takes in `Wire.waypoints`. One entry per
+   * segment, so it is always one shorter than `points`.
+   */
+  slots: number[];
+};
+
+/**
+ * The full route for a wire, pin endpoints included, in world coordinates.
  *
  * Pure and cheap: no obstacle avoidance, no node awareness. A wire may cross a
  * node — that is the user's problem to fix by bending it, which is exactly what
@@ -58,14 +75,33 @@ export function wirePath(
   to: Point,
   toSide: Side,
   waypoints: readonly Point[] = [],
-): Point[] {
-  return simplifyPath([
+): RoutedWire {
+  const points = [
     from,
     step(from, fromSide, STUB_LENGTH),
     ...waypoints,
     step(to, toSide, STUB_LENGTH),
     to,
-  ]);
+  ];
+
+  // How many waypoints lie at or before each point, which is the insertion
+  // index for anything dropped on the segment that starts there.
+  const slots = [
+    0,
+    0,
+    ...waypoints.map((_, index) => index + 1),
+    waypoints.length,
+    waypoints.length,
+  ];
+
+  // The waypoints themselves survive simplification even when they fall on a
+  // straight run: they are handles the user placed and must stay draggable, and
+  // dropping one would put `slots` out of step with the document.
+  const pinned = points.map(
+    (_, index) => index >= 2 && index < 2 + waypoints.length,
+  );
+
+  return simplifyRoute(points, slots, pinned);
 }
 
 /**
@@ -90,19 +126,61 @@ export function pendingWirePath(
 
 /** Drops zero-length segments and merges runs that continue in one direction. */
 export function simplifyPath(points: readonly Point[]): Point[] {
-  const out: Point[] = [];
-  for (const point of points) {
-    const last = out[out.length - 1];
-    if (last && samePoint(last, point)) continue;
+  return simplifyRoute(
+    points,
+    points.map(() => 0),
+    points.map(() => false),
+  ).points;
+}
 
-    const previous = out[out.length - 2];
-    if (previous && last && isCollinear(previous, last, point)) {
-      out[out.length - 1] = point;
+/**
+ * `simplifyPath`, carrying each point's waypoint slot along with it.
+ *
+ * A point may only be dropped if it is not `pinned`. When a run is merged the
+ * survivor keeps the *start* of that run, so the slot of a segment is still
+ * the slot of the point it leaves from.
+ */
+function simplifyRoute(
+  points: readonly Point[],
+  slots: readonly number[],
+  pinned: readonly boolean[],
+): RoutedWire {
+  const outPoints: Point[] = [];
+  const outSlots: number[] = [];
+  const outPinned: boolean[] = [];
+
+  for (let i = 0; i < points.length; i++) {
+    const point = points[i];
+    const last = outPoints.length - 1;
+
+    if (last >= 0 && samePoint(outPoints[last], point)) {
+      // A waypoint sitting exactly on a stub: one point, but it is still the
+      // user's handle, and the later slot is the one that follows it.
+      outPinned[last] = outPinned[last] || pinned[i];
+      outSlots[last] = slots[i];
       continue;
     }
-    out.push(point);
+
+    if (
+      last >= 1 &&
+      !outPinned[last] &&
+      isCollinear(outPoints[last - 1], outPoints[last], point)
+    ) {
+      outPoints[last] = point;
+      outSlots[last] = slots[i];
+      outPinned[last] = pinned[i];
+      continue;
+    }
+
+    outPoints.push(point);
+    outSlots.push(slots[i]);
+    outPinned.push(pinned[i]);
   }
-  return out;
+
+  return {
+    points: outPoints,
+    slots: outSlots.slice(0, Math.max(0, outPoints.length - 1)),
+  };
 }
 
 function samePoint(a: Point, b: Point): boolean {
@@ -186,51 +264,4 @@ function towards(origin: Point, target: Point, length: number): Point {
 /** Two decimals is well under a device pixel at max zoom, and keeps `d` short. */
 function round(value: number): number {
   return Math.round(value * 100) / 100;
-}
-
-/**
- * Drags one segment of a path sideways, the way you would nudge a rope.
- *
- * Free in both axes now that segments may run at any angle. The two pin
- * endpoints are anchored, so grabbing a segment that touches one splits a new
- * bend off it rather than pulling the wire off its pin.
- *
- * `index` addresses the segment between `points[index]` and `points[index + 1]`.
- */
-export function moveSegment(
-  points: readonly Point[],
-  index: number,
-  delta: Point,
-): Point[] {
-  const path = [...points];
-  if (index < 0 || index + 1 >= path.length) return path;
-
-  let target = index;
-  // Tail first: splicing the head would shift the indices this one depends on.
-  if (index + 1 === path.length - 1) {
-    path.splice(path.length - 1, 0, { ...path[path.length - 1] });
-  }
-  if (index === 0) {
-    path.splice(1, 0, { ...path[0] });
-    target = 1;
-  }
-
-  const a = path[target];
-  const b = path[target + 1];
-  // Snapped per endpoint rather than as one rounded delta, so a segment that
-  // started on the grid lands back on it.
-  path[target] = { x: snapToGrid(a.x + delta.x), y: snapToGrid(a.y + delta.y) };
-  path[target + 1] = {
-    x: snapToGrid(b.x + delta.x),
-    y: snapToGrid(b.y + delta.y),
-  };
-  return path;
-}
-
-/**
- * The document form of a routed path: the pin endpoints are dropped, because
- * they are derived from the nodes and would go stale the moment one moves.
- */
-export function waypointsFromPath(points: readonly Point[]): Point[] {
-  return simplifyPath(points.slice(1, -1));
 }

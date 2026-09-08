@@ -11,23 +11,22 @@ import {
 import type { CanvasViewport } from "@/components/canvas/canvas-viewport";
 import { screenToWorldLength } from "@/lib/circuit/coords";
 import {
+  GRID_SIZE,
   placementCenters,
   type Rect,
   rotateSize,
   snapPointToGrid,
 } from "@/lib/circuit/geometry";
 import type { PinRef, Point } from "@/lib/circuit/schema";
-import {
-  moveSegment,
-  pendingWirePath,
-  waypointsFromPath,
-} from "@/lib/circuit/wire-path";
+import { pendingWirePath } from "@/lib/circuit/wire-path";
 import type { NodeDefinition } from "@/lib/nodes/define";
 import {
+  addWireWaypoint,
   connectPins,
+  dragWireWaypoint,
+  dropWireWaypoint,
   moveSelection,
   placeNodes,
-  updateWireWaypoints,
 } from "@/state/document";
 import {
   elementsInRect,
@@ -36,10 +35,13 @@ import {
   pinAt,
   pinsCompatible,
   rectBetween,
+  WAYPOINT_HIT_RADIUS,
   WIRE_HIT_RADIUS,
+  type WireHit,
+  waypointAt,
   wireAt,
 } from "@/state/hit-test";
-import type { ResolvedPin, Scene } from "@/state/scene";
+import type { ResolvedPin, ResolvedWire, Scene } from "@/state/scene";
 import {
   addToSelection,
   clearSelection,
@@ -93,12 +95,27 @@ type Gesture =
       currentWorld: Point;
       additive: boolean;
     }
+  /**
+   * Pressed on a wire, but not yet past the drag threshold — a click here
+   * selects the wire, and only a drag turns into a new bend.
+   */
   | {
-      kind: "bend";
+      kind: "press-wire";
       wireId: string;
+      /** Where in `Wire.waypoints` the new bend would go. */
+      slot: number;
+      /** The point on the wire under the press, which is where it lands. */
+      origin: Point;
+      startClient: Point;
+    }
+  | {
+      kind: "drag-waypoint";
+      wireId: string;
+      /** Index into `Wire.waypoints`. */
       index: number;
+      /** Where the bend sat when the drag began. */
+      origin: Point;
       startWorld: Point;
-      points: readonly Point[];
     };
 
 /**
@@ -117,6 +134,9 @@ type Wiring = {
 };
 
 export type PendingWire = { points: Point[]; unresolved: boolean };
+
+/** A bend that does not exist yet, shown under the cursor on a wire. */
+export type WaypointPreview = { wireId: string; point: Point };
 
 type Options = {
   scene: Scene;
@@ -148,6 +168,13 @@ export function useEditorGestures({
    * re-render the editor per pointer move.
    */
   const [ghostWorld, setGhostWorld] = useState<Point | null>(null);
+  /**
+   * The bend a press on the wire under the cursor would add, drawn as a hollow
+   * handle so the wire says where it can be grabbed before it is grabbed.
+   * Null whenever the cursor is not over a wire.
+   */
+  const [waypointPreview, setWaypointPreview] =
+    useState<WaypointPreview | null>(null);
 
   // The scene changes on every document edit, and the handlers below are
   // installed on the viewport once; a ref keeps them reading the current one
@@ -276,6 +303,26 @@ export function useEditorGestures({
         return;
       }
 
+      // A handle on a selected wire outranks the node it may be sitting over:
+      // it is small, deliberate, and only drawn where the user can see it.
+      const handle = waypointAt(
+        current,
+        world,
+        getSelection().wireIds,
+        worldLength(WAYPOINT_HIT_RADIUS),
+      );
+      if (handle) {
+        event.preventDefault();
+        setGesture({
+          kind: "drag-waypoint",
+          wireId: handle.wire.wire.id,
+          index: handle.index,
+          origin: (handle.wire.wire.waypoints ?? [])[handle.index],
+          startWorld: world,
+        });
+        return;
+      }
+
       const node = nodeAt(current, world);
       if (node) {
         event.preventDefault();
@@ -310,12 +357,14 @@ export function useEditorGestures({
           selectOnly([], [id]);
         }
 
+        // Not a bend yet: a click on a wire only selects it. The bend appears
+        // if the press turns into a drag, at the point that was pressed.
         setGesture({
-          kind: "bend",
+          kind: "press-wire",
           wireId: id,
-          index: wire.index,
-          startWorld: world,
-          points: wire.wire.points,
+          slot: slotFor(wire),
+          origin: wire.point,
+          startClient: { x: event.clientX, y: event.clientY },
         });
         return;
       }
@@ -349,13 +398,42 @@ export function useEditorGestures({
   const onPointerMove = useCallback(
     (event: PointerEvent<HTMLDivElement>) => {
       const world = toWorld(event);
+      const current = sceneRef.current;
 
       if (armedDefinition) setGhostWorld(world);
 
       if (wiring) {
-        setWiring((current) =>
-          current ? { ...current, cursorWorld: world } : current,
+        setWiring((wire) => (wire ? { ...wire, cursorWorld: world } : wire));
+      }
+
+      // The preview is a hover affordance, so it is offered only when the
+      // pointer is free: not mid-gesture, not placing, not drawing a wire.
+      if (gesture.kind === "none" && !armedDefinition && !wiring) {
+        // A pin, a node body, or a handle already there wins — offering a new
+        // bend would promise a gesture the press is not going to perform.
+        const blocked =
+          pinAt(current, world, worldLength(PIN_SNAP_PX)) !== null ||
+          waypointAt(
+            current,
+            world,
+            getSelection().wireIds,
+            worldLength(WAYPOINT_HIT_RADIUS),
+          ) !== null ||
+          nodeAt(current, world) !== null;
+        const hovered = blocked
+          ? null
+          : wireAt(current, world, worldLength(WIRE_HIT_RADIUS));
+
+        // Compared rather than replaced: the pointer moves far more often than
+        // the handle moves a pixel, and an unchanged preview must not re-render
+        // the wire layer.
+        setWaypointPreview((shown) =>
+          samePreview(shown, hovered)
+            ? shown
+            : hovered && { wireId: hovered.wire.wire.id, point: hovered.point },
         );
+      } else if (waypointPreview) {
+        setWaypointPreview(null);
       }
 
       switch (gesture.kind) {
@@ -405,16 +483,30 @@ export function useEditorGestures({
           setGesture({ ...gesture, currentWorld: world });
           return;
 
-        case "bend": {
-          const moved = moveSegment(gesture.points, gesture.index, {
-            x: world.x - gesture.startWorld.x,
-            y: world.y - gesture.startWorld.y,
+        case "press-wire": {
+          const travelled = Math.hypot(
+            event.clientX - gesture.startClient.x,
+            event.clientY - gesture.startClient.y,
+          );
+          if (travelled < DRAG_THRESHOLD_PX) return;
+
+          // The bend goes in where the press was, not where the pointer has
+          // got to, so the wire does not jump out from under the cursor.
+          addWireWaypoint(gesture.wireId, gesture.slot, gesture.origin);
+          setGesture({
+            kind: "drag-waypoint",
+            wireId: gesture.wireId,
+            index: gesture.slot,
+            origin: snapPointToGrid(gesture.origin),
+            startWorld: gesture.origin,
           });
-          // `moveSegment` has already snapped, and the endpoints it keeps are
-          // the pins', which the document must not store.
-          updateWireWaypoints(gesture.wireId, waypointsFromPath(moved), {
-            snap: false,
-            coalesce: true,
+          return;
+        }
+
+        case "drag-waypoint": {
+          dragWireWaypoint(gesture.wireId, gesture.index, {
+            x: gesture.origin.x + (world.x - gesture.startWorld.x),
+            y: gesture.origin.y + (world.y - gesture.startWorld.y),
           });
           return;
         }
@@ -423,12 +515,13 @@ export function useEditorGestures({
           return;
       }
     },
-    [armedDefinition, gesture, toWorld, wiring],
+    [armedDefinition, gesture, toWorld, waypointPreview, wiring, worldLength],
   );
 
-  /** The pointer left the canvas, so the ghost goes with it. */
+  /** The pointer left the canvas, so the ghost and the hover handle go with it. */
   const onPointerLeave = useCallback(() => {
     setGhostWorld(null);
+    setWaypointPreview(null);
   }, []);
 
   const onPointerUp = useCallback(
@@ -450,6 +543,16 @@ export function useEditorGestures({
         if (hit && !sameAsStart) finishWiring(hit);
       }
 
+      // Dropped on top of the vertex next door: the bend is doing nothing, so
+      // it goes, and the wire straightens through where it used to be. This is
+      // the only way to remove a bend without deleting the wire.
+      if (gesture.kind === "drag-waypoint") {
+        const wire = current.wires[gesture.wireId];
+        if (wire && isRedundantWaypoint(wire, gesture.index)) {
+          dropWireWaypoint(gesture.wireId, gesture.index);
+        }
+      }
+
       if (gesture.kind === "band") {
         const rect = rectBetween(gesture.originWorld, gesture.currentWorld);
         const found = elementsInRect(current, rect);
@@ -462,6 +565,13 @@ export function useEditorGestures({
     },
     [finishWiring, gesture, toWorld, wiring, worldLength],
   );
+
+  /**
+   * Where a bend would go if the wire under the cursor were pressed right now.
+   * Suppressed while a bend is actually being dragged, so the preview does not
+   * trail the handle the user is already holding.
+   */
+  const waypointGhost = gesture.kind === "none" ? waypointPreview : null;
 
   /** The rubber band in world coordinates, or null when none is being drawn. */
   const band: Rect | null =
@@ -511,6 +621,7 @@ export function useEditorGestures({
     band,
     ghostCenters,
     pendingWire,
+    waypointGhost,
     compatiblePinIds,
     isWiring: wiring !== null,
     activatePin,
@@ -523,10 +634,52 @@ export function useEditorGestures({
     cursor:
       armedDefinition || wiring
         ? "var(--logit-cursor-cross)"
-        : gesture.kind === "move-nodes"
+        : gesture.kind === "move-nodes" || gesture.kind === "drag-waypoint"
           ? "var(--logit-cursor-move)"
           : undefined,
   };
+}
+
+/** Where in `Wire.waypoints` a bend dropped on this hit belongs. */
+function slotFor(hit: WireHit): number {
+  return hit.wire.slots[hit.index] ?? hit.wire.wire.waypoints?.length ?? 0;
+}
+
+/** Is this preview the one already on screen? Keeps hovering from re-rendering. */
+function samePreview(
+  shown: WaypointPreview | null,
+  hit: WireHit | null,
+): boolean {
+  if (!shown || !hit) return shown === null && hit === null;
+  return (
+    shown.wireId === hit.wire.wire.id &&
+    Math.abs(shown.point.x - hit.point.x) < 0.5 &&
+    Math.abs(shown.point.y - hit.point.y) < 0.5
+  );
+}
+
+/**
+ * Has a bend been dragged onto the vertex next to it?
+ *
+ * Waypoints snap to the grid and so do the pins and stubs around them, so
+ * "on top of" is exact up to a fraction of a cell — anything closer than half
+ * a cell is the same point, and the bend is no longer bending anything.
+ */
+function isRedundantWaypoint(wire: ResolvedWire, index: number): boolean {
+  const waypoint = (wire.wire.waypoints ?? [])[index];
+  if (!waypoint) return false;
+
+  const at = wire.points.findIndex(
+    (point) => point.x === waypoint.x && point.y === waypoint.y,
+  );
+  if (at < 0) return false;
+
+  const limit = GRID_SIZE / 2;
+  return [wire.points[at - 1], wire.points[at + 1]].some(
+    (neighbour) =>
+      neighbour !== undefined &&
+      Math.hypot(neighbour.x - waypoint.x, neighbour.y - waypoint.y) < limit,
+  );
 }
 
 /** Centres for a palette batch dropped at `world`, rotation-aware. */

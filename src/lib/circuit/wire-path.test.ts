@@ -1,11 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { Point } from "./schema";
 import {
-  moveSegment,
   pendingWirePath,
   simplifyPath,
   smoothPath,
-  waypointsFromPath,
   wirePath,
 } from "./wire-path";
 
@@ -25,25 +23,32 @@ function expectPassesThrough(points: readonly Point[], point: Point) {
 
 describe("wirePath", () => {
   it("runs straight between facing pins on the same row", () => {
-    const path = wirePath({ x: 0, y: 0 }, "right", { x: 100, y: 0 }, "left");
-    expect(path).toEqual([
+    const { points, slots } = wirePath(
+      { x: 0, y: 0 },
+      "right",
+      { x: 100, y: 0 },
+      "left",
+    );
+    expect(points).toEqual([
       { x: 0, y: 0 },
       { x: 100, y: 0 },
     ]);
+    // One segment, and a bend dropped on it is the wire's first waypoint.
+    expect(slots).toEqual([0]);
   });
 
   it("keeps the pin endpoints as the first and last points", () => {
     const from = { x: 0, y: 0 };
     const to = { x: 130, y: 70 };
-    const path = wirePath(from, "right", to, "left");
-    expect(path[0]).toEqual(from);
-    expect(path[path.length - 1]).toEqual(to);
+    const { points } = wirePath(from, "right", to, "left");
+    expect(points[0]).toEqual(from);
+    expect(points[points.length - 1]).toEqual(to);
   });
 
   it("crosses offset pins on one diagonal instead of two bends", () => {
     // The Manhattan router used to put a midpoint dogleg here (ADR 0006).
     expect(
-      wirePath({ x: 0, y: 0 }, "right", { x: 100, y: 40 }, "left"),
+      wirePath({ x: 0, y: 0 }, "right", { x: 100, y: 40 }, "left").points,
     ).toEqual([
       { x: 0, y: 0 },
       { x: 10, y: 0 },
@@ -53,24 +58,71 @@ describe("wirePath", () => {
   });
 
   it("leaves every pin perpendicular to its own edge", () => {
-    const path = wirePath({ x: 0, y: 0 }, "top", { x: 70, y: 30 }, "bottom");
+    const { points } = wirePath(
+      { x: 0, y: 0 },
+      "top",
+      { x: 70, y: 30 },
+      "bottom",
+    );
     // The first and last steps are the stubs, and only the stubs.
-    expect(path[1]).toEqual({ x: 0, y: -10 });
-    expect(path[path.length - 2]).toEqual({ x: 70, y: 40 });
+    expect(points[1]).toEqual({ x: 0, y: -10 });
+    expect(points[points.length - 2]).toEqual({ x: 70, y: 40 });
   });
 
   it("routes through hand-placed waypoints instead of auto-routing", () => {
     const waypoint = { x: 30, y: 60 };
-    const path = wirePath({ x: 0, y: 0 }, "right", { x: 100, y: 100 }, "left", [
-      waypoint,
-    ]);
-
-    expectPassesThrough(path, waypoint);
-    // `simplifyPath` folds the waypoint into the straight run it sits on, so
-    // it is a point *on* the path rather than necessarily a vertex of it.
-    expect(path).not.toEqual(
-      wirePath({ x: 0, y: 0 }, "right", { x: 100, y: 100 }, "left"),
+    const { points } = wirePath(
+      { x: 0, y: 0 },
+      "right",
+      { x: 100, y: 100 },
+      "left",
+      [waypoint],
     );
+
+    expectPassesThrough(points, waypoint);
+    expect(points).not.toEqual(
+      wirePath({ x: 0, y: 0 }, "right", { x: 100, y: 100 }, "left").points,
+    );
+  });
+
+  it("keeps a waypoint as a vertex even when it lands on a straight run", () => {
+    // It is the handle the user drags, so it must survive simplification —
+    // and dropping it would put `slots` out of step with the document.
+    const { points, slots } = wirePath(
+      { x: 0, y: 0 },
+      "right",
+      { x: 100, y: 0 },
+      "left",
+      [{ x: 50, y: 0 }],
+    );
+
+    expect(points).toEqual([
+      { x: 0, y: 0 },
+      { x: 50, y: 0 },
+      { x: 100, y: 0 },
+    ]);
+    expect(slots).toEqual([0, 1]);
+  });
+
+  it("numbers the slots so a bend lands between the waypoints it was drawn between", () => {
+    const { points, slots } = wirePath(
+      { x: 0, y: 0 },
+      "right",
+      { x: 200, y: 0 },
+      "left",
+      [
+        { x: 60, y: 40 },
+        { x: 140, y: 40 },
+      ],
+    );
+
+    // Every segment of the route reports where a bend dropped on it belongs.
+    expect(slots).toHaveLength(points.length - 1);
+    expect(slots[0]).toBe(0);
+    // The segment between the two waypoints inserts after the first of them.
+    const between = points.findIndex((p) => p.x === 60 && p.y === 40);
+    expect(slots[between]).toBe(1);
+    expect(slots[slots.length - 1]).toBe(2);
   });
 });
 
@@ -175,66 +227,5 @@ describe("smoothPath", () => {
         { x: 30, y: 30 },
       ]),
     ).toBe("M 0 0 L 30 30");
-  });
-});
-
-describe("moveSegment", () => {
-  const path = [
-    { x: 0, y: 0 },
-    { x: 50, y: 0 },
-    { x: 50, y: 40 },
-    { x: 100, y: 40 },
-  ];
-
-  it("moves a segment in both axes, snapped to the grid", () => {
-    const moved = moveSegment(path, 1, { x: 13, y: 24 });
-    expect(moved[1]).toEqual({ x: 60, y: 20 });
-    expect(moved[2]).toEqual({ x: 60, y: 60 });
-  });
-
-  it("splits a new bend off rather than dragging an endpoint off its pin", () => {
-    const moved = moveSegment(path, 0, { x: 0, y: 20 });
-    expect(moved[0]).toEqual(path[0]);
-    expect(moved.length).toBe(path.length + 1);
-  });
-
-  it("anchors the last point when the tail segment is dragged", () => {
-    const moved = moveSegment(path, path.length - 2, { x: 0, y: 20 });
-    expect(moved[moved.length - 1]).toEqual(path[path.length - 1]);
-  });
-
-  it("ignores an out-of-range index", () => {
-    expect(moveSegment(path, -1, { x: 10, y: 10 })).toEqual(path);
-    expect(moveSegment(path, path.length - 1, { x: 10, y: 10 })).toEqual(path);
-  });
-});
-
-describe("waypointsFromPath", () => {
-  it("drops the pin endpoints, which are derived from the nodes", () => {
-    expect(
-      waypointsFromPath([
-        { x: 0, y: 0 },
-        { x: 50, y: 0 },
-        { x: 50, y: 40 },
-        { x: 100, y: 40 },
-      ]),
-    ).toEqual([
-      { x: 50, y: 0 },
-      { x: 50, y: 40 },
-    ]);
-  });
-
-  it("round-trips: re-routing through stored waypoints reproduces the path", () => {
-    const from = { x: 0, y: 0 };
-    const to = { x: 100, y: 40 };
-    const path = wirePath(from, "right", to, "left");
-    const replayed = wirePath(
-      from,
-      "right",
-      to,
-      "left",
-      waypointsFromPath(path),
-    );
-    expect(replayed).toEqual(path);
   });
 });

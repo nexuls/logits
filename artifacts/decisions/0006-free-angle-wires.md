@@ -56,7 +56,9 @@ the curve can never disagree with what is clickable.
   axis-aligned segments and would catch a diagonal it passes nowhere near.
 - `moveSegment` drags in both axes now. A segment no longer has "its one free
   axis", so bending is freer and slightly less predictable — a drag that used
-  to slide along a rail now goes where the pointer goes.
+  to slide along a rail now goes where the pointer goes. *(Superseded by
+  [ADR 0007](0007-waypoint-handles.md): segments are no longer draggable at
+  all, and `moveSegment` is gone.)*
 - Saved documents are unaffected: `waypoints` were already absolute world
   points, and a Manhattan wire's stored bends replay as a Manhattan wire.
   Nothing needs a migration.

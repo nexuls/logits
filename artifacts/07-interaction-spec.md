@@ -60,9 +60,11 @@ canvas header, the right one from the panel button in its own header.
 | Click a second pin | Connect. The bends dropped on the way are stored with the wire, in the same undo step |
 | Drag from a pin to a pin | Connects in one gesture, as before. Releasing anywhere else just leaves the wire armed and following the cursor |
 | `Esc` while wiring | Cancel |
-| Click a wire | Select it; `Delete` removes it |
-| Drag a wire segment | Bend it. Moves freely in both axes, snapped to the grid; the pin ends stay anchored, so dragging an end segment splits a new bend off it |
-| Drag a bend onto its neighbours | Straightens the wire — collinear points collapse, so a wire cannot accumulate invisible bends |
+| Click a wire | Select it; `Delete` removes it. Its bends appear as handles |
+| Hover a wire | A hollow handle follows the cursor along the wire, at the nearest point on it, showing where a bend would go |
+| Drag from a wire | Adds a bend at the point pressed and drags it, in one undo step. A click alone only selects — the wire body is not draggable |
+| Drag a bend handle | Moves that waypoint, snapped to the grid. Handles are only grabbable while their wire is selected |
+| Drop a bend onto its neighbour | Removes it, straightening the wire. The only way to delete a bend short of deleting the wire |
 | Click a node | Select it; its parameters appear in the inspector |
 | `Tab` | Move through node bodies and pins; focusing a node selects it |
 | `Enter` on a pin | Start a wire, then `Enter` on a second pin to finish it |
@@ -105,6 +107,13 @@ that helper rather than writing a second one.
 - Bends are drawn rounded. The rounding is a rendering step (`smoothPath`) over
   the polyline, never a change to it: what is clickable is the polyline, so the
   curve cannot disagree with the hit target.
+- A bend is edited as a waypoint, never as a segment ([ADR
+  0007](decisions/0007-waypoint-handles.md)). The gesture edits
+  `Wire.waypoints` directly; the polyline is never read back out into
+  waypoints, so a bend cannot drift through a round trip. The router reports,
+  per segment, which index a bend dropped there takes, and a waypoint stays a
+  vertex of the route even when it falls on a straight run — a handle the user
+  placed must stay where they can grab it.
 - The router has no obstacle avoidance: a wire may cross a node, and the fix is
   for the user to bend it. Auto-routing around nodes is deliberately out of scope.
 - Waypoints are absolute world coordinates, so moving a node does not drag its

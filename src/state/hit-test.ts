@@ -30,13 +30,26 @@ export const PIN_HIT_RADIUS = 9;
 /** Half the clickable thickness of a wire. */
 export const WIRE_HIT_RADIUS = 6;
 
+/** How near a waypoint handle counts as on it. Slightly wider than it draws. */
+export const WAYPOINT_HIT_RADIUS = 7;
+
 export type PinHit = { node: ResolvedNode; pin: ResolvedPin };
 
 export type WireHit = {
   wire: ResolvedWire;
   /** Segment between `points[index]` and `points[index + 1]`. */
   index: number;
+  /** The point on that segment nearest the query — where a bend would go. */
+  point: Point;
   /** World distance from the query point to that segment. */
+  distance: number;
+};
+
+export type WaypointHit = {
+  wire: ResolvedWire;
+  /** Index into `wire.wire.waypoints` — the document's own bend list. */
+  index: number;
+  /** World distance from the query point to the handle. */
   distance: number;
 };
 
@@ -86,7 +99,14 @@ export function nodeAt(scene: Scene, world: Point): ResolvedNode | null {
   return found;
 }
 
-/** The wire segment nearest `world` within `radius`, or null. */
+/**
+ * The wire segment nearest `world` within `radius`, or null.
+ *
+ * The hit carries the closest point *on* the segment, which is where a bend
+ * dropped here would land — so the preview handle the editor draws under the
+ * cursor and the waypoint a press actually inserts are the same point, and
+ * cannot drift apart (ADR 0007).
+ */
 export function wireAt(
   scene: Scene,
   world: Point,
@@ -97,10 +117,45 @@ export function wireAt(
   for (const wireId of Object.keys(scene.wires).sort()) {
     const wire = scene.wires[wireId];
     for (let index = 0; index + 1 < wire.points.length; index++) {
-      const distance = distanceToSegment(
+      const point = closestPointOnSegment(
         world,
         wire.points[index],
         wire.points[index + 1],
+      );
+      const distance = Math.hypot(point.x - world.x, point.y - world.y);
+      if (distance <= radius && (!best || distance < best.distance)) {
+        best = { wire, index, point, distance };
+      }
+    }
+  }
+
+  return best;
+}
+
+/**
+ * The waypoint handle nearest `world`, among `wireIds`, within `radius`.
+ *
+ * Scoped to a caller-supplied set rather than the whole scene because handles
+ * are only drawn for selected wires: a handle nobody can see must not be
+ * grabbable, or a press near an unselected wire would silently bend it.
+ */
+export function waypointAt(
+  scene: Scene,
+  world: Point,
+  wireIds: readonly string[],
+  radius = WAYPOINT_HIT_RADIUS,
+): WaypointHit | null {
+  let best: WaypointHit | null = null;
+
+  for (const wireId of [...wireIds].sort()) {
+    const wire = scene.wires[wireId];
+    if (!wire) continue;
+
+    const waypoints = wire.wire.waypoints ?? [];
+    for (let index = 0; index < waypoints.length; index++) {
+      const distance = Math.hypot(
+        waypoints[index].x - world.x,
+        waypoints[index].y - world.y,
       );
       if (distance <= radius && (!best || distance < best.distance)) {
         best = { wire, index, distance };
@@ -169,7 +224,8 @@ export function pinsMatchExactly(a: ResolvedPin, b: ResolvedPin): boolean {
   return pinsCompatible(a, b) && a.spec.width === b.spec.width;
 }
 
-function distanceToSegment(point: Point, a: Point, b: Point): number {
+/** The point of segment `a → b` nearest `point`, endpoints included. */
+function closestPointOnSegment(point: Point, a: Point, b: Point): Point {
   const dx = b.x - a.x;
   const dy = b.y - a.y;
   const lengthSquared = dx * dx + dy * dy;
@@ -186,7 +242,7 @@ function distanceToSegment(point: Point, a: Point, b: Point): number {
           ),
         );
 
-  return Math.hypot(a.x + t * dx - point.x, a.y + t * dy - point.y);
+  return { x: a.x + t * dx, y: a.y + t * dy };
 }
 
 /**

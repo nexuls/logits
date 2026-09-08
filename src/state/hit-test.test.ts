@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { addNode, connect } from "@/lib/circuit/commands";
+import { addNode, connect, setWireWaypoints } from "@/lib/circuit/commands";
 import { createEmptyDocument } from "@/lib/circuit/io";
 import type { CircuitDocument } from "@/lib/circuit/schema";
 import type { NodeDefinition } from "@/lib/nodes/define";
@@ -12,6 +12,7 @@ import {
   pinsCompatible,
   pinsMatchExactly,
   rectBetween,
+  waypointAt,
   wireAt,
 } from "./hit-test";
 import { buildScene, clearSceneCaches } from "./scene";
@@ -203,5 +204,69 @@ describe("pinsCompatible", () => {
 
     expect(pinsCompatible(out, wide)).toBe(true);
     expect(pinsMatchExactly(out, wide)).toBe(false);
+  });
+});
+
+describe("waypointAt", () => {
+  /** The wired pair, bent twice, plus the id of the wire that was bent. */
+  function bentWire() {
+    const wireId = Object.keys(doc.wires)[0];
+    const bent = setWireWaypoints(doc, wireId, [
+      { x: 60, y: 40 },
+      { x: 140, y: 40 },
+    ]);
+    return { scene: buildScene(bent, lookupNode), wireId };
+  }
+
+  it("finds the handle nearest the point", () => {
+    const { scene: built, wireId } = bentWire();
+
+    const hit = waypointAt(built, { x: 138, y: 42 }, [wireId]);
+    expect(hit?.index).toBe(1);
+    expect(hit?.wire.wire.id).toBe(wireId);
+  });
+
+  it("ignores a wire that is not in the given set", () => {
+    // Handles are drawn for selected wires only, so an unselected wire's bends
+    // must not be grabbable.
+    const { scene: built } = bentWire();
+    expect(waypointAt(built, { x: 60, y: 40 }, [])).toBeNull();
+  });
+
+  it("finds nothing beyond the radius", () => {
+    const { scene: built, wireId } = bentWire();
+    expect(waypointAt(built, { x: 60, y: 80 }, [wireId])).toBeNull();
+  });
+});
+
+describe("wireAt", () => {
+  it("reports the point on the wire under the query, not a vertex of it", () => {
+    const built = scene();
+    const points = built.wires[Object.keys(built.wires)[0]].points;
+
+    // Two grid cells along the first segment, then nudged off it: the hit
+    // should come back projected onto the wire, nowhere near either vertex.
+    const on = {
+      x: points[0].x + (points[1].x - points[0].x) * 0.4,
+      y: points[0].y + (points[1].y - points[0].y) * 0.4,
+    };
+    const hit = wireAt(built, { x: on.x, y: on.y + 3 });
+
+    expect(hit).not.toBeNull();
+    expect(hit?.point.x).toBeCloseTo(on.x);
+    expect(hit?.point.y).toBeCloseTo(on.y);
+  });
+
+  it("says which document slot a bend dropped there would take", () => {
+    const wireId = Object.keys(doc.wires)[0];
+    const bent = setWireWaypoints(doc, wireId, [{ x: 100, y: 60 }]);
+    const built = buildScene(bent, lookupNode);
+
+    const before = wireAt(built, { x: 60, y: 30 }, 40);
+    const after = wireAt(built, { x: 150, y: 30 }, 40);
+
+    // Either side of the bend inserts either side of it in the list.
+    expect(before?.wire.slots[before.index]).toBe(0);
+    expect(after?.wire.slots[after.index]).toBe(1);
   });
 });

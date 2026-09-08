@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-
+import type { WaypointPreview } from "@/components/editor/use-editor-gestures";
 import { valueGlyph } from "@/components/nodes/node-views";
 import type { Rect } from "@/lib/circuit/geometry";
 import type { Point } from "@/lib/circuit/schema";
@@ -16,6 +16,8 @@ type Props = {
   faultedWireIds: ReadonlySet<string>;
   /** The wire being drawn, if any, already routed to the cursor. */
   pending: { points: Point[]; unresolved: boolean } | null;
+  /** The bend a press on the hovered wire would add, or null. */
+  waypointGhost: WaypointPreview | null;
   /** Rubber-band box in world coordinates, while one is being dragged. */
   band: Rect | null;
 };
@@ -38,6 +40,7 @@ function WireLayer({
   selectedWireIds,
   faultedWireIds,
   pending,
+  waypointGhost,
   band,
 }: Props) {
   const selected = new Set(selectedWireIds);
@@ -59,6 +62,37 @@ function WireLayer({
           faulted={faultedWireIds.has(id)}
         />
       ))}
+
+      {/* Handles sit above every wire, so one crossing another does not bury
+          the thing the user is aiming at. */}
+      {selectedWireIds.map((id) => {
+        const wire = scene.wires[id];
+        return wire?.wire.waypoints?.map((waypoint, index) => (
+          <circle
+            // biome-ignore lint/suspicious/noArrayIndexKey: a waypoint's index in the list *is* its identity — it has no id, and these circles hold no state for a reorder to corrupt.
+            key={`${id}/${index}`}
+            cx={waypoint.x}
+            cy={waypoint.y}
+            r={WAYPOINT_RADIUS}
+            strokeWidth={2}
+            vectorEffect="non-scaling-stroke"
+            className="fill-background stroke-primary"
+          />
+        ));
+      })}
+
+      {waypointGhost && (
+        // Hollow and dashed: it is an offer, not a bend that exists yet.
+        <circle
+          cx={waypointGhost.point.x}
+          cy={waypointGhost.point.y}
+          r={WAYPOINT_RADIUS}
+          strokeWidth={2}
+          strokeDasharray="2 2"
+          vectorEffect="non-scaling-stroke"
+          className="fill-background/60 stroke-primary"
+        />
+      )}
 
       {pending && (
         <path
@@ -92,6 +126,12 @@ function WireLayer({
 }
 
 export default memo(WireLayer);
+
+/**
+ * World units, so a handle scales with the circuit the way the pin dots and
+ * node bodies do. Matched to the 9px pin so the two read as one family.
+ */
+const WAYPOINT_RADIUS = 4.5;
 
 type WireProps = {
   wire: ResolvedWire;

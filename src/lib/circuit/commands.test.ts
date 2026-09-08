@@ -9,7 +9,10 @@ import {
   extractFragment,
   fragmentBounds,
   insertFragment,
+  insertWireWaypoint,
   moveNodes,
+  moveWireWaypoint,
+  removeWireWaypoint,
   renameDocument,
   rotateNodes,
   setDefaultZoom,
@@ -508,5 +511,86 @@ describe("setDefaultZoom", () => {
     expect(setDefaultZoom(zoomed, 0.75)).toBe(zoomed);
     expect(setDefaultZoom(doc, DEFAULT_SCALE)).toBe(doc);
     expect(setDefaultZoom(doc, Number.NaN)).toBe(doc);
+  });
+});
+
+describe("insertWireWaypoint", () => {
+  it("puts a bend at the slot it was given, snapped", () => {
+    const { document, wireId } = wiredPair();
+    const two = setWireWaypoints(document, wireId, [
+      { x: 30, y: 30 },
+      { x: 70, y: 30 },
+    ]);
+
+    const inserted = insertWireWaypoint(two, wireId, 1, { x: 52, y: 8 });
+    expect(inserted.wires[wireId].waypoints).toEqual([
+      { x: 30, y: 30 },
+      { x: 50, y: 10 },
+      { x: 70, y: 30 },
+    ]);
+  });
+
+  it("appends when the slot is past the end, which is the last segment", () => {
+    const { document, wireId } = wiredPair();
+    const one = setWireWaypoints(document, wireId, [{ x: 30, y: 30 }]);
+
+    const inserted = insertWireWaypoint(one, wireId, 9, { x: 60, y: 0 });
+    expect(inserted.wires[wireId].waypoints).toEqual([
+      { x: 30, y: 30 },
+      { x: 60, y: 0 },
+    ]);
+  });
+
+  it("leaves a document without that wire alone", () => {
+    const { document } = wiredPair();
+    expect(insertWireWaypoint(document, "nope", 0, { x: 0, y: 0 })).toBe(
+      document,
+    );
+  });
+});
+
+describe("moveWireWaypoint", () => {
+  it("moves one bend and leaves its neighbours where they were", () => {
+    const { document, wireId } = wiredPair();
+    const two = setWireWaypoints(document, wireId, [
+      { x: 30, y: 30 },
+      { x: 70, y: 30 },
+    ]);
+
+    const moved = moveWireWaypoint(two, wireId, 0, { x: 12, y: 64 });
+    expect(moved.wires[wireId].waypoints).toEqual([
+      { x: 10, y: 60 },
+      { x: 70, y: 30 },
+    ]);
+  });
+
+  it("ignores an index the wire does not have", () => {
+    const { document, wireId } = wiredPair();
+    const one = setWireWaypoints(document, wireId, [{ x: 30, y: 30 }]);
+
+    expect(moveWireWaypoint(one, wireId, 4, { x: 0, y: 0 })).toBe(one);
+    expect(moveWireWaypoint(one, wireId, -1, { x: 0, y: 0 })).toBe(one);
+  });
+});
+
+describe("removeWireWaypoint", () => {
+  it("drops the bend at that index", () => {
+    const { document, wireId } = wiredPair();
+    const two = setWireWaypoints(document, wireId, [
+      { x: 30, y: 30 },
+      { x: 70, y: 30 },
+    ]);
+
+    expect(removeWireWaypoint(two, wireId, 0).wires[wireId].waypoints).toEqual([
+      { x: 70, y: 30 },
+    ]);
+  });
+
+  it("returns the wire to auto-routing when the last bend goes", () => {
+    const { document, wireId } = wiredPair();
+    const one = setWireWaypoints(document, wireId, [{ x: 30, y: 30 }]);
+
+    const straight = removeWireWaypoint(one, wireId, 0);
+    expect("waypoints" in straight.wires[wireId]).toBe(false);
   });
 });

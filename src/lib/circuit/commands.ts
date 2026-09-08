@@ -291,6 +291,73 @@ export function setWireWaypoints(
   return { ...document, wires: { ...document.wires, [wireId]: next } };
 }
 
+/**
+ * Adds a bend at `index` in a wire's list.
+ *
+ * The index comes from the routed wire's `slots`, which is what keeps a bend
+ * dropped on a segment between the two waypoints that segment runs between.
+ * An index past the end appends, which is the case for the last segment.
+ */
+export function insertWireWaypoint(
+  document: CircuitDocument,
+  wireId: string,
+  index: number,
+  point: Point,
+  options: { snap?: boolean } = {},
+): CircuitDocument {
+  const wire = document.wires[wireId];
+  if (!wire) return document;
+
+  const waypoints = [...(wire.waypoints ?? [])];
+  waypoints.splice(clampIndex(index, waypoints.length), 0, point);
+
+  return setWireWaypoints(document, wireId, waypoints, options);
+}
+
+/** Moves one bend. Out-of-range indices are ignored, not appended. */
+export function moveWireWaypoint(
+  document: CircuitDocument,
+  wireId: string,
+  index: number,
+  point: Point,
+  options: { snap?: boolean } = {},
+): CircuitDocument {
+  const wire = document.wires[wireId];
+  const waypoints = wire?.waypoints;
+  if (!waypoints || index < 0 || index >= waypoints.length) return document;
+
+  const next = [...waypoints];
+  next[index] = point;
+
+  return setWireWaypoints(document, wireId, next, options);
+}
+
+/**
+ * Drops one bend. A wire with none left returns to auto-routing, which is what
+ * makes "drag a bend onto its neighbour" straighten a wire rather than leaving
+ * an invisible kink behind.
+ */
+export function removeWireWaypoint(
+  document: CircuitDocument,
+  wireId: string,
+  index: number,
+): CircuitDocument {
+  const wire = document.wires[wireId];
+  const waypoints = wire?.waypoints;
+  if (!waypoints || index < 0 || index >= waypoints.length) return document;
+
+  return setWireWaypoints(
+    document,
+    wireId,
+    waypoints.filter((_, at) => at !== index),
+    { snap: false },
+  );
+}
+
+function clampIndex(index: number, length: number): number {
+  return Math.max(0, Math.min(length, Math.trunc(index)));
+}
+
 export type Selection = {
   nodeIds?: readonly string[];
   wireIds?: readonly string[];

@@ -240,6 +240,7 @@ export default function Editor({
           selectedWireIds={selection.wireIds}
           faultedWireIds={faulted.wires}
           pending={gestures.pendingWire}
+          waypointGhost={gestures.waypointGhost}
           band={gestures.band}
         />
         {armedDefinition && gestures.ghostCenters && (

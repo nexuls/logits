@@ -79,6 +79,12 @@ export type ResolvedWire = {
    * endpoint is missing — there is nothing to route between.
    */
   points: Point[];
+  /**
+   * Per segment, the index a bend dropped on it takes in `wire.waypoints`.
+   * What lets a click on the wire insert a waypoint in the right place
+   * without the editor re-deriving the routing (ADR 0007).
+   */
+  slots: number[];
 };
 
 export type Scene = {
@@ -129,15 +135,12 @@ export function buildScene(
   for (const [id, wire] of Object.entries(document.wires)) {
     const from = nodes[wire.from.nodeId]?.pinsById[wire.from.pinId] ?? null;
     const to = nodes[wire.to.nodeId]?.pinsById[wire.to.pinId] ?? null;
-    wires[id] = {
-      wire,
-      from,
-      to,
-      points:
-        from && to
-          ? wirePath(from.world, from.side, to.world, to.side, wire.waypoints)
-          : [],
-    };
+    const routed =
+      from && to
+        ? wirePath(from.world, from.side, to.world, to.side, wire.waypoints)
+        : { points: [], slots: [] };
+
+    wires[id] = { wire, from, to, ...routed };
   }
 
   return { nodes, wires };

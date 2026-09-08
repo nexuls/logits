@@ -11,14 +11,16 @@ import {
   extractFragment,
   type Fragment,
   insertFragment,
+  insertWireWaypoint,
   moveNodes,
+  moveWireWaypoint,
+  removeWireWaypoint,
   renameDocument,
   rotateNodes,
   type Selection,
   setDefaultZoom,
   setNodeLabel,
   setNodeParams,
-  setWireWaypoints,
   topLeftForCenter,
 } from "@/lib/circuit/commands";
 import type {
@@ -332,18 +334,41 @@ export function connectPins(
   return result;
 }
 
-export function updateWireWaypoints(
+/**
+ * Adds a bend to a wire at `index`, snapped to the grid.
+ *
+ * `coalesce` folds it into the drag that follows, so inserting a bend and
+ * dragging it into place is one undo step rather than two.
+ */
+export function addWireWaypoint(
   wireId: string,
-  waypoints: readonly Point[],
-  options: { snap?: boolean; coalesce?: boolean } = {},
+  index: number,
+  point: Point,
 ): boolean {
-  const { coalesce, ...waypointOptions } = options;
+  return apply("waypoints", (document) =>
+    insertWireWaypoint(document, wireId, index, point),
+  );
+}
 
+/** Moves one bend. Coalesced, because a drag emits one of these per frame. */
+export function dragWireWaypoint(
+  wireId: string,
+  index: number,
+  point: Point,
+): boolean {
   return apply(
     "waypoints",
-    (document) =>
-      setWireWaypoints(document, wireId, waypoints, waypointOptions),
-    { coalesce },
+    (document) => moveWireWaypoint(document, wireId, index, point),
+    { coalesce: true },
+  );
+}
+
+/** Drops one bend, straightening the wire through where it used to be. */
+export function dropWireWaypoint(wireId: string, index: number): boolean {
+  return apply(
+    "waypoints",
+    (document) => removeWireWaypoint(document, wireId, index),
+    { coalesce: true },
   );
 }
 
