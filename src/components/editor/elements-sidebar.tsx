@@ -35,7 +35,14 @@ import ProjectSettingsPanel from "./project-settings-panel";
 type Props = {
   /** Registry `type` of the node armed for placement, if any. */
   selectedType?: string | null;
-  onSelectType?: (type: string) => void;
+  /** How many copies of it the next canvas click drops. */
+  selectedCount?: number;
+  /**
+   * Changes the armed count by `delta` — +1 from a click, -1 from a
+   * right-click. Arming a different type is the same call, so the palette
+   * needs no separate "select" path.
+   */
+  onAdjustCount?: (type: string, delta: number) => void;
 };
 
 const OTHER_CATEGORY = { id: "other", label: "Other" } as const;
@@ -50,7 +57,7 @@ function matches(definition: NodeDefinition, needle: string): boolean {
   );
 }
 
-function Body({ selectedType, onSelectType }: Props) {
+function Body({ selectedType, selectedCount = 0, onAdjustCount }: Props) {
   const { open, openMobile, isMobile, toggleSidebar, setOpen } = useSidebar();
   const isOpen = isMobile ? openMobile : open;
   const [query, setQuery] = useState("");
@@ -131,8 +138,12 @@ function Body({ selectedType, onSelectType }: Props) {
                     <NodePaletteItem
                       key={definition.type}
                       definition={definition}
-                      isSelected={definition.type === selectedType}
-                      onSelect={() => onSelectType?.(definition.type)}
+                      count={
+                        definition.type === selectedType ? selectedCount : 0
+                      }
+                      onAdjust={(delta) =>
+                        onAdjustCount?.(definition.type, delta)
+                      }
                     />
                   ))}
                 </SidebarMenu>

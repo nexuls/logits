@@ -214,20 +214,44 @@ export function placeNode(
   worldCenter: Point,
   options: Omit<AddNodeOptions, "position"> = {},
 ): string | null {
-  if (!history) return null;
+  return placeNodes(definition, [worldCenter], options)[0] ?? null;
+}
+
+/**
+ * Places several copies of one definition in a single edit — what a palette
+ * batch drops on one click.
+ *
+ * One `apply` for the whole batch, so undo takes back the click the user made
+ * rather than making them press `Ctrl+Z` six times for it.
+ */
+export function placeNodes(
+  definition: NodeDefinition,
+  worldCenters: readonly Point[],
+  options: Omit<AddNodeOptions, "position"> = {},
+): string[] {
+  if (!history || worldCenters.length === 0) return [];
 
   const rotation: Rotation = options.rotation ?? 0;
   const params = { ...definition.defaultParams, ...options.params };
-  const position = topLeftForCenter(definition, params, rotation, worldCenter);
 
-  let nodeId: string | null = null;
+  const nodeIds: string[] = [];
   apply("place", (document) => {
-    const result = addNode(document, definition, { ...options, position });
-    nodeId = result.nodeId;
-    return result.document;
+    let next = document;
+    for (const worldCenter of worldCenters) {
+      const position = topLeftForCenter(
+        definition,
+        params,
+        rotation,
+        worldCenter,
+      );
+      const result = addNode(next, definition, { ...options, position });
+      nodeIds.push(result.nodeId);
+      next = result.document;
+    }
+    return next;
   });
 
-  return nodeId;
+  return nodeIds;
 }
 
 /**

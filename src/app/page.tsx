@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
 import Editor from "@/components/editor/editor";
 import ElementsSidebar from "@/components/editor/elements-sidebar";
 import ProjectsSidebar from "@/components/projects/projects-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { MAX_PLACEMENT_COUNT } from "@/lib/circuit/geometry";
 import { useAppliedTheme, useEditorSettings } from "@/state/editor-settings";
 import { useProjects } from "@/state/projects-store";
 
@@ -13,9 +13,15 @@ export default function Home() {
   const projects = useProjects();
   const settings = useEditorSettings();
   const [activeId, setActiveId] = useState("");
-  // The node type armed for placement. The palette owns the choice and the
-  // canvas consumes it, so neither has to know about the other.
-  const [pendingType, setPendingType] = useState<string | null>(null);
+  // The node type armed for placement, and how many copies the next canvas
+  // click drops. The palette owns the choice and the canvas consumes it, so
+  // neither has to know about the other; a count of zero *is* disarmed, which
+  // is what right-clicking down past one leaves behind.
+  const [pending, setPending] = useState<{ type: string; count: number }>({
+    type: "",
+    count: 0,
+  });
+  const pendingType = pending.count > 0 ? pending.type : null;
 
   // Applied here rather than inside the settings panel: the panel unmounts
   // with the mobile sidebar sheet, and the theme must outlive that.
@@ -46,16 +52,29 @@ export default function Home() {
             showMinimap={settings.showMinimap}
             themeKey={theme}
             armedType={pendingType}
-            onDisarm={() => setPendingType(null)}
+            armedCount={pending.count}
+            onDisarm={() => setPending({ type: "", count: 0 })}
           />
         </div>
 
         <ElementsSidebar
           selectedType={pendingType}
-          onSelectType={(type) =>
-            // Clicking the armed element again disarms it, so there is a way
-            // out of placement mode without a second control.
-            setPendingType((current) => (current === type ? null : type))
+          selectedCount={pending.count}
+          onAdjustCount={(type, delta) =>
+            setPending((current) => {
+              // A different element always starts a fresh batch of one — a
+              // right-click on something that is not armed arms nothing.
+              if (current.type !== type || current.count === 0) {
+                return { type, count: delta > 0 ? 1 : 0 };
+              }
+              return {
+                type,
+                count: Math.min(
+                  MAX_PLACEMENT_COUNT,
+                  Math.max(0, current.count + delta),
+                ),
+              };
+            })
           }
         />
       </SidebarInset>

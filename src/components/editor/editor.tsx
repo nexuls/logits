@@ -23,6 +23,7 @@ import { pruneSelection, selectOnly, useSelection } from "@/state/selection";
 import { getNetlist, syncDocument, useDiagnostics } from "@/state/simulation";
 import CommandMenu from "./command-menu";
 import DiagnosticsPanel from "./diagnostics-panel";
+import GhostLayer from "./ghost-layer";
 import NodeLayer from "./node-layer";
 import RunControls from "./run-controls";
 import { useEditorGestures } from "./use-editor-gestures";
@@ -36,6 +37,8 @@ type Props = {
   themeKey: string;
   /** Node type armed by the palette, or null. */
   armedType: string | null;
+  /** How many copies the next canvas click drops. */
+  armedCount: number;
   onDisarm: () => void;
 };
 
@@ -53,6 +56,7 @@ export default function Editor({
   showMinimap,
   themeKey,
   armedType,
+  armedCount,
   onDisarm,
 }: Props) {
   const document = useDocument();
@@ -118,6 +122,7 @@ export default function Editor({
     scene,
     viewport,
     armedDefinition,
+    armedCount,
     onPlaced: onDisarm,
     onNotice: notify,
   });
@@ -190,6 +195,7 @@ export default function Editor({
           gestures.onPointerMove(event);
         }}
         onContentPointerUp={gestures.onPointerUp}
+        onContentPointerLeave={gestures.onPointerLeave}
         overlay={
           <>
             <RunControls
@@ -219,9 +225,11 @@ export default function Editor({
               </p>
             )}
 
-            {armedType && (
+            {armedDefinition && (
               <p className="pointer-events-none absolute top-14 left-1/2 z-20 -translate-x-1/2 rounded-md bg-sidebar px-2 py-1 text-[11px] text-muted-foreground">
-                Click the canvas to place · Esc to cancel
+                Click the canvas to place {armedCount} {armedDefinition.title}
+                {armedCount > 1 ? "s" : ""} · right-click the palette entry for
+                fewer · Esc to cancel
               </p>
             )}
           </>
@@ -234,6 +242,12 @@ export default function Editor({
           pending={gestures.pendingWire}
           band={gestures.band}
         />
+        {armedDefinition && gestures.ghostCenters && (
+          <GhostLayer
+            definition={armedDefinition}
+            centers={gestures.ghostCenters}
+          />
+        )}
         <NodeLayer
           scene={scene}
           selectedNodeIds={selection.nodeIds}

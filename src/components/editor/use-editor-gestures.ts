@@ -10,7 +10,12 @@ import {
 
 import type { CanvasViewport } from "@/components/canvas/canvas-viewport";
 import { screenToWorldLength } from "@/lib/circuit/coords";
-import { type Rect, snapPointToGrid } from "@/lib/circuit/geometry";
+import {
+  placementCenters,
+  type Rect,
+  rotateSize,
+  snapPointToGrid,
+} from "@/lib/circuit/geometry";
 import type { PinRef, Point } from "@/lib/circuit/schema";
 import {
   moveSegment,
@@ -21,7 +26,7 @@ import type { NodeDefinition } from "@/lib/nodes/define";
 import {
   connectPins,
   moveSelection,
-  placeNode,
+  placeNodes,
   updateWireWaypoints,
 } from "@/state/document";
 import {
@@ -118,6 +123,8 @@ type Options = {
   viewport: CanvasViewport;
   /** Node type armed by the palette, placed on the next canvas click. */
   armedDefinition: NodeDefinition | null;
+  /** How many copies of it that click drops. Ignored when nothing is armed. */
+  armedCount: number;
   onPlaced: () => void;
   /** Reports a refused connection so the editor can say why. */
   onNotice: (message: string) => void;
@@ -127,11 +134,19 @@ export function useEditorGestures({
   scene,
   viewport,
   armedDefinition,
+  armedCount,
   onPlaced,
   onNotice,
 }: Options) {
   const [gesture, setGesture] = useState<Gesture>({ kind: "none" });
   const [wiring, setWiring] = useState<Wiring | null>(null);
+  /**
+   * Where the ghost preview sits, or null while the pointer is off the canvas.
+   * Kept as state only because the ghost is rendered from it; it is written
+   * exclusively while something is armed, so an ordinary drag still does not
+   * re-render the editor per pointer move.
+   */
+  const [ghostWorld, setGhostWorld] = useState<Point | null>(null);
 
   // The scene changes on every document edit, and the handlers below are
   // installed on the viewport once; a ref keeps them reading the current one
@@ -219,8 +234,11 @@ export function useEditorGestures({
       // click is the user saying where.
       if (armedDefinition) {
         event.preventDefault();
-        const nodeId = placeNode(armedDefinition, world);
-        if (nodeId) selectOnly([nodeId]);
+        const nodeIds = placeNodes(
+          armedDefinition,
+          batchCenters(armedDefinition, world, armedCount),
+        );
+        if (nodeIds.length > 0) selectOnly(nodeIds);
         onPlaced();
         return;
       }
@@ -298,6 +316,7 @@ export function useEditorGestures({
       });
     },
     [
+      armedCount,
       armedDefinition,
       cancelWiring,
       finishWiring,
@@ -312,6 +331,8 @@ export function useEditorGestures({
   const onPointerMove = useCallback(
     (event: PointerEvent<HTMLDivElement>) => {
       const world = toWorld(event);
+
+      if (armedDefinition) setGhostWorld(world);
 
       if (wiring) {
         setWiring((current) =>
@@ -384,8 +405,13 @@ export function useEditorGestures({
           return;
       }
     },
-    [gesture, toWorld, wiring],
+    [armedDefinition, gesture, toWorld, wiring],
   );
+
+  /** The pointer left the canvas, so the ghost goes with it. */
+  const onPointerLeave = useCallback(() => {
+    setGhostWorld(null);
+  }, []);
 
   const onPointerUp = useCallback(
     (event: PointerEvent<HTMLDivElement>) => {
@@ -455,8 +481,22 @@ export function useEditorGestures({
     [scene, wiring],
   );
 
+  /**
+   * Where the armed batch would land, in world coordinates — the same centres
+   * `placeNodes` will be given, so the preview cannot drift from the result.
+   * Null when nothing is armed or the pointer is off the canvas.
+   */
+  const ghostCenters = useMemo(
+    () =>
+      armedDefinition && ghostWorld
+        ? batchCenters(armedDefinition, ghostWorld, armedCount)
+        : null,
+    [armedCount, armedDefinition, ghostWorld],
+  );
+
   return {
     band,
+    ghostCenters,
     pendingWire,
     compatiblePinIds,
     isWiring: wiring !== null,
@@ -465,6 +505,7 @@ export function useEditorGestures({
     onPointerDown,
     onPointerMove,
     onPointerUp,
+    onPointerLeave,
     /** What the viewport cursor should be while a gesture is armed. */
     cursor:
       armedDefinition || wiring
@@ -473,6 +514,16 @@ export function useEditorGestures({
           ? "var(--logit-cursor-move)"
           : undefined,
   };
+}
+
+/** Centres for a palette batch dropped at `world`, rotation-aware. */
+function batchCenters(
+  definition: NodeDefinition,
+  world: Point,
+  count: number,
+): Point[] {
+  const size = rotateSize(definition.size(definition.defaultParams), 0);
+  return placementCenters(world, size, Math.max(1, count));
 }
 
 const EMPTY_KEYS: ReadonlySet<string> = new Set();

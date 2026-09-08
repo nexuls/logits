@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   GRID_SIZE,
+  MAX_PLACEMENT_COUNT,
   nodeBounds,
   pinOffsets,
+  placementCenters,
   rectContains,
   rectsIntersect,
   rotateSide,
@@ -133,5 +135,53 @@ describe("rects", () => {
     expect(rectsIntersect(bounds, { x: 61, y: 30, width: 5, height: 5 })).toBe(
       false,
     );
+  });
+});
+
+describe("placementCenters", () => {
+  const size = { width: 4, height: 2 };
+
+  it("puts a single copy on the cursor", () => {
+    expect(placementCenters({ x: 100, y: 50 }, size, 1)).toEqual([
+      { x: 100, y: 50 },
+    ]);
+  });
+
+  it("centres a row on the cursor with a one-cell gap", () => {
+    // Step is (4 + 1) cells across, so the outer two sit ±50 world units.
+    expect(placementCenters({ x: 0, y: 0 }, size, 3)).toEqual([
+      { x: -50, y: 0 },
+      { x: 0, y: 0 },
+      { x: 50, y: 0 },
+    ]);
+  });
+
+  it("wraps past three and centres a short last row under the first", () => {
+    const centers = placementCenters({ x: 0, y: 0 }, size, 4);
+
+    expect(centers).toHaveLength(4);
+    expect(centers.slice(0, 3).map((point) => point.y)).toEqual([
+      -15, -15, -15,
+    ]);
+    expect(centers[3]).toEqual({ x: 0, y: 15 });
+  });
+
+  it("lays out the whole cap without overlapping bodies", () => {
+    const centers = placementCenters({ x: 0, y: 0 }, size, MAX_PLACEMENT_COUNT);
+    const keys = new Set(centers.map((point) => `${point.x}/${point.y}`));
+
+    expect(keys.size).toBe(MAX_PLACEMENT_COUNT);
+
+    // Every pair is clear on at least one axis, so the batch never drops two
+    // bodies on top of each other.
+    for (const a of centers) {
+      for (const b of centers) {
+        if (a === b) continue;
+        const clear =
+          Math.abs(a.x - b.x) >= size.width * GRID_SIZE ||
+          Math.abs(a.y - b.y) >= size.height * GRID_SIZE;
+        expect(clear).toBe(true);
+      }
+    }
   });
 });

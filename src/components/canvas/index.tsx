@@ -53,6 +53,8 @@ type Props = {
   onContentPointerDown?: (event: PointerEvent<HTMLDivElement>) => void;
   onContentPointerMove?: (event: PointerEvent<HTMLDivElement>) => void;
   onContentPointerUp?: (event: PointerEvent<HTMLDivElement>) => void;
+  /** The pointer left the canvas — what a cursor-following preview hides on. */
+  onContentPointerLeave?: () => void;
   /** Cursor for the viewport while an editing gesture is armed. */
   cursor?: string;
   /**
@@ -76,6 +78,7 @@ export default function Canvas({
   onContentPointerDown,
   onContentPointerMove,
   onContentPointerUp,
+  onContentPointerLeave,
   cursor,
   onViewportChange,
 }: Props) {
@@ -180,6 +183,7 @@ export default function Canvas({
           onContentPointerUp?.(event);
           onPointerCancel(event);
         }}
+        onPointerLeave={() => onContentPointerLeave?.()}
         onWheel={onWheel}
         // onDoubleClick={onDoubleClick}
         style={{
