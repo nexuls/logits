@@ -2,10 +2,14 @@ import type { ComponentType } from "react";
 
 import type { CircuitNode } from "@/lib/circuit/schema";
 import type { NodeDefinition } from "@/lib/nodes/define";
+import BargraphView from "./bargraph-view";
 import LampView from "./lamp-view";
 import PushButtonView from "./push-button-view";
 import ReadoutView from "./readout-view";
+import ScopeView from "./scope-view";
+import SevenSegmentView from "./seven-segment-view";
 import ToggleView from "./toggle-view";
+import TunnelView from "./tunnel-view";
 
 /**
  * Custom renderers for nodes that display or accept data.
@@ -46,6 +50,10 @@ const NODE_VIEWS: Record<string, NodeView> = {
   "push-button": PushButtonView,
   lamp: LampView,
   readout: ReadoutView,
+  bargraph: BargraphView,
+  "seven-segment": SevenSegmentView,
+  scope: ScopeView,
+  tunnel: TunnelView,
 };
 
 /** Null for a node with no custom view, or one naming a view this build lacks. */

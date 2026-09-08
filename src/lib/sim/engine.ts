@@ -16,6 +16,7 @@ import {
   Z,
 } from "./logic";
 import { EventQueue } from "./queue";
+import { WaveformRecorder, type WaveformSample } from "./waveform";
 
 /**
  * The discrete-event simulation core.
@@ -100,6 +101,8 @@ export class Engine {
   private readonly netDrivers: number[][];
   private readonly netValues: Signal[];
   private readonly netReaders: Reader[][];
+  /** Backs `emitSample`; cleared on reset, like every other piece of state. */
+  private readonly recorder = new WaveformRecorder();
 
   private currentTime = 0;
   private currentVersion = 0;
@@ -190,6 +193,14 @@ export class Engine {
     return [...this.netlist.diagnostics, ...this.runtimeDiagnostics];
   }
 
+  /**
+   * Recorded history for one node channel, oldest first — empty for a node
+   * that has never emitted, which today is everything but `scope.logic`.
+   */
+  waveform(nodeId: string, channel: string): WaveformSample[] {
+    return this.recorder.read(nodeId, channel);
+  }
+
   readNet(netId: number): Signal {
     return Uint8Array.from(this.netValues[netId]);
   }
@@ -207,6 +218,7 @@ export class Engine {
     this.queue.clear();
     this.currentTime = 0;
     this.runtimeDiagnostics = [];
+    this.recorder.clear();
 
     for (const [netId, net] of this.netlist.nets.entries()) {
       this.netValues[netId] = createSignal(net.width, Z);
@@ -416,6 +428,9 @@ export class Engine {
           node.index,
           now + Math.max(0, Math.trunc(delayNs)),
         );
+      },
+      emitSample: (channel, value) => {
+        this.recorder.record(node.netlistNode.id, channel, now, value);
       },
     };
 

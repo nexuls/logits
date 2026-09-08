@@ -148,9 +148,23 @@ directly, which is what keeps `src/lib/` runnable in a plain Node test.
 ## Instruments
 
 - **Oscilloscope / logic analyser** samples on net change into a fixed-capacity
-  ring buffer (`src/lib/sim/waveform.ts`) storing `(time, value)` pairs per
-  channel. Capacity is bounded; oldest samples drop. The scope node's view draws
-  the ring buffer straight to a `<canvas>`.
+  ring buffer ([waveform.ts](../src/lib/sim/waveform.ts)) storing
+  `(time, value)` pairs per channel. Capacity is bounded; oldest samples drop.
+  Only *transitions* are stored — a scope draws a level that holds until the
+  next change, so recording every re-evaluation would fill the ring with
+  duplicates and shorten the visible history for nothing. The recorder is
+  cleared by `reset()`, like every other piece of run state.
+
+  `scope.logic` declares `delayNs: () => 0`, so a sample lands at the instant
+  the net moved rather than a reaction time later. An instrument that skewed
+  every trace by its own delay would be useless for the setup-and-hold
+  questions it exists to answer.
+
+  The view reads the buffer through `readWaveform` in the simulation store and
+  subscribes with `useSimulationRevision` — a comparable number that changes
+  once per frame. The samples themselves are *not* a `useSyncExternalStore`
+  snapshot: they allocate, so `Object.is` would never match and the component
+  would re-render for ever.
 - **Clock** is an ordinary node that calls `scheduleSelf(halfPeriodNs)` and
   toggles. It is not special-cased in the engine.
 

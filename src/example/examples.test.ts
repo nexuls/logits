@@ -22,6 +22,7 @@ describe("examples", () => {
       "2-to-1 multiplexer",
       "SR latch (NOR)",
       "Tri-state bus",
+      "Master-slave flip-flop",
     ]);
   });
 

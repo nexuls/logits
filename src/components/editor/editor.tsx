@@ -9,6 +9,7 @@ import {
 } from "@/components/canvas/canvas-viewport";
 import type { Rect } from "@/lib/circuit/geometry";
 import type { Point } from "@/lib/circuit/schema";
+import { subcircuitLookup } from "@/lib/circuit/subcircuit";
 import type { NodeDefinition } from "@/lib/nodes/define";
 import { lookupNode } from "@/lib/nodes/registry";
 import {
@@ -97,12 +98,18 @@ export default function Editor({
   }, [document]);
 
   const netlist = getNetlist();
+  // The document's own chips are node types as far as the scene is concerned,
+  // so the canvas resolves them through the same lookup the engine does.
+  const documentLookup = useMemo(
+    () => (document ? subcircuitLookup(document, lookupNode) : lookupNode),
+    [document],
+  );
   const scene = useMemo(
     () =>
       document
-        ? buildScene(document, lookupNode, netlist?.pinToNet)
+        ? buildScene(document, documentLookup, netlist?.pinToNet)
         : { nodes: {}, wires: {} },
-    [document, netlist],
+    [document, documentLookup, netlist],
   );
 
   const notify = useCallback((message: string) => {

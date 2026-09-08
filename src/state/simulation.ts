@@ -5,6 +5,7 @@ import { useSyncExternalStore } from "react";
 import type { Diagnostic } from "@/lib/circuit/netlist";
 import { buildNetlist, type Netlist, pinKey } from "@/lib/circuit/netlist";
 import type { CircuitDocument } from "@/lib/circuit/schema";
+import { subcircuitLookup } from "@/lib/circuit/subcircuit";
 import type { NodeLookup, NodeParams } from "@/lib/nodes/define";
 import { lookupNode } from "@/lib/nodes/registry";
 import { Engine } from "@/lib/sim/engine";
@@ -15,6 +16,7 @@ import {
   type RunnerMode,
   type RunnerOptions,
 } from "@/lib/sim/runner";
+import type { WaveformSample } from "@/lib/sim/waveform";
 
 /**
  * The compiled circuit and the thing running it, for the open document.
@@ -49,6 +51,8 @@ const listeners = new Set<() => void>();
 let revision = 0;
 
 let lookup: NodeLookup = lookupNode;
+/** `lookup` plus the open document's subcircuits. Rebuilt on every sync. */
+let documentLookup: NodeLookup = lookupNode;
 let runnerOptions: RunnerOptions = {};
 
 /**
@@ -134,8 +138,12 @@ export function syncDocument(document: CircuitDocument | null): void {
     return;
   }
 
-  const compiled = buildNetlist(document, lookup);
-  const nextSignature = topologySignature(compiled, lookup);
+  // The document's own chips are node types too, so the lookup the engine is
+  // built from is derived per document rather than being the bare registry.
+  documentLookup = subcircuitLookup(document, lookup);
+
+  const compiled = buildNetlist(document, documentLookup);
+  const nextSignature = topologySignature(compiled, documentLookup);
 
   if (!engine || nextSignature !== signature) {
     rebuild(compiled, nextSignature);
@@ -171,7 +179,7 @@ function rebuild(compiled: Netlist, nextSignature: string): void {
 
   netlist = compiled;
   signature = nextSignature;
-  engine = new Engine(compiled, lookup);
+  engine = new Engine(compiled, documentLookup);
   engineParams = new Map(compiled.nodes.map((node) => [node.id, node.params]));
 
   runner = new Runner(engine, { ...runnerOptions, speedNsPerSecond: speed });
@@ -212,6 +220,30 @@ export function getNetlist(): Netlist | null {
 
 export function getEngine(): Engine | null {
   return engine;
+}
+
+/**
+ * Recorded samples for one node channel, oldest first.
+ *
+ * Not a `useSyncExternalStore` snapshot: it allocates, so comparing it with
+ * `Object.is` would re-render forever. A view pairs it with
+ * `useSimulationRevision`, which *is* a comparable snapshot, and reads this
+ * during the render that revision triggers.
+ */
+export function readWaveform(
+  nodeId: string,
+  channel: string,
+): WaveformSample[] {
+  return engine?.waveform(nodeId, channel) ?? [];
+}
+
+/** Bumped once per frame the simulation changed anything. */
+export function useSimulationRevision(): number {
+  return useSyncExternalStore(
+    subscribe,
+    () => revision,
+    () => 0,
+  );
 }
 
 /** Test seam: a `FrameScheduler` and a lookup that do not need a browser. */

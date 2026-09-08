@@ -19,7 +19,7 @@ type CircuitDocument = {
   nodes: Record<NodeId, CircuitNode>;
   wires: Record<WireId, Wire>;
   defaultZoom?: number;         // scale this circuit opens at; absent = 100%
-  subcircuits?: Record<string, CircuitDocument>;  // user-defined chips (phase 4)
+  subcircuits?: Record<string, CircuitDocument>;  // user-defined chips
 };
 
 type CircuitNode = {
@@ -115,8 +115,13 @@ form the engine executes. It takes the registry lookup rather than importing it,
 for the same reason the scene does: it can then be tested against pin layouts
 the catalog does not have.
 
+- Subcircuit instances are **inlined first**, so everything below compiles one
+  flat circuit (see the section after this one).
 - Union-find over wires groups connected pins into **nets**. Every pin gets a
   net, wired or not — an unconnected input still has to read `Z`.
+- Pins whose definition declares a `netAliases` name are then merged by name,
+  which is what makes two `bus.tunnel` nodes one net with no wire between them.
+  Nothing here recognises a node `type` to do it.
 - A net's width is the width of its pins; mismatched widths are a **validation
   error**, surfaced on the wire, not silently coerced. The net is still built,
   at the widest pin's width, so no driver can overrun the engine's buffer.
@@ -132,6 +137,26 @@ the catalog does not have.
 
 `buildNetlist` is pure and must stay pure — it is the easiest thing in the
 codebase to unit test, so test it.
+
+## Subcircuits
+
+A user-defined chip **is a document**, stored under the root document's
+`subcircuits`. An instance of one is an ordinary `CircuitNode` whose `type` is
+`sub.<key>`; its params hold nothing derived, because its interface is read off
+the chip's own `sub.port` nodes at lookup time by `subcircuitLookup` in
+[subcircuit.ts](../src/lib/circuit/subcircuit.ts). Editing a chip therefore
+changes every instance of it with no migration.
+
+`flattenDocument` replaces each instance with a prefixed copy of the chip's
+nodes and wires — ids become `<instance>/<inner>` — and re-points the parent's
+wires at the matching port node, so the two nets become one net rather than
+being bridged by a buffer. `buildNetlist` runs it before anything else, which
+means the engine never learns that subcircuits exist.
+
+The library is flat: chips may use other chips, but all of them live in the
+root `subcircuits`. Nesting is bounded by `MAX_SUBCIRCUIT_DEPTH` and exceeding
+it is a `subcircuit-recursion` diagnostic. See
+[ADR 0010](decisions/0010-subcircuits-are-derived-node-types.md).
 
 ## Validation
 

@@ -46,6 +46,20 @@ The gate families are already factored: `symmetricGate` and `unaryGate` in
 save format — are written once. Reach for `combine` from
 [sim/logic.ts](../src/lib/sim/logic.ts) before writing a bit loop by hand.
 
+Look for an existing helper before writing geometry or a param clamp:
+
+| You need | Use |
+| --- | --- |
+| A "Bit width" stepper, a clamped `width`, pin stacking, body height | [nodes/shared.ts](../src/lib/nodes/shared.ts) |
+| To know whether a clock moved, four-valued | `detectEdge` in [nodes/edges.ts](../src/lib/nodes/edges.ts) |
+| To read `rst` / `set` / `load` / `oe` | `controlState` in [nodes/shared.ts](../src/lib/nodes/shared.ts) |
+| A reset/enable/clock frame around a stored value | `registerLike` / `bitFlop` in [seq/shared.ts](../src/lib/nodes/seq/shared.ts) |
+| Four-valued addition | `addSignals` in [comb/arith.ts](../src/lib/nodes/comb/arith.ts) |
+
+`controlState` and `detectEdge` are not conveniences — they carry the rules in
+[ADR 0009](decisions/0009-z-is-idle-on-a-control-pin.md) about what an unwired
+pin means. Re-deriving them by hand is how you get a flip-flop stuck in reset.
+
 Then add it to `src/lib/nodes/registry.ts`. The registry is an **explicit
 array** — never rely on import side effects or filesystem globbing, both of
 which break tree-shaking and make ordering non-deterministic.
@@ -79,11 +93,34 @@ which break tree-shaking and make ordering non-deterministic.
       writes exactly the pin's width. The engine pads a short write with `Z`
       rather than corrupting the net, but that is a safety net, not a licence.
 - [ ] Has a test: truth table for combinational, waveform for sequential.
+      [src/test/circuit.ts](../src/test/circuit.ts) has both harnesses —
+      `evaluateOnce` for a table, `engineFor` for a real circuit with a real
+      clock. Anything with `state` is tested the second way: a flip-flop that
+      latched on the wrong edge would pass every static check.
 - [ ] Appears in the palette with a sensible `icon` and `keywords`, under a
       `category` that `nodeCategories` in the registry knows about. The palette
       reads all of that off the definition — never edit the palette to add a node.
       Reuse an existing icon name where the shape fits; a genuinely new shape is
       a third file, `node-icons.tsx`, and it is keyed by shape, never by `type`.
+
+## When a node is more than pins and an `evaluate`
+
+Three optional hooks on `NodeDefinition` let a node do something structural
+without any other file learning its `type`. Each is answered by exactly one
+family today, and each is the reason a rule in `AGENTS.md` still holds:
+
+- **`netAliases(params)`** — pin id to net *name*. Every pin naming the same net
+  is merged into one net with no wire between them. `bus.tunnel` is the only
+  user; `buildNetlist` applies it without knowing what a tunnel is.
+- **`subcircuit(params)`** — "which chip am I an instance of". Only the
+  definitions synthesized by
+  [circuit/subcircuit.ts](../src/lib/circuit/subcircuit.ts) answer.
+- **`boundaryPort(params)`** — "which pin of the instance do I stand for",
+  inside a chip. Only `sub.port` answers. See
+  [ADR 0010](decisions/0010-subcircuits-are-derived-node-types.md).
+
+If a node needs something structural that none of these covers, the fix is a
+fourth hook on the contract, not a `type` comparison in the netlist.
 
 ## When a node needs custom rendering
 
@@ -137,11 +174,15 @@ flipped mid-run without wiping the circuit's state.
 
 ```
 src/lib/nodes/
-  define.ts          defineNode(), types
+  define.ts          defineNode(), types, param readers
   registry.ts        explicit array of every definition
+  shared.ts          pin stacking, width params, controlState
+  edges.ts           four-valued clock-edge detection
   gates/and.ts       one node per file, kebab-case filenames
   timing/clock.ts
-  instruments/oscilloscope.ts
+  seq/shared.ts      the reset/enable/clock frame
+  comb/arith.ts
+  instruments/scope.ts
 ```
 
 ## Anti-patterns

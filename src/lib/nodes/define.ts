@@ -123,6 +123,39 @@ export type NodeDefinition = {
   view?: string;
   /** Pin layout is derived from params, never stored in the document. */
   pins: (params: NodeParams) => PinSpec[];
+  /**
+   * Named net joins: pin id → net name. Every pin in the document that names
+   * the same net is merged into one net with no wire between them, which is
+   * what a tunnel is.
+   *
+   * Declared here rather than recognised by `type` in `buildNetlist`, for the
+   * same reason `tristate` is a `PinSpec` flag: the netlist must never learn a
+   * node type (Non-negotiable #4). A blank or missing name joins nothing.
+   */
+  netAliases?: (params: NodeParams) => Record<string, string>;
+  /**
+   * Key into the document's `subcircuits` that this node instantiates, if it
+   * is an instance at all.
+   *
+   * The other half of the same idea as `netAliases`: `buildNetlist` has to
+   * inline user-defined chips, and it finds them by asking definitions rather
+   * than by recognising a `type`. Only the synthesized definitions from
+   * `src/lib/circuit/subcircuit.ts` answer.
+   */
+  subcircuit?: (params: NodeParams) => string | undefined;
+  /**
+   * The boundary pin this node stands for *inside* a subcircuit definition —
+   * `sub.port` and nothing else. `name` is matched against the instance's pin
+   * ids when the chip is inlined, `pinId` says which of this node's own pins
+   * carries the signal across the boundary, and `direction` is the pin the
+   * *instance* presents, from the chip's point of view. It has to be declared
+   * rather than read off the pin, because the pin itself is `inout`: a port is
+   * a join, not a driver, and a port that claimed to drive would short against
+   * whatever the parent has wired to it.
+   */
+  boundaryPort?: (
+    params: NodeParams,
+  ) => { name: string; pinId: string; direction: "in" | "out" } | undefined;
   /** In grid cells. Must leave room for every pin `pins()` returns. */
   size: (params: NodeParams) => Size;
   /**
@@ -249,6 +282,15 @@ export function intParam(
   return typeof value === "number" && Number.isFinite(value)
     ? Math.trunc(value)
     : fallback;
+}
+
+export function stringParam(
+  params: NodeParams,
+  key: string,
+  fallback: string,
+): string {
+  const value = params[key];
+  return typeof value === "string" ? value : fallback;
 }
 
 /**

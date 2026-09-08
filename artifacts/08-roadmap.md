@@ -46,11 +46,11 @@ boxes is an incomplete phase.
 
 ## Phase 4 — The rest of the nodes
 
-- [ ] Sources/sinks, timing, sequential, combinational blocks ([06-node-catalog.md](06-node-catalog.md))
-- [ ] Instruments: oscilloscope, 7-segment, hex display, bargraph
-- [ ] Buses: split/merge/tunnel
-- [ ] Subcircuits (user-defined chips) with port nodes and instancing
-- **Exit:** every node in the catalog exists, each with a test.
+- [x] Timing, sequential, combinational and memory blocks ([06-node-catalog.md](06-node-catalog.md)) — 40 definitions in the registry across nine categories. `seq.dff` and `seq.register` are one implementation with two pin sets, and so are `seq.jkff` and `seq.tff`; the reset/enable/clock frame every clocked node shares is [seq/shared.ts](../src/lib/nodes/seq/shared.ts). Two conventions about what an unwired pin means came out of writing them and are now [ADR 0009](decisions/0009-z-is-idle-on-a-control-pin.md)
+- [x] Instruments: oscilloscope, 7-segment, hex display, bargraph — `emitSample` is now wired to a real ring buffer in [waveform.ts](../src/lib/sim/waveform.ts), which stores transitions only and is cleared by `reset()`. `scope.logic` has `delayNs: 0` so a sample lands at the transition, not a reaction time later, and its view subscribes with `useSimulationRevision` rather than snapshotting an array that could never compare equal
+- [x] Buses: split/merge/tunnel — a tunnel has no `evaluate` at all. `buildNetlist` merges pins by name through the new `netAliases` hook on `NodeDefinition`, so two tunnels are genuinely one net and the netlist still knows no node types
+- [~] Subcircuits (user-defined chips) with port nodes and instancing — the **model is done and tested**: `sub.port`, instances typed `sub.<key>`, definitions derived from the document by `subcircuitLookup`, and `flattenDocument` inlining them before the netlist is compiled ([ADR 0010](decisions/0010-subcircuits-are-derived-node-types.md)). What is missing is the **authoring surface** — nothing in the editor can make a chip from a selection or open one to edit, so a `sub.<key>` node can only arrive in a hand-written or imported document today
+- **Exit:** every node in the catalog exists, each with a test. **Met for the catalog**; the subcircuit *editor* is outstanding and is the one box above that is not ticked. Test harnesses for both kinds of node — a truth table and a real running circuit — are in [src/test/circuit.ts](../src/test/circuit.ts).
 
 ## Phase 5 — Polish
 
@@ -68,8 +68,12 @@ boxes is an incomplete phase.
 | `bun run lint` reports pre-existing errors, all in generated shadcn primitives (mostly `a11y/useSemanticElements`); they need a biome override or a regeneration, not hand edits | [components/ui/](../src/components/ui/) |
 | `renameProject` in the projects store rewrites the stored document from disk, which would discard unsaved edits if the document is open. Use `renameOpenDocument` for the open one; the two paths need merging when routing lands | [state/projects-store.ts](../src/state/projects-store.ts) |
 | `SidebarProvider` is hand-edited (a generated shadcn file) to take `cookieName` and `keyboardShortcut`, so the page's two sidebars do not share one cookie or both toggle on `⌘B`. A regeneration will drop it | [ui/sidebar.tsx](../src/components/ui/sidebar.tsx) |
-| `emitSample` is declared on `EvalContext` but no node emits and nothing collects; the waveform ring buffer lands with the oscilloscope in Phase 4 | [lib/nodes/define.ts](../src/lib/nodes/define.ts) |
-| Subcircuits are not flattened — `buildNetlist` compiles the top-level document only, which is correct until phase 4 introduces instancing | [lib/circuit/netlist.ts](../src/lib/circuit/netlist.ts) |
+| No way to *make* a subcircuit. The model, the flattening and the simulation are done, but nothing in the editor turns a selection into a chip or opens one to edit, so `sub.<key>` nodes can only arrive in an imported document | [lib/circuit/subcircuit.ts](../src/lib/circuit/subcircuit.ts) |
+| An instance's own pins are not in the netlist — flattening replaces them with the chip's port pins — so `pinToNet` has no entry and the canvas shows no value on them. The wires either side still show theirs; the fix is the scene mapping an instance pin to its port's net | [state/scene.ts](../src/state/scene.ts) |
+| Diagnostics inside a chip name an inlined node id (`chip/gate`), which nothing on the canvas draws, so "show me the problem" cannot reach it | [lib/circuit/subcircuit.ts](../src/lib/circuit/subcircuit.ts) |
+| A `mem.ram` write never reaches the document, so a memory image cannot be edited by running the circuit and then saved. Deliberate — one undo entry per clock edge would be worse — but it means there is no way to dump what a RAM ended up holding | [lib/nodes/mem/ram.ts](../src/lib/nodes/mem/ram.ts) |
+| The scope's trigger search walks the whole ring buffer on every frame it renders. Bounded by `CHANNEL_CAPACITY` and invisible at one scope, but it is per-frame work that should be cached against the sample count | [components/nodes/scope-view.tsx](../src/components/nodes/scope-view.tsx) |
+| No example circuit uses anything from phase 4 — the shipped six are still gates and switches, so a clock, a counter or a scope has to be found in the palette rather than met in a worked example | [src/example/](../src/example/) |
 | A stored `light` theme is applied on hydration, so the first paint is always dark — the alternative is a blocking script in the document head | [state/editor-settings.ts](../src/state/editor-settings.ts) |
 | `SidebarMenuSkeleton` picks a random width and cannot be server-rendered without a hydration mismatch; the sidebar hand-rolls its placeholders instead | [ui/sidebar.tsx](../src/components/ui/sidebar.tsx) |
 | Wire picking and rubber-band selection scan every wire per pointer event. Fine at the catalogue's scale, but the architecture calls for a spatial index; that is the phase 5 performance pass, with a measurement | [state/hit-test.ts](../src/state/hit-test.ts) |

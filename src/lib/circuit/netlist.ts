@@ -4,6 +4,7 @@ import {
   referencedPinsByNode,
 } from "@/lib/nodes/define";
 import type { CircuitDocument, PinRef, PinSpec } from "./schema";
+import { flattenDocument } from "./subcircuit";
 
 /**
  * Netlist compilation: the document flattened into the form the engine runs.
@@ -59,7 +60,8 @@ export type DiagnosticCode =
   | "undriven-input"
   | "unknown-node-type"
   | "unknown-pin"
-  | "oscillation";
+  | "oscillation"
+  | "subcircuit-recursion";
 
 export type Diagnostic = {
   code: DiagnosticCode;
@@ -91,10 +93,16 @@ export function pinKey(nodeId: string, pinId: string): string {
 }
 
 export function buildNetlist(
-  document: CircuitDocument,
+  source: CircuitDocument,
   lookup: NodeLookup,
 ): Netlist {
-  const diagnostics: Diagnostic[] = [];
+  // User-defined chips are inlined first, so everything below compiles one
+  // flat circuit and the engine never learns that subcircuits exist.
+  const { document, diagnostics: flattenDiagnostics } = flattenDocument(
+    source,
+    lookup,
+  );
+  const diagnostics: Diagnostic[] = [...flattenDiagnostics];
   const referencedPins = referencedPinsByNode(document);
 
   // Sorted rather than in document order: net ids reach the engine, and two
@@ -177,6 +185,46 @@ export function buildNetlist(
     }
 
     union.merge(fromKey, toKey);
+  }
+
+  // Named nets. A definition may declare that some of its pins *are* a net
+  // called something — that is what `bus.tunnel` is — and every pin naming the
+  // same net joins it with no wire in between. Walked in sorted node order so
+  // which pin ends up the group's representative is deterministic, and driven
+  // entirely off the `netAliases` contract: nothing here knows a node type.
+  const aliasAnchor = new Map<string, NetlistPin>();
+
+  for (const nodeId of nodeIds) {
+    const node = document.nodes[nodeId];
+    const aliases = lookup(node.type)?.netAliases?.(node.params);
+    if (!aliases) continue;
+
+    for (const pinId of Object.keys(aliases).sort()) {
+      const name = aliases[pinId];
+      const pin = pins.get(pinKey(nodeId, pinId));
+      if (!pin || name.length === 0) continue;
+
+      const anchorPin = aliasAnchor.get(name);
+      if (!anchorPin) {
+        aliasAnchor.set(name, pin);
+        continue;
+      }
+
+      if (anchorPin.width !== pin.width) {
+        diagnostics.push({
+          code: "width-mismatch",
+          severity: "error",
+          message: `Net "${name}" is named by a ${anchorPin.width}-bit pin and a ${pin.width}-bit pin.`,
+          pins: [toPinRef(anchorPin), toPinRef(pin)],
+          nodeIds: dedupe([anchorPin.nodeId, pin.nodeId]),
+        });
+      }
+
+      union.merge(
+        pinKey(anchorPin.nodeId, anchorPin.pinId),
+        pinKey(nodeId, pinId),
+      );
+    }
   }
 
   // Roots are numbered in sorted-key order, so net ids are stable. Every pin
