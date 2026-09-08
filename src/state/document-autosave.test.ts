@@ -1,10 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { examples } from "@/example";
 import { createEmptyDocument } from "@/lib/circuit/io";
 import type { NodeDefinition } from "@/lib/nodes/define";
 import { lookupNode } from "@/lib/nodes/registry";
 import {
   flushSave,
+  getDocument,
   getSaveState,
+  isEphemeral,
+  openDocument,
   placeNode,
   resetDocumentStore,
   setDocument,
@@ -118,5 +122,79 @@ describe("autosave", () => {
     flushSave();
 
     expect(writes).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * The examples are the one thing that is editable without being saved, so the
+ * gate on that has to be tested where autosave is tested — a regression here
+ * would silently start writing shipped circuits into the user's project list.
+ */
+describe("example documents", () => {
+  const example = examples[0];
+
+  it("opens an example that is in no storage", () => {
+    expect(openDocument(example.id)).toBe(true);
+    expect(getDocument()?.name).toBe(example.name);
+    expect(isEphemeral()).toBe(true);
+  });
+
+  it("never writes an example, however much it is edited", () => {
+    openDocument(example.id);
+
+    placeNode(definition, { x: 0, y: 0 });
+    vi.runAllTimers();
+    flushSave();
+
+    expect(store.size).toBe(0);
+    // Nothing is pending either: a save indicator must not spin forever on a
+    // write that is never going to happen.
+    expect(getSaveState()).toEqual({ pending: false, error: null });
+  });
+
+  it("leaves the catalogue copy pristine when an example is edited", () => {
+    const before = Object.keys(example.document.nodes).length;
+
+    openDocument(example.id);
+    placeNode(definition, { x: 0, y: 0 });
+
+    expect(Object.keys(getDocument()?.nodes ?? {})).toHaveLength(before + 1);
+    // Reopening it is what a user does after switching away, and they must get
+    // the shipped circuit back rather than a mutated module-level object.
+    expect(Object.keys(example.document.nodes)).toHaveLength(before);
+  });
+
+  it("clears the flag when a real project is opened next", () => {
+    openDocument(example.id);
+    expect(isEphemeral()).toBe(true);
+
+    const project = createEmptyDocument("Real");
+    setDocument(project);
+    placeNode(definition, { x: 0, y: 0 });
+    vi.runAllTimers();
+
+    expect(isEphemeral()).toBe(false);
+    expect(storedNodeCount(project.id)).toBe(1);
+  });
+
+  it("prefers a stored project over an example with the same id", () => {
+    store.set(
+      documentKey(example.id),
+      JSON.stringify({
+        version: 2,
+        id: example.id,
+        name: "Mine",
+        nodes: {},
+        wires: {},
+      }),
+    );
+
+    expect(openDocument(example.id)).toBe(true);
+    expect(getDocument()?.name).toBe("Mine");
+    expect(isEphemeral()).toBe(false);
+  });
+
+  it("returns false for an id that is neither", () => {
+    expect(openDocument("d_nothing")).toBe(false);
   });
 });

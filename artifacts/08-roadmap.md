@@ -54,7 +54,7 @@ boxes is an incomplete phase.
 
 ## Phase 5 — Polish
 
-- [ ] Example circuits shipped with the app
+- [x] Example circuits shipped with the app — six documents in [`src/example/`](../src/example/), listed in a collapsed sidebar group. They open *ephemeral*: fully editable and simulatable, but never written to storage, and "import" copies what is on screen into a new project ([ADR 0008](decisions/0008-examples-are-ephemeral.md))
 - [ ] Shareable URL encoding — file import/export landed with the phase 3 toolbar
 - [ ] Performance pass against the 2,000-node target
 - [ ] Keyboard-only walkthrough and a11y audit
@@ -84,4 +84,5 @@ boxes is an incomplete phase.
 | Hovering runs the pin, waypoint, node and wire hit-tests on every pointer move over the canvas, where an idle pointer used to cost nothing. Same bounded-by-scene-size problem as wire picking, and the same fix — a spatial index in the phase 5 performance pass | [state/hit-test.ts](../src/state/hit-test.ts) |
 | Waypoint handles are sized in world units, so they shrink with the circuit at low zoom instead of staying a constant target on screen. SVG has no non-scaling radius; it needs the radius divided by the live zoom, which the wire layer does not currently read | [editor/wire-layer.tsx](../src/components/editor/wire-layer.tsx) |
 | A wire in progress has no undo for its last bend — `Esc` cancels the whole wire, because the bends are not in the document until the wire lands | [editor/use-editor-gestures.ts](../src/components/editor/use-editor-gestures.ts) |
+| Edits to an example are lost on switching away, with only a badge to warn: nothing prompts to import first. The prompt needs the same "unsaved changes" story routing will need | [state/document.ts](../src/state/document.ts) |
 | Touch has pan and zoom but no editing gestures — a drag on a node pans the canvas. The pointer handlers are written against mouse semantics and need a tap/long-press story | [canvas/index.tsx](../src/components/canvas/index.tsx) |

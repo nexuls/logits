@@ -175,6 +175,12 @@ and the `nodeIds` / `wireIds` / `pins` / `netId` the editor should mark.
   code that knows about `version`. They are pure and take strings — the
   `localStorage` calls live in [src/state/storage.ts](../src/state/storage.ts),
   so replacing the store never touches the domain layer.
+- The circuits in [`src/example/`](../src/example/) are ordinary documents of
+  this format, compiled into the bundle rather than stored. They open
+  *ephemeral* — editable, but `scheduleSave` refuses to write them — so
+  nothing about them reaches `localStorage` until the user imports one, which
+  copies it to a fresh document id ([ADR
+  0008](decisions/0008-examples-are-ephemeral.md)).
 - Every schema change adds a migration step `migrate_N_to_N+1`. Never change the
   meaning of an existing field in place.
 - Deserialisation is defensive: an untrusted file must not be able to crash the

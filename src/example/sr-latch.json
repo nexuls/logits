@@ -1,0 +1,185 @@
+{
+  "version": 2,
+  "id": "ex_sr_latch",
+  "name": "SR latch (NOR)",
+  "nodes": {
+    "n_r": {
+      "id": "n_r",
+      "type": "io.switch",
+      "position": {
+        "x": 80,
+        "y": 140
+      },
+      "params": {
+        "width": 1,
+        "value": 0
+      },
+      "label": "Reset"
+    },
+    "n_s": {
+      "id": "n_s",
+      "type": "io.switch",
+      "position": {
+        "x": 80,
+        "y": 340
+      },
+      "params": {
+        "width": 1,
+        "value": 1
+      },
+      "label": "Set"
+    },
+    "n_nor_q": {
+      "id": "n_nor_q",
+      "type": "gate.nor",
+      "position": {
+        "x": 260,
+        "y": 150
+      },
+      "params": {
+        "inputs": 2,
+        "width": 1
+      }
+    },
+    "n_nor_qn": {
+      "id": "n_nor_qn",
+      "type": "gate.nor",
+      "position": {
+        "x": 260,
+        "y": 350
+      },
+      "params": {
+        "inputs": 2,
+        "width": 1
+      }
+    },
+    "n_led_q": {
+      "id": "n_led_q",
+      "type": "io.led",
+      "position": {
+        "x": 480,
+        "y": 150
+      },
+      "params": {
+        "color": "green"
+      },
+      "label": "Q"
+    },
+    "n_led_qn": {
+      "id": "n_led_qn",
+      "type": "io.led",
+      "position": {
+        "x": 480,
+        "y": 350
+      },
+      "params": {
+        "color": "blue"
+      },
+      "label": "Q'"
+    }
+  },
+  "wires": {
+    "w_01": {
+      "id": "w_01",
+      "from": {
+        "nodeId": "n_r",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_nor_q",
+        "pinId": "in0"
+      }
+    },
+    "w_02": {
+      "id": "w_02",
+      "from": {
+        "nodeId": "n_s",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_nor_qn",
+        "pinId": "in0"
+      }
+    },
+    "w_03": {
+      "id": "w_03",
+      "from": {
+        "nodeId": "n_nor_q",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_nor_qn",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 380,
+          "y": 170
+        },
+        {
+          "x": 380,
+          "y": 420
+        },
+        {
+          "x": 220,
+          "y": 420
+        },
+        {
+          "x": 220,
+          "y": 380
+        }
+      ]
+    },
+    "w_04": {
+      "id": "w_04",
+      "from": {
+        "nodeId": "n_nor_qn",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_nor_q",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 400,
+          "y": 370
+        },
+        {
+          "x": 400,
+          "y": 120
+        },
+        {
+          "x": 200,
+          "y": 120
+        },
+        {
+          "x": 200,
+          "y": 180
+        }
+      ]
+    },
+    "w_05": {
+      "id": "w_05",
+      "from": {
+        "nodeId": "n_nor_q",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_led_q",
+        "pinId": "in"
+      }
+    },
+    "w_06": {
+      "id": "w_06",
+      "from": {
+        "nodeId": "n_nor_qn",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_led_qn",
+        "pinId": "in"
+      }
+    }
+  }
+}

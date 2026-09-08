@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { createDocumentId } from "@/lib/circuit/ids";
 import { createEmptyDocument } from "@/lib/circuit/io";
 import type { CircuitDocument, ProjectMeta } from "@/lib/circuit/schema";
 import {
@@ -85,6 +86,28 @@ export type CreateResult =
 
 export function createProject(name = "Untitled circuit"): CreateResult {
   const document = createEmptyDocument(uniqueName(name));
+  const result = writeDocument(document);
+  invalidate();
+
+  return result.ok ? { ok: true, id: document.id } : result;
+}
+
+/**
+ * Copies a document into storage as a brand new project — what "import" does
+ * to a shipped example, and to anything else that is on screen without being
+ * saved.
+ *
+ * A fresh document id rather than the source's, so importing the same example
+ * twice gives two independent projects instead of one overwriting the other.
+ * Element ids are kept: they only have to be unique within a document.
+ */
+export function createProjectFrom(source: CircuitDocument): CreateResult {
+  const document: CircuitDocument = {
+    ...source,
+    id: createDocumentId(),
+    name: uniqueName(source.name),
+  };
+
   const result = writeDocument(document);
   invalidate();
 

@@ -1,0 +1,233 @@
+{
+  "version": 2,
+  "id": "ex_tristate_bus",
+  "name": "Tri-state bus",
+  "nodes": {
+    "n_d0": {
+      "id": "n_d0",
+      "type": "io.switch",
+      "position": {
+        "x": 80,
+        "y": 180
+      },
+      "params": {
+        "width": 1,
+        "value": 1
+      },
+      "label": "Data 0"
+    },
+    "n_en0": {
+      "id": "n_en0",
+      "type": "io.switch",
+      "position": {
+        "x": 80,
+        "y": 280
+      },
+      "params": {
+        "width": 1,
+        "value": 1
+      },
+      "label": "Enable 0"
+    },
+    "n_d1": {
+      "id": "n_d1",
+      "type": "io.switch",
+      "position": {
+        "x": 80,
+        "y": 400
+      },
+      "params": {
+        "width": 1,
+        "value": 0
+      },
+      "label": "Data 1"
+    },
+    "n_en1": {
+      "id": "n_en1",
+      "type": "io.switch",
+      "position": {
+        "x": 80,
+        "y": 500
+      },
+      "params": {
+        "width": 1,
+        "value": 0
+      },
+      "label": "Enable 1"
+    },
+    "n_ts0": {
+      "id": "n_ts0",
+      "type": "gate.tristate",
+      "position": {
+        "x": 280,
+        "y": 180
+      },
+      "params": {
+        "width": 1
+      }
+    },
+    "n_ts1": {
+      "id": "n_ts1",
+      "type": "gate.tristate",
+      "position": {
+        "x": 280,
+        "y": 400
+      },
+      "params": {
+        "width": 1
+      }
+    },
+    "n_led": {
+      "id": "n_led",
+      "type": "io.led",
+      "position": {
+        "x": 500,
+        "y": 180
+      },
+      "params": {
+        "color": "green"
+      },
+      "label": "Bus"
+    },
+    "n_probe": {
+      "id": "n_probe",
+      "type": "io.probe",
+      "position": {
+        "x": 500,
+        "y": 290
+      },
+      "params": {
+        "width": 1,
+        "radix": "binary"
+      },
+      "label": "Bus value"
+    }
+  },
+  "wires": {
+    "w_01": {
+      "id": "w_01",
+      "from": {
+        "nodeId": "n_d0",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_ts0",
+        "pinId": "in"
+      }
+    },
+    "w_02": {
+      "id": "w_02",
+      "from": {
+        "nodeId": "n_en0",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_ts0",
+        "pinId": "en"
+      },
+      "waypoints": [
+        {
+          "x": 220,
+          "y": 300
+        },
+        {
+          "x": 220,
+          "y": 140
+        },
+        {
+          "x": 310,
+          "y": 140
+        }
+      ]
+    },
+    "w_03": {
+      "id": "w_03",
+      "from": {
+        "nodeId": "n_d1",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_ts1",
+        "pinId": "in"
+      }
+    },
+    "w_04": {
+      "id": "w_04",
+      "from": {
+        "nodeId": "n_en1",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_ts1",
+        "pinId": "en"
+      },
+      "waypoints": [
+        {
+          "x": 220,
+          "y": 520
+        },
+        {
+          "x": 220,
+          "y": 360
+        },
+        {
+          "x": 310,
+          "y": 360
+        }
+      ]
+    },
+    "w_05": {
+      "id": "w_05",
+      "from": {
+        "nodeId": "n_ts0",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_led",
+        "pinId": "in"
+      }
+    },
+    "w_06": {
+      "id": "w_06",
+      "from": {
+        "nodeId": "n_ts0",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_probe",
+        "pinId": "in"
+      },
+      "waypoints": [
+        {
+          "x": 420,
+          "y": 200
+        },
+        {
+          "x": 420,
+          "y": 310
+        }
+      ]
+    },
+    "w_07": {
+      "id": "w_07",
+      "from": {
+        "nodeId": "n_ts1",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_probe",
+        "pinId": "in"
+      },
+      "waypoints": [
+        {
+          "x": 420,
+          "y": 420
+        },
+        {
+          "x": 420,
+          "y": 310
+        }
+      ]
+    }
+  }
+}

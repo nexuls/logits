@@ -5,6 +5,7 @@ import Editor from "@/components/editor/editor";
 import ElementsSidebar from "@/components/editor/elements-sidebar";
 import ProjectsSidebar from "@/components/projects/projects-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { getExample } from "@/example";
 import { MAX_PLACEMENT_COUNT } from "@/lib/circuit/geometry";
 import { useAppliedTheme, useEditorSettings } from "@/state/editor-settings";
 import { useProjects } from "@/state/projects-store";
@@ -29,10 +30,11 @@ export default function Home() {
 
   // The list is empty until hydration reads storage, so the opening project can
   // only be picked once it arrives — and picked again if the open one is
-  // deleted from under us.
+  // deleted from under us. An example is a valid selection that is deliberately
+  // not in the list, so it has to survive this too.
   useEffect(() => {
     setActiveId((current) =>
-      projects.some((project) => project.id === current)
+      getExample(current) || projects.some((project) => project.id === current)
         ? current
         : (projects[0]?.id ?? ""),
     );

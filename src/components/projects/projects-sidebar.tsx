@@ -36,15 +36,19 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getExample } from "@/example";
 import type { ProjectMeta } from "@/lib/circuit/schema";
+import { getDocument } from "@/state/document";
 import {
   createProject,
+  createProjectFrom,
   deleteProject,
   pinProject,
   renameProject,
   useHydrated,
   useProjects,
 } from "@/state/projects-store";
+import ExamplesGroup from "./examples-group";
 import ProjectItem from "./project-item";
 
 type Props = {
@@ -95,6 +99,31 @@ export default function ProjectsSidebar({
     // Straight into a rename: a new circuit's name is the first thing you want
     // to change, and it saves a trip to the menu.
     setEditingId(result.id);
+  };
+
+  /**
+   * Turns an example into a project the user owns.
+   *
+   * It imports what is *on screen* when that example is the open document, not
+   * the pristine file: an example is editable, so the button would otherwise
+   * silently discard the very edits it is being asked to keep.
+   */
+  const importExample = (exampleId: string) => {
+    const example = getExample(exampleId);
+    if (!example) return;
+
+    const open = getDocument();
+    const result = createProjectFrom(
+      open?.id === exampleId ? open : example.document,
+    );
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+
+    setError(null);
+    setQuery("");
+    onSelectProject?.(result.id);
   };
 
   const confirmDelete = () => {
@@ -214,6 +243,15 @@ export default function ProjectsSidebar({
             No projects match “{query.trim()}”.
           </p>
         )}
+
+        {/* Not gated on `hydrated`: the examples are compiled in rather than
+            read from storage, so they are the same on the server and the
+            client and can fill the first paint. */}
+        <ExamplesGroup
+          activeId={activeProjectId}
+          onOpen={(exampleId) => onSelectProject?.(exampleId)}
+          onImport={importExample}
+        />
       </SidebarContent>
 
       <SidebarFooter>

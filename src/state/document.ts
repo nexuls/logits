@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-
+import { getExample } from "@/example";
 import {
   type AddNodeOptions,
   addNode,
@@ -62,6 +62,14 @@ let history: History<CircuitDocument> | null = null;
 /** Bumped on every change so `getSnapshot` can hand back a stable value. */
 const listeners = new Set<() => void>();
 
+/**
+ * True while the open document is not backed by storage — a shipped example.
+ * It is a property of *this* document rather than a mode the editor is in, so
+ * it is cleared by whatever replaces the document and never has to be reset by
+ * a caller.
+ */
+let ephemeral = false;
+
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 let unsaved: CircuitDocument | null = null;
 let saveError: string | null = null;
@@ -99,6 +107,11 @@ function setSaveState(next: SaveState) {
  * way out, and nothing here needs a render to happen first.
  */
 function scheduleSave(document: CircuitDocument) {
+  // The one gate on persistence, so an example is editable, undoable and
+  // simulatable without any command, the history stack or the editor knowing
+  // that it is not going to be written anywhere.
+  if (ephemeral) return;
+
   unsaved = document;
   setSaveState({ pending: true, error: saveError });
 
@@ -156,33 +169,66 @@ function apply(
   return true;
 }
 
-/** Loads a stored document into the editor. False when it is missing. */
+/**
+ * Loads a document into the editor by id. False when there is no such thing.
+ *
+ * Storage first, then the shipped examples — one entry point, so the editor
+ * asks for an id and never has to know which kind it got. An example opens
+ * *ephemeral*: fully editable, undoable and simulatable, but nothing it does
+ * reaches storage. Selecting it again therefore re-reads the pristine
+ * catalogue copy, which is the honest consequence of never having saved.
+ *
+ * Storage wins a collision, so a project can never be shadowed by an example.
+ */
 export function openDocument(projectId: string): boolean {
   if (history?.present.id === projectId) return true;
 
-  flushSave();
-
   const loaded = readDocument(projectId);
-  if (!loaded?.ok) return false;
+  if (loaded?.ok) {
+    adopt(loaded.document, false);
+    return true;
+  }
 
-  history = createHistory(loaded.document);
-  saveError = null;
-  setSaveState({ pending: false, error: null });
-  emit();
-  return true;
+  const example = getExample(projectId);
+  if (example) {
+    adopt(example.document, true);
+    return true;
+  }
+
+  return false;
 }
 
 /** Puts a document straight into the editor — an import, or a test fixture. */
 export function setDocument(document: CircuitDocument): void {
-  flushSave();
-  history = createHistory(document);
-  emit();
+  adopt(document, false);
 }
 
 export function closeDocument(): void {
   flushSave();
   history = null;
+  ephemeral = false;
   emit();
+}
+
+/** The one place a document becomes *the* document, so `ephemeral` cannot drift. */
+function adopt(document: CircuitDocument, isEphemeral: boolean): void {
+  // Flushes the *outgoing* document, so this has to run before the flag moves.
+  flushSave();
+
+  history = createHistory(document);
+  ephemeral = isEphemeral;
+  saveError = null;
+  setSaveState({ pending: false, error: null });
+  emit();
+}
+
+/** True when edits to the open document are deliberately not being saved. */
+export function isEphemeral(): boolean {
+  return history !== null && ephemeral;
+}
+
+export function useIsEphemeral(): boolean {
+  return useSyncExternalStore(subscribe, isEphemeral, () => false);
 }
 
 export function getDocument(): CircuitDocument | null {
@@ -469,6 +515,7 @@ export function resetDocumentStore(): void {
     saveTimer = null;
   }
   history = null;
+  ephemeral = false;
   unsaved = null;
   saveError = null;
   saveState = IDLE_SAVE_STATE;

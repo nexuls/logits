@@ -17,6 +17,7 @@ import {
   placeNode,
   renameOpenDocument,
   useDocument,
+  useIsEphemeral,
 } from "@/state/document";
 import { buildScene, type Scene } from "@/state/scene";
 import { pruneSelection, selectOnly, useSelection } from "@/state/selection";
@@ -61,6 +62,7 @@ export default function Editor({
   onDisarm,
 }: Props) {
   const document = useDocument();
+  const ephemeral = useIsEphemeral();
   const selection = useSelection();
   const diagnostics = useDiagnostics();
 
@@ -214,6 +216,15 @@ export default function Editor({
                   selectOnly(nodeIds, wireIds)
                 }
               />
+            )}
+
+            {/* An example is fully editable, so nothing else on screen would
+                tell the user their edits are going nowhere. */}
+            {ephemeral && (
+              <p className="pointer-events-none absolute top-14 left-4 z-20 rounded-md border border-dashed border-border bg-sidebar px-2 py-1 text-[11px] text-muted-foreground">
+                Example — edits are not saved. Import it from the sidebar to
+                keep them.
+              </p>
             )}
 
             {notice && (

@@ -1,0 +1,149 @@
+{
+  "version": 2,
+  "id": "ex_half_adder",
+  "name": "Half adder",
+  "nodes": {
+    "n_a": {
+      "id": "n_a",
+      "type": "io.switch",
+      "position": {
+        "x": 80,
+        "y": 140
+      },
+      "params": {
+        "width": 1,
+        "value": 1
+      },
+      "label": "A"
+    },
+    "n_b": {
+      "id": "n_b",
+      "type": "io.switch",
+      "position": {
+        "x": 80,
+        "y": 220
+      },
+      "params": {
+        "width": 1,
+        "value": 1
+      },
+      "label": "B"
+    },
+    "n_xor": {
+      "id": "n_xor",
+      "type": "gate.xor",
+      "position": {
+        "x": 240,
+        "y": 150
+      },
+      "params": {
+        "inputs": 2,
+        "width": 1
+      }
+    },
+    "n_and": {
+      "id": "n_and",
+      "type": "gate.and",
+      "position": {
+        "x": 240,
+        "y": 230
+      },
+      "params": {
+        "inputs": 2,
+        "width": 1
+      }
+    },
+    "n_sum": {
+      "id": "n_sum",
+      "type": "io.led",
+      "position": {
+        "x": 380,
+        "y": 150
+      },
+      "params": {
+        "color": "green"
+      },
+      "label": "Sum"
+    },
+    "n_carry": {
+      "id": "n_carry",
+      "type": "io.led",
+      "position": {
+        "x": 380,
+        "y": 230
+      },
+      "params": {
+        "color": "amber"
+      },
+      "label": "Carry"
+    }
+  },
+  "wires": {
+    "w_01": {
+      "id": "w_01",
+      "from": {
+        "nodeId": "n_a",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_xor",
+        "pinId": "in0"
+      }
+    },
+    "w_02": {
+      "id": "w_02",
+      "from": {
+        "nodeId": "n_b",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_xor",
+        "pinId": "in1"
+      }
+    },
+    "w_03": {
+      "id": "w_03",
+      "from": {
+        "nodeId": "n_a",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_and",
+        "pinId": "in1"
+      }
+    },
+    "w_04": {
+      "id": "w_04",
+      "from": {
+        "nodeId": "n_b",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_and",
+        "pinId": "in0"
+      }
+    },
+    "w_05": {
+      "id": "w_05",
+      "from": {
+        "nodeId": "n_xor",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_sum",
+        "pinId": "in"
+      }
+    },
+    "w_06": {
+      "id": "w_06",
+      "from": {
+        "nodeId": "n_and",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_carry",
+        "pinId": "in"
+      }
+    }
+  }
+}

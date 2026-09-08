@@ -1,0 +1,284 @@
+{
+  "version": 2,
+  "id": "ex_full_adder",
+  "name": "Full adder",
+  "nodes": {
+    "n_a": {
+      "id": "n_a",
+      "type": "io.switch",
+      "position": {
+        "x": 80,
+        "y": 120
+      },
+      "params": {
+        "width": 1,
+        "value": 1
+      },
+      "label": "A"
+    },
+    "n_b": {
+      "id": "n_b",
+      "type": "io.switch",
+      "position": {
+        "x": 80,
+        "y": 200
+      },
+      "params": {
+        "width": 1,
+        "value": 1
+      },
+      "label": "B"
+    },
+    "n_cin": {
+      "id": "n_cin",
+      "type": "io.switch",
+      "position": {
+        "x": 80,
+        "y": 280
+      },
+      "params": {
+        "width": 1,
+        "value": 0
+      },
+      "label": "Carry in"
+    },
+    "n_xor1": {
+      "id": "n_xor1",
+      "type": "gate.xor",
+      "position": {
+        "x": 240,
+        "y": 150
+      },
+      "params": {
+        "inputs": 2,
+        "width": 1
+      }
+    },
+    "n_and1": {
+      "id": "n_and1",
+      "type": "gate.and",
+      "position": {
+        "x": 240,
+        "y": 370
+      },
+      "params": {
+        "inputs": 2,
+        "width": 1
+      }
+    },
+    "n_xor2": {
+      "id": "n_xor2",
+      "type": "gate.xor",
+      "position": {
+        "x": 420,
+        "y": 210
+      },
+      "params": {
+        "inputs": 2,
+        "width": 1
+      }
+    },
+    "n_and2": {
+      "id": "n_and2",
+      "type": "gate.and",
+      "position": {
+        "x": 420,
+        "y": 280
+      },
+      "params": {
+        "inputs": 2,
+        "width": 1
+      }
+    },
+    "n_or": {
+      "id": "n_or",
+      "type": "gate.or",
+      "position": {
+        "x": 600,
+        "y": 360
+      },
+      "params": {
+        "inputs": 2,
+        "width": 1
+      }
+    },
+    "n_sum": {
+      "id": "n_sum",
+      "type": "io.led",
+      "position": {
+        "x": 740,
+        "y": 210
+      },
+      "params": {
+        "color": "green"
+      },
+      "label": "Sum"
+    },
+    "n_cout": {
+      "id": "n_cout",
+      "type": "io.led",
+      "position": {
+        "x": 740,
+        "y": 360
+      },
+      "params": {
+        "color": "amber"
+      },
+      "label": "Carry out"
+    }
+  },
+  "wires": {
+    "w_01": {
+      "id": "w_01",
+      "from": {
+        "nodeId": "n_a",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_xor1",
+        "pinId": "in0"
+      }
+    },
+    "w_02": {
+      "id": "w_02",
+      "from": {
+        "nodeId": "n_b",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_xor1",
+        "pinId": "in1"
+      }
+    },
+    "w_03": {
+      "id": "w_03",
+      "from": {
+        "nodeId": "n_a",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_and1",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 180,
+          "y": 140
+        },
+        {
+          "x": 180,
+          "y": 380
+        }
+      ]
+    },
+    "w_04": {
+      "id": "w_04",
+      "from": {
+        "nodeId": "n_b",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_and1",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 200,
+          "y": 220
+        },
+        {
+          "x": 200,
+          "y": 400
+        }
+      ]
+    },
+    "w_05": {
+      "id": "w_05",
+      "from": {
+        "nodeId": "n_xor1",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_xor2",
+        "pinId": "in0"
+      }
+    },
+    "w_06": {
+      "id": "w_06",
+      "from": {
+        "nodeId": "n_cin",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_xor2",
+        "pinId": "in1"
+      }
+    },
+    "w_07": {
+      "id": "w_07",
+      "from": {
+        "nodeId": "n_xor1",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_and2",
+        "pinId": "in0"
+      }
+    },
+    "w_08": {
+      "id": "w_08",
+      "from": {
+        "nodeId": "n_cin",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_and2",
+        "pinId": "in1"
+      }
+    },
+    "w_09": {
+      "id": "w_09",
+      "from": {
+        "nodeId": "n_and1",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_or",
+        "pinId": "in1"
+      }
+    },
+    "w_10": {
+      "id": "w_10",
+      "from": {
+        "nodeId": "n_and2",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_or",
+        "pinId": "in0"
+      }
+    },
+    "w_11": {
+      "id": "w_11",
+      "from": {
+        "nodeId": "n_xor2",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_sum",
+        "pinId": "in"
+      }
+    },
+    "w_12": {
+      "id": "w_12",
+      "from": {
+        "nodeId": "n_or",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_cout",
+        "pinId": "in"
+      }
+    }
+  }
+}
