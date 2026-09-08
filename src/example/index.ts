@@ -3,10 +3,10 @@ import type { CircuitDocument } from "@/lib/circuit/schema";
 import fullAdder from "./full-adder.json";
 import gateSampler from "./gate-sampler.json";
 import halfAdder from "./half-adder.json";
+import masterSlaveFlipFlop from "./master-slave-flipflop.json";
 import mux2to1 from "./mux-2to1.json";
 import srLatch from "./sr-latch.json";
 import tristateBus from "./tristate-bus.json";
-import masterSlaveFlipFlop from "./master-slave-flipflop.json";
 
 /**
  * The circuits shipped with the app.

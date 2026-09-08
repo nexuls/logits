@@ -104,10 +104,7 @@
       "id": "w_IssNLJTVVVbD",
       "from": { "nodeId": "n_NWWwg_qxWPri", "pinId": "out" },
       "to": { "nodeId": "n_Gu7lQuyiE9BE", "pinId": "in0" },
-      "waypoints": [
-        { "x": 510, "y": 310 },
-        { "x": 430, "y": 340 }
-      ]
+      "waypoints": [{ "x": 510, "y": 310 }, { "x": 430, "y": 340 }]
     },
     "w_LV4S3svGZnWn": {
       "id": "w_LV4S3svGZnWn",
@@ -156,10 +153,7 @@
       "id": "w_5aH8wexgMV8w",
       "from": { "nodeId": "n_mQxaWe9hQl9q", "pinId": "out" },
       "to": { "nodeId": "n_6ocBy1h1jmTQ", "pinId": "in" },
-      "waypoints": [
-        { "x": 310, "y": 440 },
-        { "x": 470, "y": 440 }
-      ]
+      "waypoints": [{ "x": 310, "y": 440 }, { "x": 470, "y": 440 }]
     },
     "w_YnxP6mkVyXOL": {
       "id": "w_YnxP6mkVyXOL",
@@ -199,19 +193,13 @@
       "id": "w_7DA45-voPubk",
       "from": { "nodeId": "n_FSsA_dYJYqrk", "pinId": "out" },
       "to": { "nodeId": "n_FdmfaPzXOyuP", "pinId": "in0" },
-      "waypoints": [
-        { "x": 770, "y": 310 },
-        { "x": 690, "y": 330 }
-      ]
+      "waypoints": [{ "x": 770, "y": 310 }, { "x": 690, "y": 330 }]
     },
     "w_oRLwj8x5t30w": {
       "id": "w_oRLwj8x5t30w",
       "from": { "nodeId": "n_FdmfaPzXOyuP", "pinId": "out" },
       "to": { "nodeId": "n_FSsA_dYJYqrk", "pinId": "in1" },
-      "waypoints": [
-        { "x": 770, "y": 330 },
-        { "x": 690, "y": 310 }
-      ]
+      "waypoints": [{ "x": 770, "y": 330 }, { "x": 690, "y": 310 }]
     },
     "w_LClr4yaxCqbi": {
       "id": "w_LClr4yaxCqbi",
