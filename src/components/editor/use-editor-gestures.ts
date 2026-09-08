@@ -19,8 +19,8 @@ import {
 import type { PinRef, Point } from "@/lib/circuit/schema";
 import {
   moveSegment,
+  pendingWirePath,
   waypointsFromPath,
-  wirePath,
 } from "@/lib/circuit/wire-path";
 import type { NodeDefinition } from "@/lib/nodes/define";
 import {
@@ -32,7 +32,6 @@ import {
 import {
   elementsInRect,
   nodeAt,
-  PIN_HIT_RADIUS,
   type PinHit,
   pinAt,
   pinsCompatible,
@@ -68,7 +67,7 @@ import {
 const DRAG_THRESHOLD_PX = 3;
 
 /** Screen pixels a pin snaps within while wiring, per the interaction spec. */
-const PIN_SNAP_PX = 10;
+const PIN_SNAP_PX = 14;
 
 type Gesture =
   | { kind: "none" }
@@ -103,15 +102,17 @@ type Gesture =
     };
 
 /**
- * Wiring is not in `Gesture` because it outlives the pointer: dropping on
- * empty canvas leaves the wire pending and visibly unresolved rather than
- * discarding what the user drew (artifacts/07-interaction-spec.md).
+ * Wiring is not in `Gesture` because it outlives the pointer: a wire is armed
+ * by a click, follows the cursor across as many clicks as it takes to place its
+ * bends, and ends only on a pin or on Esc (artifacts/07-interaction-spec.md).
  */
 type Wiring = {
   from: PinRef;
   fromPin: ResolvedPin;
   cursorWorld: Point;
-  /** Set once the pointer has been released without landing on a pin. */
+  /** Bends dropped by clicking empty canvas, in world coordinates. */
+  waypoints: readonly Point[];
+  /** Set when a connection was refused, so the preview says so in red. */
   unresolved: boolean;
 };
 
@@ -170,8 +171,23 @@ export function useEditorGestures({
       from: { nodeId: hit.node.node.id, pinId: hit.pin.spec.id },
       fromPin: hit.pin,
       cursorWorld: hit.pin.world,
+      waypoints: [],
       unresolved: false,
     });
+  }, []);
+
+  /** A click on empty canvas while wiring: drop a bend and keep drawing. */
+  const addWaypoint = useCallback((world: Point) => {
+    setWiring((current) =>
+      current
+        ? {
+            ...current,
+            waypoints: [...current.waypoints, snapPointToGrid(world)],
+            // The bend is the user answering the refusal, so drop the warning.
+            unresolved: false,
+          }
+        : current,
+    );
   }, []);
 
   /**
@@ -186,7 +202,7 @@ export function useEditorGestures({
       if (!wiring) return;
 
       const to: PinRef = { nodeId: hit.node.node.id, pinId: hit.pin.spec.id };
-      const result = connectPins(wiring.from, to);
+      const result = connectPins(wiring.from, to, wiring.waypoints);
 
       if (result.ok) {
         setWiring(null);
@@ -245,10 +261,12 @@ export function useEditorGestures({
 
       const pin = pinAt(current, world, worldLength(PIN_SNAP_PX));
 
+      // A wire in progress owns the click: on a pin it lands, anywhere else it
+      // drops a bend and keeps following the cursor. Esc is the way out.
       if (wiring) {
         event.preventDefault();
         if (pin) finishWiring(pin);
-        else cancelWiring();
+        else addWaypoint(world);
         return;
       }
 
@@ -316,9 +334,9 @@ export function useEditorGestures({
       });
     },
     [
+      addWaypoint,
       armedCount,
       armedDefinition,
-      cancelWiring,
       finishWiring,
       onPlaced,
       startWiring,
@@ -418,23 +436,18 @@ export function useEditorGestures({
       const world = toWorld(event);
       const current = sceneRef.current;
 
-      if (wiring && !wiring.unresolved) {
+      // Release only ever *completes* a wire, so drag-from-pin-to-pin still
+      // works in one gesture. Releasing anywhere else leaves the wire armed and
+      // following the cursor — the click-click-click path — rather than
+      // discarding what the user drew.
+      if (wiring) {
         const hit = pinAt(current, world, worldLength(PIN_SNAP_PX));
         const sameAsStart =
           hit &&
           hit.node.node.id === wiring.from.nodeId &&
           hit.pin.spec.id === wiring.from.pinId;
 
-        // Landing back on the pin it started from is the click that *arms* a
-        // wire rather than a zero-length drag, so it leaves wiring in progress.
-        if (hit && !sameAsStart) {
-          finishWiring(hit);
-        } else if (!hit && !samePoint(world, wiring.fromPin.world)) {
-          // Dropped on nothing: keep it drawn and flagged rather than
-          // discarding the user's work.
-          setWiring({ ...wiring, unresolved: true });
-          onNotice("Drop the wire on a pin, or press Esc to cancel.");
-        }
+        if (hit && !sameAsStart) finishWiring(hit);
       }
 
       if (gesture.kind === "band") {
@@ -447,7 +460,7 @@ export function useEditorGestures({
 
       if (gesture.kind !== "none") setGesture({ kind: "none" });
     },
-    [finishWiring, gesture, onNotice, toWorld, wiring, worldLength],
+    [finishWiring, gesture, toWorld, wiring, worldLength],
   );
 
   /** The rubber band in world coordinates, or null when none is being drawn. */
@@ -462,11 +475,11 @@ export function useEditorGestures({
    */
   const pendingWire: PendingWire | null = wiring
     ? {
-        points: wirePath(
+        points: pendingWirePath(
           wiring.fromPin.world,
           wiring.fromPin.side,
           wiring.cursorWorld,
-          oppositeSide(wiring.fromPin.side),
+          wiring.waypoints,
         ),
         unresolved: wiring.unresolved,
       }
@@ -541,25 +554,4 @@ function pinKeysCompatibleWith(scene: Scene, wiring: Wiring): Set<string> {
   }
 
   return keys;
-}
-
-/** Where a wire being dragged should appear to enter the cursor from. */
-function oppositeSide(side: ResolvedPin["side"]): ResolvedPin["side"] {
-  switch (side) {
-    case "left":
-      return "right";
-    case "right":
-      return "left";
-    case "top":
-      return "bottom";
-    default:
-      return "top";
-  }
-}
-
-/** A press and release at the same spot — a click, not a drag. */
-function samePoint(a: Point, b: Point): boolean {
-  return (
-    Math.abs(a.x - b.x) < PIN_HIT_RADIUS && Math.abs(a.y - b.y) < PIN_HIT_RADIUS
-  );
 }

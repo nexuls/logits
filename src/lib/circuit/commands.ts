@@ -236,6 +236,7 @@ export function connect(
   lookup: NodeLookup,
   a: PinRef,
   b: PinRef,
+  waypoints: readonly Point[] = [],
 ): ConnectResult {
   const pinA = findPin(document, lookup, a);
   const pinB = findPin(document, lookup, b);
@@ -257,6 +258,12 @@ export function connect(
 
   const wireId = createWireId();
   const wire: Wire = { id: wireId, from, to };
+  // Bends the user dropped while drawing arrive with the connection rather than
+  // as a second edit, so the whole wire is one undo step.
+  if (waypoints.length > 0) {
+    const ordered = from === a ? waypoints : [...waypoints].reverse();
+    wire.waypoints = ordered.map(snapPointToGrid);
+  }
 
   return {
     ok: true,

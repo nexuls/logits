@@ -252,6 +252,52 @@ describe("connect", () => {
     expect(joined.document.wires[joined.wireId].to.nodeId).toBe(second.nodeId);
   });
 
+  it("keeps the bends drawn with the wire, snapped to the grid", () => {
+    const first = addNode(doc, and, { position: { x: 0, y: 0 } });
+    const second = addNode(first.document, led, {
+      position: { x: 100, y: 0 },
+    });
+
+    const joined = connect(
+      second.document,
+      lookupNode,
+      { nodeId: first.nodeId, pinId: "out" },
+      { nodeId: second.nodeId, pinId: "in" },
+      [{ x: 47, y: 62 }],
+    );
+
+    if (!joined.ok) throw new Error(joined.reason);
+    expect(joined.document.wires[joined.wireId].waypoints).toEqual([
+      { x: 50, y: 60 },
+    ]);
+  });
+
+  it("reverses the bends when the drawn direction is flipped to put the driver first", () => {
+    const first = addNode(doc, and, { position: { x: 0, y: 0 } });
+    const second = addNode(first.document, led, {
+      position: { x: 100, y: 0 },
+    });
+
+    // Drawn from the LED input, so `connect` swaps the ends — the bends must
+    // follow, or the wire would replay its own route backwards.
+    const joined = connect(
+      second.document,
+      lookupNode,
+      { nodeId: second.nodeId, pinId: "in" },
+      { nodeId: first.nodeId, pinId: "out" },
+      [
+        { x: 80, y: 40 },
+        { x: 30, y: 40 },
+      ],
+    );
+
+    if (!joined.ok) throw new Error(joined.reason);
+    expect(joined.document.wires[joined.wireId].waypoints).toEqual([
+      { x: 30, y: 40 },
+      { x: 80, y: 40 },
+    ]);
+  });
+
   it("refuses a pin that does not exist", () => {
     const { document, andId, ledId } = wiredPair();
     const result = connect(

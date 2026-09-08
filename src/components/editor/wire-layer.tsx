@@ -5,6 +5,7 @@ import { memo } from "react";
 import { valueGlyph } from "@/components/nodes/node-views";
 import type { Rect } from "@/lib/circuit/geometry";
 import type { Point } from "@/lib/circuit/schema";
+import { smoothPath } from "@/lib/circuit/wire-path";
 import { cn } from "@/lib/utils";
 import type { ResolvedWire, Scene } from "@/state/scene";
 import { useNetValue } from "@/state/simulation";
@@ -60,11 +61,13 @@ function WireLayer({
       ))}
 
       {pending && (
-        <polyline
-          points={toPoints(pending.points)}
+        <path
+          d={smoothPath(pending.points)}
           fill="none"
-          strokeWidth={2}
+          strokeWidth={3}
           strokeDasharray="6 4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
           vectorEffect="non-scaling-stroke"
           className={cn(
             pending.unresolved ? "stroke-destructive" : "stroke-primary",
@@ -114,17 +117,17 @@ function Wire({ wire, selected, faulted }: WireProps) {
   }
 
   const bits = Math.max(wire.from?.spec.width ?? 1, wire.to?.spec.width ?? 1);
-  const middle = wire.points[Math.floor(wire.points.length / 2)];
+  const middle = midpoint(wire.points);
 
   // A bus shows its value; a single bit only speaks up when colour alone would
   // not be enough — an X, or a floating net.
   const label = bits > 1 ? value || `${bits}b` : valueGlyph(value);
-  const baseWidth = bits > 1 ? 3.5 : 2;
+  const baseWidth = bits > 1 ? 5 : 3;
 
   return (
     <g>
-      <polyline
-        points={toPoints(wire.points)}
+      <path
+        d={smoothPath(wire.points)}
         fill="none"
         vectorEffect="non-scaling-stroke"
         // Buses are drawn thicker, so a 4-bit link reads as one at a glance.
@@ -163,6 +166,28 @@ function Wire({ wire, selected, faulted }: WireProps) {
   );
 }
 
-function toPoints(points: readonly Point[]): string {
-  return points.map((point) => `${point.x},${point.y}`).join(" ");
+/**
+ * Where the value label sits: the middle of the *longest* segment, not the
+ * middle vertex. A diagonal wire's vertices bunch up near its bends, and a
+ * label parked on one of those lands on top of the node it just left.
+ */
+function midpoint(points: readonly Point[]): Point {
+  let best = 0;
+  let bestLength = -1;
+
+  for (let i = 0; i + 1 < points.length; i++) {
+    const length = Math.hypot(
+      points[i + 1].x - points[i].x,
+      points[i + 1].y - points[i].y,
+    );
+    if (length > bestLength) {
+      bestLength = length;
+      best = i;
+    }
+  }
+
+  return {
+    x: (points[best].x + points[best + 1].x) / 2,
+    y: (points[best].y + points[best + 1].y) / 2,
+  };
 }

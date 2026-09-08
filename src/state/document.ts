@@ -319,10 +319,14 @@ export function setOpenDocumentDefaultZoom(zoom: number): boolean {
   return apply("zoom", (document) => setDefaultZoom(document, zoom));
 }
 
-export function connectPins(from: PinRef, to: PinRef): ConnectResult {
+export function connectPins(
+  from: PinRef,
+  to: PinRef,
+  waypoints: readonly Point[] = [],
+): ConnectResult {
   if (!history) return { ok: false, reason: "missing-pin" };
 
-  const result = connect(history.present, lookupNode, from, to);
+  const result = connect(history.present, lookupNode, from, to, waypoints);
   if (result.ok) apply("connect", () => result.document);
 
   return result;

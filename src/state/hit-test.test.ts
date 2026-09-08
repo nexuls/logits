@@ -135,6 +135,40 @@ describe("elementsInRect", () => {
     expect(found.wireIds).toHaveLength(1);
   });
 
+  it("misses a diagonal wire whose bounding box overlaps but which does not", () => {
+    // The two nodes are offset in y, so their wire runs diagonally across the
+    // gap. A band tucked into the corner of that diagonal's bounding box must
+    // not catch it (ADR 0006).
+    const offset = addNode(doc, led, { position: { x: 200, y: 200 } });
+    const joined = connect(
+      offset.document,
+      lookupNode,
+      { nodeId: andId, pinId: "in1" },
+      { nodeId: offset.nodeId, pinId: "in" },
+    );
+    if (!joined.ok) throw new Error(`connect failed: ${joined.reason}`);
+
+    const built = buildScene(joined.document, lookupNode);
+    const diagonal = Object.keys(built.wires).find(
+      (id) => built.wires[id].wire.to.nodeId === offset.nodeId,
+    );
+    if (!diagonal) throw new Error("the diagonal wire was not built");
+
+    const band = { x: 170, y: 30, width: 20, height: 20 };
+    expect(elementsInRect(built, band).wireIds).not.toContain(diagonal);
+
+    // …while a band actually on the line does catch it.
+    const middle = built.wires[diagonal].points[1];
+    expect(
+      elementsInRect(built, {
+        x: middle.x - 5,
+        y: middle.y - 5,
+        width: 10,
+        height: 10,
+      }).wireIds,
+    ).toContain(diagonal);
+  });
+
   it("finds nothing in empty space", () => {
     const found = elementsInRect(scene(), {
       x: 1000,

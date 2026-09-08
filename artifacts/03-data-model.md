@@ -100,9 +100,11 @@ A wire stores only its **bends**. The polyline itself —
 [wire-path.ts](../src/lib/circuit/wire-path.ts) — is derived per render from
 the pins plus the waypoints, so it follows the nodes automatically. Waypoints
 are absolute and grid-snapped; a wire with none is auto-routed, and adding one
-is what makes it manually routed. Every segment is axis-aligned, and the router
-re-orthogonalises whatever it is given, so a saved path cannot come back
-diagonal after a node moves.
+is what makes it manually routed. Segments run at any angle ([ADR
+0006](decisions/0006-free-angle-wires.md)) and the router adds nothing of its
+own beyond a one-cell stub off each pin, so the bends in the file are exactly
+the bends on screen. Rounded corners are drawn from that polyline and are never
+written back to it.
 
 ## Netlist (derived, never stored)
 

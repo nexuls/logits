@@ -147,12 +147,12 @@ export default function CircuitNode({
             // no pointer events; it exists for Tab-and-Enter and the tooltip.
             // `click` still fires from the keyboard on a focused button.
             className={cn(
-              "pointer-events-none absolute size-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-current bg-card outline-none",
+              "pointer-events-none absolute size-[9px] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-current bg-card outline-none",
               "focus-visible:ring-2 focus-visible:ring-ring",
               valueClass(value),
               wiring &&
                 (candidate
-                  ? "scale-150 border-2 border-primary text-primary"
+                  ? "scale-150 border-primary text-primary"
                   : "opacity-30"),
             )}
             style={{

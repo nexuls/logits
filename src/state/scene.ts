@@ -75,7 +75,7 @@ export type ResolvedWire = {
   from: ResolvedPin | null;
   to: ResolvedPin | null;
   /**
-   * The Manhattan polyline to draw, pin endpoints included. Empty when either
+   * The polyline to draw, pin endpoints included. Empty when either
    * endpoint is missing — there is nothing to route between.
    */
   points: Point[];

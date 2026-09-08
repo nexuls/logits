@@ -24,11 +24,11 @@ import type { ResolvedNode, ResolvedPin, ResolvedWire, Scene } from "./scene";
  * size at every zoom.
  */
 
-/** How near a pin counts as on it. ~10 screen px at 1×, per the interaction spec. */
-export const PIN_HIT_RADIUS = 6;
+/** How near a pin counts as on it. ~14 screen px at 1×, per the interaction spec. */
+export const PIN_HIT_RADIUS = 9;
 
 /** Half the clickable thickness of a wire. */
-export const WIRE_HIT_RADIUS = 4;
+export const WIRE_HIT_RADIUS = 6;
 
 export type PinHit = { node: ResolvedNode; pin: ResolvedPin };
 
@@ -190,16 +190,36 @@ function distanceToSegment(point: Point, a: Point, b: Point): number {
 }
 
 /**
- * Segments are axis-aligned by construction (`wire-path.ts` orthogonalises
- * every path), so this is an overlap test on two intervals rather than a
- * general segment/box clip.
+ * A real segment/box clip, because segments run at any angle (ADR 0006): a
+ * bounding-box overlap would catch a diagonal whose box crosses the band while
+ * the wire itself passes well clear of it.
+ *
+ * Liang–Barsky — the segment is clipped against the four slabs of the rect, and
+ * survives if the entry parameter never overtakes the exit one.
  */
 function segmentIntersectsRect(a: Point, b: Point, rect: Rect): boolean {
-  const segment = {
-    x: Math.min(a.x, b.x),
-    y: Math.min(a.y, b.y),
-    width: Math.abs(a.x - b.x),
-    height: Math.abs(a.y - b.y),
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+
+  let enter = 0;
+  let exit = 1;
+
+  const slab = (direction: number, distance: number): boolean => {
+    if (direction === 0) {
+      // Parallel to this pair of edges: inside them, or missing entirely.
+      return distance >= 0;
+    }
+    const t = distance / direction;
+    if (direction < 0) enter = Math.max(enter, t);
+    else exit = Math.min(exit, t);
+    return true;
   };
-  return rectsIntersect(segment, rect);
+
+  return (
+    slab(-dx, a.x - rect.x) &&
+    slab(dx, rect.x + rect.width - a.x) &&
+    slab(-dy, a.y - rect.y) &&
+    slab(dy, rect.y + rect.height - a.y) &&
+    enter <= exit
+  );
 }

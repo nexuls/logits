@@ -87,11 +87,11 @@ describe("buildScene", () => {
 
     const wireId = Object.keys(after.wires)[0];
     expect(after.wires[wireId].points).not.toEqual(before.wires[wireId].points);
-    // Still Manhattan after the move: every segment is axis-aligned.
-    for (const [index, point] of after.wires[wireId].points.entries()) {
-      if (index === 0) continue;
-      const previous = after.wires[wireId].points[index - 1];
-      expect(point.x === previous.x || point.y === previous.y).toBe(true);
-    }
+    // The route still ends on the pins it belongs to, wherever they went.
+    const points = after.wires[wireId].points;
+    expect(points[0]).toEqual(after.nodes[andId].pinsById.out.world);
+    expect(points[points.length - 1]).toEqual(
+      after.nodes[ledId].pinsById.in.world,
+    );
   });
 });

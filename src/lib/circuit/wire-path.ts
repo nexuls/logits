@@ -4,10 +4,12 @@ import type { PinSpec, Point } from "./schema";
 /**
  * Wire routing: turning two pins and a list of waypoints into a polyline.
  *
- * Wires are Manhattan — every segment is axis-aligned, so a wire bends like a
- * pipe rather than running diagonally. Waypoints are the user's bends, stored
- * in the document in absolute world coordinates; everything else here is
- * derived per render and never saved. See artifacts/07-interaction-spec.md.
+ * Wires run at any angle — a segment may be horizontal, vertical or diagonal
+ * (ADR 0006). The path is exactly the points the user gave it: a short stub off
+ * each pin so the wire leaves the node body perpendicular, then straight runs
+ * through every waypoint. Waypoints are the user's bends, stored in the
+ * document in absolute world coordinates; everything else here is derived per
+ * render and never saved. See artifacts/07-interaction-spec.md.
  *
  * A wire with no waypoints is auto-routed. Storing a waypoint *is* what makes a
  * wire manually routed — there is no separate mode flag, so there is no way for
@@ -19,7 +21,11 @@ type Side = PinSpec["side"];
 /** A short lead so a wire leaves its pin perpendicular to the node body. */
 const STUB_LENGTH = GRID_SIZE;
 
-const isHorizontal = (side: Side) => side === "left" || side === "right";
+/** Corner rounding, in world units, that `smoothPath` aims for at each bend. */
+export const WIRE_CORNER_RADIUS = GRID_SIZE * 0.8;
+
+/** Below this a coordinate difference is rounding noise, not a real turn. */
+const EPSILON = 1e-6;
 
 function step(point: Point, side: Side, distance: number): Point {
   switch (side) {
@@ -40,6 +46,11 @@ function step(point: Point, side: Side, distance: number): Point {
  * Pure and cheap: no obstacle avoidance, no node awareness. A wire may cross a
  * node — that is the user's problem to fix by bending it, which is exactly what
  * waypoints are for.
+ *
+ * With no waypoints the route is the straight line between the two stubs, at
+ * whatever angle that is. There is no midpoint bend to insert any more: a
+ * diagonal is one segment, and a bend the user did not ask for is a bend they
+ * have to undo.
  */
 export function wirePath(
   from: Point,
@@ -48,121 +59,44 @@ export function wirePath(
   toSide: Side,
   waypoints: readonly Point[] = [],
 ): Point[] {
-  const fromStub = step(from, fromSide, STUB_LENGTH);
-  const toStub = step(to, toSide, STUB_LENGTH);
-  const middle =
-    waypoints.length > 0
-      ? waypoints
-      : autoRoute(fromStub, fromSide, toStub, toSide);
-
-  return simplifyPath(
-    orthogonalize(
-      [from, fromStub, ...middle, toStub, to],
-      isHorizontal(fromSide),
-    ),
-  );
+  return simplifyPath([
+    from,
+    step(from, fromSide, STUB_LENGTH),
+    ...waypoints,
+    step(to, toSide, STUB_LENGTH),
+    to,
+  ]);
 }
 
 /**
- * The default two-bend path the interaction spec asks for: pins that face along
- * the same axis meet at the midpoint between them, which is the shape people
- * expect on a schematic. Pins on perpendicular axes need only one corner, and
- * `orthogonalize` inserts it.
+ * The polyline for a wire still being drawn, whose far end is the cursor.
  *
- * When the target sits *behind* the source pin the midpoint falls between the
- * two node bodies, and the wire would double back across the node it just left.
- * Feedback is not an edge case here — every latch and oscillator has some — so
- * that case detours perpendicularly instead, giving the four-bend path that
- * goes around.
+ * Only the anchored end gets a stub: the cursor end has no pin yet, so giving
+ * it one would make the preview lag behind the pointer by a grid cell.
  */
-function autoRoute(
+export function pendingWirePath(
   from: Point,
   fromSide: Side,
-  to: Point,
-  toSide: Side,
+  cursor: Point,
+  waypoints: readonly Point[] = [],
 ): Point[] {
-  const fromH = isHorizontal(fromSide);
-  if (fromH !== isHorizontal(toSide)) return [];
-
-  if (fromH) {
-    if (isAhead(from.x, to.x, fromSide === "right")) {
-      const midX = snapToGrid((from.x + to.x) / 2);
-      return [
-        { x: midX, y: from.y },
-        { x: midX, y: to.y },
-      ];
-    }
-    const midY = snapToGrid((from.y + to.y) / 2);
-    return [
-      { x: from.x, y: midY },
-      { x: to.x, y: midY },
-    ];
-  }
-
-  if (isAhead(from.y, to.y, fromSide === "bottom")) {
-    const midY = snapToGrid((from.y + to.y) / 2);
-    return [
-      { x: from.x, y: midY },
-      { x: to.x, y: midY },
-    ];
-  }
-  const midX = snapToGrid((from.x + to.x) / 2);
-  return [
-    { x: midX, y: from.y },
-    { x: midX, y: to.y },
-  ];
+  return simplifyPath([
+    from,
+    step(from, fromSide, STUB_LENGTH),
+    ...waypoints,
+    cursor,
+  ]);
 }
 
-/** Is the target in the direction the source pin actually points? */
-function isAhead(from: number, to: number, increasing: boolean): boolean {
-  return increasing ? to >= from : to <= from;
-}
-
-/**
- * Inserts a corner wherever two consecutive points share neither axis, so the
- * path stays Manhattan no matter what the waypoints say. This is what keeps a
- * hand-routed wire legal after the node at one end is dragged away.
- *
- * The corner turns *across* the incoming segment's axis, so the path alternates
- * instead of doubling back on itself.
- */
-function orthogonalize(points: readonly Point[], startHorizontal: boolean) {
-  const out: Point[] = [points[0]];
-  let horizontal = startHorizontal;
-
-  for (let i = 1; i < points.length; i++) {
-    const previous = out[out.length - 1];
-    const next = points[i];
-    if (previous.x !== next.x && previous.y !== next.y) {
-      out.push(
-        horizontal
-          ? { x: next.x, y: previous.y }
-          : { x: previous.x, y: next.y },
-      );
-    }
-    out.push(next);
-
-    const last = out[out.length - 2];
-    if (last.x !== next.x) horizontal = true;
-    else if (last.y !== next.y) horizontal = false;
-  }
-  return out;
-}
-
-/** Drops zero-length segments and merges runs that continue along one axis. */
+/** Drops zero-length segments and merges runs that continue in one direction. */
 export function simplifyPath(points: readonly Point[]): Point[] {
   const out: Point[] = [];
   for (const point of points) {
     const last = out[out.length - 1];
-    if (last && last.x === point.x && last.y === point.y) continue;
+    if (last && samePoint(last, point)) continue;
 
     const previous = out[out.length - 2];
-    if (
-      previous &&
-      last &&
-      ((previous.x === last.x && last.x === point.x) ||
-        (previous.y === last.y && last.y === point.y))
-    ) {
+    if (previous && last && isCollinear(previous, last, point)) {
       out[out.length - 1] = point;
       continue;
     }
@@ -171,13 +105,95 @@ export function simplifyPath(points: readonly Point[]): Point[] {
   return out;
 }
 
+function samePoint(a: Point, b: Point): boolean {
+  return Math.abs(a.x - b.x) < EPSILON && Math.abs(a.y - b.y) < EPSILON;
+}
+
 /**
- * Drags one segment of a path sideways, the way you would nudge a pipe.
+ * Do `a → b → c` continue in one direction?
  *
- * Only the axis the segment can actually move along is honoured — a horizontal
- * segment moves in y, a vertical one in x. The two pin endpoints are anchored,
- * so grabbing a segment that touches one splits a new bend off it rather than
- * pulling the wire off its pin.
+ * The cross product is scaled by the two segment lengths, so the tolerance is a
+ * *shape* tolerance rather than an absolute one: a hair of a kink survives on a
+ * short segment and is folded away on a long one, instead of the reverse.
+ */
+function isCollinear(a: Point, b: Point, c: Point): boolean {
+  const abx = b.x - a.x;
+  const aby = b.y - a.y;
+  const bcx = c.x - b.x;
+  const bcy = c.y - b.y;
+  const cross = abx * bcy - aby * bcx;
+  const scale = Math.hypot(abx, aby) * Math.hypot(bcx, bcy);
+  // Also require the second segment to keep going forward, so a spur that
+  // doubles back exactly along the first is kept as the bend it is.
+  return Math.abs(cross) <= scale * 1e-9 && abx * bcx + aby * bcy > 0;
+}
+
+/**
+ * An SVG `d` string for a polyline with its corners rounded off.
+ *
+ * Each bend is replaced by a quadratic through the two points `radius` back
+ * along the segments either side of it, which is the cheapest curve that is
+ * tangent to both — so the wire never bulges outside the polyline the
+ * hit-test uses. The radius shrinks to fit short segments, so a tight zigzag
+ * degrades to a sharper corner instead of overshooting into its neighbour.
+ */
+export function smoothPath(
+  points: readonly Point[],
+  radius = WIRE_CORNER_RADIUS,
+): string {
+  if (points.length === 0) return "";
+
+  const first = points[0];
+  let d = `M ${round(first.x)} ${round(first.y)}`;
+
+  for (let i = 1; i < points.length - 1; i++) {
+    const previous = points[i - 1];
+    const corner = points[i];
+    const next = points[i + 1];
+
+    const inLength = distance(previous, corner);
+    const outLength = distance(corner, next);
+    // Half, not the whole segment: two consecutive corners must each keep to
+    // their own side of the segment they share or the curves would overlap.
+    const r = Math.min(radius, inLength / 2, outLength / 2);
+    if (r < EPSILON) continue;
+
+    const start = towards(corner, previous, r);
+    const end = towards(corner, next, r);
+    d += ` L ${round(start.x)} ${round(start.y)}`;
+    d += ` Q ${round(corner.x)} ${round(corner.y)} ${round(end.x)} ${round(end.y)}`;
+  }
+
+  const last = points[points.length - 1];
+  return points.length > 1 ? `${d} L ${round(last.x)} ${round(last.y)}` : d;
+}
+
+function distance(a: Point, b: Point): number {
+  return Math.hypot(b.x - a.x, b.y - a.y);
+}
+
+/** The point `length` from `origin` along the line towards `target`. */
+function towards(origin: Point, target: Point, length: number): Point {
+  const span = distance(origin, target);
+  if (span < EPSILON) return origin;
+  const t = length / span;
+  return {
+    x: origin.x + (target.x - origin.x) * t,
+    y: origin.y + (target.y - origin.y) * t,
+  };
+}
+
+/** Two decimals is well under a device pixel at max zoom, and keeps `d` short. */
+function round(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+/**
+ * Drags one segment of a path sideways, the way you would nudge a rope.
+ *
+ * Free in both axes now that segments may run at any angle. The two pin
+ * endpoints are anchored, so grabbing a segment that touches one splits a new
+ * bend off it rather than pulling the wire off its pin.
  *
  * `index` addresses the segment between `points[index]` and `points[index + 1]`.
  */
@@ -201,13 +217,13 @@ export function moveSegment(
 
   const a = path[target];
   const b = path[target + 1];
-  const horizontal = a.y === b.y;
-  const moved = horizontal
-    ? { y: snapToGrid(a.y + delta.y) }
-    : { x: snapToGrid(a.x + delta.x) };
-
-  path[target] = { ...a, ...moved };
-  path[target + 1] = { ...b, ...moved };
+  // Snapped per endpoint rather than as one rounded delta, so a segment that
+  // started on the grid lands back on it.
+  path[target] = { x: snapToGrid(a.x + delta.x), y: snapToGrid(a.y + delta.y) };
+  path[target + 1] = {
+    x: snapToGrid(b.x + delta.x),
+    y: snapToGrid(b.y + delta.y),
+  };
   return path;
 }
 
