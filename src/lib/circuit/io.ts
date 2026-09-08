@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAX_SCALE, MIN_SCALE } from "./coords";
 import { createDocumentId } from "./ids";
 import {
   type CircuitDocument,
@@ -15,7 +16,7 @@ import {
  * `localStorage`. The browser side of persistence lives in `src/state/`.
  */
 
-export const CURRENT_VERSION = 1;
+export const CURRENT_VERSION = 2;
 
 export const FILE_EXTENSION = ".logits.json";
 export const FILE_MIME_TYPE = "application/json";
@@ -28,7 +29,18 @@ export const FILE_MIME_TYPE = "application/json";
  */
 const MIGRATIONS: readonly ((
   doc: Record<string, unknown>,
-) => Record<string, unknown>)[] = [];
+) => Record<string, unknown>)[] = [migrate_1_to_2];
+
+/**
+ * v2 added the optional `defaultZoom`. A v1 document is already a valid v2 one
+ * without it — absent means 100% — so there is nothing to rewrite. The step
+ * exists because the version still has to move: a v2 file carrying a zoom
+ * would otherwise open silently in a v1 build that drops the field on the next
+ * save.
+ */
+function migrate_1_to_2(doc: Record<string, unknown>): Record<string, unknown> {
+  return doc;
+}
 
 export type LoadIssueCode =
   | "invalid-json"
@@ -158,6 +170,14 @@ function salvage(raw: Record<string, unknown>): LoadResult {
       name: z.string().min(1).max(200).catch("Untitled circuit"),
       nodes: z.record(z.string(), z.unknown()).catch({}),
       wires: z.record(z.string(), z.unknown()).catch({}),
+      // An out-of-range or non-numeric zoom falls back to "unset" rather than
+      // failing the document: a bad view preference is not worth a circuit.
+      defaultZoom: z
+        .number()
+        .min(MIN_SCALE)
+        .max(MAX_SCALE)
+        .optional()
+        .catch(undefined),
       subcircuits: z.record(z.string(), z.unknown()).optional(),
     })
     .safeParse(raw);
@@ -238,6 +258,9 @@ function salvage(raw: Record<string, unknown>): LoadResult {
     nodes,
     wires,
   };
+  if (envelope.data.defaultZoom !== undefined) {
+    document.defaultZoom = envelope.data.defaultZoom;
+  }
   if (Object.keys(subcircuits).length > 0) document.subcircuits = subcircuits;
 
   return { ok: true, document, issues };

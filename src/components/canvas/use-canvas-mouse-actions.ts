@@ -10,6 +10,7 @@ import {
 
 import {
   clampScale,
+  DEFAULT_SCALE,
   panByScreen,
   type Viewport,
   zoomAt,
@@ -24,14 +25,29 @@ type UseCanvasMouseActionsParams = {
   minScale: number;
   maxScale: number;
   zoomIntensity?: number;
+  /** Scale a fresh view — and `resetView` — lands on. */
   initialScale?: number;
   initialOffset?: Point;
+  /**
+   * Changing this re-frames the view on the initial scale and offset. It is
+   * how swapping the document under the canvas starts at that circuit's zoom
+   * rather than inheriting the last one's.
+   */
+  viewKey?: string;
 };
 
 const DEFAULT_ZOOM_INTENSITY = 0.0015;
 const TRACKPAD_ZOOM_MULTIPLIER = 3.25;
 const TRACKPAD_DELTA_THRESHOLD = 16;
 const TOOLBAR_ZOOM_FACTOR = 1.2;
+
+/**
+ * Module-level so the default `initialOffset` keeps one identity across
+ * renders. A fresh `{ x: 0, y: 0 }` per call would make `resetView` a new
+ * function every render, and the re-framing effect below would then fire on
+ * every render instead of when `viewKey` changes.
+ */
+const ORIGIN: Point = { x: 0, y: 0 };
 
 function isZoomGesture(
   event: WheelEvent<HTMLDivElement> | globalThis.WheelEvent,
@@ -50,8 +66,9 @@ export function useCanvasMouseActions({
   minScale,
   maxScale,
   zoomIntensity = DEFAULT_ZOOM_INTENSITY,
-  initialScale = 1,
-  initialOffset = { x: 0, y: 0 },
+  initialScale = DEFAULT_SCALE,
+  initialOffset = ORIGIN,
+  viewKey,
 }: UseCanvasMouseActionsParams) {
   const [viewState, setViewState] = useState<ViewState>({
     scale: initialScale,
@@ -229,6 +246,17 @@ export function useCanvasMouseActions({
       offset: initialOffset,
     });
   }, [initialOffset, initialScale]);
+
+  // Re-frames when the caller swaps what is on the canvas, and only then: a
+  // change to `initialScale` alone is the user editing the project's default
+  // zoom, which must not yank the view out from under the edit they are
+  // making. They get the new scale on the next reset, or the next open.
+  const framedKeyRef = useRef(viewKey);
+  useEffect(() => {
+    if (framedKeyRef.current === viewKey) return;
+    framedKeyRef.current = viewKey;
+    resetView();
+  }, [viewKey, resetView]);
 
   const onPointerDown = useCallback(
     (event: PointerEvent<HTMLDivElement>) => {

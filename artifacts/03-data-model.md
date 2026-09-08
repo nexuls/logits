@@ -18,6 +18,7 @@ type CircuitDocument = {
   name: string;
   nodes: Record<NodeId, CircuitNode>;
   wires: Record<WireId, Wire>;
+  defaultZoom?: number;         // scale this circuit opens at; absent = 100%
   subcircuits?: Record<string, CircuitDocument>;  // user-defined chips (phase 4)
 };
 
@@ -42,6 +43,17 @@ type PinRef = { nodeId: NodeId; pinId: string };
 
 Ids are opaque strings from `src/lib/circuit/ids.ts` (`nanoid`-style, no
 counters — counters collide on paste and merge).
+
+`defaultZoom` is the one piece of *view* state the document owns, and it is a
+setting rather than a running transform: the editor opens the circuit at that
+scale and "reset view" returns to it, but pan and live zoom stay in the
+viewport and are never written back. It is bounded by `MIN_SCALE`/`MAX_SCALE`
+in [coords.ts](../src/lib/circuit/coords.ts) — the same limits the canvas
+clamps to, so a file cannot ask for a scale that will not render — and absent
+means 100%, so a circuit that never set one serialises exactly as it did
+before the field existed. Edited through `setDefaultZoom`, like any other
+command; the panel is
+[project-settings-panel.tsx](../src/components/editor/project-settings-panel.tsx).
 
 **Positions are world coordinates in canvas units**, not pixels; zoom does not
 change them. Nodes snap to a 10-unit grid: `GRID_SIZE` in

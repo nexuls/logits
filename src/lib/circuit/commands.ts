@@ -3,6 +3,7 @@ import type {
   NodeLookup,
   NodeParams,
 } from "@/lib/nodes/define";
+import { clampScale, DEFAULT_SCALE } from "./coords";
 import {
   GRID_SIZE,
   nodeBounds,
@@ -187,6 +188,29 @@ export function renameDocument(
   if (!trimmed || trimmed === document.name) return document;
 
   return { ...document, name: trimmed };
+}
+
+/**
+ * Sets the scale the editor opens this circuit at.
+ *
+ * `DEFAULT_SCALE` clears the field rather than storing it, so a project reset
+ * to 100% serialises identically to one that never set a zoom — the same
+ * reason `pinProject` stores `undefined` instead of `false`. Out-of-range
+ * values are clamped rather than refused: the control should not be able to
+ * produce a scale the canvas will not render, and neither should a caller.
+ */
+export function setDefaultZoom(
+  document: CircuitDocument,
+  zoom: number,
+): CircuitDocument {
+  if (!Number.isFinite(zoom)) return document;
+
+  const clamped = clampScale(zoom);
+  const next = clamped === DEFAULT_SCALE ? undefined : clamped;
+  if (next === document.defaultZoom) return document;
+
+  const { defaultZoom: _dropped, ...rest } = document;
+  return next === undefined ? rest : { ...rest, defaultZoom: next };
 }
 
 export type ConnectFailure =

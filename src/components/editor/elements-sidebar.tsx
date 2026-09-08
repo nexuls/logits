@@ -30,6 +30,7 @@ import { nodeCategories, nodeDefinitions } from "@/lib/nodes/registry";
 import EditorSettingsPanel from "./editor-settings-panel";
 import Inspector from "./inspector";
 import NodePaletteItem from "./node-palette-item";
+import ProjectSettingsPanel from "./project-settings-panel";
 
 type Props = {
   /** Registry `type` of the node armed for placement, if any. */
@@ -146,6 +147,8 @@ function Body({ selectedType, onSelectType }: Props) {
           )}
 
           <SidebarSeparator className="mx-0 group-data-[collapsible=icon]:hidden" />
+
+          <ProjectSettingsPanel />
 
           <EditorSettingsPanel />
         </SidebarContent>

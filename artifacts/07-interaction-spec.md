@@ -18,8 +18,15 @@ Do not change a built gesture without an ADR — muscle memory is a feature.
 | Two-finger pinch (touch) | Zoom + pan |
 | Double-click empty canvas | Reset view |
 
-Zoom is clamped to `0.05`–`8`. Native wheel is prevented on the viewport so the
-page never scrolls behind the canvas.
+Zoom is clamped to `0.05`–`8` (`MIN_SCALE`/`MAX_SCALE` in
+[coords.ts](../src/lib/circuit/coords.ts)). Native wheel is prevented on the
+viewport so the page never scrolls behind the canvas.
+
+**Reset view** goes to the project's `defaultZoom`, not to 100%, and the
+minimap's percentage button is labelled with that target. Opening a circuit
+frames it at the same scale. Editing the setting does *not* move the current
+view — a preference change must not yank the canvas out from under an edit in
+progress; it applies at the next reset or open.
 
 The `--logit-cursor-*` custom properties the canvas uses are defined in
 [globals.css](../src/app/globals.css); each falls back to the standard keyword,

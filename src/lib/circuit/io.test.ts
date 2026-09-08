@@ -186,3 +186,38 @@ describe("salvage", () => {
     expect(result.document.subcircuits).toBeUndefined();
   });
 });
+
+describe("defaultZoom", () => {
+  it("round-trips a stored zoom", () => {
+    const document = { ...documentFixture(), defaultZoom: 0.6 };
+    const loaded = deserialize(serialize(document));
+
+    expect(loaded.ok && loaded.document.defaultZoom).toBe(0.6);
+  });
+
+  it("is absent, not defaulted, when the file has none", () => {
+    const loaded = fromJson(documentFixture());
+
+    expect(loaded.ok && "defaultZoom" in loaded.document).toBe(false);
+  });
+
+  it("drops an out-of-range or non-numeric zoom without losing the circuit", () => {
+    for (const bad of [0, 99, "big", null]) {
+      const loaded = fromJson({ ...documentFixture(), defaultZoom: bad });
+
+      expect(loaded.ok).toBe(true);
+      expect(loaded.ok && loaded.document.defaultZoom).toBeUndefined();
+      expect(loaded.ok && Object.keys(loaded.document.nodes)).toHaveLength(2);
+    }
+  });
+
+  it("upgrades a v1 document, which simply has no zoom", () => {
+    const v1 = { ...documentFixture(), version: 1 };
+    const loaded = fromJson(v1);
+
+    expect(loaded.ok).toBe(true);
+    expect(loaded.ok && loaded.document.version).toBe(CURRENT_VERSION);
+    expect(loaded.ok && loaded.document.defaultZoom).toBeUndefined();
+    expect(loaded.ok && Object.keys(loaded.document.wires)).toEqual(["w_1"]);
+  });
+});

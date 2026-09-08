@@ -10,6 +10,7 @@ import {
   useState,
 } from "react";
 
+import { DEFAULT_SCALE, MAX_SCALE, MIN_SCALE } from "@/lib/circuit/coords";
 import type { Rect } from "@/lib/circuit/geometry";
 import CanvasGrid from "./canvas-grid";
 import { type CanvasViewport, createCanvasViewport } from "./canvas-viewport";
@@ -28,6 +29,17 @@ type Props = {
   title?: string;
   showGrid?: boolean;
   showMinimap?: boolean;
+  /**
+   * Scale the view starts at and that "reset view" returns to. The document
+   * owns this number; the canvas only renders at it.
+   */
+  defaultZoom?: number;
+  /**
+   * Identifies what is on the canvas. When it changes the view re-frames on
+   * `defaultZoom` — how opening another circuit starts at its own zoom
+   * instead of inheriting the previous one's.
+   */
+  viewKey?: string;
   /** World-space extent of `children`, for the minimap. Null when empty. */
   contentBounds?: Rect | null;
   /** Passed through to the minimap, which samples theme colours imperatively. */
@@ -50,15 +62,14 @@ type Props = {
   onViewportChange?: (viewport: CanvasViewport) => void;
 };
 
-const MIN_SCALE = 0.05;
-const MAX_SCALE = 8;
-
 export default function Canvas({
   children,
   overlay,
   title = "Untitled circuit",
   showGrid = true,
   showMinimap = true,
+  defaultZoom = DEFAULT_SCALE,
+  viewKey,
   contentBounds = null,
   themeKey,
   onTitleChange,
@@ -88,6 +99,8 @@ export default function Canvas({
     viewportRef,
     minScale: MIN_SCALE,
     maxScale: MAX_SCALE,
+    initialScale: defaultZoom,
+    viewKey,
   });
 
   useEffect(() => {
@@ -207,6 +220,7 @@ export default function Canvas({
           onZoomIn={zoomIn}
           onZoomOut={zoomOut}
           onResetView={resetView}
+          resetZoomPercent={Math.round(defaultZoom * 100)}
           canZoomIn={scale < MAX_SCALE - 0.0001}
           canZoomOut={scale > MIN_SCALE + 0.0001}
         />

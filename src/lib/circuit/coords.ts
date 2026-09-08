@@ -83,7 +83,23 @@ export function viewportCenterWorld(view: Viewport, size: ViewportSize): Point {
   return toWorld({ x: size.width / 2, y: size.height / 2 }, view);
 }
 
-export function clampScale(scale: number, min: number, max: number): number {
+/**
+ * Zoom limits, and the scale a view starts at when nothing says otherwise.
+ *
+ * They live here rather than in the canvas component because they are no
+ * longer the viewport's private business: a document may carry a
+ * `defaultZoom`, and `schema.ts` validates it against exactly these numbers.
+ * One definition — do not re-declare them.
+ */
+export const MIN_SCALE = 0.05;
+export const MAX_SCALE = 8;
+export const DEFAULT_SCALE = 1;
+
+export function clampScale(
+  scale: number,
+  min: number = MIN_SCALE,
+  max: number = MAX_SCALE,
+): number {
   return Math.min(max, Math.max(min, scale));
 }
 

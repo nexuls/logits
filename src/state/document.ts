@@ -15,6 +15,7 @@ import {
   renameDocument,
   rotateNodes,
   type Selection,
+  setDefaultZoom,
   setNodeLabel,
   setNodeParams,
   setWireWaypoints,
@@ -281,6 +282,17 @@ export function updateNodeLabel(nodeId: string, label: string): boolean {
  */
 export function renameOpenDocument(name: string): boolean {
   return apply("rename", (document) => renameDocument(document, name));
+}
+
+/**
+ * Sets the zoom the open circuit opens at, and that "reset view" returns to.
+ *
+ * A document edit like any other: it is in the save format, so it belongs to
+ * undo and autosave rather than to the viewport, which owns only the *current*
+ * transform and nothing that outlives the session.
+ */
+export function setOpenDocumentDefaultZoom(zoom: number): boolean {
+  return apply("zoom", (document) => setDefaultZoom(document, zoom));
 }
 
 export function connectPins(from: PinRef, to: PinRef): ConnectResult {

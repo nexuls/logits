@@ -12,11 +12,13 @@ import {
   moveNodes,
   renameDocument,
   rotateNodes,
+  setDefaultZoom,
   setNodeLabel,
   setNodeParams,
   setWireWaypoints,
   topLeftForCenter,
 } from "./commands";
+import { DEFAULT_SCALE, MAX_SCALE, MIN_SCALE } from "./coords";
 import { createEmptyDocument } from "./io";
 import type { CircuitDocument } from "./schema";
 
@@ -433,5 +435,32 @@ describe("fragmentBounds", () => {
 
     expect(fragmentBounds(fragment, lookupNode)?.x).toBe(0);
     expect(fragmentBounds({ nodes: [], wires: [] }, lookupNode)).toBeNull();
+  });
+});
+
+describe("setDefaultZoom", () => {
+  it("stores a zoom inside the viewport's limits", () => {
+    expect(setDefaultZoom(doc, 0.5).defaultZoom).toBe(0.5);
+  });
+
+  it("clamps rather than refusing an out-of-range zoom", () => {
+    expect(setDefaultZoom(doc, 99).defaultZoom).toBe(MAX_SCALE);
+    expect(setDefaultZoom(doc, 0).defaultZoom).toBe(MIN_SCALE);
+  });
+
+  it("drops the field at 100%, so a reset circuit serialises as an unset one", () => {
+    const zoomed = setDefaultZoom(doc, 2);
+    const reset = setDefaultZoom(zoomed, DEFAULT_SCALE);
+
+    expect("defaultZoom" in reset).toBe(false);
+    expect(reset).toEqual(doc);
+  });
+
+  it("returns the same document when nothing changes", () => {
+    const zoomed = setDefaultZoom(doc, 0.75);
+
+    expect(setDefaultZoom(zoomed, 0.75)).toBe(zoomed);
+    expect(setDefaultZoom(doc, DEFAULT_SCALE)).toBe(doc);
+    expect(setDefaultZoom(doc, Number.NaN)).toBe(doc);
   });
 });

@@ -167,6 +167,11 @@ export default function Editor({
         title={document?.name ?? "No circuit open"}
         showGrid={showGrid}
         showMinimap={showMinimap}
+        defaultZoom={document?.defaultZoom}
+        // The loaded document's id, not `projectId`: the two differ for the
+        // render between asking for a project and the store having it, and
+        // re-framing then would use the outgoing circuit's zoom.
+        viewKey={document?.id ?? ""}
         contentBounds={contentBounds}
         themeKey={themeKey}
         cursor={gestures.cursor}

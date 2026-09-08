@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAX_SCALE, MIN_SCALE } from "./coords";
 
 /**
  * Runtime schemas for the circuit document.
@@ -57,6 +58,14 @@ const circuitDocumentBaseSchema = z.object({
   name: z.string().min(1).max(200),
   nodes: z.record(idSchema, circuitNodeSchema),
   wires: z.record(idSchema, wireSchema),
+  /**
+   * Scale the editor opens this circuit at, and what "reset view" returns to.
+   * Absent means 100%, so a circuit that never set one serialises exactly as
+   * it did before the field existed. Bounded by the viewport's own zoom
+   * limits — a document must not be able to ask for a scale the canvas
+   * refuses to render.
+   */
+  defaultZoom: z.number().min(MIN_SCALE).max(MAX_SCALE).optional(),
 });
 
 /**

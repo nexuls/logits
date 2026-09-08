@@ -40,6 +40,8 @@ type Props = {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onResetView: () => void;
+  /** Where `onResetView` lands, as a percentage — the project's default zoom. */
+  resetZoomPercent: number;
   canZoomIn: boolean;
   canZoomOut: boolean;
 };
@@ -65,6 +67,7 @@ export default function Minimap({
   onZoomIn,
   onZoomOut,
   onResetView,
+  resetZoomPercent,
   canZoomIn,
   canZoomOut,
 }: Props) {
@@ -229,7 +232,11 @@ export default function Minimap({
           size="xs"
           onClick={onResetView}
           className="min-w-10 px-1 text-center tabular-nums"
-          aria-label="Reset zoom and position"
+          // Names the destination, not just the action: with a project default
+          // other than 100% the button no longer does the obvious thing, and
+          // the percentage it shows is the *current* zoom, not the target.
+          aria-label={`Reset view to ${resetZoomPercent}%`}
+          title={`Reset view to ${resetZoomPercent}%`}
         >
           {zoomPercent}%
         </Button>
