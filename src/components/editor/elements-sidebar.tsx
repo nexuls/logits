@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/sidebar";
 import type { NodeDefinition } from "@/lib/nodes/define";
 import { nodeCategories, nodeDefinitions } from "@/lib/nodes/registry";
-import Inspector from "./inspector";
 import NodePaletteItem from "./node-palette-item";
 
 type Props = {
@@ -117,10 +116,6 @@ function Body({ selectedType, selectedCount = 0, onAdjustCount }: Props) {
         <SidebarSeparator className="mx-0" />
 
         <SidebarContent>
-          {/* Above the palette: when something is selected, its properties are
-              what the user came here for. It renders nothing otherwise. */}
-          <Inspector />
-
           {groups.map((category) => (
             <SidebarGroup key={category.id}>
               <SidebarGroupLabel>{category.label}</SidebarGroupLabel>

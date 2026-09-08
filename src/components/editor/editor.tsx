@@ -25,6 +25,7 @@ import { getNetlist, syncDocument, useDiagnostics } from "@/state/simulation";
 import CommandMenu from "./command-menu";
 import DiagnosticsPanel from "./diagnostics-panel";
 import GhostLayer from "./ghost-layer";
+import Inspector, { InspectorAnchor, selectionBounds } from "./inspector";
 import NodeLayer from "./node-layer";
 import RunControls from "./run-controls";
 import SettingsDialog from "./settings-dialog";
@@ -133,6 +134,14 @@ export default function Editor({
 
   // Where the pointer last was, in world coordinates — paste lands here.
   const pointerWorld = useRef<Point>({ x: 0, y: 0 });
+
+  // Shared by the inspector's two halves: the box drawn in world coordinates
+  // inside the canvas, and the popover placed against it from outside.
+  const inspectorAnchorRef = useRef<HTMLDivElement>(null);
+  const inspectorBounds = useMemo(
+    () => selectionBounds(scene, selection),
+    [scene, selection],
+  );
 
   useEditorShortcuts({
     pointerWorld: () => pointerWorld.current,
@@ -273,7 +282,20 @@ export default function Editor({
           onSelectNode={(nodeId) => selectOnly([nodeId])}
           onPinActivate={gestures.activatePin}
         />
+        {/* Only the anchor lives in the transformed layer, so the inspector
+            can be placed against the selection's real on-screen box. The
+            popover itself is rendered below, outside the canvas. */}
+        <InspectorAnchor
+          bounds={inspectorBounds}
+          anchorRef={inspectorAnchorRef}
+        />
       </Canvas>
+
+      {/* Outside `<Canvas>` on purpose: a portal bubbles its events up the
+          React tree, so a popup mounted under the canvas would feed every
+          click in the form to the canvas pointer handlers, which would
+          hit-test empty space and clear the selection it is editing. */}
+      <Inspector bounds={inspectorBounds} anchorRef={inspectorAnchorRef} />
 
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
 
