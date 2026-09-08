@@ -12,12 +12,12 @@ export const ledNode = defineNode({
     {
       key: "color",
       label: "Colour",
-      kind: "select",
+      kind: "color",
       options: [
-        { value: "green", label: "Green" },
-        { value: "red", label: "Red" },
-        { value: "amber", label: "Amber" },
-        { value: "blue", label: "Blue" },
+        { value: "green", label: "Green", swatch: "var(--logit-led-green)" },
+        { value: "red", label: "Red", swatch: "var(--logit-led-red)" },
+        { value: "amber", label: "Amber", swatch: "var(--logit-led-amber)" },
+        { value: "blue", label: "Blue", swatch: "var(--logit-led-blue)" },
       ],
     },
   ],

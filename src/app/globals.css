@@ -181,3 +181,16 @@
     16 16,
     zoom-out;
 }
+
+/**
+ * LED hues. Tokens rather than palette classes because a node definition names
+ * the colour it emits (`io.led`'s `color` param) and the lamp view renders it,
+ * so both read one value. Identical in both themes: an LED's colour is the
+ * physical part it models, not app chrome that should follow the theme.
+ */
+:root {
+  --logit-led-green: oklch(0.845 0.143 164.978);
+  --logit-led-red: oklch(0.704 0.191 22.216);
+  --logit-led-amber: oklch(0.828 0.189 84.429);
+  --logit-led-blue: oklch(0.746 0.16 232.661);
+}

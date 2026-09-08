@@ -48,6 +48,19 @@ export type ParamSpec =
       kind: "select";
       options: readonly { value: string; label: string }[];
       hint?: string;
+    }
+  | {
+      key: string;
+      label: string;
+      kind: "color";
+      /**
+       * `swatch` is a CSS colour value — a token like
+       * `var(--logit-led-green)`, never a class name — so the swatch the
+       * inspector draws and the colour the node's own view renders come from
+       * this one list. Adding a colour stays a one-file change.
+       */
+      options: readonly { value: string; label: string; swatch: string }[];
+      hint?: string;
     };
 
 /**
@@ -236,4 +249,25 @@ export function intParam(
   return typeof value === "number" && Number.isFinite(value)
     ? Math.trunc(value)
     : fallback;
+}
+
+/**
+ * The CSS colour a node's `kind: "color"` param currently selects, or the
+ * first option when the saved value is unknown.
+ *
+ * Lives here rather than in the view so the swatch the inspector draws and
+ * the colour the node renders itself in cannot drift apart, and so a node
+ * that wants a colour declares it in one place. Returns undefined for a
+ * definition with no colour param at all.
+ */
+export function colorParam(
+  def: NodeDefinition,
+  params: NodeParams,
+): string | undefined {
+  const spec = def.paramsSchema?.find((entry) => entry.kind === "color");
+  if (!spec || spec.kind !== "color") return undefined;
+
+  const value = params[spec.key];
+  const chosen = spec.options.find((option) => option.value === value);
+  return (chosen ?? spec.options[0])?.swatch;
 }

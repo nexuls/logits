@@ -1,13 +1,20 @@
 "use client";
 
-import { RotateCwIcon, Trash2Icon } from "lucide-react";
+import { MinusIcon, PlusIcon, RotateCwIcon, Trash2Icon } from "lucide-react";
 import type { ReactNode, RefObject } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Popover, PopoverContent, PopoverTitle } from "@/components/ui/popover";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import type { Rect } from "@/lib/circuit/geometry";
 import type { NodeParams, ParamSpec } from "@/lib/nodes/define";
@@ -132,49 +139,56 @@ function SelectionPopover({
         // does not exist.
         initialFocus={false}
         finalFocus={false}
-        className="w-60 gap-3 rounded-xl p-3"
+        // Sectioned rather than one stack: a header naming what is selected,
+        // the fields, then the actions. The rules between them are what let
+        // the eye find a field's edges, so the popup does not read as one
+        // undifferentiated column of controls.
+        className="w-68 gap-0 overflow-hidden rounded-xl p-0"
       >
-        <PopoverTitle className="text-xs font-medium text-muted-foreground">
+        <PopoverTitle className="border-b border-border/60 px-3.5 py-2.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
           {node
             ? (definition?.title ?? node.type)
             : `${total} element${total === 1 ? "" : "s"} selected`}
         </PopoverTitle>
 
-        {node && (
-          <div className="space-y-1.5">
-            <Label htmlFor="inspector-label" className="text-xs">
-              Label
-            </Label>
-            <Input
-              id="inspector-label"
-              defaultValue={node.label ?? ""}
-              placeholder={definition?.title ?? node.type}
-              onBlur={(event) => updateNodeLabel(node.id, event.target.value)}
-              className="h-8"
-            />
+        {(node || !definition) && (
+          <div className="flex flex-col gap-4 px-3.5 py-3.5">
+            {node && (
+              <Field htmlFor="inspector-label" label="Label">
+                <Input
+                  id="inspector-label"
+                  defaultValue={node.label ?? ""}
+                  placeholder={definition?.title ?? node.type}
+                  onBlur={(event) =>
+                    updateNodeLabel(node.id, event.target.value)
+                  }
+                  className="h-9"
+                />
+              </Field>
+            )}
+
+            {node &&
+              definition?.paramsSchema?.map((spec) => (
+                <ParamField
+                  key={spec.key}
+                  spec={spec}
+                  params={node.params}
+                  onChange={(value) =>
+                    updateNodeParams(node.id, { [spec.key]: value })
+                  }
+                />
+              ))}
+
+            {node && !definition && (
+              <p className="text-xs text-destructive">
+                This build has no definition for “{node.type}”, so it cannot be
+                configured or simulated. Its wiring is preserved.
+              </p>
+            )}
           </div>
         )}
 
-        {node &&
-          definition?.paramsSchema?.map((spec) => (
-            <ParamField
-              key={spec.key}
-              spec={spec}
-              params={node.params}
-              onChange={(value) =>
-                updateNodeParams(node.id, { [spec.key]: value })
-              }
-            />
-          ))}
-
-        {node && !definition && (
-          <p className="text-xs text-destructive">
-            This build has no definition for “{node.type}”, so it cannot be
-            configured or simulated. Its wiring is preserved.
-          </p>
-        )}
-
-        <div className="flex gap-2">
+        <div className="flex gap-2 border-t border-border/60 px-3.5 py-2.5">
           <Button
             type="button"
             variant="outline"
@@ -190,7 +204,7 @@ function SelectionPopover({
             type="button"
             variant="outline"
             size="sm"
-            className="flex-1"
+            className="flex-1 text-destructive hover:text-destructive"
             onClick={() => {
               deleteSelection(selection);
               clearSelection();
@@ -252,10 +266,40 @@ type FieldProps = {
 };
 
 /**
+ * The frame every control sits in: label above, control below, hint under
+ * that. One place, so no field can drift into its own spacing and the gap
+ * between two fields always reads as larger than the gap inside one.
+ */
+function Field({
+  htmlFor,
+  label,
+  hint,
+  children,
+}: {
+  htmlFor?: string;
+  label: string;
+  hint?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label
+        htmlFor={htmlFor}
+        className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase"
+      >
+        {label}
+      </Label>
+      {children}
+      {hint && <Hint>{hint}</Hint>}
+    </div>
+  );
+}
+
+/**
  * One parameter control, chosen by `kind`.
  *
  * The `kind` set is closed and small on purpose: the inspector has to pick a
- * widget, and a node author picking from four is a clearer contract than one
+ * widget, and a node author picking from five is a clearer contract than one
  * describing a value's type and hoping the right control falls out.
  */
 function ParamField({ spec, params, onChange }: FieldProps) {
@@ -264,7 +308,7 @@ function ParamField({ spec, params, onChange }: FieldProps) {
 
   if (spec.kind === "bool") {
     return (
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-3">
         <Label htmlFor={id} className="text-xs font-normal">
           {spec.label}
         </Label>
@@ -277,17 +321,47 @@ function ParamField({ spec, params, onChange }: FieldProps) {
     );
   }
 
+  if (spec.kind === "color") {
+    const value = typeof raw === "string" ? raw : "";
+    return (
+      <Field label={spec.label} hint={spec.hint}>
+        {/* A radio group, not a select: four hues fit in a row, and picking
+            one is a single click instead of open-scan-click. The checked one
+            is drawn as a disc, a gap, then a ring — a shape difference, so the
+            choice is not carried by colour alone, and unlike the primitive's
+            inner dot it does not have to contrast with every hue. */}
+        <RadioGroup
+          value={value}
+          onValueChange={(next) => onChange(next)}
+          aria-label={spec.label}
+          className="flex w-full flex-row flex-wrap items-center gap-2.5"
+        >
+          {spec.options.map((option) => (
+            <RadioGroupItem
+              key={option.value}
+              value={option.value}
+              aria-label={option.label}
+              title={option.label}
+              style={{ background: option.swatch }}
+              // `after:inset-0` undoes the primitive's oversized tap target,
+              // which would otherwise overlap the neighbouring swatch and let
+              // one steal the other's clicks.
+              className="size-6 border-2 border-border/70 ring-offset-1 ring-offset-popover transition-[border-width,box-shadow] after:inset-0 data-checked:border-4 data-checked:border-popover data-checked:ring-2 data-checked:ring-ring [&_[data-slot=radio-group-indicator]]:hidden"
+            />
+          ))}
+        </RadioGroup>
+      </Field>
+    );
+  }
+
   if (spec.kind === "select") {
     return (
-      <div className="space-y-1.5">
-        <Label htmlFor={id} className="text-xs">
-          {spec.label}
-        </Label>
+      <Field htmlFor={id} label={spec.label} hint={spec.hint}>
         <NativeSelect
           id={id}
           value={typeof raw === "string" ? raw : ""}
           onChange={(event) => onChange(event.target.value)}
-          className="w-full"
+          className="h-9 w-full"
         >
           {spec.options.map((option) => (
             <option key={option.value} value={option.value}>
@@ -295,53 +369,76 @@ function ParamField({ spec, params, onChange }: FieldProps) {
             </option>
           ))}
         </NativeSelect>
-        {spec.hint && <Hint>{spec.hint}</Hint>}
-      </div>
+      </Field>
     );
   }
 
   if (spec.kind === "text") {
     return (
-      <div className="space-y-1.5">
-        <Label htmlFor={id} className="text-xs">
-          {spec.label}
-        </Label>
+      <Field htmlFor={id} label={spec.label} hint={spec.hint}>
         <Input
           id={id}
           defaultValue={typeof raw === "string" ? raw : ""}
           maxLength={spec.maxLength}
           onBlur={(event) => onChange(event.target.value)}
-          className="h-8"
+          className="h-9"
         />
-        {spec.hint && <Hint>{spec.hint}</Hint>}
-      </div>
+      </Field>
     );
   }
 
+  const step = spec.step ?? 1;
+  const current = typeof raw === "number" ? raw : (spec.min ?? 0);
+  // Clamped here rather than in the node: a definition that had to defend
+  // against a nonsense width would be defending against this control, and it
+  // is the control that should not produce one.
+  const nudge = (delta: number) =>
+    onChange(clamp(current + delta, spec.min, spec.max));
+
   return (
-    <div className="space-y-1.5">
-      <Label htmlFor={id} className="text-xs">
-        {spec.label}
-      </Label>
-      <Input
-        id={id}
-        type="number"
-        min={spec.min}
-        max={spec.max}
-        step={spec.step ?? 1}
-        value={typeof raw === "number" ? raw : ""}
-        onChange={(event) => {
-          const value = Number.parseInt(event.target.value, 10);
-          if (!Number.isFinite(value)) return;
-          // Clamped here rather than in the node: a definition that had to
-          // defend against a nonsense width would be defending against this
-          // control, and it is the control that should not produce one.
-          onChange(clamp(value, spec.min, spec.max));
-        }}
-        className="h-8"
-      />
-      {spec.hint && <Hint>{spec.hint}</Hint>}
-    </div>
+    <Field htmlFor={id} label={spec.label} hint={spec.hint}>
+      <InputGroup className="h-9">
+        <InputGroupAddon align="inline-start">
+          <InputGroupButton
+            size="icon-xs"
+            aria-label={`Decrease ${spec.label}`}
+            disabled={spec.min !== undefined && current <= spec.min}
+            onClick={() => nudge(-step)}
+          >
+            <MinusIcon />
+          </InputGroupButton>
+        </InputGroupAddon>
+
+        <InputGroupInput
+          id={id}
+          type="number"
+          inputMode="numeric"
+          min={spec.min}
+          max={spec.max}
+          step={step}
+          value={typeof raw === "number" ? raw : ""}
+          onChange={(event) => {
+            const value = Number.parseInt(event.target.value, 10);
+            if (!Number.isFinite(value)) return;
+            onChange(clamp(value, spec.min, spec.max));
+          }}
+          // The native spinners are redundant next to the two buttons, and at
+          // this size they crowd the value they sit on.
+          className="text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        />
+
+        <InputGroupAddon align="inline-end">
+          <InputGroupButton
+            size="icon-xs"
+            aria-label={`Increase ${spec.label}`}
+            disabled={spec.max !== undefined && current >= spec.max}
+            onClick={() => nudge(step)}
+          >
+            <PlusIcon />
+          </InputGroupButton>
+        </InputGroupAddon>
+      </InputGroup>
+    </Field>
   );
 }
 

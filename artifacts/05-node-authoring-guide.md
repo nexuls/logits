@@ -67,8 +67,11 @@ which break tree-shaking and make ordering non-deterministic.
       work that out for itself.
 - [ ] `size()` is in grid units and leaves room for every pin.
 - [ ] Every configurable param has a `paramsSchema` entry, so the inspector can
-      offer it. The `kind` picks the control (`int`, `bool`, `text`, `select`);
-      never edit the inspector to add a node.
+      offer it. The `kind` picks the control (`int` — a stepper, `bool`, `text`,
+      `select`, `color` — a row of swatches); never edit the inspector to add a
+      node. A `color` option carries a `swatch` CSS colour, and the node's own
+      view reads it back through `colorParam`, so the palette is declared once
+      in the definition rather than duplicated in the view.
 - [ ] Stateful nodes implement `createState`; state is JSON-serialisable and
       never holds DOM refs or closures. It is re-created on every reset, so a
       latched value must not survive one.

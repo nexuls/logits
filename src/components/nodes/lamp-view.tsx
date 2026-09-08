@@ -1,5 +1,6 @@
 "use client";
 
+import { colorParam } from "@/lib/nodes/define";
 import { cn } from "@/lib/utils";
 import { describeValue, type NodeViewProps, valueGlyph } from "./node-views";
 
@@ -9,20 +10,15 @@ import { describeValue, type NodeViewProps, valueGlyph } from "./node-views";
  * The colour param is a *hue*, and the lit/unlit distinction is carried by
  * brightness and a glyph as well, so the state is legible without colour
  * vision and without a legend (see the accessibility rules in AGENTS.md).
+ *
+ * The hue itself comes from the definition's own `color` param, through
+ * `colorParam`, which is the same list the inspector draws its swatches from —
+ * there is no palette in this file to fall out of step with it.
  */
 
-const COLORS: Record<string, { lit: string; ring: string }> = {
-  green: { lit: "bg-emerald-400", ring: "shadow-emerald-400/60" },
-  red: { lit: "bg-red-400", ring: "shadow-red-400/60" },
-  amber: { lit: "bg-amber-400", ring: "shadow-amber-400/60" },
-  blue: { lit: "bg-sky-400", ring: "shadow-sky-400/60" },
-};
-
-export default function LampView({ node, readPin }: NodeViewProps) {
+export default function LampView({ node, def, readPin }: NodeViewProps) {
   const value = readPin("in");
-  const color =
-    COLORS[typeof node.params.color === "string" ? node.params.color : ""] ??
-    COLORS.green;
+  const swatch = colorParam(def, node.params);
 
   const lit = value === "1";
   const unknown = value.includes("X");
@@ -40,13 +36,20 @@ export default function LampView({ node, readPin }: NodeViewProps) {
           unknown
             ? "border-destructive bg-destructive/20 text-destructive"
             : lit
-              ? cn(
-                  "border-transparent shadow-[0_0_8px_2px]",
-                  color.lit,
-                  color.ring,
-                )
+              ? "border-transparent"
               : "border-border bg-muted text-muted-foreground",
         )}
+        style={
+          lit && !unknown
+            ? {
+                background: swatch,
+                // The glow is the hue at 60% against the canvas, matching the
+                // swatch rather than a second colour that has to be kept in
+                // step with it.
+                boxShadow: `0 0 8px 2px color-mix(in oklab, ${swatch} 60%, transparent)`,
+              }
+            : undefined
+        }
       >
         {lit ? null : glyph}
       </span>
