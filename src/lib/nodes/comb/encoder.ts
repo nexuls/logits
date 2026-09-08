@@ -33,6 +33,41 @@ const OUTPUT_BITS_PARAM: ParamSpec = {
  */
 export const encoderNode = defineNode({
   type: "comb.encoder",
+  docs: `
+The inverse of the decoder: it reports **which input is high**, as a number on
+\`Y\`.
+
+## Behaviour
+
+**Output bits** sets the width of \`Y\`; there are 2 to that power inputs.
+\`V\` (valid) is high when the answer means something and low when no input is
+asserted — without it, "nothing is high" and "input 0 is high" would both read
+as zero.
+
+**Priority** decides what a non-one-hot input means:
+
+- **On** (a priority encoder): the *highest-numbered* high input wins and
+  anything below it is ignored. An unknown below the winner is harmless; one
+  above it is not, since it might have been the winner, so that gives \`X\`.
+- **Off** (a plain encoder): exactly one input is expected to be high. Two at
+  once, or any unresolved input, gives \`X\` on both \`Y\` and \`V\` rather
+  than inventing a winner.
+
+## Typical uses
+
+- **Interrupt arbitration** — one request line per device, priority on, and
+  \`Y\` is the highest-priority pending request with \`V\` saying whether
+  there is one at all.
+- Reading a keypad or a bank of switches as a number.
+- Finding the position of the most significant set bit — a normaliser's first
+  step.
+- Compressing a one-hot state vector back to a state number.
+
+## On the canvas
+
+1. Click the element in the palette, then click the canvas to place it.
+2. Click a pin to start a wire and a second pin to land it; \`Esc\` cancels.
+3. Select the element to open the inspector over it and edit the settings above.`,
   title: "Encoder",
   icon: "encoder",
   category: "comb",

@@ -16,6 +16,48 @@ import { widthOf, widthParam } from "../shared";
  */
 export const portNode = defineNode({
   type: "sub.port",
+  docs: `
+A boundary pin, placed **inside** a subcircuit definition. It becomes one pin
+on every instance of that chip.
+
+## Behaviour
+
+**Port name** is the pin's name on the instance, so keep it short — \`CLK\`,
+\`D\`, \`Q\`. A blank name defines no pin at all.
+
+**Direction** is written from the *chip's* point of view, not the port's:
+
+- **Input to the chip** — the parent circuit drives it. Inside the definition
+  it is therefore a *source*, and its pin sits on the right, feeding your logic.
+- **Output from the chip** — your logic drives it, and it appears on the left.
+
+Getting that backwards is the classic way to end up with every signal reading
+\`Z\`. If a chip's outputs are all floating, check the port directions first.
+
+**Bit width** is the width of the pin on the instance.
+
+The port is a **join**, not a buffer: when the chip is inlined, this element's
+net and the instance pin's net become one net. It adds no delay and drives
+nothing itself.
+
+## Typical uses
+
+Building a reusable chip:
+
+1. Create a subcircuit and place your logic inside it.
+2. Add a port for every signal that should cross the boundary, naming each one.
+3. Set each port's direction from the chip's point of view.
+4. Place an instance of the chip in a parent circuit — the ports are its pins,
+   in the order and with the names you gave them.
+
+Renaming a port changes the instance's pin, so wires already landed on the old
+name will need re-attaching.
+
+## On the canvas
+
+1. Click the element in the palette, then click the canvas to place it.
+2. Click a pin to start a wire and a second pin to land it; \`Esc\` cancels.
+3. Select the element to open the inspector over it and edit the settings above.`,
   title: "Port",
   icon: "port",
   category: "sub",

@@ -54,6 +54,7 @@ boxes is an incomplete phase.
 
 ## Phase 5 — Polish
 
+- [x] Per-element help in the palette — every entry has an info button opening [node-docs-dialog.tsx](../src/components/editor/node-docs-dialog.tsx). The prose is Markdown on the definition (`NodeDefinition.docs`), rendered by `react-markdown` through [ui/markdown.tsx](../src/components/ui/markdown.tsx); the pin and setting tables are *derived* from `pins()` and `paramsSchema` rather than restated, so they cannot drift. Adding a node still touches two files, and `registry.test.ts` fails a definition that ships without a page
 - [x] Example circuits shipped with the app — six documents in [`src/example/`](../src/example/), listed in a collapsed sidebar group. They open *ephemeral*: fully editable and simulatable, but never written to storage, and "import" copies what is on screen into a new project ([ADR 0008](decisions/0008-examples-are-ephemeral.md))
 - [ ] Shareable URL encoding — file import/export landed with the phase 3 toolbar
 - [ ] Performance pass against the 2,000-node target
@@ -80,6 +81,9 @@ boxes is an incomplete phase.
 | Every node renders, on or off screen. Culling against the visible world rect is cheap to add and belongs with the same performance pass | [editor/node-layer.tsx](../src/components/editor/node-layer.tsx) |
 | The LED palette is four `--logit-led-*` tokens with the same value in both themes, declared in `globals.css` and named by `io.led`. A node wanting a colour outside that set has to add a token, which is one file more than "add an option" | [app/globals.css](../src/app/globals.css) |
 | The inspector edits one node at a time; a multi-node selection gets rotate and delete only. A merged parameter view needs a "mixed value" story first | [editor/inspector.tsx](../src/components/editor/inspector.tsx) |
+| A node's help shows the pins for `defaultParams`, since a palette entry is not an instance. For a node whose pin count follows a param — a mux, a decoder, a scope — the table is therefore the default shape and its prose has to say so | [editor/node-docs-dialog.tsx](../src/components/editor/node-docs-dialog.tsx) |
+| The info button lives only in the palette. A node already on the canvas has no route to its help — the inspector popover is the obvious place, and would need the button without stealing the popover's focus | [editor/inspector.tsx](../src/components/editor/inspector.tsx) |
+| `docs` is not searchable. The palette's search matches `title`, `type` and `keywords` only, so "how do I debounce a button" finds nothing even though `time.oneshot` says exactly that | [editor/elements-sidebar.tsx](../src/components/editor/elements-sidebar.tsx) |
 | The inspector popover ignores outside presses so dragging the selected node does not dismiss it, which means it can sit over the element it edits. Moving out of the way needs the popover to know the node is being dragged | [editor/inspector.tsx](../src/components/editor/inspector.tsx) |
 | `PopoverContent` is hand-edited (a generated shadcn file) to forward the positioner's `anchor`, which is what lets the inspector anchor to a canvas element instead of a trigger. A regeneration will drop it | [ui/popover.tsx](../src/components/ui/popover.tsx) |
 | `Ctrl+A` is deliberately unbound — select-all lands in phase 5 with the rest of the keyboard walkthrough | [editor/use-editor-shortcuts.ts](../src/components/editor/use-editor-shortcuts.ts) |

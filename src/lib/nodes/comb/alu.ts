@@ -37,6 +37,54 @@ export const ALU_OP_BITS = 3;
 
 export const aluNode = defineNode({
   type: "comb.alu",
+  docs: `
+An arithmetic and logic unit: eight operations on two words, selected by a
+3-bit \`OP\` code, with the usual condition flags.
+
+## Behaviour
+
+| \`OP\` | Operation | \`Y\` |
+| :-: | :-- | :-- |
+| 0 | Add | A + B |
+| 1 | Subtract | A − B |
+| 2 | AND | A & B |
+| 3 | OR | A \\| B |
+| 4 | XOR | A ^ B |
+| 5 | NOT | ~A — \`B\` is ignored |
+| 6 | Shift left | A << 1, zero in at the bottom |
+| 7 | Shift right | A >> 1, zero in at the top |
+
+The op codes are part of the save format and never change order, so a saved
+circuit keeps computing what it computed.
+
+### Flags
+
+- \`Z\` (zero) — every bit of \`Y\` is 0. Unknown if any bit is.
+- \`C\` (carry) — the unsigned carry out of an add, the borrow of a subtract,
+  and the bit shifted off the end of a shift, which is what makes shifts
+  chainable across two of these.
+- \`V\` (overflow) — **signed** overflow: the operands agreed on sign and the
+  result disagrees. On the logic operations both \`C\` and \`V\` are 0.
+
+Subtraction is the adder with \`B\` inverted and a carry in of 1 — two's
+complement, the same trick you would wire by hand around \`comb.adder\`.
+
+An \`OP\` that cannot be resolved puts \`X\` on \`Y\` and every flag: the
+element cannot know which operation it is performing.
+
+## Typical uses
+
+- The datapath of a small CPU, with \`OP\` driven from an instruction decoder
+  and \`A\` from an accumulator register.
+- Feeding the flags into a \`seq.register\` as a status word, and from there
+  into conditional-branch logic.
+- Multi-word arithmetic — chain \`C\` between two ALUs.
+
+## On the canvas
+
+1. Click the element in the palette, then click the canvas to place it.
+2. Click a pin to start a wire and a second pin to land it; \`Esc\` cancels.
+3. Select the element to open the inspector over it and edit the settings above.`,
   title: "ALU",
   icon: "alu",
   category: "comb",

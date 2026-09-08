@@ -50,6 +50,21 @@ describe("registry", () => {
       expect(ids.length).toBeGreaterThan(0);
       expect(new Set(ids).size).toBe(ids.length);
     });
+
+    // The palette's info dialog is driven straight off `docs`, so a node
+    // shipped without one has no help at all. Checked here rather than left
+    // to review, since the dialog degrades quietly instead of failing.
+    it("documents itself", () => {
+      expect(definition.docs?.trim().length ?? 0).toBeGreaterThan(200);
+    });
+
+    it("has balanced code spans in its docs", () => {
+      // An odd count means a `\`` escape was lost somewhere in a template
+      // literal, which renders as a run of literal backticks rather than as
+      // code and is invisible until someone opens the dialog.
+      const backticks = definition.docs?.match(/`/g)?.length ?? 0;
+      expect(backticks % 2).toBe(0);
+    });
   });
 });
 

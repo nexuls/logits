@@ -16,6 +16,8 @@ export const andGate = defineNode({
   title: "AND",
   category: "gates",                // must be listed in `nodeCategories`
   keywords: ["and", "conjunction", "&"],
+  docs: `…`,                        // Markdown help for the palette's info
+                                    // dialog — see "Documenting a node" below
   icon: "and",                      // palette icon *name*, resolved by
                                     // src/components/nodes/node-icons.tsx —
                                     // a string, never a component: no React here
@@ -97,11 +99,47 @@ which break tree-shaking and make ordering non-deterministic.
       `evaluateOnce` for a table, `engineFor` for a real circuit with a real
       clock. Anything with `state` is tested the second way: a flip-flop that
       latched on the wrong edge would pass every static check.
+- [ ] Has a `docs` string. The palette's info button is driven straight off it,
+      so a node without one ships with no help at all — see below.
 - [ ] Appears in the palette with a sensible `icon` and `keywords`, under a
       `category` that `nodeCategories` in the registry knows about. The palette
       reads all of that off the definition — never edit the palette to add a node.
       Reuse an existing icon name where the shape fits; a genuinely new shape is
       a third file, `node-icons.tsx`, and it is keyed by shape, never by `type`.
+
+## Documenting a node
+
+Every entry in the palette has an info button, and it opens
+[node-docs-dialog.tsx](../src/components/editor/node-docs-dialog.tsx) rendering
+that definition's `docs` — Markdown, on the definition itself, not a `.md` file
+beside it, because adding a node still has to touch exactly two files. It is a
+string and not JSX for the same reason `icon` and `view` are names: this layer
+may not import React. GFM is on, so tables work.
+
+**Do not restate the pins or the parameters.** The dialog derives both tables
+from `pins(defaultParams)` and `paramsSchema`, so they cannot drift from the
+element the canvas actually draws. Prose that repeats them can.
+
+What a good page covers, roughly in this order:
+
+1. A one-line answer to "what is this".
+2. `## Behaviour` — what it computes, and what it does at the edges: which
+   value is *controlling*, what an unresolved input produces, what an unwired
+   control pin means.
+3. `## Typical uses` — the circuits it is actually for. This is the section
+   that turns a catalog into something you can learn from.
+4. `## On the canvas` — placing it, wiring it, and anything about the
+   inspector that is not obvious.
+
+Where a whole family shares a section, factor it out rather than writing it
+nine times: `SHARED_GATE_DOCS` in [gates/shared.ts](../src/lib/nodes/gates/shared.ts)
+and `SHARED_CLOCKED_DOCS` in [seq/shared.ts](../src/lib/nodes/seq/shared.ts) are
+appended by the factories, so a gate file documents what makes it that gate and
+nothing more.
+
+`registry.test.ts` checks that every definition has one and that its code spans
+are balanced — an escaped backtick lost inside a template literal renders as a
+run of literal backticks and is invisible until someone opens the dialog.
 
 ## When a node is more than pins and an `evaluate`
 

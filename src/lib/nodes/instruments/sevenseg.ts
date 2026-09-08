@@ -45,6 +45,44 @@ export function isBcd(params: NodeParams): boolean {
  */
 export const sevenSegmentNode = defineNode({
   type: "disp.sevenseg",
+  docs: `
+A seven-segment digit, in two shapes: raw segment pins, or a BCD value it
+decodes itself.
+
+## Behaviour
+
+**Mode** changes which pins the display presents.
+
+- **Segment pins** — one input per segment, \`A\` through \`G\`, in datasheet
+  order. This is the part you wire a decoder to, and the mode to use when
+  building the decoder is the exercise.
+- **BCD value** — a single 4-bit \`VAL\` input, decoded internally to the
+  usual patterns for 0–9 and A–F. Use it when the decoding is not the point.
+
+\`DP\` is the decimal point, on the bottom edge, in both modes.
+
+**Common anode** inverts the sense of every segment input, so segments light on
+\`0\` rather than \`1\` — which is how a common-anode part is wired in
+hardware, and a good source of confusion worth being able to reproduce.
+
+Segments driven by an unresolved signal are marked as unknown rather than being
+shown lit or dark, so a half-wired display is distinguishable from a working
+one showing an odd glyph.
+
+## Typical uses
+
+- The output of a decade counter (\`seq.counter\` with **Modulus** 10) in BCD
+  mode.
+- Two or more digits fed from \`bus.split\` with groups of \`4,4\`.
+- A hand-built BCD-to-seven-segment decoder in segment-pin mode — seven
+  Boolean functions of four inputs, and the classic Karnaugh-map exercise.
+- A hexadecimal readout, since the BCD decoding covers A–F too.
+
+## On the canvas
+
+1. Click the element in the palette, then click the canvas to place it.
+2. Click a pin to start a wire and a second pin to land it; \`Esc\` cancels.
+3. Select the element to open the inspector over it and edit the settings above.`,
   title: "7-segment",
   icon: "seven-segment",
   category: "instruments",

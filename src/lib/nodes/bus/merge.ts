@@ -6,6 +6,35 @@ import { GROUPS_PARAM, groupOffsets, parseGroups, totalWidth } from "./groups";
 /** The inverse of `bus.split`: narrow lanes back onto one bus. */
 export const mergeNode = defineNode({
   type: "bus.merge",
+  docs: `
+Joins narrow lanes back onto one bus, least significant group first.
+
+## Behaviour
+
+**Groups** is a comma-separated list of lane counts, least significant first,
+in the same format \`bus.split\` uses. \`4,4\` takes two nibbles and produces
+an 8-bit bus with \`A0\` in the low half; \`1,1,1,1\` gathers four single bits
+into a nibble.
+
+The output width is the sum of the groups. Like the split, this is wiring: bits
+are placed on the bus exactly as they arrive, with \`Z\` and \`X\` carried
+through rather than normalised.
+
+## Typical uses
+
+- Assembling a word from individual \`io.switch\` bits to feed a probe or an
+  adder.
+- Concatenating an opcode and an operand into an instruction word for
+  \`mem.rom\`.
+- Zero- or sign-extending: merge the value with a constant in the high group.
+- Round-tripping with \`bus.split\` to reorder bits — split with one grouping,
+  rewire, merge with another.
+
+## On the canvas
+
+1. Click the element in the palette, then click the canvas to place it.
+2. Click a pin to start a wire and a second pin to land it; \`Esc\` cancels.
+3. Select the element to open the inspector over it and edit the settings above.`,
   title: "Merge",
   icon: "merge",
   category: "bus",

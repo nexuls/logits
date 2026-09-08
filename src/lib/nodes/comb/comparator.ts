@@ -18,6 +18,37 @@ import { widthOf, widthParam } from "../shared";
  */
 export const comparatorNode = defineNode({
   type: "comb.comparator",
+  docs: `
+Compares two words and raises exactly one of \`A<B\`, \`A=B\`, \`A>B\`.
+
+## Behaviour
+
+**Signed** decides how the operands are read. Off, they are plain unsigned
+magnitudes. On, both are two's complement, so at four bits \`1111\` is −1 and
+compares below \`0001\` rather than above it.
+
+Unlike the adder, this element is all-or-nothing about unknowns: less-than,
+equal and greater-than are properties of the *whole word*, so a single
+unresolved bit in either operand leaves all three outputs at \`X\`. There is
+no partial answer to give.
+
+The three outputs are mutually exclusive and one is always high, so any two of
+them can be gated together for the compound tests — \`A≤B\` is
+\`A<B\` OR \`A=B\` through a \`gate.or\`.
+
+## Typical uses
+
+- A loop terminator: compare a counter against a limit and use \`A=B\` to
+  stop or reload it.
+- Sorting and min/max networks, with the flags steering a \`comb.mux\`.
+- Address range decoding — two comparators and an AND.
+- Watching for a specific value with an \`io.constant\` on \`B\`.
+
+## On the canvas
+
+1. Click the element in the palette, then click the canvas to place it.
+2. Click a pin to start a wire and a second pin to land it; \`Esc\` cancels.
+3. Select the element to open the inspector over it and edit the settings above.`,
   title: "Comparator",
   icon: "comparator",
   category: "comb",

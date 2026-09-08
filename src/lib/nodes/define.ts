@@ -99,6 +99,18 @@ export type NodeDefinition = {
   category: string;
   keywords?: readonly string[];
   /**
+   * Long-form help for this node, as Markdown — what it is, how it behaves at
+   * the edges, and how to wire it up on the canvas. The palette's info dialog
+   * renders it (GFM, so tables work) alongside the pin and parameter tables it
+   * derives from `pins` and `paramsSchema`, which is why nothing here should
+   * restate those: document *behaviour*, not the pin list.
+   *
+   * A string on the definition rather than a `.md` file beside it, so adding a
+   * node still touches exactly two files, and Markdown rather than JSX for the
+   * same reason `icon` and `view` are names: this layer may not import React.
+   */
+  docs?: string;
+  /**
    * Name of the palette icon for this node, resolved by
    * `src/components/nodes/node-icons.tsx`. A name and not a component, because
    * this layer must stay free of React. Names a shape (`"and"`, `"lamp"`), so

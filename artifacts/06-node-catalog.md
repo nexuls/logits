@@ -8,6 +8,12 @@ Everything in this file now exists in `src/lib/nodes/registry.ts`, appears in
 the palette, and simulates. The one thing that is *not* finished is the
 authoring surface for subcircuits — see the note at the bottom of the file.
 
+Each node's *prose* — what it is for, how it behaves at the edges, the circuits
+it belongs in — lives on the definition as `docs`, and reaches users through the
+info button on its palette entry. This file stays the frozen contract; see
+[05-node-authoring-guide.md](05-node-authoring-guide.md) for what a `docs` page
+should cover.
+
 Conventions: inputs left, outputs right, `clk` bottom, `en`/`rst`/`load` top,
 and `sel`/`op` bottom beside the clock, because they select rather than flow
 through. `n` = the node's `width` parameter. All widths default to 1 unless

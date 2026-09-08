@@ -1,9 +1,17 @@
 "use client";
 
+import { InfoIcon } from "lucide-react";
+import { useState } from "react";
+
 import { nodeIcon } from "@/components/nodes/node-icons";
-import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import {
+  SidebarMenuAction,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar";
 import { MAX_PLACEMENT_COUNT } from "@/lib/circuit/geometry";
 import type { NodeDefinition } from "@/lib/nodes/define";
+import NodeDocsDialog from "./node-docs-dialog";
 
 type Props = {
   definition: NodeDefinition;
@@ -27,6 +35,10 @@ type Props = {
  * Right-click is a pointer-only gesture, so `-` and the arrow keys do the same
  * thing from the keyboard, and the count is in the accessible name rather than
  * only in the badge.
+ *
+ * The info action beside it opens the element's help. It is a sibling button
+ * rather than something inside the menu button, because nesting a button in a
+ * button is invalid HTML and would make the help unreachable by keyboard.
  */
 export default function NodePaletteItem({
   definition,
@@ -36,6 +48,7 @@ export default function NodePaletteItem({
   const Icon = nodeIcon(definition.icon);
   const armed = count > 0;
   const atLimit = count >= MAX_PLACEMENT_COUNT;
+  const [docsOpen, setDocsOpen] = useState(false);
 
   return (
     <SidebarMenuItem>
@@ -71,7 +84,8 @@ export default function NodePaletteItem({
             ? `${definition.title}, ${count} armed of ${MAX_PLACEMENT_COUNT}. Click to add one, right-click or minus to remove one.`
             : `${definition.title}. Click to arm for placement.`
         }
-        className="h-11 gap-3 [&_svg]:size-6 group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:p-1.5!"
+        // Room on the right for the info action, which overlays the button.
+        className="h-11 gap-3 pr-8 [&_svg]:size-6 group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:p-1.5! group-data-[collapsible=icon]:pr-1.5! group-has-data-[sidebar=menu-action]/menu-item:pr-9"
       >
         <Icon />
         <span>{definition.title}</span>
@@ -87,6 +101,30 @@ export default function NodePaletteItem({
           </span>
         )}
       </SidebarMenuButton>
+
+      {/* Shown on hover and whenever anything in the row has focus, so the
+          palette stays quiet at rest but the action is still tabbable. It
+          hides itself on the collapsed rail, where there is no room for it. */}
+      <SidebarMenuAction
+        showOnHover
+        type="button"
+        onClick={() => setDocsOpen(true)}
+        aria-label={`About ${definition.title}`}
+        aria-haspopup="dialog"
+        className="size-8 text-sidebar-foreground/60"
+      >
+        <InfoIcon />
+      </SidebarMenuAction>
+
+      {/* Mounted only once opened: the palette renders forty of these, and
+          forty dialogs' worth of derived pin tables is work for nothing. */}
+      {docsOpen && (
+        <NodeDocsDialog
+          definition={definition}
+          open={docsOpen}
+          onOpenChange={setDocsOpen}
+        />
+      )}
     </SidebarMenuItem>
   );
 }

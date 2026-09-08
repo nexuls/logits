@@ -25,6 +25,55 @@ export function channelCount(params: NodeParams): number {
  */
 export const scopeNode = defineNode({
   type: "scope.logic",
+  docs: `
+A logic analyser. It drives nothing and records everything wired to it, so you
+can see *when* a signal moved rather than only what it is now.
+
+## Behaviour
+
+**Channels** sets how many traces there are — one input pin each, all one bit
+wide. Split a bus with \`bus.split\` to watch several of its lines.
+
+**Time span (ns)** is the width of the visible window in simulated
+nanoseconds. Narrow it to see individual gate delays; widen it to see a whole
+sequence.
+
+### Triggering
+
+**Trigger channel** at −1 free-runs: the window simply ends at the current
+time and everything scrolls. Set it to a channel number and the window is
+anchored to that channel's most recent edge instead, with **Trigger edge**
+picking rising or falling. A repeating waveform then stands still, which is
+the only way to read a periodic signal properly.
+
+### Why the traces line up
+
+The scope reacts with **zero delay**, unlike every other element. A sample
+lands at the instant the net actually moved rather than a nanosecond later — a
+scope that skewed every trace by its own reaction time would be useless for
+exactly the setup-and-hold questions it exists to answer.
+
+Recorded samples are simulation state: a reset clears the traces, and so does
+a structural edit.
+
+## Typical uses
+
+- Confirming a clock is running, and at what period, before debugging anything
+  downstream.
+- Watching a counter's bits and seeing that a ripple counter's stages do
+  **not** switch together while a synchronous one's do.
+- Setup and hold: put \`CLK\` on one channel and \`D\` on another, insert a
+  \`time.delay\` in the data path, and watch the flip-flop start latching the
+  wrong value.
+- Catching a glitch that an \`io.led\` is far too slow to show.
+
+## On the canvas
+
+1. Place it — it is wide, so leave room — and wire one signal per \`CH\` pin.
+2. Put the clock on \`CH0\` and set **Trigger channel** to 0 for a stable
+   picture.
+3. Press \`Space\` to run, or \`.\` to single-step and watch the trace advance
+   one event at a time.`,
   title: "Oscilloscope",
   icon: "scope",
   category: "instruments",

@@ -50,6 +50,7 @@ canvas header, the right one from the panel button in its own header.
 | Gesture | Action |
 | --- | --- |
 | Click a palette element, then click the canvas / `Ctrl+K` command menu | Place a node. The command menu places at the last pointer position |
+| Click the info button on a palette element | Open its help dialog — the definition's `docs`, plus pin and setting tables derived from the definition. The button appears on hover and whenever anything in the row has focus, so it is tabbable but quiet at rest |
 | Click an armed palette element again | Arm one more copy, up to 6. Right-click (or `-`/`ArrowDown` on the focused entry) takes one back off; down past one disarms |
 | Move the pointer over the canvas while armed | A dashed ghost of the batch follows the cursor, drawn at the snapped positions the click will use. It is one undo step however many copies land |
 | Left-drag on a node | Move (snapped to the 10-unit grid; hold `Alt` to bypass) |

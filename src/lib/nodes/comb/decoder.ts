@@ -24,6 +24,38 @@ const INPUT_BITS_PARAM: ParamSpec = {
 /** One-hot decode of `in`, gated by `en`. `en` unwired reads Z and enables. */
 export const decoderNode = defineNode({
   type: "comb.decoder",
+  docs: `
+Turns a binary address into a **one-hot** set of outputs: exactly one line
+high, the one \`A\` names.
+
+## Behaviour
+
+**Address bits** sets the input width; there are 2 to that power outputs. Two
+address bits give \`Y0\`…\`Y3\`, and an address of 2 raises \`Y2\` with the
+rest low.
+
+\`EN\` gates the whole thing. Held low, every output is low regardless of the
+address. Unwired it floats and the decoder is enabled, which is the useful
+default. An \`EN\` that cannot be resolved puts \`X\` on every line, and so
+does an unresolvable address.
+
+## Typical uses
+
+- **Memory and device selection** — the outputs are one-hot by construction,
+  which is exactly what a bank of \`gate.tristate\` enables needs if the
+  shared bus is never to be contended.
+- Driving a 7-segment display's segments from a value, when the decoding is
+  the exercise. \`disp.sevenseg\` in BCD mode does it for you when it is not.
+- One-of-n indicator lamps — a decoder into a row of \`io.led\`.
+- Micro-code control: a state number in, one control line per state out.
+
+\`comb.encoder\` is the inverse: one-hot in, a number out.
+
+## On the canvas
+
+1. Click the element in the palette, then click the canvas to place it.
+2. Click a pin to start a wire and a second pin to land it; \`Esc\` cancels.
+3. Select the element to open the inspector over it and edit the settings above.`,
   title: "Decoder",
   icon: "decoder",
   category: "comb",

@@ -25,6 +25,45 @@ type ClockState = {
 
 export const clockNode = defineNode({
   type: "time.clock",
+  docs: `
+A free-running square wave, and the only element that makes time pass on its
+own.
+
+## Behaviour
+
+Everything else in a circuit reacts to a change somewhere upstream. The clock
+instead schedules its own next edge, which is what gets a sequential circuit
+moving at all.
+
+- **Period (ns)** is one full cycle in simulated nanoseconds. It is simulated
+  time, not wall-clock time — the run speed control decides how fast that maps
+  to seconds on screen.
+- **Duty cycle (%)** is the share of the period spent high. Both halves are
+  always at least one nanosecond, so an extreme duty cycle narrows a phase
+  rather than collapsing it.
+- **Start high** picks the phase the clock begins in after a reset.
+
+\`EN\` gates it. Held low, the output sits at \`0\` and the clock stops
+scheduling entirely, so a disabled clock is free. Re-enabling it starts a
+clean half period rather than resuming a stale phase. Left unwired it runs.
+
+An \`EN\` nobody can resolve puts \`X\` on the output while the phase keeps
+running underneath, so the waveform recovers the moment \`EN\` does.
+
+## Typical uses
+
+- Driving \`CLK\` on flip-flops, registers, counters and synchronous RAM.
+- Two clocks at different periods, to explore what happens when domains cross.
+- A slow clock into \`EN\` of a fast one, for a gated burst.
+
+Chain it into \`seq.counter\` to divide it down, or into \`scope.logic\` as a
+timebase reference beside the signals you are actually measuring.
+
+## On the canvas
+
+1. Click the element in the palette, then click the canvas to place it.
+2. Click a pin to start a wire and a second pin to land it; \`Esc\` cancels.
+3. Select the element to open the inspector over it and edit the settings above.`,
   title: "Clock",
   icon: "clock",
   category: "timing",

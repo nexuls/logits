@@ -15,6 +15,39 @@ import { AND2, type BitTable, combine } from "@/lib/sim/logic";
  * See artifacts/06-node-catalog.md.
  */
 
+/**
+ * Appended to every gate's own help, so the paragraph about unknowns and about
+ * widening a gate is written once rather than nine times. A gate file
+ * documents what makes it that gate; this documents what makes it a gate.
+ */
+const SHARED_GATE_DOCS = `
+## Unknown and floating inputs
+
+Signals here are four-valued — \`0\`, \`1\`, \`X\` (contended or unknown) and
+\`Z\` (nothing driving). A gate resolves what it honestly can: an input at a
+*controlling* value settles the output whatever the others are, so an AND with
+one real \`0\` is \`0\` even with an \`X\` beside it. Where the answer genuinely
+depends on the unknown input, the output is \`X\`.
+
+An unconnected input floats at \`Z\`, which is not a level. A gate treats it as
+\`X\` rather than guessing a level, so a half-wired gate reads \`X\` instead of
+quietly looking correct.
+
+## On the canvas
+
+1. Click the element in the palette, then click the canvas to drop it. Click
+   the palette entry again first to arm several copies in one go.
+2. Drag from an input pin to whatever drives it, and from \`Y\` to whatever it
+   feeds. Click empty canvas mid-wire to drop a bend.
+3. Select the gate to open the inspector, where **Bit width** lives — and
+   **Inputs**, on the gates that have more than one. Changing either re-derives
+   the pins: wires already attached stay put, but a width the other end does
+   not share raises a width-mismatch warning on the wire.
+
+Press \`R\` to rotate the selection, \`Ctrl/Cmd + D\` to duplicate it, and
+\`Space\` to start or pause the simulation.
+`;
+
 const MIN_INPUTS = 2;
 const MAX_INPUTS = 8;
 
@@ -50,6 +83,8 @@ type GateSpec = {
   title: string;
   icon: string;
   keywords: readonly string[];
+  /** Markdown help, rendered by the palette's info dialog. */
+  docs: string;
   /**
    * Bit table folded pairwise across the inputs. Each table already bakes in
    * its controlling value, so an AND with one `0` input is `0` however many
@@ -86,6 +121,7 @@ export function symmetricGate({
   title,
   icon,
   keywords,
+  docs,
   op,
   invert,
 }: GateSpec): NodeDefinition {
@@ -95,6 +131,7 @@ export function symmetricGate({
     category: "gates",
     keywords,
     icon,
+    docs: docs + SHARED_GATE_DOCS,
     defaultParams: { inputs: MIN_INPUTS, width: 1 },
     paramsSchema: [INPUTS_PARAM, WIDTH_PARAM],
     pins: (params) => {
@@ -138,6 +175,7 @@ export function unaryGate({
   title,
   icon,
   keywords,
+  docs,
   invert,
 }: Omit<GateSpec, "op">): NodeDefinition {
   return {
@@ -146,6 +184,7 @@ export function unaryGate({
     category: "gates",
     keywords,
     icon,
+    docs: docs + SHARED_GATE_DOCS,
     defaultParams: { width: 1 },
     paramsSchema: [WIDTH_PARAM],
     pins: (params) => {

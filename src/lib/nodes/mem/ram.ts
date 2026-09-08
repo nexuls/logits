@@ -33,6 +33,57 @@ type RamState = {
  */
 export const ramNode = defineNode({
   type: "mem.ram",
+  docs: `
+Read/write memory on a shared, bidirectional data bus.
+
+## Behaviour
+
+**Address bits** sets the cell count — 2 to that power — and **Bit width** the
+word size. **Contents** seeds the memory at reset, in the same hex format the
+ROM uses.
+
+\`D\` is a single \`inout\` pin: the same bus carries the word in on a write
+and out on a read. That is what real static RAM does, and it means the
+netlist expects other drivers on that net rather than flagging it.
+
+| Pin | Effect |
+| :-- | :-- |
+| \`WE\` | Write enable. While high the part is *listening*, not driving |
+| \`OE\` | Output enable. High drives the addressed word onto \`D\`; low or unwired releases it to \`Z\` |
+| \`CLK\` | The write edge, when **Synchronous write** is on |
+| \`A\` | Address |
+
+**Synchronous write** on (the default) writes on the rising clock edge while
+\`WE\` is high. Off, it writes for as long as \`WE\` is high with no clock at
+all — simpler to wire, and a good way to see why real designs prefer the
+clocked version.
+
+The part never reads back its own bus during a write: while \`WE\` is high it
+releases \`D\`. Letting it drive and listen at once is how a real one shorts
+itself.
+
+A write whose address or enable cannot be resolved could have landed anywhere,
+so the **whole array** goes unknown rather than quietly staying intact.
+
+## Contents are runtime state
+
+A write during the run does **not** edit the document. The array is rebuilt
+from the **Contents** param on every reset, exactly like a flip-flop's stored
+bit. That is deliberate: a memory that rewrote the document as it ran would
+put one undo entry on the stack per clock edge.
+
+## Typical uses
+
+- Data memory for a small CPU, sharing a bus with \`mem.rom\` through
+  \`gate.tristate\` and a \`comb.decoder\` on the enables.
+- A stack or a queue, with \`seq.counter\` driving the address.
+- A frame or waveform buffer, written from one counter and read by another.
+
+## On the canvas
+
+1. Click the element in the palette, then click the canvas to place it.
+2. Click a pin to start a wire and a second pin to land it; \`Esc\` cancels.
+3. Select the element to open the inspector over it and edit the settings above.`,
   title: "RAM",
   icon: "ram",
   category: "mem",

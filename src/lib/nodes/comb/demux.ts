@@ -10,6 +10,35 @@ import { SELECT_PARAM, selectBitsOf } from "./mux";
  */
 export const demuxNode = defineNode({
   type: "comb.demux",
+  docs: `
+A demultiplexer: \`A\` reaches the one output that \`SEL\` names, and every
+other output is driven **low**.
+
+## Behaviour
+
+The multiplexer run backwards. **Select bits** decides how many outputs there
+are — 2 to that power — and **Bit width** how wide each one is.
+
+The unselected outputs are actively driven low rather than left floating: this
+is a router, not a bank of tri-state drivers. If you want a shared bus where
+only one source drives at a time, that is \`gate.tristate\` with a
+\`comb.decoder\` on the enables.
+
+A \`SEL\` that cannot be resolved puts \`X\` on **every** output, since the
+signal could have gone anywhere.
+
+## Typical uses
+
+- Steering a write into one of several registers.
+- Distributing a clock or a strobe to the one destination that should see it.
+- With \`A\` tied high, it is a decoder — which is what \`comb.decoder\` is,
+  built for that job.
+
+## On the canvas
+
+1. Click the element in the palette, then click the canvas to place it.
+2. Click a pin to start a wire and a second pin to land it; \`Esc\` cancels.
+3. Select the element to open the inspector over it and edit the settings above.`,
   title: "Demultiplexer",
   icon: "demux",
   category: "comb",

@@ -33,6 +33,61 @@ import {
  * go through `bitFlop`.
  */
 
+/**
+ * Appended to the help of every clocked node built here, so the rules about
+ * what an unwired control pin means — which are the same rules for all of
+ * them, and the ones people get wrong — are written once.
+ */
+const SHARED_CLOCKED_DOCS = `
+## Control pins
+
+Pin placement follows the catalog convention: data on the left, outputs on the
+right, the clock on the bottom edge, and the asynchronous controls across the
+top.
+
+An **unwired pin floats at \`Z\`**, and what that means depends on the pin:
+
+| Pin | Unwired | Held low | Held high |
+| :-- | :-- | :-- | :-- |
+| \`RST\` | idle — no reset | idle | clears the stored value |
+| \`SET\` | idle — no set | idle | fills the stored value with 1s |
+| \`EN\` | **enabled** | disabled — the clock is ignored | enabled |
+| \`CLK\` | never clocks | never clocks | never clocks — it is the *edge* that counts |
+
+An enable reads the opposite way round from a reset on purpose: a flip-flop
+with nothing wired to \`EN\` is the common case and must still clock, while
+one with nothing wired to \`RST\` must not sit permanently in reset.
+
+Reset beats set, the way a real part's asynchronous clear does, so asserting
+both gives a defined answer rather than an \`X\`.
+
+## Edges, and what counts as one
+
+The clock is compared against the level read last time.
+
+- \`0\` → \`1\` is a rising edge, \`1\` → \`0\` a falling one, and
+  **Clock edge** picks which one this part acts on.
+- Coming out of \`Z\` is **not** an edge. Every circuit starts undriven, and
+  counting the first driven level as an edge would clock the whole sheet once
+  at power-up.
+- An edge into or out of \`X\` is *unknowable*, and puts \`X\` on the
+  output rather than guessing. That is what an uninitialised or contended
+  clock looks like — if outputs read \`X\` and stay there, the clock is
+  usually what to check first.
+
+## On the canvas
+
+1. Place the element, then wire \`CLK\` from \`time.clock\` (or from an
+   \`io.button\` through \`time.oneshot\`, to step it by hand).
+2. Wire the data pins on the left and take the outputs off the right.
+3. Select it to open the inspector for the settings above.
+
+Stored values are **simulation state**, not document state: they are rebuilt
+from scratch on every reset, and a structural edit — changing **Bit width**,
+or rewiring a pin — resets them too. Only \`params\` survive, which is why a
+switch position does and a latched bit does not.
+`;
+
 /** Body of a flip-flop: wide enough for three control pins across the top. */
 const BODY_WIDTH = 8;
 const BODY_HEIGHT = 6;
@@ -144,6 +199,8 @@ type RegisterSpec = {
   title: string;
   icon: string;
   keywords: readonly string[];
+  /** Markdown help, rendered by the palette's info dialog. */
+  docs: string;
   /** `seq.dff` has `set` and `qn`; `seq.register` has neither. */
   hasSet: boolean;
   hasQn: boolean;
@@ -155,6 +212,7 @@ export function registerLike({
   title,
   icon,
   keywords,
+  docs,
   hasSet,
   hasQn,
 }: RegisterSpec): NodeDefinition {
@@ -164,6 +222,7 @@ export function registerLike({
     category: "seq",
     keywords,
     icon,
+    docs: docs + SHARED_CLOCKED_DOCS,
     defaultParams: { width: 1, edge: "rising", asyncReset: true },
     paramsSchema: [
       widthParam(),
@@ -245,6 +304,8 @@ type BitFlopSpec = {
   title: string;
   icon: string;
   keywords: readonly string[];
+  /** Markdown help, rendered by the palette's info dialog. */
+  docs: string;
   /** Data pin ids, left side, one bit each — `["j", "k"]` or `["t"]`. */
   inputs: readonly string[];
   /** Next `q` bit from the current one and the data pins, at the edge. */
@@ -261,6 +322,7 @@ export function bitFlop({
   title,
   icon,
   keywords,
+  docs,
   inputs,
   next,
 }: BitFlopSpec): NodeDefinition {
@@ -270,6 +332,7 @@ export function bitFlop({
     category: "seq",
     keywords,
     icon,
+    docs: docs + SHARED_CLOCKED_DOCS,
     defaultParams: { edge: "rising", asyncReset: true },
     paramsSchema: [EDGE_PARAM],
     pins: () => {

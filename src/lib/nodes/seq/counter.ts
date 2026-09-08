@@ -30,6 +30,52 @@ type CounterState = {
  */
 export const counterNode = defineNode({
   type: "seq.counter",
+  docs: `
+A synchronous up/down counter with an asynchronous reset and a parallel load.
+
+## Behaviour
+
+On each rising clock edge the count moves by one, in the direction
+**Direction** sets, and appears on \`Q\`. Everything happens on the one edge —
+this is not a ripple counter, so all the output bits change together.
+
+**Modulus** is where it wraps. Leave it at 0 to count the full range of the bit
+width (0…2ⁿ−1); set it to 10 for a decade counter, 60 for seconds, and so on.
+
+\`CO\` (carry out) is high on the *terminal* count — the last value before the
+wrap, which is modulus−1 counting up and 0 counting down. That is the pin that
+makes counters chainable: wire one stage's \`CO\` into the next stage's \`EN\`
+and the second only advances on the cycle the first rolls over.
+
+| Pin | Effect |
+| :-- | :-- |
+| \`RST\` | High clears the count to 0 immediately, without waiting for a clock edge. Beats everything else |
+| \`LOAD\` | High at the edge loads \`D\` instead of counting |
+| \`EN\` | Low at the edge holds the count. Unwired reads as enabled |
+| \`D\` | The value \`LOAD\` writes |
+
+An unwired \`RST\` floats and does nothing — only a reset actually asserted
+clears the counter.
+
+## Typical uses
+
+- A program counter: \`LOAD\` and \`D\` give you the jump, \`EN\` gives you the
+  stall.
+- A clock divider — feed \`time.clock\` in and take a slower square wave off
+  a high bit of \`Q\`.
+- Driving \`mem.rom\`'s address for a sequencer or a waveform table.
+- Feeding \`disp.sevenseg\` in BCD mode with **Modulus** at 10, for a digit
+  that rolls over the way a real one does.
+
+## On the canvas
+
+1. Place it and wire \`CLK\` from \`time.clock\`.
+2. Put \`Q\` into \`io.probe\` or \`disp.hex\` to read the count.
+3. Set **Bit width** and **Modulus** in the inspector before wiring, since
+   changing the width re-derives the pins.
+4. Wire \`RST\` from an \`io.button\` to zero it by hand.
+
+The count is simulation state — a reset, or a structural edit, clears it.`,
   title: "Counter",
   icon: "counter",
   category: "seq",

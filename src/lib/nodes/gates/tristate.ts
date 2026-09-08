@@ -8,6 +8,46 @@ import { AND2, combine, createSignal, HIGH, LOW, X, Z } from "@/lib/sim/logic";
  */
 export const tristateGate = defineNode({
   type: "gate.tristate",
+  docs: `
+A buffer that can **let go** of its output. With \`EN\` high it passes \`A\`
+through; with \`EN\` low it stops driving altogether and \`Y\` floats at
+\`Z\`.
+
+## Behaviour
+
+\`Z\` is not a level — it is *nobody is driving this net*. That is what makes
+this gate different from an AND: a disabled tri-state does not output \`0\`, it
+outputs nothing, so another driver on the same net is free to decide the value.
+
+| EN | Y |
+| :-: | :-- |
+| 1 | \`A\` (a floating \`A\` reads \`X\`) |
+| 0 | \`Z\` — released |
+| X | \`X\` — nobody knows whether this driver is on |
+
+\`EN\` is always one bit wide however wide the data is, and it sits on the top
+edge like every other enable in the catalog. Its output pin is marked
+tri-state, which is what tells the netlist that several of these sharing a net
+is a bus and not a short circuit.
+
+## Building a bus
+
+1. Place one tri-state per source and wire every \`Y\` to the same net.
+2. Drive exactly one \`EN\` high at a time — \`comb.decoder\` is the usual
+   way, since its outputs are one-hot by construction.
+3. Enable two at once with different data and the net is contended: it reads
+   \`X\` and the wire is flagged with a multiple-drivers diagnostic.
+
+Leaving *every* enable low leaves the bus floating at \`Z\`, which reads as
+unknown downstream rather than as zero. A pull-down — an \`io.constant\` of 0
+through a resistor is not modelled here — is not available, so drive the bus
+from a default source instead.
+
+## On the canvas
+
+1. Click the element in the palette, then click the canvas to place it.
+2. Click a pin to start a wire and a second pin to land it; \`Esc\` cancels.
+3. Select the element to open the inspector over it and edit the settings above.`,
   title: "Tri-state",
   icon: "tristate",
   category: "gates",
