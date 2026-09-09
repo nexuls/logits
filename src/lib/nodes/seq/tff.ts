@@ -32,6 +32,7 @@ Always one bit wide.
 - **Synchronous counter** — all stages on one clock, with AND gates feeding
   each \`T\` from the bits below it.`,
   title: "T flip-flop",
+  shortTitle: "TFF",
   icon: "flip-flop",
   keywords: ["t", "tff", "toggle", "divider", "flip flop", "sequential"],
   inputs: ["t"],

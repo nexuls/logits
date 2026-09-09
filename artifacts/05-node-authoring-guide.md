@@ -56,6 +56,7 @@ Look for an existing helper before writing geometry or a param clamp:
 | You need | Use |
 | --- | --- |
 | A "Bit width" stepper, a clamped `width`, pin stacking, body height | [nodes/shared.ts](../src/lib/nodes/shared.ts) |
+| Room a name takes on a body, and the gutters its pin labels eat | [nodes/label-metrics.ts](../src/lib/nodes/label-metrics.ts) |
 | To know whether a clock moved, four-valued | `detectEdge` in [nodes/edges.ts](../src/lib/nodes/edges.ts) |
 | To read `rst` / `set` / `load` / `oe` | `controlState` in [nodes/shared.ts](../src/lib/nodes/shared.ts) |
 | A reset/enable/clock frame around a stored value | `registerLike` / `bitFlop` in [seq/shared.ts](../src/lib/nodes/seq/shared.ts) |
@@ -105,6 +106,8 @@ which break tree-shaking and make ordering non-deterministic.
 - [ ] Declares `kind: "basic"` **only** if its pins are obvious from where they
       sit; otherwise leave `kind` off and let the canvas label it. See "Basic or
       compound" below.
+- [ ] Has a `shortTitle` if `title` is longer than the abbreviation a schematic
+      would use for it. See "Names, and the body that has to hold one".
 - [ ] Has a `docs` string. The palette's info button is driven straight off it,
       so a node without one ships with no help at all — see below.
 - [ ] Appears in the palette with a sensible `icon` and `keywords`, under a
@@ -187,6 +190,25 @@ family today, and each is the reason a rule in `AGENTS.md` still holds:
 
 If a node needs something structural that none of these covers, the fix is a
 fourth hook on the contract, not a `type` comparison in the netlist.
+
+## Names, and the body that has to hold one
+
+Two `title`s, and they are for different readers:
+
+- **`title`** — what the palette, the inspector and the docs dialog call it:
+  `"Demultiplexer"`.
+- **`shortTitle`** — what the *canvas* writes on the body, where the
+  conventional abbreviation is both what fits and what a reader of a schematic
+  expects: `"DEMUX"`, `"DFF"`, `"REG"`. Omit it for a name that is already
+  short.
+
+You do not size a body against its name by hand. `defineNode` measures the
+name against the body and the gutters the pin labels occupy, and widens — or
+raises — the footprint until the name is set on **one line at 8px or larger**,
+moving the pins on the growing edges by half the growth so a centred `CLK`
+stays centred. The metrics are in
+[label-metrics.ts](../src/lib/nodes/label-metrics.ts) and `registry.test.ts`
+checks the promise at all four rotations.
 
 ## When a node needs custom rendering
 

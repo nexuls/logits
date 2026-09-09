@@ -6,6 +6,7 @@ import {
   type PinSpec,
 } from "@/lib/circuit/schema";
 import type { Signal } from "@/lib/sim/logic";
+import { fitBody } from "./label-metrics";
 
 /**
  * The node definition contract: everything the app knows about a node type.
@@ -97,6 +98,16 @@ export type NodeDefinition = {
   /** Registry key, `"<family>.<name>"`. Stable forever — it is in save files. */
   type: string;
   title: string;
+  /**
+   * The name the canvas writes on the body, when the full `title` is too long
+   * to be one there — `"MUX"` for a multiplexer, `"DFF"` for a D flip-flop.
+   *
+   * The palette, the inspector and the docs dialog always use `title`: this is
+   * only what the element is called *on a schematic*, where the conventional
+   * abbreviation is both what fits and what a reader expects. Omit it for a
+   * title that is already short.
+   */
+  shortTitle?: string;
   category: string;
   keywords?: readonly string[];
   /**
@@ -145,11 +156,15 @@ export type NodeDefinition = {
    */
   paramsSchema?: readonly ParamSpec[];
   /**
-   * Name of the custom renderer for this node, resolved by
+   * Name of the renderer for this node's body, resolved by
    * `src/components/nodes/node-views.tsx`. A name and not a component, for the
-   * same reason `icon` is: this layer must stay free of React. Omit for the
-   * generic renderer, which draws `title` and the pins — only a node that
-   * genuinely *displays* or *accepts* data needs one.
+   * same reason `icon` is: this layer must stay free of React.
+   *
+   * Every definition names one, and `BLOCK_VIEW` — the labelled rectangle — is
+   * the honest default rather than a fallback nothing declares: it is what
+   * says "this element is still drawn as a box", so the ones that have grown a
+   * real symbol are the ones that name something else. A name this build does
+   * not have falls back to the block rather than rendering nothing.
    */
   view?: string;
   /** Pin layout is derived from params, never stored in the document. */
@@ -221,14 +236,15 @@ const PLACEHOLDER_SIZE: Size = { width: 6, height: 4 };
  * reference them, so the circuit still renders wired up instead of collapsing.
  */
 export function placeholderDefinition(type: string): NodeDefinition {
-  return {
+  return defineNode({
     type,
     title: type,
     category: "unknown",
+    view: BLOCK_VIEW,
     defaultParams: {},
     pins: () => [],
     size: () => PLACEHOLDER_SIZE,
-  };
+  });
 }
 
 /**
@@ -284,13 +300,59 @@ export function pinSpecsFor(
 }
 
 /**
- * Authoring entry point for a definition. It is an identity function today —
- * its job is to be the single name every definition file imports, so the day
- * the contract grows `evaluate` and `paramsSchema` there is one place to widen
- * and every node file already routes through it.
+ * The renderer every element gets until someone draws it a real symbol: a
+ * rectangle with the element's name in it. Named here because `defineNode`
+ * has to know which view draws a title, and it is the only thing it knows
+ * about any view.
+ */
+export const BLOCK_VIEW = "block";
+
+/**
+ * Authoring entry point for a definition. Every node file routes through it,
+ * which is what lets the contract grow in one place.
+ *
+ * What it adds today is the guarantee behind "the block renders fine at every
+ * rotation": a body drawn as a labelled box is widened until its name fits it,
+ * so no definition has to hand-tune a footprint against the length of its own
+ * title. A node with a real symbol is left exactly as written — it draws
+ * something other than a name, and only its author knows how big that is.
  */
 export function defineNode(definition: NodeDefinition): NodeDefinition {
-  return definition;
+  const view = definition.view ?? BLOCK_VIEW;
+  if (view !== BLOCK_VIEW) return definition;
+
+  const label = definition.shortTitle ?? definition.title;
+  // Pin names are drawn by default on everything but a `"basic"` node, and
+  // that default is what the footprint has to survive — a body sized for bare
+  // pins would have its title cut in half the moment the labels came on.
+  const labelled = definition.kind !== "basic";
+
+  // Both `pins` and `size` are asked for the same params over and over — once
+  // per netlist rebuild, once per scene layout — so the fit is computed once
+  // per params object rather than on every call. Keyed by identity because
+  // commands replace the params object on every edit, which makes identity an
+  // exact "have these changed?" test.
+  const fitted = new WeakMap<NodeParams, ReturnType<typeof fitBody>>();
+  const fit = (params: NodeParams) => {
+    const hit = fitted.get(params);
+    if (hit) return hit;
+
+    const result = fitBody(
+      label,
+      definition.pins(params),
+      definition.size(params),
+      labelled,
+    );
+    fitted.set(params, result);
+    return result;
+  };
+
+  return {
+    ...definition,
+    view,
+    pins: (params) => [...fit(params).pins],
+    size: (params) => fit(params).size,
+  };
 }
 
 /**

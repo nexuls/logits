@@ -37,6 +37,7 @@ register with extra steps.
 - State machines drawn from a JK excitation table, which is what most textbook
   exercises use it for.`,
   title: "JK flip-flop",
+  shortTitle: "JKFF",
   icon: "flip-flop",
   keywords: ["jk", "jkff", "flip flop", "toggle", "sequential"],
   inputs: ["j", "k"],

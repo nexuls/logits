@@ -45,6 +45,7 @@ the result does not, which \`comb.alu\` reports on its \`V\` pin.
 2. Click a pin to start a wire and a second pin to land it; \`Esc\` cancels.
 3. Select the element to open the inspector over it and edit the settings above.`,
   title: "Adder",
+  shortTitle: "ADD",
   icon: "adder",
   category: "comb",
   keywords: ["adder", "add", "sum", "ripple", "carry", "arithmetic"],

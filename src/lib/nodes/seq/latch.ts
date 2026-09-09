@@ -53,6 +53,7 @@ can say whether \`Q\` is showing the stored value or the input — and that is
 Stored values are simulation state: a reset, or any structural edit such as
 changing **Bit width**, clears them.`,
   title: "D latch",
+  shortTitle: "LATCH",
   icon: "latch",
   category: "seq",
   keywords: ["latch", "transparent", "level", "d latch", "sequential"],

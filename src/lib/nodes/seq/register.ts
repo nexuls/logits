@@ -34,6 +34,7 @@ a new one on the cycle you choose. Unwired, \`EN\` reads as enabled.
 - Holding a value read from \`mem.ram\` while the address changes.
 - A pipeline register between two combinational stages.`,
   title: "Register",
+  shortTitle: "REG",
   icon: "register",
   keywords: ["register", "store", "latch", "word", "sequential"],
   hasSet: false,

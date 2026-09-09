@@ -35,6 +35,7 @@ Raise **Bit width** and it stores a whole word on one edge. At that point it is
 - **Pipeline stage** — a flip-flop between two blocks of logic is what lets
   both run in the same cycle.`,
   title: "D flip-flop",
+  shortTitle: "DFF",
   icon: "flip-flop",
   keywords: ["dff", "d flip flop", "latch", "register", "edge", "sequential"],
   hasSet: true,

@@ -40,6 +40,7 @@ signal could have gone anywhere.
 2. Click a pin to start a wire and a second pin to land it; \`Esc\` cancels.
 3. Select the element to open the inspector over it and edit the settings above.`,
   title: "Demultiplexer",
+  shortTitle: "DEMUX",
   icon: "demux",
   category: "comb",
   keywords: ["demux", "demultiplexer", "route", "distribute", "combinational"],

@@ -1,5 +1,6 @@
 import type { PinSpec } from "@/lib/circuit/schema";
 import {
+  defineNode,
   intParam,
   type NodeDefinition,
   type NodeParams,
@@ -81,6 +82,8 @@ const INPUTS_PARAM: ParamSpec = {
 type GateSpec = {
   type: string;
   title: string;
+  /** The abbreviation the canvas writes on the body, when `title` is long. */
+  shortTitle?: string;
   icon: string;
   keywords: readonly string[];
   /** Markdown help, rendered by the palette's info dialog. */
@@ -119,15 +122,17 @@ function bodyHeight(inputs: number): number {
 export function symmetricGate({
   type,
   title,
+  shortTitle,
   icon,
   keywords,
   docs,
   op,
   invert,
 }: GateSpec): NodeDefinition {
-  return {
+  return defineNode({
     type,
     title,
+    shortTitle,
     category: "gates",
     // A row of interchangeable inputs on one side and the output on the other:
     // which pin is which is the shape, not the name.
@@ -169,21 +174,23 @@ export function symmetricGate({
       );
       ctx.write("out", combine(inputs, width, op, invert));
     },
-  };
+  });
 }
 
 /** `gate.not` and `gate.buffer`: one input, one output. */
 export function unaryGate({
   type,
   title,
+  shortTitle,
   icon,
   keywords,
   docs,
   invert,
 }: Omit<GateSpec, "op">): NodeDefinition {
-  return {
+  return defineNode({
     type,
     title,
+    shortTitle,
     category: "gates",
     // A row of interchangeable inputs on one side and the output on the other:
     // which pin is which is the shape, not the name.
@@ -215,5 +222,5 @@ export function unaryGate({
       // unary gate does is normalise Z to X and optionally invert.
       ctx.write("out", combine([ctx.read("in")], width, AND2, invert));
     },
-  };
+  });
 }

@@ -57,6 +57,7 @@ does an unresolvable address.
 2. Click a pin to start a wire and a second pin to land it; \`Esc\` cancels.
 3. Select the element to open the inspector over it and edit the settings above.`,
   title: "Decoder",
+  shortTitle: "DEC",
   icon: "decoder",
   category: "comb",
   keywords: ["decoder", "one hot", "address", "select", "combinational"],

@@ -1,4 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { GRID_SIZE, rotateSide, rotateSize } from "@/lib/circuit/geometry";
+import { BLOCK_VIEW } from "./define";
+import { bodyGutters, fitTitle, labelChars, titleSpace } from "./label-metrics";
 import { lookupNode, nodeCategories, nodeDefinitions } from "./registry";
 
 const categoryIds = new Set(nodeCategories.map((category) => category.id));
@@ -78,6 +81,51 @@ describe("registry", () => {
         expect(`${side}: ${[...stems].join(",")}`).toBe(
           `${side}: ${[...stems][0]}`,
         );
+      }
+    });
+
+    // The canvas writes `shortTitle` on the body when it has one, so a "short"
+    // title longer than the title it replaces is a mistake, not a preference.
+    it("keeps any short title short", () => {
+      if (!definition.shortTitle) return;
+
+      expect(labelChars(definition.shortTitle)).toBeLessThanOrEqual(
+        labelChars(definition.title),
+      );
+      expect(definition.shortTitle.trim()).toBe(definition.shortTitle);
+    });
+
+    // The promise behind the block: whichever way an element is turned, its
+    // name is set on one line at a size that can still be read. Checked at
+    // every rotation, because a quarter turn swaps which edges the pin labels
+    // eat and can leave a title with nowhere to go.
+    it("fits its name on one line at every rotation", () => {
+      if (definition.view !== BLOCK_VIEW) return;
+
+      const label = definition.shortTitle ?? definition.title;
+      for (const rotation of [0, 90, 180, 270] as const) {
+        const turned = rotateSize(size, rotation);
+        const layout = fitTitle(
+          label,
+          titleSpace(
+            {
+              width: turned.width * GRID_SIZE,
+              height: turned.height * GRID_SIZE,
+            },
+            bodyGutters(
+              pins.map((pin) => ({
+                side: rotateSide(pin.side, rotation),
+                name: pin.name,
+              })),
+              definition.kind !== "basic",
+            ),
+          ),
+        );
+
+        expect(`${rotation}: ${layout.lines} line(s)`).toBe(
+          `${rotation}: 1 line(s)`,
+        );
+        expect(layout.fontSize).toBeGreaterThanOrEqual(8);
       }
     });
 

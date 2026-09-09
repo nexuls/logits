@@ -50,6 +50,7 @@ them can be gated together for the compound tests — \`A≤B\` is
 2. Click a pin to start a wire and a second pin to land it; \`Esc\` cancels.
 3. Select the element to open the inspector over it and edit the settings above.`,
   title: "Comparator",
+  shortTitle: "CMP",
   icon: "comparator",
   category: "comb",
   keywords: ["comparator", "compare", "less", "greater", "equal", "arithmetic"],

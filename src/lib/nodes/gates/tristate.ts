@@ -49,6 +49,7 @@ from a default source instead.
 2. Click a pin to start a wire and a second pin to land it; \`Esc\` cancels.
 3. Select the element to open the inspector over it and edit the settings above.`,
   title: "Tri-state",
+  shortTitle: "TRI",
   icon: "tristate",
   category: "gates",
   // One pin to a side, and the enable is the only pin on the top edge, so

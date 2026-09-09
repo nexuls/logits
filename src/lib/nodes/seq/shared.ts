@@ -1,6 +1,7 @@
 import type { PinSpec } from "@/lib/circuit/schema";
 import {
   boolParam,
+  defineNode,
   type EvalContext,
   type NodeDefinition,
 } from "@/lib/nodes/define";
@@ -197,6 +198,8 @@ function clocked(
 type RegisterSpec = {
   type: string;
   title: string;
+  /** The abbreviation the canvas writes on the body — `"DFF"`, `"JKFF"`. */
+  shortTitle?: string;
   icon: string;
   keywords: readonly string[];
   /** Markdown help, rendered by the palette's info dialog. */
@@ -210,15 +213,17 @@ type RegisterSpec = {
 export function registerLike({
   type,
   title,
+  shortTitle,
   icon,
   keywords,
   docs,
   hasSet,
   hasQn,
 }: RegisterSpec): NodeDefinition {
-  return {
+  return defineNode({
     type,
     title,
+    shortTitle,
     category: "seq",
     keywords,
     icon,
@@ -296,12 +301,14 @@ export function registerLike({
       ctx.write("q", q);
       if (hasQn) ctx.write("qn", invert(q, width));
     },
-  };
+  });
 }
 
 type BitFlopSpec = {
   type: string;
   title: string;
+  /** The abbreviation the canvas writes on the body — `"DFF"`, `"JKFF"`. */
+  shortTitle?: string;
   icon: string;
   keywords: readonly string[];
   /** Markdown help, rendered by the palette's info dialog. */
@@ -320,15 +327,17 @@ type BitFlopSpec = {
 export function bitFlop({
   type,
   title,
+  shortTitle,
   icon,
   keywords,
   docs,
   inputs,
   next,
 }: BitFlopSpec): NodeDefinition {
-  return {
+  return defineNode({
     type,
     title,
+    shortTitle,
     category: "seq",
     keywords,
     icon,
@@ -401,7 +410,7 @@ export function bitFlop({
       ctx.write("q", q);
       ctx.write("qn", invert(q, 1));
     },
-  };
+  });
 }
 
 /** Shared by JK and T: a toggle nobody can resolve is X, not a coin flip. */

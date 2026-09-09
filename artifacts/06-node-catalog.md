@@ -130,6 +130,14 @@ the setup-and-hold questions it exists to answer.
 display one net's value, which is the point of keying views by behaviour rather
 than by node type.
 
+Every other element in this catalog names `view: "block"` — a rectangle with
+its name in it — and writes the schematic abbreviation there (`MUX`, `DEMUX`,
+`DFF`, `REG`, `CMP`) through `NodeDefinition.shortTitle`, while the tables
+above, the palette and the help keep the full title. Footprints are not
+hand-tuned against those names: `defineNode` widens or raises a body that
+cannot set its name on one line, which is why `comb.demux`, `seq.counter`,
+`bus.split` and `bus.merge` are wider than their `size()` asks for.
+
 ## Structure — `bus.*`, `sub.*`
 
 | type | pins | notes |

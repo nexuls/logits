@@ -77,6 +77,7 @@ clears the counter.
 
 The count is simulation state — a reset, or a structural edit, clears it.`,
   title: "Counter",
+  shortTitle: "CTR",
   icon: "counter",
   category: "seq",
   keywords: ["counter", "count", "up", "down", "divider", "sequential"],
