@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 430" width="1100" height="430" role="img" aria-label="Anatomy of a node: a definition file plus one line in the registry">
+  <defs>
+    <style>
+      .t { font-family: ui-sans-serif, -apple-system, "Segoe UI", Inter, sans-serif; }
+      .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; }
+      .h { fill: #e6f1f5; font-size: 16px; font-weight: 600; }
+      .p { fill: #90a9b6; font-size: 13px; }
+      .k { fill: #6ee7d7; }
+      .card { fill: #131f26; stroke: #2b424d; stroke-width: 1.5; }
+      .arrow { stroke: #2dd4bf; stroke-width: 2; fill: none; marker-end: url(#b); }
+      .dead { stroke: #7f3b40; stroke-width: 2; fill: none; stroke-dasharray: 6 5; }
+    </style>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#2dd4bf"/>
+    </marker>
+  </defs>
+
+  <rect width="1100" height="430" rx="16" fill="#0d1117"/>
+  <text x="40" y="46" class="t h">Adding an element touches exactly two files</text>
+  <text x="40" y="70" class="t p">If the canvas, the engine, the palette or the inspector needs a change to make your node work, the abstraction is broken.</text>
+
+  <!-- definition card -->
+  <g transform="translate(40 96)">
+    <rect width="440" height="296" rx="12" class="card"/>
+    <rect width="440" height="34" rx="12" fill="#18272f"/>
+    <rect y="22" width="440" height="12" fill="#18272f"/>
+    <text x="16" y="23" class="mono k">src/lib/nodes/io/probe.ts</text>
+    <g class="mono" fill="#a9c2ce">
+      <text x="16" y="62">defineNode({</text>
+      <text x="32" y="84">type:  <tspan fill="#6ee7d7">"io.probe"</tspan>,   <tspan fill="#5d7481">// in the save format, forever</tspan></text>
+      <text x="32" y="106">title: <tspan fill="#6ee7d7">"Probe"</tspan>,</text>
+      <text x="32" y="128">docs:  <tspan fill="#5d7481">// markdown → the help dialog</tspan></text>
+      <text x="32" y="150">pins:  <tspan fill="#5d7481">// → canvas, netlist, help table</tspan></text>
+      <text x="32" y="172">paramsSchema: <tspan fill="#5d7481">// → the inspector form</tspan></text>
+      <text x="32" y="194">size:  <tspan fill="#5d7481">// footprint in grid cells</tspan></text>
+      <text x="32" y="216">view:  <tspan fill="#6ee7d7">"readout"</tspan>, <tspan fill="#5d7481">// a name, not a component</tspan></text>
+      <text x="32" y="238">evaluate: <tspan fill="#5d7481">// pure, deterministic</tspan></text>
+      <text x="16" y="260">})</text>
+    </g>
+  </g>
+
+  <!-- registry card -->
+  <g transform="translate(40 96)">
+    <g transform="translate(478 0)">
+      <rect width="200" height="92" rx="12" class="card"/>
+      <rect width="200" height="34" rx="12" fill="#18272f"/>
+      <rect y="22" width="200" height="12" fill="#18272f"/>
+      <text x="16" y="23" class="mono k">registry.ts</text>
+      <text x="16" y="64" class="mono" fill="#a9c2ce">probeNode,</text>
+    </g>
+    <path d="M440 46 H478" class="arrow"/>
+  </g>
+
+  <!-- consumers -->
+  <g transform="translate(758 96)">
+    <text x="0" y="14" class="t p">…and it appears in</text>
+    <g class="t" fill="#cfe6ee" font-size="14">
+      <rect x="0" y="28" width="290" height="38" rx="9" fill="#12292c" stroke="#1f5f5a"/>
+      <text x="16" y="52">the palette &amp; ⌘K command menu</text>
+      <rect x="0" y="76" width="290" height="38" rx="9" fill="#12292c" stroke="#1f5f5a"/>
+      <text x="16" y="100">the inspector, as a real form</text>
+      <rect x="0" y="124" width="290" height="38" rx="9" fill="#12292c" stroke="#1f5f5a"/>
+      <text x="16" y="148">the help dialog, with pin tables</text>
+      <rect x="0" y="172" width="290" height="38" rx="9" fill="#12292c" stroke="#1f5f5a"/>
+      <text x="16" y="196">the netlist and the simulation</text>
+    </g>
+  </g>
+  <path d="M678 142 H750" class="arrow"/>
+
+  <!-- the rule -->
+  <g transform="translate(498 292)">
+    <rect width="260" height="100" rx="12" fill="#1c1216" stroke="#7f3b40" stroke-width="1.5"/>
+    <text x="16" y="30" class="t" font-size="14" fill="#fecaca" font-weight="600">Never special-case</text>
+    <text x="16" y="52" class="mono" fill="#f2b8b8">if (node.type === …)</text>
+    <text x="16" y="76" class="t p">outside the node's own file.</text>
+  </g>
+</svg>

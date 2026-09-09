@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 424" width="1100" height="424" role="img" aria-label="Four-valued signals: 0, 1, X and Z, shown as a waveform">
+  <defs>
+    <style>
+      .t { font-family: ui-sans-serif, -apple-system, "Segoe UI", Inter, sans-serif; }
+      .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+      .h { fill: #e6f1f5; font-size: 16px; font-weight: 600; }
+      .p { fill: #90a9b6; font-size: 13px; }
+      .lane { stroke: #1e2e37; stroke-width: 1; }
+      .name { font-family: ui-monospace, Menlo, monospace; font-size: 12px; fill: #7f97a3; }
+      .w { fill: none; stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+    </style>
+    <pattern id="hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="9" height="9" fill="#241419"/>
+      <line x1="0" y1="0" x2="0" y2="9" stroke="#f87171" stroke-width="3" stroke-opacity="0.7"/>
+    </pattern>
+  </defs>
+
+  <rect width="1100" height="424" rx="16" fill="#0d1117"/>
+  <text x="40" y="46" class="t h">Signals are four-valued, never booleans</text>
+  <text x="40" y="70" class="t p">A tri-state bus, an uninitialised flip-flop and a driver conflict are all unrepresentable without X and Z.</text>
+
+  <!-- legend -->
+  <g transform="translate(40 92)">
+    <rect x="0" y="0" width="200" height="52" rx="9" fill="#131f26" stroke="#2b424d"/>
+    <circle cx="26" cy="26" r="9" fill="#3d5561"/>
+    <text x="46" y="22" class="mono" font-size="14" fill="#cfe6ee">0</text>
+    <text x="46" y="41" class="t p">driven low</text>
+
+    <g transform="translate(216 0)">
+      <rect x="0" y="0" width="200" height="52" rx="9" fill="#12292c" stroke="#1f5f5a"/>
+      <circle cx="26" cy="26" r="9" fill="#2dd4bf"/>
+      <text x="46" y="22" class="mono" font-size="14" fill="#cfe6ee">1</text>
+      <text x="46" y="41" class="t p">driven high</text>
+    </g>
+    <g transform="translate(432 0)">
+      <rect x="0" y="0" width="200" height="52" rx="9" fill="#241419" stroke="#7f3b40"/>
+      <path d="M19 19 L33 33 M33 19 L19 33" stroke="#f87171" stroke-width="3" stroke-linecap="round"/>
+      <text x="52" y="22" class="mono" font-size="14" fill="#fecaca">X</text>
+      <text x="52" y="41" class="t p">unknown / conflict</text>
+    </g>
+    <g transform="translate(648 0)">
+      <rect x="0" y="0" width="200" height="52" rx="9" fill="#171f2c" stroke="#3a4a6b"/>
+      <circle cx="26" cy="26" r="9" fill="none" stroke="#93a5d0" stroke-width="2.5" stroke-dasharray="3.5 3.5"/>
+      <text x="46" y="22" class="mono" font-size="14" fill="#cbd5f5">Z</text>
+      <text x="46" y="41" class="t p">high impedance</text>
+    </g>
+    <text x="874" y="22" class="t p">X carries a marker,</text>
+    <text x="874" y="41" class="t p">never colour alone.</text>
+  </g>
+
+  <!-- waveform -->
+  <g transform="translate(40 196)">
+    <!-- CLK: low y=34, high y=0 -->
+    <text x="0" y="24" class="name">CLK</text>
+    <line x1="56" y1="42" x2="1024" y2="42" class="lane"/>
+    <path d="M60 34 H120 V0 H180 V34 H240 V0 H300 V34 H360 V0 H420 V34 H480 V0 H540 V34 H600 V0 H660 V34 H720 V0 H780 V34 H840 V0 H900 V34 H960 V0 H1020"
+          class="w" stroke="#2dd4bf"/>
+
+    <!-- Q: low y=114, high y=80. X until the first clock after reset -->
+    <text x="0" y="104" class="name">Q</text>
+    <line x1="56" y1="122" x2="1024" y2="122" class="lane"/>
+    <rect x="60" y="76" width="180" height="42" rx="3" fill="url(#hatch)"/>
+    <path d="M60 97 H240" class="w" stroke="#f87171" stroke-dasharray="7 5"/>
+    <text x="150" y="66" text-anchor="middle" class="mono" font-size="12" fill="#fecaca">X until reset</text>
+    <path d="M240 114 H360 V80 H480 V114 H600 V80 H720 V114 H840 V80 H960 V114 H1020"
+          class="w" stroke="#2dd4bf"/>
+    <text x="630" y="140" text-anchor="middle" class="mono" font-size="12" fill="#6ee7d7">then a clean divide-by-two</text>
+
+    <!-- BUS: a Z stretch, a driven stretch, a Z stretch -->
+    <text x="0" y="184" class="name">BUS</text>
+    <line x1="56" y1="202" x2="1024" y2="202" class="lane"/>
+    <path d="M60 178 H340" class="w" stroke="#93a5d0" stroke-dasharray="2 7"/>
+    <path d="M340 178 L356 166 H624 L640 178 L624 190 H356 Z" fill="#12292c" stroke="#2dd4bf" stroke-width="2.5" stroke-linejoin="round"/>
+    <text x="490" y="183" text-anchor="middle" class="mono" font-size="12" fill="#6ee7d7">0x2F</text>
+    <path d="M640 178 H1020" class="w" stroke="#93a5d0" stroke-dasharray="2 7"/>
+    <text x="200" y="206" text-anchor="middle" class="mono" font-size="12" fill="#93a5d0">Z: nobody driving</text>
+    <text x="490" y="206" text-anchor="middle" class="mono" font-size="12" fill="#6ee7d7">tri-state buffer enabled</text>
+    <text x="830" y="206" text-anchor="middle" class="mono" font-size="12" fill="#93a5d0">Z: released again</text>
+  </g>
+</svg>
