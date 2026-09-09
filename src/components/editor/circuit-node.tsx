@@ -3,7 +3,8 @@
 import { useMemo } from "react";
 
 import { nodeView, valueClass } from "@/components/nodes/node-views";
-import { GRID_SIZE, type Rect } from "@/lib/circuit/geometry";
+import { GRID_SIZE, orientationOf, type Rect } from "@/lib/circuit/geometry";
+import { PIN_LABEL_GAP } from "@/lib/nodes/label-metrics";
 import { cn } from "@/lib/utils";
 import { updateNodeParams } from "@/state/document";
 import type { ResolvedNode, ResolvedPin } from "@/state/scene";
@@ -37,8 +38,13 @@ type Props = {
  * DOM rather than `<canvas>` so a node can hold real controls and real focus
  * (ADR 0003). It renders entirely from the `ResolvedNode` — size, pins, title
  * — and never sees a `type` string, so there is nothing here to special-case a
- * node on (Non-negotiable #4). Anything a node wants to draw for itself comes
- * from its `view`, resolved by `node-views.tsx`.
+ * node on (Non-negotiable #4).
+ *
+ * What is *inside* the body is never decided here: every element names a
+ * `view`, resolved by `node-views.tsx`, and the ones with no symbol of their
+ * own name the block — a rectangle with the element's name in it. This file
+ * draws the frame around that, the pins, and the two markers, and nothing
+ * else, so giving an element a real symbol never touches the canvas.
  *
  * The body is `pointer-events: none`: picking is done mathematically against
  * the scene in `use-editor-gestures.ts`, which is the only way a hit target
@@ -76,6 +82,8 @@ export default function CircuitNode({
   // author did not think about it is labelled rather than left mute.
   const showPinLabels =
     def.kind === "basic" ? showBasicPinLabels : showCompoundPinLabels;
+
+  const orientation = orientationOf(node.rotation);
 
   // The body says what the element *is*; `node.label` says which one it is,
   // and hangs under the body where nothing competes with it. Keeping the two
@@ -118,30 +126,18 @@ export default function CircuitNode({
               : "border-border",
         )}
       >
-        {View ? (
-          <div className="pointer-events-auto absolute inset-[6px]">
-            <View
-              node={node}
-              def={def}
-              readPin={(pinId) => valueByPin[pinId] ?? ""}
-              setParams={(patch) => updateNodeParams(node.id, patch)}
-              interactive={interactive}
-            />
-          </div>
-        ) : (
-          <span
-            className="line-clamp-2 text-[10px] leading-[1.15] font-medium break-words"
-            // Reserving the gutter rather than letting the two overlap: the
-            // title is centred and the labels are pinned to the edges, so on a
-            // narrow body they collide, and a title wrapped to fit is legible
-            // where a title crossed out by an `A1` is not. Two lines, because
-            // what is left of an 8-cell body between two gutters is about six
-            // characters wide and most titles here are longer than that.
-            style={titlePadding(pins, showPinLabels)}
-          >
-            {def.title}
-          </span>
-        )}
+        <div className="pointer-events-auto absolute inset-[6px]">
+          <View
+            node={node}
+            def={def}
+            resolved={resolved}
+            orientation={orientation}
+            showPinLabels={showPinLabels}
+            readPin={(pinId) => valueByPin[pinId] ?? ""}
+            setParams={(patch) => updateNodeParams(node.id, patch)}
+            interactive={interactive}
+          />
+        </div>
 
         {faulted && (
           // A marker as well as the border colour: state is never carried by
@@ -232,67 +228,6 @@ export default function CircuitNode({
       )}
     </div>
   );
-}
-
-/**
- * How far a pin label sits from its pin, in world units — clear of the 9px
- * pin dot, whose own edge is 4.5px in.
- */
-const PIN_LABEL_GAP = 7;
-
-/**
- * A pin label's width, in world units: the chip's own padding plus about five
- * units per character at the 7px font it uses. Measured against the widest
- * names in the catalogue (`COUT`, `LOAD`) rather than computed — this only
- * sets the padding a *centred, wrapping* title is laid out in, and measuring
- * text honestly would mean a layout pass per node per frame.
- */
-const PIN_LABEL_PAD = 2;
-
-/** `border-2` on the body, in world units. */
-const BODY_BORDER_WIDTH = 2;
-
-/**
- * Characters a pin name draws, which is not its `length`: `Q̅` is a `Q` and a
- * combining macron, two code points wide and one glyph wide, and taking the
- * string at its word gives a flip-flop a gutter for a name twice the size of
- * the one on screen.
- */
-function labelChars(name: string): number {
-  return [...name.replace(/\p{M}/gu, "")].length;
-}
-const PIN_LABEL_CHAR = 5.1;
-
-/**
- * Room the body's title gives up, per side, to the labels on that edge.
- *
- * Per side and sized to the names actually there, rather than one worst-case
- * gutter: a flip-flop whose vertical edges say `D` and `Q` keeps its title on
- * one line, where a gutter wide enough for `COUT` would have broken it in
- * half. Only left and right edges take room — a top or bottom label sits above
- * or below the title, not beside it.
- */
-function titlePadding(
-  pins: readonly ResolvedPin[],
-  showPinLabels: boolean,
-): { paddingLeft: number; paddingRight: number } {
-  const gutter = (side: ResolvedPin["side"]) => {
-    const widest = pins
-      .filter((pin) => pin.side === side && pin.spec.name)
-      .reduce((max, pin) => Math.max(max, labelChars(pin.spec.name)), 0);
-    // Less the border: a pin sits on the body's outer edge, so the label is
-    // placed from there, while this padding is measured inside the border box.
-    return widest === 0
-      ? 4
-      : PIN_LABEL_GAP +
-          PIN_LABEL_PAD +
-          widest * PIN_LABEL_CHAR -
-          BODY_BORDER_WIDTH;
-  };
-
-  return showPinLabels
-    ? { paddingLeft: gutter("left"), paddingRight: gutter("right") }
-    : { paddingLeft: 4, paddingRight: 4 };
 }
 
 /** Pushes the label off the edge it is anchored to, per side. */

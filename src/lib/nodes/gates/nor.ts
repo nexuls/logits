@@ -29,6 +29,7 @@ Like NAND, NOR is functionally complete on its own.
   the mirror of the NAND version.`,
   title: "NOR",
   icon: "nor",
+  view: "block",
   keywords: ["nor", "not or", "universal"],
   op: OR2,
   invert: true,

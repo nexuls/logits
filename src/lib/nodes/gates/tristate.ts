@@ -51,6 +51,7 @@ from a default source instead.
   title: "Tri-state",
   shortTitle: "TRI",
   icon: "tristate",
+  view: "block",
   category: "gates",
   // One pin to a side, and the enable is the only pin on the top edge, so
   // its stub already says which one it is.

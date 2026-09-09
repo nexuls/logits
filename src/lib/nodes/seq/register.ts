@@ -36,6 +36,7 @@ a new one on the cycle you choose. Unwired, \`EN\` reads as enabled.
   title: "Register",
   shortTitle: "REG",
   icon: "register",
+  view: "block",
   keywords: ["register", "store", "latch", "word", "sequential"],
   hasSet: false,
   hasQn: false,

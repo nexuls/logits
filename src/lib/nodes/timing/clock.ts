@@ -66,6 +66,7 @@ timebase reference beside the signals you are actually measuring.
 3. Select the element to open the inspector over it and edit the settings above.`,
   title: "Clock",
   icon: "clock",
+  view: "block",
   category: "timing",
   kind: "basic",
   keywords: ["clock", "clk", "oscillator", "square wave", "pulse", "source"],

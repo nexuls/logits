@@ -34,6 +34,7 @@ Always one bit wide.
   title: "T flip-flop",
   shortTitle: "TFF",
   icon: "flip-flop",
+  view: "block",
   keywords: ["t", "tff", "toggle", "divider", "flip flop", "sequential"],
   inputs: ["t"],
   next: (current, [t]) =>

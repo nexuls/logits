@@ -42,6 +42,7 @@ signal could have gone anywhere.
   title: "Demultiplexer",
   shortTitle: "DEMUX",
   icon: "demux",
+  view: "block",
   category: "comb",
   keywords: ["demux", "demultiplexer", "route", "distribute", "combinational"],
   defaultParams: { selectBits: 1, width: 1 },

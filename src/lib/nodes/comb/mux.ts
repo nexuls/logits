@@ -82,6 +82,7 @@ names.
   title: "Multiplexer",
   shortTitle: "MUX",
   icon: "mux",
+  view: "block",
   category: "comb",
   keywords: ["mux", "multiplexer", "select", "switch", "combinational"],
   defaultParams: { selectBits: 1, width: 1 },

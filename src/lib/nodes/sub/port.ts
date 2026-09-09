@@ -60,6 +60,7 @@ name will need re-attaching.
 3. Select the element to open the inspector over it and edit the settings above.`,
   title: "Port",
   icon: "port",
+  view: "block",
   category: "sub",
   // One pin; the port's own name is its parameter.
   kind: "basic",

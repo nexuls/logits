@@ -37,6 +37,7 @@ through rather than normalised.
 3. Select the element to open the inspector over it and edit the settings above.`,
   title: "Merge",
   icon: "merge",
+  view: "block",
   category: "bus",
   keywords: ["merge", "bus", "join", "concat", "bits", "structure"],
   defaultParams: { groups: "1,1,1,1" },

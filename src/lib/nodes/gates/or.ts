@@ -27,6 +27,7 @@ output high, whatever the others are, so an OR with a known \`1\` never reads
   together, which is what wiring two outputs to one net would do.`,
   title: "OR",
   icon: "or",
+  view: "block",
   keywords: ["or", "disjunction", "|"],
   op: OR2,
 });

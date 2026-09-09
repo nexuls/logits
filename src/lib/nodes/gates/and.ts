@@ -30,6 +30,7 @@ output low no matter what the rest are doing, unknowns included.
 - Masking a bus: raise **Bit width** and AND the word against a constant.`,
   title: "AND",
   icon: "and",
+  view: "block",
   keywords: ["and", "conjunction", "&"],
   op: AND2,
 });

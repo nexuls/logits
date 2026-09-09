@@ -30,5 +30,6 @@ not a state it can be in. Known levels pass through untouched.
 For a buffer that can also **let go** of its output, use \`gate.tristate\`.`,
   title: "Buffer",
   icon: "buffer",
+  view: "block",
   keywords: ["buffer", "buf", "repeater"],
 });

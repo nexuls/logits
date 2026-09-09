@@ -39,6 +39,7 @@ stays an \`X\`. Nothing here has a propagation delay worth thinking about.
 3. Select the element to open the inspector over it and edit the settings above.`,
   title: "Split",
   icon: "split",
+  view: "block",
   category: "bus",
   keywords: ["split", "bus", "fan out", "slice", "bits", "structure"],
   defaultParams: { groups: "1,1,1,1" },

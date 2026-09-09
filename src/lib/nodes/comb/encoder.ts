@@ -71,6 +71,7 @@ as zero.
   title: "Encoder",
   shortTitle: "ENC",
   icon: "encoder",
+  view: "block",
   category: "comb",
   keywords: ["encoder", "priority", "index", "one hot", "combinational"],
   defaultParams: { outputBits: 2, priority: true },

@@ -59,6 +59,7 @@ does an unresolvable address.
   title: "Decoder",
   shortTitle: "DEC",
   icon: "decoder",
+  view: "block",
   category: "comb",
   keywords: ["decoder", "one hot", "address", "select", "combinational"],
   defaultParams: { inputBits: 2 },

@@ -30,6 +30,7 @@ one's complement of the word.
   honest way to ask for propagation delay.`,
   title: "NOT",
   icon: "inverter",
+  view: "block",
   keywords: ["not", "inverter", "invert", "!"],
   invert: true,
 });

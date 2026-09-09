@@ -30,6 +30,18 @@ export type PinOffset = {
   dy: number;
 };
 
+/**
+ * Which way round a node ended up. A quarter turn swaps its axes, so a view
+ * with a direction of its own — a gate pointing right, an arrowhead, a name
+ * set along the body — draws itself along this rather than reading `rotation`
+ * and re-deriving the same two cases.
+ */
+export type Orientation = "horizontal" | "vertical";
+
+export function orientationOf(rotation: Rotation = 0): Orientation {
+  return rotation === 90 || rotation === 270 ? "vertical" : "horizontal";
+}
+
 /** Clockwise from the top, so `rotation / 90` is the number of steps. */
 const SIDES = ["top", "right", "bottom", "left"] as const;
 

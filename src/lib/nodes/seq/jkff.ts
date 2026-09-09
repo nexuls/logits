@@ -39,6 +39,7 @@ register with extra steps.
   title: "JK flip-flop",
   shortTitle: "JKFF",
   icon: "flip-flop",
+  view: "block",
   keywords: ["jk", "jkff", "flip flop", "toggle", "sequential"],
   inputs: ["j", "k"],
   next: (current, [j, k]) => {

@@ -30,6 +30,7 @@ which is why real logic families are full of them.
   circuit to build here. \`seq.latch\` is the ready-made version.`,
   title: "NAND",
   icon: "nand",
+  view: "block",
   keywords: ["nand", "not and", "universal"],
   op: AND2,
   invert: true,

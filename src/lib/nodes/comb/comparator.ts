@@ -52,6 +52,7 @@ them can be gated together for the compound tests — \`A≤B\` is
   title: "Comparator",
   shortTitle: "CMP",
   icon: "comparator",
+  view: "block",
   category: "comb",
   keywords: ["comparator", "compare", "less", "greater", "equal", "arithmetic"],
   defaultParams: { width: 4, signed: false },

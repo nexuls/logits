@@ -27,6 +27,7 @@ output \`X\`.
 - Even-parity generation and checking.`,
   title: "XNOR",
   icon: "xnor",
+  view: "block",
   keywords: ["xnor", "exclusive nor", "equivalence"],
   op: XOR2,
   invert: true,

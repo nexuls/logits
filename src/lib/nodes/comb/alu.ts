@@ -87,6 +87,7 @@ element cannot know which operation it is performing.
 3. Select the element to open the inspector over it and edit the settings above.`,
   title: "ALU",
   icon: "alu",
+  view: "block",
   category: "comb",
   keywords: ["alu", "arithmetic", "logic unit", "add", "subtract", "cpu"],
   defaultParams: { width: 8 },

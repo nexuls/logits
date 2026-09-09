@@ -84,6 +84,8 @@ type GateSpec = {
   title: string;
   /** The abbreviation the canvas writes on the body, when `title` is long. */
   shortTitle?: string;
+  /** Renderer name — `"block"` until this gate is drawn as a real symbol. */
+  view?: string;
   icon: string;
   keywords: readonly string[];
   /** Markdown help, rendered by the palette's info dialog. */
@@ -124,6 +126,7 @@ export function symmetricGate({
   title,
   shortTitle,
   icon,
+  view,
   keywords,
   docs,
   op,
@@ -133,6 +136,7 @@ export function symmetricGate({
     type,
     title,
     shortTitle,
+    view,
     category: "gates",
     // A row of interchangeable inputs on one side and the output on the other:
     // which pin is which is the shape, not the name.
@@ -183,6 +187,7 @@ export function unaryGate({
   title,
   shortTitle,
   icon,
+  view,
   keywords,
   docs,
   invert,
@@ -191,6 +196,7 @@ export function unaryGate({
     type,
     title,
     shortTitle,
+    view,
     category: "gates",
     // A row of interchangeable inputs on one side and the output on the other:
     // which pin is which is the shape, not the name.

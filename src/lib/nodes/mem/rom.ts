@@ -89,6 +89,7 @@ the next reset.
 3. Select the element to open the inspector over it and edit the settings above.`,
   title: "ROM",
   icon: "rom",
+  view: "block",
   category: "mem",
   keywords: ["rom", "memory", "lookup", "table", "microcode"],
   defaultParams: { addressBits: 4, width: 8, contents: "" },

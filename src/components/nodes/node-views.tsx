@@ -1,8 +1,10 @@
 import type { ComponentType } from "react";
 
 import type { CircuitNode } from "@/lib/circuit/schema";
-import type { NodeDefinition } from "@/lib/nodes/define";
+import { BLOCK_VIEW, type NodeDefinition } from "@/lib/nodes/define";
+import type { ResolvedNode } from "@/state/scene";
 import BargraphView from "./bargraph-view";
+import BlockView from "./block-view";
 import LampView from "./lamp-view";
 import PushButtonView from "./push-button-view";
 import ReadoutView from "./readout-view";
@@ -12,22 +14,40 @@ import ToggleView from "./toggle-view";
 import TunnelView from "./tunnel-view";
 
 /**
- * Custom renderers for nodes that display or accept data.
+ * How each element draws itself.
  *
  * The same indirection as `node-icons.tsx`, for the same reason: a definition
  * names one with a `view` string because `src/lib/nodes/` may not import
  * React, and this file is the one place that maps names to components. Keys
- * name a *behaviour* — "lamp", "readout" — never a node `type`, so a new
- * indicator reuses an entry here instead of adding one (Non-negotiable #4).
+ * name a *behaviour* or a *shape* — "lamp", "readout", "block" — never a node
+ * `type`, so two elements that look alike share one entry (Non-negotiable #4).
  *
- * Most nodes have no `view` at all and are drawn by the generic renderer from
- * `size()`, `title` and pins. Reach for one only when the node genuinely shows
- * a value or takes a click.
+ * Every element has a view, and most of them name `"block"`: a rectangle with
+ * the element's name in it, which is what the catalogue is drawn as until a
+ * real symbol is designed for it. That makes the elements still waiting for a
+ * symbol exactly the ones that say `view: "block"`, and designing one is a
+ * component beside this file, a line here, and a line in the definition —
+ * nothing in the canvas, the engine or the palette changes.
  */
 
 export type NodeViewProps = {
   node: CircuitNode;
   def: NodeDefinition;
+  /**
+   * The node's geometry, rotation already applied: `bounds` in world units,
+   * and `pins` on the edges they actually ended up on. A view that has to lay
+   * anything out reads it from here rather than re-deriving it — the scene
+   * computed it once for the whole frame.
+   */
+  resolved: ResolvedNode;
+  /**
+   * Which way round the element is: `"vertical"` after a quarter turn. A
+   * symbol that has a direction — a gate pointing right, an arrowhead — draws
+   * itself along this axis; a symmetric one can ignore it.
+   */
+  orientation: "horizontal" | "vertical";
+  /** Whether the canvas is drawing this element's pin names right now. */
+  showPinLabels: boolean;
   /**
    * The value on each pin's net, MSB first — `"0"`, `"1011"`, `"X"`, or `""`
    * when nothing is compiled yet. A view reads only the pins it draws.
@@ -46,6 +66,7 @@ export type NodeViewProps = {
 export type NodeView = ComponentType<NodeViewProps>;
 
 const NODE_VIEWS: Record<string, NodeView> = {
+  [BLOCK_VIEW]: BlockView,
   toggle: ToggleView,
   "push-button": PushButtonView,
   lamp: LampView,
@@ -56,9 +77,14 @@ const NODE_VIEWS: Record<string, NodeView> = {
   tunnel: TunnelView,
 };
 
-/** Null for a node with no custom view, or one naming a view this build lacks. */
-export function nodeView(name: string | undefined): NodeView | null {
-  return (name && NODE_VIEWS[name]) || null;
+/**
+ * The renderer for a view name. Falls back to the block — the labelled
+ * rectangle every element starts as — for a definition that names none, and
+ * for one naming a view this build does not have, so an element from a newer
+ * save still draws as a box with its name rather than as nothing at all.
+ */
+export function nodeView(name: string | undefined): NodeView {
+  return (name && NODE_VIEWS[name]) || BlockView;
 }
 
 /**

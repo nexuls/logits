@@ -200,6 +200,8 @@ type RegisterSpec = {
   title: string;
   /** The abbreviation the canvas writes on the body — `"DFF"`, `"JKFF"`. */
   shortTitle?: string;
+  /** Renderer name — `"block"` until this part is drawn as a real symbol. */
+  view?: string;
   icon: string;
   keywords: readonly string[];
   /** Markdown help, rendered by the palette's info dialog. */
@@ -215,6 +217,7 @@ export function registerLike({
   title,
   shortTitle,
   icon,
+  view,
   keywords,
   docs,
   hasSet,
@@ -224,6 +227,7 @@ export function registerLike({
     type,
     title,
     shortTitle,
+    view,
     category: "seq",
     keywords,
     icon,
@@ -309,6 +313,8 @@ type BitFlopSpec = {
   title: string;
   /** The abbreviation the canvas writes on the body — `"DFF"`, `"JKFF"`. */
   shortTitle?: string;
+  /** Renderer name — `"block"` until this part is drawn as a real symbol. */
+  view?: string;
   icon: string;
   keywords: readonly string[];
   /** Markdown help, rendered by the palette's info dialog. */
@@ -329,6 +335,7 @@ export function bitFlop({
   title,
   shortTitle,
   icon,
+  view,
   keywords,
   docs,
   inputs,
@@ -338,6 +345,7 @@ export function bitFlop({
     type,
     title,
     shortTitle,
+    view,
     category: "seq",
     keywords,
     icon,

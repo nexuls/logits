@@ -84,6 +84,14 @@ describe("registry", () => {
       }
     });
 
+    // Every element names a view, and the ones with no symbol of their own
+    // name the block. That is what makes `view: "block"` a to-do list rather
+    // than a silent fallback: grep it and you have the elements still drawn as
+    // a labelled rectangle.
+    it("names the renderer that draws it", () => {
+      expect(definition.view).toBeTruthy();
+    });
+
     // The canvas writes `shortTitle` on the body when it has one, so a "short"
     // title longer than the title it replaces is a mistake, not a preference.
     it("keeps any short title short", () => {

@@ -37,6 +37,7 @@ Raise **Bit width** and it stores a whole word on one edge. At that point it is
   title: "D flip-flop",
   shortTitle: "DFF",
   icon: "flip-flop",
+  view: "block",
   keywords: ["dff", "d flip flop", "latch", "register", "edge", "sequential"],
   hasSet: true,
   hasQn: true,

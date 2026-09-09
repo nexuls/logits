@@ -24,6 +24,10 @@ export const andGate = defineNode({
   icon: "and",                      // palette icon *name*, resolved by
                                     // src/components/nodes/node-icons.tsx —
                                     // a string, never a component: no React here
+  view: "block",                    // body renderer *name*, resolved by
+                                    // src/components/nodes/node-views.tsx —
+                                    // "block" is the labelled rectangle every
+                                    // element gets until it has a real symbol
   defaultParams: { inputs: 2, width: 1 },
   paramsSchema: [
     { key: "inputs", label: "Inputs", kind: "int", min: 2, max: 8 },
@@ -106,6 +110,7 @@ which break tree-shaking and make ordering non-deterministic.
 - [ ] Declares `kind: "basic"` **only** if its pins are obvious from where they
       sit; otherwise leave `kind` off and let the canvas label it. See "Basic or
       compound" below.
+- [ ] Names a `view` — `"block"` unless it has a symbol or a readout of its own.
 - [ ] Has a `shortTitle` if `title` is longer than the abbreviation a schematic
       would use for it. See "Names, and the body that has to hold one".
 - [ ] Has a `docs` string. The palette's info button is driven straight off it,
@@ -191,6 +196,56 @@ family today, and each is the reason a rule in `AGENTS.md` still holds:
 If a node needs something structural that none of these covers, the fix is a
 fourth hook on the contract, not a `type` comparison in the netlist.
 
+## How a node is drawn
+
+**Every node names a `view`**, and most of them name the same one:
+
+```ts
+view: "block",     // a *name*, resolved by src/components/nodes/node-views.tsx
+```
+
+`"block"` is [block-view.tsx](../src/components/nodes/block-view.tsx) — a
+rectangle with the element's name in it, which is what the whole catalog is
+drawn as until someone designs it a real symbol. Declaring it rather than
+leaving `view` off is deliberate: `grep 'view: "block"' src/lib/nodes` is the
+list of elements still waiting for one.
+
+Reach for a different view when the node displays data or takes a click —
+scope, 7-segment, hex readout, LED, switch — or when you are drawing the
+element's actual symbol. Either way it is a component in
+`src/components/nodes/` plus one line in
+[node-views.tsx](../src/components/nodes/node-views.tsx), which is the one
+place that maps names to components. `view` is a string for the same reason
+`icon` is: this layer may not import React.
+
+The keys name a **behaviour or a shape** — `"toggle"`, `"lamp"`, `"readout"`,
+`"block"` — never a node `type`. The probe and the constant share `"readout"`;
+two gates that differ only by a bubble should share one outline, not own two.
+
+Views receive `NodeViewProps`:
+
+| prop | what it is for |
+| --- | --- |
+| `node`, `def` | the node and its definition |
+| `resolved` | geometry with rotation applied — `bounds` in world units, `pins` on the edges they actually ended up on |
+| `orientation` | `"vertical"` after a quarter turn; a symbol with a direction draws itself along this |
+| `showPinLabels` | whether the canvas is drawing this element's pin names right now |
+| `readPin`, `setParams`, `interactive` | the value on a pin, an edit through a command, and whether input goes anywhere |
+
+A view must:
+
+- subscribe only to the nets they display (see the boundary rules in
+  [02-architecture.md](02-architecture.md));
+- draw with `<canvas>` or SVG if they update every frame — not React state;
+- stay interactive at any zoom (they live inside the transformed layer);
+- **read fine at every rotation.** It is handed `orientation` and post-rotation
+  pin sides; a symbol that ignores them is a symbol that lies about which way
+  the signal flows;
+- keep pointer events off the node body except on genuinely interactive parts,
+  so dragging the node still works. An interactive part also has to
+  `stopPropagation` on `pointerdown`, or the click starts a move gesture
+  instead — see [toggle-view.tsx](../src/components/nodes/toggle-view.tsx).
+
 ## Names, and the body that has to hold one
 
 Two `title`s, and they are for different readers:
@@ -210,34 +265,12 @@ stays centred. The metrics are in
 [label-metrics.ts](../src/lib/nodes/label-metrics.ts) and `registry.test.ts`
 checks the promise at all four rotations.
 
-## When a node needs custom rendering
-
-Most nodes are drawn by the generic renderer from `size()`, `title` and pins.
-Only reach for a custom `view` when the node genuinely displays data — scope,
-7-segment, hex readout, LED, switch.
-
-```ts
-view: "readout",   // a *name*, resolved by src/components/nodes/node-views.tsx
-```
-
-`view` is a string for the same reason `icon` is: this layer may not import
-React. [node-views.tsx](../src/components/nodes/node-views.tsx) is the one place
-that maps names to components, and the keys name a **behaviour** — `"toggle"`,
-`"lamp"`, `"readout"` — never a node `type`. The probe and the constant share
-`"readout"`; a genuinely new behaviour is a component beside it and one line in
-that map.
-
-Views are React components in `src/components/nodes/`. They receive
-`NodeViewProps` — `{ node, def, readPin, setParams, interactive }` — and must:
-
-- subscribe only to the nets they display (see the boundary rules in
-  [02-architecture.md](02-architecture.md));
-- draw with `<canvas>` or SVG if they update every frame — not React state;
-- stay interactive at any zoom (they live inside the transformed layer);
-- keep pointer events off the node body except on genuinely interactive parts,
-  so dragging the node still works. An interactive part also has to
-  `stopPropagation` on `pointerdown`, or the click starts a move gesture
-  instead — see [toggle-view.tsx](../src/components/nodes/toggle-view.tsx).
+`block-view.tsx` then reads the same numbers to decide **which way the name
+runs**: along whichever axis has the clear room, so a body that is tall —
+whether authored tall like an 8-line encoder, or turned on its side — writes
+its name downwards instead of hyphenating it into syllables. That is the whole
+of the horizontal/vertical rule; there is no third variant and no per-node
+tuning.
 
 ## Interactive nodes (switches, buttons)
 

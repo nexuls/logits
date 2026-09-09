@@ -86,6 +86,7 @@ put one undo entry on the stack per clock edge.
 3. Select the element to open the inspector over it and edit the settings above.`,
   title: "RAM",
   icon: "ram",
+  view: "block",
   category: "mem",
   keywords: ["ram", "memory", "read", "write", "store", "sram"],
   defaultParams: {

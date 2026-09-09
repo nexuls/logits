@@ -31,6 +31,7 @@ input leaves the output \`X\` even when the rest are known.
   whenever two buses disagree.`,
   title: "XOR",
   icon: "xor",
+  view: "block",
   keywords: ["xor", "exclusive or", "^", "parity"],
   op: XOR2,
 });

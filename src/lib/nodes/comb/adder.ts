@@ -47,6 +47,7 @@ the result does not, which \`comb.alu\` reports on its \`V\` pin.
   title: "Adder",
   shortTitle: "ADD",
   icon: "adder",
+  view: "block",
   category: "comb",
   keywords: ["adder", "add", "sum", "ripple", "carry", "arithmetic"],
   defaultParams: { width: 4 },

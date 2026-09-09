@@ -53,6 +53,7 @@ guessing.
 3. Select the element to open the inspector over it and edit the settings above.`,
   title: "One-shot",
   icon: "pulse",
+  view: "block",
   category: "timing",
   kind: "basic",
   keywords: ["oneshot", "monostable", "pulse", "trigger", "edge", "debounce"],

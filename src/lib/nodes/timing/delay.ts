@@ -51,6 +51,7 @@ same as flipping a switch mid-run.
 3. Select the element to open the inspector over it and edit the settings above.`,
   title: "Delay",
   icon: "hourglass",
+  view: "block",
   category: "timing",
   kind: "basic",
   keywords: ["delay", "propagation", "lag", "buffer", "timing"],
