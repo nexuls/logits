@@ -38,6 +38,10 @@ type Props = {
   projectId: string;
   showGrid: boolean;
   showMinimap: boolean;
+  /** Pin names on elements whose pins are obvious from their shape. */
+  showBasicPinLabels: boolean;
+  /** Pin names on elements whose pins are told apart only by name. */
+  showCompoundPinLabels: boolean;
   themeKey: string;
   /** Node type armed by the palette, or null. */
   armedType: string | null;
@@ -58,6 +62,8 @@ export default function Editor({
   projectId,
   showGrid,
   showMinimap,
+  showBasicPinLabels,
+  showCompoundPinLabels,
   themeKey,
   armedType,
   armedCount,
@@ -284,6 +290,8 @@ export default function Editor({
           selectedNodeIds={selection.nodeIds}
           faultedNodeIds={faulted.nodes}
           interactive={document !== null}
+          showBasicPinLabels={showBasicPinLabels}
+          showCompoundPinLabels={showCompoundPinLabels}
           compatiblePinIds={gestures.compatiblePinIds}
           wiring={gestures.isWiring}
           onSelectNode={(nodeId) => selectOnly([nodeId])}

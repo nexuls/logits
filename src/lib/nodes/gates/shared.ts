@@ -129,6 +129,9 @@ export function symmetricGate({
     type,
     title,
     category: "gates",
+    // A row of interchangeable inputs on one side and the output on the other:
+    // which pin is which is the shape, not the name.
+    kind: "basic",
     keywords,
     icon,
     docs: docs + SHARED_GATE_DOCS,
@@ -182,6 +185,9 @@ export function unaryGate({
     type,
     title,
     category: "gates",
+    // A row of interchangeable inputs on one side and the output on the other:
+    // which pin is which is the shape, not the name.
+    kind: "basic",
     keywords,
     icon,
     docs: docs + SHARED_GATE_DOCS,

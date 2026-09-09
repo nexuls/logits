@@ -67,6 +67,7 @@ timebase reference beside the signals you are actually measuring.
   title: "Clock",
   icon: "clock",
   category: "timing",
+  kind: "basic",
   keywords: ["clock", "clk", "oscillator", "square wave", "pulse", "source"],
   defaultParams: { periodNs: 100, dutyCycle: 50, startHigh: false },
   paramsSchema: [

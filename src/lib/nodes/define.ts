@@ -99,6 +99,24 @@ export type NodeDefinition = {
   category: string;
   keywords?: readonly string[];
   /**
+   * Whether this node's pins can be read off the picture.
+   *
+   * `"basic"` — a switch, an LED, a two-input gate: one pin to a side, or a
+   * row of interchangeable inputs, so which pin is which follows from where it
+   * is. `"compound"` — a flip-flop, a mux, a RAM: several pins on one edge
+   * with genuinely different jobs, told apart by nothing but their names.
+   *
+   * It decides only whether the canvas draws the pin names *by default*; each
+   * kind has its own switch in the editor settings, so either can be forced on
+   * or off. Omitting it means `"compound"`, because a node whose author never
+   * thought about this is far likelier to need its names shown than not —
+   * over-labelling is a smaller failure than an unreadable one.
+   *
+   * Declared here, and read only by the node renderer, so no component has to
+   * know which types are which (Non-negotiable #4).
+   */
+  kind?: "basic" | "compound";
+  /**
    * Long-form help for this node, as Markdown — what it is, how it behaves at
    * the edges, and how to wire it up on the canvas. The palette's info dialog
    * renders it (GFM, so tables work) alongside the pin and parameter tables it

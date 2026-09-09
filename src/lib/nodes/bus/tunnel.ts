@@ -57,6 +57,8 @@ wire when it would not.
   title: "Tunnel",
   icon: "tunnel",
   category: "bus",
+  // One pin, and the view already draws the net name it joins.
+  kind: "basic",
   keywords: ["tunnel", "label", "net", "name", "jump", "structure"],
   defaultParams: { name: "", width: 1 },
   view: "tunnel",

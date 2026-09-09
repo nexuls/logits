@@ -42,6 +42,7 @@ It drives nothing and cannot disturb the circuit it is measuring.
   title: "Hex display",
   icon: "hex",
   category: "instruments",
+  kind: "basic",
   keywords: ["hex", "hexadecimal", "display", "readout", "number", "digits"],
   defaultParams: { width: 8, radix: "hex" },
   view: "readout",

@@ -52,6 +52,8 @@ export default function Home() {
             projectId={activeId}
             showGrid={settings.showGrid}
             showMinimap={settings.showMinimap}
+            showBasicPinLabels={settings.showBasicPinLabels}
+            showCompoundPinLabels={settings.showCompoundPinLabels}
             themeKey={theme}
             armedType={pendingType}
             armedCount={pending.count}

@@ -10,6 +10,10 @@ type Props = {
   selectedNodeIds: readonly string[];
   faultedNodeIds: ReadonlySet<string>;
   interactive: boolean;
+  /** Pin names per `NodeDefinition.kind`; two flags, not one object, so the
+   * memo above still compares by value. */
+  showBasicPinLabels: boolean;
+  showCompoundPinLabels: boolean;
   /** `nodeId/pinId` keys the wire in progress could land on. */
   compatiblePinIds: ReadonlySet<string>;
   /** True while a wire is being drawn, which is when the highlight applies. */
@@ -31,6 +35,8 @@ function NodeLayer({
   selectedNodeIds,
   faultedNodeIds,
   interactive,
+  showBasicPinLabels,
+  showCompoundPinLabels,
   compatiblePinIds,
   wiring,
   onSelectNode,
@@ -49,6 +55,8 @@ function NodeLayer({
             selected={selected.has(id)}
             faulted={faultedNodeIds.has(id)}
             interactive={interactive}
+            showBasicPinLabels={showBasicPinLabels}
+            showCompoundPinLabels={showCompoundPinLabels}
             compatiblePinIds={compatiblePinIds}
             wiring={wiring}
             onFocus={() => onSelectNode(id)}

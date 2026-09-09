@@ -36,6 +36,7 @@ a value you want to read from across the canvas.
   title: "Probe",
   icon: "gauge",
   category: "io",
+  kind: "basic",
   keywords: ["probe", "readout", "value", "monitor", "output", "sink"],
   defaultParams: { width: 1, radix: "binary" },
   view: "readout",

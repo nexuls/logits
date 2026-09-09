@@ -52,6 +52,7 @@ same as flipping a switch mid-run.
   title: "Delay",
   icon: "hourglass",
   category: "timing",
+  kind: "basic",
   keywords: ["delay", "propagation", "lag", "buffer", "timing"],
   defaultParams: { width: 1, delayNs: 10 },
   paramsSchema: [

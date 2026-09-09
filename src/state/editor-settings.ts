@@ -18,6 +18,8 @@ const settingsSchema = z.object({
   theme: z.literal(["dark", "light"]),
   showGrid: z.boolean(),
   showMinimap: z.boolean(),
+  showBasicPinLabels: z.boolean(),
+  showCompoundPinLabels: z.boolean(),
 });
 
 export type EditorSettings = z.infer<typeof settingsSchema>;
@@ -30,6 +32,10 @@ const DEFAULTS: EditorSettings = {
   theme: "dark",
   showGrid: true,
   showMinimap: true,
+  // Off for the elements whose pins are obvious from their shape, on for the
+  // ones where only the name tells `D` from `CLK`. See `NodeDefinition.kind`.
+  showBasicPinLabels: false,
+  showCompoundPinLabels: true,
 };
 
 /** `useLayoutEffect` warns when it runs during SSR, where there is no layout. */

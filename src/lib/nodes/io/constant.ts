@@ -31,6 +31,7 @@ it costs nothing per frame.
   title: "Constant",
   icon: "binary",
   category: "io",
+  kind: "basic",
   keywords: ["constant", "literal", "vcc", "ground", "gnd", "tie", "source"],
   defaultParams: { width: 1, value: 1 },
   view: "readout",

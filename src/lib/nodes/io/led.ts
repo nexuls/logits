@@ -38,6 +38,7 @@ directly, so adding a row of them costs the simulation nothing.
   title: "LED",
   icon: "lamp",
   category: "io",
+  kind: "basic",
   keywords: ["led", "lamp", "light", "output", "sink", "indicator"],
   defaultParams: { color: "green" },
   view: "lamp",

@@ -54,6 +54,7 @@ guessing.
   title: "One-shot",
   icon: "pulse",
   category: "timing",
+  kind: "basic",
   keywords: ["oneshot", "monostable", "pulse", "trigger", "edge", "debounce"],
   defaultParams: { widthNs: 50, edge: "rising" },
   paramsSchema: [

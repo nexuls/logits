@@ -36,6 +36,7 @@ pulse.
   title: "Button",
   icon: "push-button",
   category: "io",
+  kind: "basic",
   keywords: ["button", "momentary", "push", "input", "source"],
   defaultParams: { pressed: false },
   view: "push-button",

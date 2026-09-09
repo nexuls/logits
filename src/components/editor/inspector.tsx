@@ -1,7 +1,7 @@
 "use client";
 
 import { MinusIcon, PlusIcon, RotateCwIcon, Trash2Icon } from "lucide-react";
-import type { ReactNode, RefObject } from "react";
+import { type ReactNode, type RefObject, useEffect, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -155,14 +155,10 @@ function SelectionPopover({
           <div className="flex flex-col gap-4 px-3.5 py-3.5">
             {node && (
               <Field htmlFor="inspector-label" label="Label">
-                <Input
-                  id="inspector-label"
-                  defaultValue={node.label ?? ""}
+                <LabelField
+                  nodeId={node.id}
+                  label={node.label ?? ""}
                   placeholder={definition?.title ?? node.type}
-                  onBlur={(event) =>
-                    updateNodeLabel(node.id, event.target.value)
-                  }
-                  className="h-9"
                 />
               </Field>
             )}
@@ -264,6 +260,51 @@ type FieldProps = {
   params: NodeParams;
   onChange: (value: unknown) => void;
 };
+
+/**
+ * The node's own name, overriding the definition's title on the canvas.
+ *
+ * Uncontrolled — the popover is keyed by the selection, so a new node is a new
+ * field — and committed on blur *and* on unmount. The unmount commit is the
+ * one that matters: the click that clears the selection removes this input
+ * while it still has focus, and a removed element fires no blur, so without it
+ * a label typed and then clicked away from was silently thrown away.
+ */
+function LabelField({
+  nodeId,
+  label,
+  placeholder,
+}: {
+  nodeId: string;
+  label: string;
+  placeholder: string;
+}) {
+  // A ref, not state: this is only ever read back at commit time, and a render
+  // per keystroke would rebuild the scene for a field the canvas cannot see.
+  const typed = useRef(label);
+
+  useEffect(
+    () => () => {
+      updateNodeLabel(nodeId, typed.current);
+    },
+    [nodeId],
+  );
+
+  return (
+    <Input
+      id="inspector-label"
+      defaultValue={label}
+      placeholder={placeholder}
+      onChange={(event) => {
+        typed.current = event.target.value;
+      }}
+      // Committing here too keeps one undo entry per editing session rather
+      // than deferring every label to whenever the popover happens to close.
+      onBlur={(event) => updateNodeLabel(nodeId, event.target.value)}
+      className="h-9"
+    />
+  );
+}
 
 /**
  * The frame every control sits in: label above, control below, hint under

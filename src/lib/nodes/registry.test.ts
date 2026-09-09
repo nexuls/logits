@@ -58,6 +58,29 @@ describe("registry", () => {
       expect(definition.docs?.trim().length ?? 0).toBeGreaterThan(200);
     });
 
+    // `kind` decides whether the canvas labels the pins without being asked,
+    // so a node that claims to be "basic" is claiming its pins can be read off
+    // its shape. Approximated as: no edge carries two pins with different
+    // names, once a trailing index is dropped — `A0`/`A1` are one row of
+    // interchangeable inputs, `D` and `CLK` are not.
+    it("is only called basic when its pins are told apart by position", () => {
+      if (definition.kind !== "basic") return;
+
+      const stemsBySide = new Map<string, Set<string>>();
+      for (const pin of pins) {
+        const stem = pin.name.replace(/\d+$/, "");
+        const stems = stemsBySide.get(pin.side) ?? new Set<string>();
+        stems.add(stem);
+        stemsBySide.set(pin.side, stems);
+      }
+
+      for (const [side, stems] of stemsBySide) {
+        expect(`${side}: ${[...stems].join(",")}`).toBe(
+          `${side}: ${[...stems][0]}`,
+        );
+      }
+    });
+
     it("has balanced code spans in its docs", () => {
       // An odd count means a `\`` escape was lost somewhere in a template
       // literal, which renders as a run of literal backticks rather than as

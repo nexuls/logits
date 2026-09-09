@@ -36,6 +36,7 @@ one wire replaces eight: wire the bus straight in rather than splitting it.
   title: "Bargraph",
   icon: "bargraph",
   category: "instruments",
+  kind: "basic",
   keywords: ["bargraph", "bar", "leds", "display", "bits", "meter"],
   defaultParams: { width: 8, color: "green" },
   view: "bargraph",

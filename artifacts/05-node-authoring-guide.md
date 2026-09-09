@@ -15,6 +15,9 @@ export const andGate = defineNode({
   type: "gate.and",                 // "<family>.<name>", stable forever
   title: "AND",
   category: "gates",                // must be listed in `nodeCategories`
+  kind: "basic",                    // pins readable from the shape, so the
+                                    // canvas leaves their names off by
+                                    // default — omit for "compound"
   keywords: ["and", "conjunction", "&"],
   docs: `…`,                        // Markdown help for the palette's info
                                     // dialog — see "Documenting a node" below
@@ -99,6 +102,9 @@ which break tree-shaking and make ordering non-deterministic.
       `evaluateOnce` for a table, `engineFor` for a real circuit with a real
       clock. Anything with `state` is tested the second way: a flip-flop that
       latched on the wrong edge would pass every static check.
+- [ ] Declares `kind: "basic"` **only** if its pins are obvious from where they
+      sit; otherwise leave `kind` off and let the canvas label it. See "Basic or
+      compound" below.
 - [ ] Has a `docs` string. The palette's info button is driven straight off it,
       so a node without one ships with no help at all — see below.
 - [ ] Appears in the palette with a sensible `icon` and `keywords`, under a
@@ -106,6 +112,28 @@ which break tree-shaking and make ordering non-deterministic.
       reads all of that off the definition — never edit the palette to add a node.
       Reuse an existing icon name where the shape fits; a genuinely new shape is
       a third file, `node-icons.tsx`, and it is keyed by shape, never by `type`.
+
+## Basic or compound
+
+`kind` says whether a reader can tell this node's pins apart by looking at it.
+
+- **`"basic"`** — one pin to a side, or a row of interchangeable inputs: a
+  switch, an LED, an AND gate, a tri-state buffer whose enable is the only pin
+  on its top edge. Where the pin is says which one it is.
+- **`"compound"`** — several pins on one edge doing different jobs: `D` against
+  `CLK`, `Y0` against `Y1`. Only the name tells them apart. **This is the
+  default**, and omitting `kind` is how you get it, because a node whose author
+  never considered the question is likelier to need its names shown than not.
+
+The canvas draws pin names for compound nodes and not for basic ones, and each
+kind has its own switch in the editor settings so either can be forced. That is
+all `kind` does — it is never read by the netlist, the engine or the save
+format, and no component holds a list of which types are which
+(Non-negotiable #4).
+
+`registry.test.ts` fails a node that calls itself basic while putting two
+differently-named pins on one edge, so the claim cannot quietly rot as a
+definition grows pins.
 
 ## Documenting a node
 

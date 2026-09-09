@@ -61,6 +61,8 @@ name will need re-attaching.
   title: "Port",
   icon: "port",
   category: "sub",
+  // One pin; the port's own name is its parameter.
+  kind: "basic",
   keywords: ["port", "pin", "boundary", "subcircuit", "chip", "interface"],
   defaultParams: { name: "IN", direction: "in", width: 1 },
   paramsSchema: [

@@ -13,7 +13,11 @@ import {
 } from "@/state/editor-settings";
 
 type ToggleProps = {
-  setting: "showGrid" | "showMinimap";
+  setting:
+    | "showGrid"
+    | "showMinimap"
+    | "showBasicPinLabels"
+    | "showCompoundPinLabels";
   label: string;
   description: string;
   checked: boolean;
@@ -93,6 +97,24 @@ export default function EditorSettingsPanel() {
           label="Minimap"
           description="Overview and zoom controls."
           checked={settings.showMinimap}
+        />
+      </section>
+
+      <section className="space-y-1">
+        <h3 className="text-xs font-medium text-muted-foreground">
+          Pin labels
+        </h3>
+        <SettingSwitch
+          setting="showBasicPinLabels"
+          label="Basic elements"
+          description="Gates, switches, LEDs — one pin to a side, so the shape already says which is which."
+          checked={settings.showBasicPinLabels}
+        />
+        <SettingSwitch
+          setting="showCompoundPinLabels"
+          label="Compound elements"
+          description="Flip-flops, counters, memories — several pins to an edge, told apart only by name."
+          checked={settings.showCompoundPinLabels}
         />
       </section>
     </>

@@ -38,6 +38,7 @@ never changes, use \`io.constant\`.
   title: "Switch",
   icon: "toggle",
   category: "io",
+  kind: "basic",
   keywords: ["switch", "toggle", "input", "source", "dip"],
   defaultParams: { width: 1, value: 0 },
   view: "toggle",

@@ -51,6 +51,9 @@ from a default source instead.
   title: "Tri-state",
   icon: "tristate",
   category: "gates",
+  // One pin to a side, and the enable is the only pin on the top edge, so
+  // its stub already says which one it is.
+  kind: "basic",
   keywords: ["tristate", "three state", "buffer", "enable", "z", "bus"],
   defaultParams: { width: 1 },
   paramsSchema: [

@@ -130,6 +130,27 @@ that helper rather than writing a second one.
   wire is the same weight at every zoom. The value label sits at the middle of
   the wire's *longest* segment, which on a diagonal route is the only place it
   is reliably clear of both nodes.
+- Each pin is named on the element it belongs to, just *inside* the body on the
+  edge the pin ended up on after rotation — the outside is where its wire
+  leaves, and a label there would sit under every route into the node. The text
+  stays upright at every angle, and sits on a chip in the node's own background
+  colour, so it stays readable over a waveform, a seven-segment digit or the
+  body title. The names come from `pins()`, so a node that renames or
+  re-derives a pin relabels itself. They are decoration for the sighted reader
+  only (`aria-hidden`): the pin button already carries the same name in its
+  `aria-label` and tooltip.
+- Whether they are drawn by default depends on the element, not on a list of
+  types: a **basic** element (`NodeDefinition.kind`) has one pin to a side or a
+  row of interchangeable inputs, so its shape already says which pin is which
+  and the names are off; a **compound** one has several pins to an edge that
+  nothing but their names distinguishes, so they are on. Both have their own
+  switch under **Pin labels** in the settings dialog. These are editor
+  preferences and are not part of a circuit.
+- The body's title gives up the width the labels on its left and right edges
+  occupy, and wraps to two lines rather than running underneath them. The
+  element's own name — `node.label`, if it has one — hangs *below* the body,
+  never inside it, so a renamed element does not fight its own pins for the
+  same row.
 - Never rely on colour alone: `X` gets a `!` on the wire and a badge on the
   node, a floating net gets `~`, and every diagnostic is a row in the
   diagnostics panel that selects the element it is about when clicked.
