@@ -4,7 +4,7 @@ import { memo } from "react";
 import type { WaypointPreview } from "@/components/editor/use-editor-gestures";
 import { valueGlyph } from "@/components/nodes/node-views";
 import type { Rect } from "@/lib/circuit/geometry";
-import type { Point } from "@/lib/circuit/schema";
+import { isWireAnchor, type Point } from "@/lib/circuit/schema";
 import { smoothPath } from "@/lib/circuit/wire-path";
 import { cn } from "@/lib/utils";
 import type { ResolvedWire, Scene } from "@/state/scene";
@@ -62,6 +62,21 @@ function WireLayer({
           faulted={faultedWireIds.has(id)}
         />
       ))}
+
+      {/* The dot a schematic puts where wires meet. Drawn from the branches
+          themselves — each one starts at the bend it names — so a tap always
+          has a dot and a plain bend never does. */}
+      {Object.values(scene.wires).map((wire) =>
+        wire.start && isWireAnchor(wire.wire.from) ? (
+          <circle
+            key={`tap/${wire.wire.id}`}
+            cx={wire.start.world.x}
+            cy={wire.start.world.y}
+            r={TAP_RADIUS}
+            className="fill-muted-foreground"
+          />
+        ) : null,
+      )}
 
       {/* Handles sit above every wire, so one crossing another does not bury
           the thing the user is aiming at. */}
@@ -132,6 +147,13 @@ export default memo(WireLayer);
  * node bodies do. Matched to the 9px pin so the two read as one family.
  */
 const WAYPOINT_RADIUS = 4.5;
+
+/**
+ * The junction dot, in world units. Half a waypoint handle: it marks a
+ * connection rather than offering a grab target, and a dot the size of the
+ * handle would read as a component sitting on the wire.
+ */
+const TAP_RADIUS = 2.25;
 
 type WireProps = {
   wire: ResolvedWire;

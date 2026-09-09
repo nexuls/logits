@@ -71,24 +71,23 @@ export type RoutedWire = {
  */
 export function wirePath(
   from: Point,
-  fromSide: Side,
+  /**
+   * Null for an end that is not on a node — a branch starts at a bend on the
+   * wire it taps, where there is no body to clear and so no stub to draw.
+   */
+  fromSide: Side | null,
   to: Point,
   toSide: Side,
   waypoints: readonly Point[] = [],
 ): RoutedWire {
-  const points = [
-    from,
-    step(from, fromSide, STUB_LENGTH),
-    ...waypoints,
-    step(to, toSide, STUB_LENGTH),
-    to,
-  ];
+  const lead = fromSide ? [from, step(from, fromSide, STUB_LENGTH)] : [from];
+
+  const points = [...lead, ...waypoints, step(to, toSide, STUB_LENGTH), to];
 
   // How many waypoints lie at or before each point, which is the insertion
   // index for anything dropped on the segment that starts there.
   const slots = [
-    0,
-    0,
+    ...lead.map(() => 0),
     ...waypoints.map((_, index) => index + 1),
     waypoints.length,
     waypoints.length,
@@ -98,7 +97,8 @@ export function wirePath(
   // straight run: they are handles the user placed and must stay draggable, and
   // dropping one would put `slots` out of step with the document.
   const pinned = points.map(
-    (_, index) => index >= 2 && index < 2 + waypoints.length,
+    (_, index) =>
+      index >= lead.length && index < lead.length + waypoints.length,
   );
 
   return simplifyRoute(points, slots, pinned);
@@ -112,13 +112,14 @@ export function wirePath(
  */
 export function pendingWirePath(
   from: Point,
-  fromSide: Side,
+  /** Null for a wire branched off another, which starts flat at the tap. */
+  fromSide: Side | null,
   cursor: Point,
   waypoints: readonly Point[] = [],
 ): Point[] {
   return simplifyPath([
     from,
-    step(from, fromSide, STUB_LENGTH),
+    ...(fromSide ? [step(from, fromSide, STUB_LENGTH)] : []),
     ...waypoints,
     cursor,
   ]);

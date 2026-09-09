@@ -7,18 +7,22 @@ import { clampScale, DEFAULT_SCALE } from "./coords";
 import {
   GRID_SIZE,
   nodeBounds,
+  pinOffsets,
   rotateSize,
   snapPointToGrid,
   snapToGrid,
 } from "./geometry";
 import { createNodeId, createWireId } from "./ids";
-import type {
-  CircuitDocument,
-  CircuitNode,
-  PinRef,
-  Point,
-  Rotation,
-  Wire,
+import {
+  type CircuitDocument,
+  type CircuitNode,
+  isWireAnchor,
+  type PinRef,
+  type Point,
+  type Rotation,
+  type Wire,
+  type WireAnchor,
+  type WireEnd,
 } from "./schema";
 
 /**
@@ -224,24 +228,40 @@ export type ConnectResult =
   | { ok: false; reason: ConnectFailure };
 
 /**
- * Joins two pins.
+ * Joins two pins, or a tap on a wire to a pin.
  *
  * `Wire.from` is stored as the driver where the two directions make that
  * unambiguous, so the save format does not depend on which end the user drew
  * first — see artifacts/03-data-model.md. Between two pins of the same
- * direction the drawn order is kept, and the netlist reports the problem.
+ * direction the drawn order is kept, and the netlist reports the problem. An
+ * anchored end is never swapped: only `from` may hold one, and a branch is
+ * always drawn away from the wire it taps.
  */
 export function connect(
   document: CircuitDocument,
   lookup: NodeLookup,
-  a: PinRef,
+  a: WireEnd,
   b: PinRef,
   waypoints: readonly Point[] = [],
 ): ConnectResult {
-  const pinA = findPin(document, lookup, a);
   const pinB = findPin(document, lookup, b);
+  if (!pinB) return { ok: false, reason: "missing-pin" };
 
-  if (!pinA || !pinB) return { ok: false, reason: "missing-pin" };
+  if (isWireAnchor(a)) {
+    const tapped = document.wires[a.wireId];
+    if (!tapped?.waypoints?.[a.waypoint]) {
+      return { ok: false, reason: "missing-pin" };
+    }
+    if (findWireBetween(document, a, b)) {
+      return { ok: false, reason: "already-connected" };
+    }
+
+    return addWire(document, a, b, waypoints, false);
+  }
+
+  const pinA = findPin(document, lookup, a);
+
+  if (!pinA) return { ok: false, reason: "missing-pin" };
   if (a.nodeId === b.nodeId && a.pinId === b.pinId) {
     return { ok: false, reason: "same-pin" };
   }
@@ -256,12 +276,27 @@ export function connect(
     return { ok: false, reason: "already-connected" };
   }
 
+  return addWire(document, from, to, waypoints, from !== a);
+}
+
+/**
+ * Writes the wire. `reversed` says the ends were swapped to put the driver in
+ * `from`, so the bends drawn along the way are reversed with them — otherwise
+ * the wire would replay its own route backwards.
+ */
+function addWire(
+  document: CircuitDocument,
+  from: WireEnd,
+  to: PinRef,
+  waypoints: readonly Point[],
+  reversed: boolean,
+): ConnectResult {
   const wireId = createWireId();
   const wire: Wire = { id: wireId, from, to };
   // Bends the user dropped while drawing arrive with the connection rather than
   // as a second edit, so the whole wire is one undo step.
   if (waypoints.length > 0) {
-    const ordered = from === a ? waypoints : [...waypoints].reverse();
+    const ordered = reversed ? [...waypoints].reverse() : waypoints;
     wire.waypoints = ordered.map(snapPointToGrid);
   }
 
@@ -269,6 +304,45 @@ export function connect(
     ok: true,
     document: { ...document, wires: { ...document.wires, [wireId]: wire } },
     wireId,
+  };
+}
+
+export type BranchWireResult = {
+  document: CircuitDocument;
+  /** The bend that was added, as the branch's `from` will name it. */
+  anchor: WireAnchor;
+  /** Where that bend sits, snapped — where the branch starts drawing. */
+  world: Point;
+};
+
+/**
+ * Taps a wire at `point`, ready for a branch to start there.
+ *
+ * `slot` is the insertion index into the wire's waypoints, the same meaning
+ * `insertWireWaypoint` gives it; the caller gets it from the routed wire's
+ * `slots`, the same way a dropped bend does (see `wire-path.ts`).
+ *
+ * The wire itself is not split and nothing is placed: the tap is an ordinary
+ * bend on the wire, and the branch that starts there names it. Dragging that
+ * bend therefore drags the start of the branch, because there is only one
+ * point and both wires read it.
+ */
+export function branchWireAt(
+  document: CircuitDocument,
+  wireId: string,
+  slot: number,
+  point: Point,
+): BranchWireResult | null {
+  const wire = document.wires[wireId];
+  if (!wire) return null;
+
+  const at = clampIndex(slot, wire.waypoints?.length ?? 0);
+  const world = snapPointToGrid(point);
+
+  return {
+    document: insertWireWaypoint(document, wireId, at, world),
+    anchor: { wireId, waypoint: at },
+    world,
   };
 }
 
@@ -309,9 +383,14 @@ export function insertWireWaypoint(
   if (!wire) return document;
 
   const waypoints = [...(wire.waypoints ?? [])];
-  waypoints.splice(clampIndex(index, waypoints.length), 0, point);
+  const at = clampIndex(index, waypoints.length);
+  waypoints.splice(at, 0, point);
 
-  return setWireWaypoints(document, wireId, waypoints, options);
+  return reindexAnchors(
+    setWireWaypoints(document, wireId, waypoints, options),
+    wireId,
+    (waypoint) => (waypoint >= at ? waypoint + 1 : waypoint),
+  );
 }
 
 /** Moves one bend. Out-of-range indices are ignored, not appended. */
@@ -336,6 +415,12 @@ export function moveWireWaypoint(
  * Drops one bend. A wire with none left returns to auto-routing, which is what
  * makes "drag a bend onto its neighbour" straighten a wire rather than leaving
  * an invisible kink behind.
+ *
+ * A bend a branch starts from is **not** dropped: it is the branch's endpoint,
+ * and removing it would leave that wire starting nowhere. The gesture that
+ * straightens a wire by dropping a bend on its neighbour therefore simply does
+ * not straighten this one, which is the honest outcome — the branch is still
+ * attached there and the user can see why.
  */
 export function removeWireWaypoint(
   document: CircuitDocument,
@@ -345,13 +430,59 @@ export function removeWireWaypoint(
   const wire = document.wires[wireId];
   const waypoints = wire?.waypoints;
   if (!waypoints || index < 0 || index >= waypoints.length) return document;
+  if (hasBranchAt(document, wireId, index)) return document;
 
-  return setWireWaypoints(
-    document,
+  return reindexAnchors(
+    setWireWaypoints(
+      document,
+      wireId,
+      waypoints.filter((_, at) => at !== index),
+      { snap: false },
+    ),
     wireId,
-    waypoints.filter((_, at) => at !== index),
-    { snap: false },
+    (waypoint) => (waypoint > index ? waypoint - 1 : waypoint),
   );
+}
+
+/** Does any wire start from this bend? */
+export function hasBranchAt(
+  document: CircuitDocument,
+  wireId: string,
+  waypoint: number,
+): boolean {
+  return Object.values(document.wires).some(
+    (wire) =>
+      isWireAnchor(wire.from) &&
+      wire.from.wireId === wireId &&
+      wire.from.waypoint === waypoint,
+  );
+}
+
+/**
+ * Shifts the anchors into `wireId` after its bend list changed shape.
+ *
+ * Waypoints are identified by position, so inserting or removing one moves
+ * every bend after it and the branches hanging off them have to move with it.
+ * Both callers are here, which is what keeps that rule in one place.
+ */
+function reindexAnchors(
+  document: CircuitDocument,
+  wireId: string,
+  shift: (waypoint: number) => number,
+): CircuitDocument {
+  let wires: Record<string, Wire> | null = null;
+
+  for (const [id, wire] of Object.entries(document.wires)) {
+    if (!isWireAnchor(wire.from) || wire.from.wireId !== wireId) continue;
+
+    const waypoint = shift(wire.from.waypoint);
+    if (waypoint === wire.from.waypoint) continue;
+
+    wires ??= { ...document.wires };
+    wires[id] = { ...wire, from: { wireId, waypoint } };
+  }
+
+  return wires ? { ...document, wires } : document;
 }
 
 function clampIndex(index: number, length: number): number {
@@ -368,7 +499,10 @@ export type Selection = {
  *
  * Wires attached to a deleted node go with it — leaving them would put a
  * `dangling-wire` in the document, which is a load-time repair case, not
- * something an edit should ever create.
+ * something an edit should ever create. Branches off a deleted wire go the
+ * same way, and branches off *those*: a tap with nothing left to tap has no
+ * position at all, so there is nothing to leave behind for the user to
+ * reattach.
  */
 export function deleteElements(
   document: CircuitDocument,
@@ -382,8 +516,23 @@ export function deleteElements(
   );
 
   for (const wire of Object.values(document.wires)) {
-    if (nodeIds.has(wire.from.nodeId) || nodeIds.has(wire.to.nodeId)) {
+    const from = isWireAnchor(wire.from) ? null : wire.from.nodeId;
+    if ((from && nodeIds.has(from)) || nodeIds.has(wire.to.nodeId)) {
       wireIds.add(wire.id);
+    }
+  }
+
+  // Repeated until nothing new is caught, so a branch off a branch off a
+  // deleted wire goes too. Bounded by the wire count, since each pass either
+  // adds a wire or stops.
+  for (let added = true; added; ) {
+    added = false;
+    for (const wire of Object.values(document.wires)) {
+      if (wireIds.has(wire.id)) continue;
+      if (isWireAnchor(wire.from) && wireIds.has(wire.from.wireId)) {
+        wireIds.add(wire.id);
+        added = true;
+      }
     }
   }
 
@@ -430,9 +579,32 @@ export function extractFragment(
   // the user happened to click things in.
   const nodes = [...nodeIds].sort().map((id) => document.nodes[id]);
 
-  const wires = Object.values(document.wires)
-    .filter((wire) => kept.has(wire.from.nodeId) && kept.has(wire.to.nodeId))
-    .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const all = Object.values(document.wires).sort((a, b) =>
+    a.id < b.id ? -1 : a.id > b.id ? 1 : 0,
+  );
+
+  const wires = all.filter(
+    (wire) =>
+      !isWireAnchor(wire.from) &&
+      kept.has(wire.from.nodeId) &&
+      kept.has(wire.to.nodeId),
+  );
+
+  // A branch comes along only if the wire it taps did, for the same reason a
+  // wire needs both its nodes: a tap on something that was not copied would
+  // re-attach to the original. Repeated so a branch off a branch follows too.
+  const taken = new Set(wires.map((wire) => wire.id));
+  for (let added = true; added; ) {
+    added = false;
+    for (const wire of all) {
+      if (taken.has(wire.id) || !isWireAnchor(wire.from)) continue;
+      if (!taken.has(wire.from.wireId) || !kept.has(wire.to.nodeId)) continue;
+
+      wires.push(wire);
+      taken.add(wire.id);
+      added = true;
+    }
+  }
 
   return { nodes, wires };
 }
@@ -478,16 +650,26 @@ export function insertFragment(
   const wires = { ...document.wires };
   const wireIds: string[] = [];
 
+  // Ids first, then the wires: a branch may be listed before the wire it taps,
+  // and its anchor has to name the *copy* of that wire rather than the
+  // original it was lifted from.
+  const wireIdMap = new Map<string, string>();
+  for (const source of fragment.wires) wireIdMap.set(source.id, createWireId());
+
   for (const source of fragment.wires) {
-    const from = idMap.get(source.from.nodeId);
     const to = idMap.get(source.to.nodeId);
+    const from = isWireAnchor(source.from)
+      ? anchorInto(wireIdMap, source.from)
+      : mappedPin(idMap, source.from);
     if (!from || !to) continue;
 
-    const wireId = createWireId();
+    const wireId = wireIdMap.get(source.id);
+    if (!wireId) continue;
+
     wireIds.push(wireId);
     wires[wireId] = {
       id: wireId,
-      from: { nodeId: from, pinId: source.from.pinId },
+      from,
       to: { nodeId: to, pinId: source.to.pinId },
       ...(source.waypoints
         ? {
@@ -504,6 +686,24 @@ export function insertFragment(
     document: { ...document, nodes, wires },
     selection: { nodeIds: [...idMap.values()], wireIds },
   };
+}
+
+/** A pin ref pointing at the copy of its node, or null if that was not copied. */
+function mappedPin(
+  idMap: ReadonlyMap<string, string>,
+  ref: PinRef,
+): PinRef | null {
+  const nodeId = idMap.get(ref.nodeId);
+  return nodeId ? { nodeId, pinId: ref.pinId } : null;
+}
+
+/** The same for an anchor, re-pointed at the copy of the wire it taps. */
+function anchorInto(
+  wireIdMap: ReadonlyMap<string, string>,
+  anchor: WireAnchor,
+): WireAnchor | null {
+  const wireId = wireIdMap.get(anchor.wireId);
+  return wireId ? { wireId, waypoint: anchor.waypoint } : null;
 }
 
 /** World-space box around the nodes of a fragment, for pasting at a point. */
@@ -589,16 +789,26 @@ function findPin(document: CircuitDocument, lookup: NodeLookup, ref: PinRef) {
     .find((pin) => pin.id === ref.pinId);
 }
 
-function findWireBetween(document: CircuitDocument, a: PinRef, b: PinRef) {
+function findWireBetween(document: CircuitDocument, a: WireEnd, b: PinRef) {
   return Object.values(document.wires).find(
     (wire) =>
-      (samePin(wire.from, a) && samePin(wire.to, b)) ||
-      (samePin(wire.from, b) && samePin(wire.to, a)),
+      (sameEnd(wire.from, a) && sameEnd(wire.to, b)) ||
+      (sameEnd(wire.from, b) && sameEnd(wire.to, a)),
   );
 }
 
-const samePin = (a: PinRef, b: PinRef) =>
-  a.nodeId === b.nodeId && a.pinId === b.pinId;
+/** Two ends are the same when they are the same kind and name the same thing. */
+function sameEnd(a: WireEnd, b: WireEnd): boolean {
+  if (isWireAnchor(a) || isWireAnchor(b)) {
+    return (
+      isWireAnchor(a) &&
+      isWireAnchor(b) &&
+      a.wireId === b.wireId &&
+      a.waypoint === b.waypoint
+    );
+  }
+  return a.nodeId === b.nodeId && a.pinId === b.pinId;
+}
 
 function omit<T>(record: Record<string, T>, keys: ReadonlySet<string>) {
   if (keys.size === 0) return record;

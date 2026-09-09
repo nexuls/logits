@@ -3,7 +3,13 @@ import {
   pinSpecsFor,
   referencedPinsByNode,
 } from "@/lib/nodes/define";
-import type { CircuitDocument, PinRef, PinSpec } from "./schema";
+import {
+  type CircuitDocument,
+  isWireAnchor,
+  type PinRef,
+  type PinSpec,
+  type WireEnd,
+} from "./schema";
 import { flattenDocument } from "./subcircuit";
 
 /**
@@ -92,6 +98,34 @@ export function pinKey(nodeId: string, pinId: string): string {
   return `${nodeId}\u0000${pinId}`;
 }
 
+/**
+ * The pin a wire end stands for, following a branch's anchor to the wire it
+ * taps, and that wire's anchor in turn if it is itself a branch.
+ *
+ * Null when the chain leads nowhere — a tap on a wire that has been deleted —
+ * or when it leads back to itself. A cycle cannot be built by the editor,
+ * which only ever anchors to a wire that already exists, but a hand-written
+ * file can say anything and this must not spin on it.
+ */
+export function resolveWireEnd(
+  document: CircuitDocument,
+  end: WireEnd,
+): PinRef | null {
+  const seen = new Set<string>();
+  let current = end;
+
+  while (isWireAnchor(current)) {
+    if (seen.has(current.wireId)) return null;
+    seen.add(current.wireId);
+
+    const target = document.wires[current.wireId];
+    if (!target) return null;
+    current = target.from;
+  }
+
+  return current;
+}
+
 export function buildNetlist(
   source: CircuitDocument,
   lookup: NodeLookup,
@@ -151,21 +185,29 @@ export function buildNetlist(
 
   for (const wireId of wireIds) {
     const wire = document.wires[wireId];
-    const fromKey = pinKey(wire.from.nodeId, wire.from.pinId);
+    // A branch's `from` is a tap on another wire rather than a pin. Its net is
+    // that wire's net, and a wire's two ends are one net by construction, so
+    // resolving the tap to *either* end of what it taps is enough — `to` is
+    // always a pin, which is what makes the walk terminate.
+    const fromRef = resolveWireEnd(document, wire.from);
+    const fromKey = fromRef && pinKey(fromRef.nodeId, fromRef.pinId);
     const toKey = pinKey(wire.to.nodeId, wire.to.pinId);
-    const from = pins.get(fromKey);
+    const from = fromKey ? pins.get(fromKey) : undefined;
     const to = pins.get(toKey);
 
-    if (!from || !to) {
+    if (!fromKey || !from || !to) {
       // The pin existed when the wire was drawn and does not now — an `inputs`
       // param lowered, a node type replaced. Load-time `dangling-wire` catches
-      // only a missing *node*, so this is what catches the rest.
+      // only a missing *node*, so this is what catches the rest. An anchor
+      // that resolves to nothing is the same failure a branch away.
       diagnostics.push({
         code: "unknown-pin",
         severity: "error",
-        message: "Wire connects a pin that no longer exists.",
+        message: fromKey
+          ? "Wire connects a pin that no longer exists."
+          : "Branch taps a wire that no longer exists.",
         wireIds: [wireId],
-        pins: [from ? wire.to : wire.from],
+        pins: from ? [wire.to] : fromRef ? [fromRef] : [],
       });
       continue;
     }
@@ -179,8 +221,8 @@ export function buildNetlist(
         severity: "error",
         message: `Wire joins a ${from.width}-bit pin to a ${to.width}-bit pin.`,
         wireIds: [wireId],
-        pins: [wire.from, wire.to],
-        nodeIds: dedupe([wire.from.nodeId, wire.to.nodeId]),
+        pins: [fromRef, wire.to],
+        nodeIds: dedupe([fromRef.nodeId, wire.to.nodeId]),
       });
     }
 

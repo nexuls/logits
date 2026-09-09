@@ -5,6 +5,7 @@ import { getExample } from "@/example";
 import {
   type AddNodeOptions,
   addNode,
+  branchWireAt,
   type ConnectResult,
   connect,
   deleteElements,
@@ -28,6 +29,8 @@ import type {
   PinRef,
   Point,
   Rotation,
+  WireAnchor,
+  WireEnd,
 } from "@/lib/circuit/schema";
 import type { NodeDefinition } from "@/lib/nodes/define";
 import { lookupNode } from "@/lib/nodes/registry";
@@ -368,7 +371,7 @@ export function setOpenDocumentDefaultZoom(zoom: number): boolean {
 }
 
 export function connectPins(
-  from: PinRef,
+  from: WireEnd,
   to: PinRef,
   waypoints: readonly Point[] = [],
 ): ConnectResult {
@@ -378,6 +381,33 @@ export function connectPins(
   if (result.ok) apply("connect", () => result.document);
 
   return result;
+}
+
+export type WireBranch = { anchor: WireAnchor; world: Point };
+
+/**
+ * Taps a wire at `point` and reports the bend to start a branch from.
+ *
+ * The tap is an ordinary waypoint on the wire, so dragging it afterwards
+ * drags the branch's start with it — there is one point and both wires read
+ * it. The branch is on the same net because the netlist resolves the anchor
+ * through to the tapped wire's own end, not because anything is copied.
+ *
+ * One `apply`, so the bend is a single undo step; the wire drawn out of it is
+ * a second, ordinary `connectPins` when it lands.
+ */
+export function branchWire(
+  wireId: string,
+  slot: number,
+  point: Point,
+): WireBranch | null {
+  if (!history) return null;
+
+  const result = branchWireAt(history.present, wireId, slot, point);
+  if (!result) return null;
+
+  apply("branch", () => result.document);
+  return { anchor: result.anchor, world: result.world };
 }
 
 /**

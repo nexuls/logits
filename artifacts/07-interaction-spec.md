@@ -62,6 +62,7 @@ canvas header, the right one from the panel button in its own header.
 | Drag from a pin to a pin | Connects in one gesture, as before. Releasing anywhere else just leaves the wire armed and following the cursor |
 | `Esc` while wiring | Cancel |
 | Click a wire | Select it; `Delete` removes it. Its bends appear as handles |
+| Right-click a wire, then drag | Branches from the point pressed: drops a bend there and arms a wire that starts at it, the same as a left-click on a pin — drag straight to a target pin to land in one gesture, or release early and keep drawing click by click. The bend is one undo step; the wire landed from it is a second, ordinary one. `Esc` abandons the wire and leaves the bend, which changes nothing about the circuit, so `Ctrl+Z` is what takes it back |
 | Hover a wire | A hollow handle follows the cursor along the wire, at the nearest point on it, showing where a bend would go |
 | Drag from a wire | Adds a bend at the point pressed and drags it, in one undo step. A click alone only selects — the wire body is not draggable |
 | Drag a bend handle | Moves that waypoint, snapped to the grid. Handles are only grabbable while their wire is selected |
@@ -121,6 +122,21 @@ that helper rather than writing a second one.
   wires' bends along. The wire re-aims its end segments at the pins instead — a
   hand-routed wire stays attached after the node at one end moves, it just may
   not stay pretty.
+- A branch **starts on the wire it came from**: its `from` is a tap naming that
+  wire and one of its bends, not a pin ([ADR 0011](decisions/0011-branches-are-wire-anchors.md)). The bend is an
+  ordinary waypoint, so dragging it moves the branch's start with it — there is
+  one point, and the wire that owns it is the one the handle belongs to. The
+  branch is on the same net because the netlist resolves the tap through to that
+  wire's own end, not because anything was copied.
+- A branch leaves its tap **flat**: the one-cell stub exists to clear a node
+  body, and there is no body here. A junction dot is drawn where it leaves, so
+  three wires meeting reads the way a schematic does.
+- The bend a branch starts from **cannot be dropped** — dragging it onto its
+  neighbour, which straightens any other wire, leaves this one alone, because
+  removing it would leave the branch starting nowhere. Delete the branch first.
+- Deleting a wire deletes the branches hanging off it, and theirs in turn. A tap
+  on a wire that is gone has no position at all, so there is nothing to leave
+  behind for the user to reattach.
 
 ## Feedback
 

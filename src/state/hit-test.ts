@@ -214,15 +214,22 @@ export function rectBetween(a: Point, b: Point): Rect {
  * then see (artifacts/07-interaction-spec.md). What this drives is the
  * highlight while dragging, so it must agree with what `connect` will accept.
  */
-export function pinsCompatible(a: ResolvedPin, b: ResolvedPin): boolean {
+export function pinsCompatible(a: HasSpec, b: HasSpec): boolean {
   if (a.spec.direction === "inout" || b.spec.direction === "inout") return true;
   return a.spec.direction !== b.spec.direction;
 }
 
 /** Same widths, so the connection would raise no diagnostic at all. */
-export function pinsMatchExactly(a: ResolvedPin, b: ResolvedPin): boolean {
+export function pinsMatchExactly(a: HasSpec, b: HasSpec): boolean {
   return pinsCompatible(a, b) && a.spec.width === b.spec.width;
 }
+
+/**
+ * Only the spec is read, so a caller holding one without a position — the
+ * wiring gesture, comparing against the pin a wire started from — need not
+ * invent the rest of a `ResolvedPin` to ask.
+ */
+type HasSpec = Pick<ResolvedPin, "spec">;
 
 /** The point of segment `a → b` nearest `point`, endpoints included. */
 function closestPointOnSegment(point: Point, a: Point, b: Point): Point {

@@ -6,6 +6,7 @@ import {
   type CircuitNode,
   circuitDocumentSchema,
   circuitNodeSchema,
+  isWireAnchor,
   type Wire,
   wireSchema,
 } from "./schema";
@@ -16,7 +17,7 @@ import {
  * `localStorage`. The browser side of persistence lives in `src/state/`.
  */
 
-export const CURRENT_VERSION = 2;
+export const CURRENT_VERSION = 3;
 
 export const FILE_EXTENSION = ".logits.json";
 export const FILE_MIME_TYPE = "application/json";
@@ -29,7 +30,7 @@ export const FILE_MIME_TYPE = "application/json";
  */
 const MIGRATIONS: readonly ((
   doc: Record<string, unknown>,
-) => Record<string, unknown>)[] = [migrate_1_to_2];
+) => Record<string, unknown>)[] = [migrate_1_to_2, migrate_2_to_3];
 
 /**
  * v2 added the optional `defaultZoom`. A v1 document is already a valid v2 one
@@ -39,6 +40,17 @@ const MIGRATIONS: readonly ((
  * save.
  */
 function migrate_1_to_2(doc: Record<string, unknown>): Record<string, unknown> {
+  return doc;
+}
+
+/**
+ * v3 let a wire's `from` be a tap on another wire rather than a pin, which is
+ * how a branch is stored. Every v2 wire is pin-to-pin, and a `PinRef` is still
+ * a valid `from`, so again there is nothing to rewrite — but a v3 file
+ * containing a branch must not open in a v2 build, which would read the
+ * anchored end as a malformed `PinRef` and drop the wire.
+ */
+function migrate_2_to_3(doc: Record<string, unknown>): Record<string, unknown> {
   return doc;
 }
 
@@ -223,7 +235,8 @@ function salvage(raw: Record<string, unknown>): LoadResult {
       continue;
     }
     const { from, to } = wire.data;
-    if (!nodes[from.nodeId] || !nodes[to.nodeId]) {
+    const fromNode = isWireAnchor(from) ? true : Boolean(nodes[from.nodeId]);
+    if (!fromNode || !nodes[to.nodeId]) {
       issues.push({
         code: "dangling-wire",
         elementId: key,
@@ -232,6 +245,25 @@ function salvage(raw: Record<string, unknown>): LoadResult {
       continue;
     }
     wires[key] = wire.data.id === key ? wire.data : { ...wire.data, id: key };
+  }
+
+  // Anchors are checked after every wire is in, since a branch may be listed
+  // before the wire it taps. A branch whose target did not survive the pass
+  // above has nowhere to start from, so it goes the same way a wire missing a
+  // node does rather than being kept as an edge nothing can draw.
+  for (const [key, wire] of Object.entries(wires)) {
+    if (!isWireAnchor(wire.from)) continue;
+
+    const target = wires[wire.from.wireId];
+    const bends = target?.waypoints?.length ?? 0;
+    if (!target || wire.from.waypoint >= bends) {
+      issues.push({
+        code: "dangling-wire",
+        elementId: key,
+        message: "Branch references a wire or bend that is not in the document",
+      });
+      delete wires[key];
+    }
   }
 
   const subcircuits: Record<string, CircuitDocument> = {};

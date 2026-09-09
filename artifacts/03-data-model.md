@@ -33,12 +33,17 @@ type CircuitNode = {
 
 type Wire = {
   id: WireId;
-  from: PinRef;                 // an output or inout pin
+  from: WireEnd;                // a driver pin, or a tap on another wire
   to: PinRef;                   // an input or inout pin
   waypoints?: Point[];          // the user's bends, absolute world coords
 };
 
 type PinRef = { nodeId: NodeId; pinId: string };
+
+// A branch: it starts at another wire's `waypoint`-th bend and follows it.
+type WireAnchor = { wireId: WireId; waypoint: number };
+
+type WireEnd = PinRef | WireAnchor;
 ```
 
 Ids are opaque strings from `src/lib/circuit/ids.ts` (`nanoid`-style, no
@@ -95,6 +100,21 @@ never written to the document — see
 pure and position-independent; [scene.ts](../src/state/scene.ts) assembles
 `ResolvedNode` / `ResolvedWire` and owns the caches. Components render a
 `ResolvedNode` and never do the maths themselves.
+
+Only `from` may be an anchor. A wire is always *landed* on a pin, so `to` stays
+a `PinRef` and the code reading it needs no guard — and a branch is always drawn
+away from the wire it taps, never into it. `buildNetlist` resolves an anchor by
+following it to the tapped wire's own `from`, and that wire's in turn, so a
+branch is on the tapped wire's net without anything being copied; a chain that
+leads nowhere, or back to itself, resolves to nothing and is a diagnostic. See
+[ADR 0011](decisions/0011-branches-are-wire-anchors.md).
+
+Because a waypoint *is* its index in the list, inserting or removing a bend
+shifts every anchor after it. `insertWireWaypoint` and `removeWireWaypoint` are
+the only two places that can happen and both re-index, which is what keeps that
+rule in one place; the bend a branch starts from cannot be removed at all.
+Deleting a wire deletes the branches hanging off it, transitively, and copying
+one re-points the copy at the copy of the wire it tapped.
 
 A wire stores only its **bends**. The polyline itself —
 `ResolvedWire.points`, built by
@@ -188,7 +208,8 @@ and the `nodeIds` / `wireIds` / `pins` / `netId` the editor should mark.
 
 ## Persistence
 
-- File extension `.logits.json`; MIME `application/json`.
+- File extension `.logits.json`; MIME `application/json`. Save format **v3**,
+  which is where `Wire.from` gained the anchor form.
 - Autosave the working document to `localStorage` under `logits:doc:<id>`,
   debounced inside [document.ts](../src/state/document.ts) rather than with
   `useDebouncedCallback`: a pending edit must still be written when the editor

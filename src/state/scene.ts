@@ -7,12 +7,14 @@ import {
   type Size,
 } from "@/lib/circuit/geometry";
 import { pinKey } from "@/lib/circuit/netlist";
-import type {
-  CircuitDocument,
-  CircuitNode,
-  PinSpec,
-  Point,
-  Wire,
+import {
+  type CircuitDocument,
+  type CircuitNode,
+  isWireAnchor,
+  type PinSpec,
+  type Point,
+  type Wire,
+  type WireAnchor,
 } from "@/lib/circuit/schema";
 import { wirePath } from "@/lib/circuit/wire-path";
 import {
@@ -69,11 +71,20 @@ export type ResolvedWire = {
   wire: Wire;
   /**
    * Null when the pin no longer exists — e.g. a saved wire lands on `in3` of a
-   * gate whose `inputs` param was since lowered to 2. That is a real error and
-   * stays visible rather than being papered over.
+   * gate whose `inputs` param was since lowered to 2 — and also for a branch,
+   * whose `from` is a bend on another wire rather than a pin. `start` is where
+   * the wire actually begins in either case. That is a real error and stays
+   * visible rather than being papered over.
    */
   from: ResolvedPin | null;
   to: ResolvedPin | null;
+  /**
+   * Where the wire leaves from, and by which edge. A pin end gives its own
+   * position and side; a branch gives the tapped bend and `null`, which is
+   * what tells the router to start there flat instead of stubbing out of a
+   * node body. Null when the end resolves to nothing at all.
+   */
+  start: { world: Point; side: ResolvedPin["side"] | null } | null;
   /**
    * The polyline to draw, pin endpoints included. Empty when either
    * endpoint is missing — there is nothing to route between.
@@ -133,17 +144,42 @@ export function buildScene(
 
   const wires: Record<string, ResolvedWire> = {};
   for (const [id, wire] of Object.entries(document.wires)) {
-    const from = nodes[wire.from.nodeId]?.pinsById[wire.from.pinId] ?? null;
+    const from = isWireAnchor(wire.from)
+      ? null
+      : (nodes[wire.from.nodeId]?.pinsById[wire.from.pinId] ?? null);
     const to = nodes[wire.to.nodeId]?.pinsById[wire.to.pinId] ?? null;
+
+    // A branch reads its start straight out of the wire it taps, so dragging
+    // that bend drags this wire's start with it — there is nothing stored here
+    // to keep in step (artifacts/03-data-model.md).
+    const start = isWireAnchor(wire.from)
+      ? anchorPoint(document, wire.from)
+      : from && { world: from.world, side: from.side };
+
     const routed =
-      from && to
-        ? wirePath(from.world, from.side, to.world, to.side, wire.waypoints)
+      start && to
+        ? wirePath(start.world, start.side, to.world, to.side, wire.waypoints)
         : { points: [], slots: [] };
 
-    wires[id] = { wire, from, to, ...routed };
+    wires[id] = { wire, from, to, start: start ?? null, ...routed };
   }
 
   return { nodes, wires };
+}
+
+/**
+ * Where a branch begins: the bend it taps, in world coordinates.
+ *
+ * Waypoints are absolute, so there is no chain to walk even when the tapped
+ * wire is itself a branch. Null when the bend is gone, which leaves the wire
+ * unroutable and visible as such rather than drawn from somewhere invented.
+ */
+function anchorPoint(
+  document: CircuitDocument,
+  anchor: WireAnchor,
+): { world: Point; side: null } | null {
+  const world = document.wires[anchor.wireId]?.waypoints?.[anchor.waypoint];
+  return world ? { world, side: null } : null;
 }
 
 export function resolveNode(

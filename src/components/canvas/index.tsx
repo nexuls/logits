@@ -187,6 +187,9 @@ export default function Canvas({
           onPointerCancel(event);
         }}
         onPointerLeave={() => onContentPointerLeave?.()}
+        // A right-click branches a wire through `onContentPointerDown`
+        // (button 2); this only has to keep the browser's own menu off it.
+        onContextMenu={(event) => event.preventDefault()}
         onWheel={onWheel}
         // onDoubleClick={onDoubleClick}
         style={{

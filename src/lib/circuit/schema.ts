@@ -41,10 +41,38 @@ export const circuitNodeSchema = z.object({
 });
 export type CircuitNode = z.infer<typeof circuitNodeSchema>;
 
+/**
+ * A tap on another wire: the branch starts at that wire's `waypoint`-th bend
+ * and follows it, so dragging the bend drags the branch with it.
+ *
+ * An index rather than an id because a waypoint *is* its position in the list
+ * (ADR 0007); the commands that insert and remove bends re-index the anchors
+ * pointing past them, which is the price of keeping waypoints plain points.
+ */
+export const wireAnchorSchema = z.object({
+  wireId: idSchema,
+  /** Index into that wire's own `waypoints`. */
+  waypoint: z.int().nonnegative(),
+});
+export type WireAnchor = z.infer<typeof wireAnchorSchema>;
+
+/** Where a wire ends: a pin, or a tap on another wire. */
+export const wireEndSchema = z.union([pinRefSchema, wireAnchorSchema]);
+export type WireEnd = z.infer<typeof wireEndSchema>;
+
+/** Narrows a `WireEnd`. The two shapes share no keys, so this is exact. */
+export function isWireAnchor(end: WireEnd): end is WireAnchor {
+  return "wireId" in end;
+}
+
 export const wireSchema = z.object({
   id: idSchema,
-  /** An output or inout pin. */
-  from: pinRefSchema,
+  /**
+   * An output or inout pin — or, for a branch, the wire it was tapped off.
+   * Only this end may be an anchor: a wire is always *landed* on a pin, so
+   * `to` stays a `PinRef` and code reading it needs no guard.
+   */
+  from: wireEndSchema,
   /** An input or inout pin. */
   to: pinRefSchema,
   waypoints: z.array(pointSchema).max(256).optional(),

@@ -17,11 +17,17 @@ import {
   rotateSize,
   snapPointToGrid,
 } from "@/lib/circuit/geometry";
-import type { PinRef, Point } from "@/lib/circuit/schema";
+import {
+  isWireAnchor,
+  type PinRef,
+  type Point,
+  type WireEnd,
+} from "@/lib/circuit/schema";
 import { pendingWirePath } from "@/lib/circuit/wire-path";
 import type { NodeDefinition } from "@/lib/nodes/define";
 import {
   addWireWaypoint,
+  branchWire,
   connectPins,
   dragWireWaypoint,
   dropWireWaypoint,
@@ -124,8 +130,19 @@ type Gesture =
  * bends, and ends only on a pin or on Esc (artifacts/07-interaction-spec.md).
  */
 type Wiring = {
-  from: PinRef;
-  fromPin: ResolvedPin;
+  from: WireEnd;
+  /**
+   * Where the wire is being drawn *from*: a pin's position and the edge it
+   * leaves by, or — when the wire was branched off another — the tapped bend
+   * and no side, since there is no body to stub out of. `spec` is null for a
+   * branch too: a tap is a net rather than a pin, so every pin is a legal
+   * target for it.
+   */
+  origin: {
+    world: Point;
+    side: ResolvedPin["side"] | null;
+    spec: ResolvedPin["spec"] | null;
+  };
   cursorWorld: Point;
   /** Bends dropped by clicking empty canvas, in world coordinates. */
   waypoints: readonly Point[];
@@ -193,15 +210,26 @@ export function useEditorGestures({
     [viewport],
   );
 
-  const startWiring = useCallback((hit: PinHit) => {
+  /** Arms a wire from a pin or from a tap on another wire. */
+  const beginWiring = useCallback((from: WireEnd, origin: Wiring["origin"]) => {
     setWiring({
-      from: { nodeId: hit.node.node.id, pinId: hit.pin.spec.id },
-      fromPin: hit.pin,
-      cursorWorld: hit.pin.world,
+      from,
+      origin,
+      cursorWorld: origin.world,
       waypoints: [],
       unresolved: false,
     });
   }, []);
+
+  const startWiring = useCallback(
+    (hit: PinHit) => {
+      beginWiring(
+        { nodeId: hit.node.node.id, pinId: hit.pin.spec.id },
+        { world: hit.pin.world, side: hit.pin.side, spec: hit.pin.spec },
+      );
+    },
+    [beginWiring],
+  );
 
   /** A click on empty canvas while wiring: drop a bend and keep drawing. */
   const addWaypoint = useCallback((world: Point) => {
@@ -268,10 +296,33 @@ export function useEditorGestures({
 
   const onPointerDown = useCallback(
     (event: PointerEvent<HTMLDivElement>) => {
-      if (event.button !== 0) return;
-
       const world = toWorld(event);
       const current = sceneRef.current;
+
+      // A right-click owns only a wire: it taps the wire under the cursor and
+      // arms a wire from the junction that lands there, which from here on is
+      // an ordinary wire in progress from an ordinary pin. Anywhere else, or
+      // mid-gesture already, it does nothing — the canvas suppresses the
+      // browser's own menu either way.
+      if (event.button === 2) {
+        if (armedDefinition || wiring || gesture.kind !== "none") return;
+
+        const wire = wireAt(current, world, worldLength(WIRE_HIT_RADIUS));
+        if (!wire) return;
+
+        event.preventDefault();
+        const branch = branchWire(wire.wire.wire.id, slotFor(wire), wire.point);
+        if (branch) {
+          beginWiring(branch.anchor, {
+            world: branch.world,
+            side: null,
+            spec: null,
+          });
+        }
+        return;
+      }
+
+      if (event.button !== 0) return;
 
       // Placing wins over everything else: the palette armed a type and the
       // click is the user saying where.
@@ -386,7 +437,9 @@ export function useEditorGestures({
       addWaypoint,
       armedCount,
       armedDefinition,
+      beginWiring,
       finishWiring,
+      gesture.kind,
       onPlaced,
       startWiring,
       toWorld,
@@ -535,8 +588,11 @@ export function useEditorGestures({
       // discarding what the user drew.
       if (wiring) {
         const hit = pinAt(current, world, worldLength(PIN_SNAP_PX));
+        // A branch has no pin to have started on, so nothing can be "the same
+        // pin" as its start and every hit is a real landing.
         const sameAsStart =
           hit &&
+          !isWireAnchor(wiring.from) &&
           hit.node.node.id === wiring.from.nodeId &&
           hit.pin.spec.id === wiring.from.pinId;
 
@@ -586,8 +642,8 @@ export function useEditorGestures({
   const pendingWire: PendingWire | null = wiring
     ? {
         points: pendingWirePath(
-          wiring.fromPin.world,
-          wiring.fromPin.side,
+          wiring.origin.world,
+          wiring.origin.side,
           wiring.cursorWorld,
           wiring.waypoints,
         ),
@@ -696,11 +752,15 @@ const EMPTY_KEYS: ReadonlySet<string> = new Set();
 
 function pinKeysCompatibleWith(scene: Scene, wiring: Wiring): Set<string> {
   const keys = new Set<string>();
+  const origin = wiring.origin.spec;
+  const skip = isWireAnchor(wiring.from) ? null : wiring.from.nodeId;
 
   for (const [nodeId, node] of Object.entries(scene.nodes)) {
-    if (nodeId === wiring.from.nodeId) continue;
+    if (nodeId === skip) continue;
     for (const pin of node.pins) {
-      if (pinsCompatible(wiring.fromPin, pin)) {
+      // A branch starts on a net rather than a pin, so it has no direction to
+      // clash with and anything is a legal target.
+      if (!origin || pinsCompatible({ spec: origin }, pin)) {
         keys.add(`${nodeId}/${pin.spec.id}`);
       }
     }

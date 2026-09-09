@@ -4,6 +4,7 @@ import { lookupNode } from "@/lib/nodes/registry";
 import {
   addNode,
   boundsOf,
+  branchWireAt,
   connect,
   deleteElements,
   extractFragment,
@@ -23,7 +24,12 @@ import {
 } from "./commands";
 import { DEFAULT_SCALE, MAX_SCALE, MIN_SCALE } from "./coords";
 import { createEmptyDocument } from "./io";
-import type { CircuitDocument } from "./schema";
+import {
+  isWireAnchor,
+  type CircuitDocument,
+  type PinRef,
+  type Wire,
+} from "./schema";
 
 /** Narrowing through a helper, so the fixtures are `NodeDefinition` inside
  *  the hoisted helpers below rather than `NodeDefinition | undefined`. */
@@ -35,6 +41,12 @@ function requireNode(type: string): NodeDefinition {
 
 const and = requireNode("gate.and");
 const led = requireNode("io.led");
+
+/** Narrows a wire's `from` for the pin-to-pin cases, which is most of them. */
+function fromPin(wire: Wire): PinRef {
+  if (isWireAnchor(wire.from)) throw new Error("expected a pin, got a tap");
+  return wire.from;
+}
 
 let doc: CircuitDocument;
 
@@ -251,7 +263,9 @@ describe("connect", () => {
     );
 
     if (!joined.ok) throw new Error(joined.reason);
-    expect(joined.document.wires[joined.wireId].from.nodeId).toBe(first.nodeId);
+    expect(fromPin(joined.document.wires[joined.wireId]).nodeId).toBe(
+      first.nodeId,
+    );
     expect(joined.document.wires[joined.wireId].to.nodeId).toBe(second.nodeId);
   });
 
@@ -437,9 +451,9 @@ describe("insertFragment", () => {
     const result = insertFragment(document, fragment, { x: 40, y: 40 });
 
     const copied = result.document.wires[result.selection.wireIds[0]];
-    expect(result.selection.nodeIds).toContain(copied.from.nodeId);
+    expect(result.selection.nodeIds).toContain(fromPin(copied).nodeId);
     expect(result.selection.nodeIds).toContain(copied.to.nodeId);
-    expect(copied.from.pinId).toBe("out");
+    expect(fromPin(copied).pinId).toBe("out");
   });
 
   it("snaps the offset and shifts waypoints with the copy", () => {
@@ -592,5 +606,195 @@ describe("removeWireWaypoint", () => {
 
     const straight = removeWireWaypoint(one, wireId, 0);
     expect("waypoints" in straight.wires[wireId]).toBe(false);
+  });
+});
+
+describe("branchWireAt", () => {
+  it("taps the wire with a bend and leaves the wire itself intact", () => {
+    const { document, andId, ledId, wireId } = wiredPair();
+
+    const result = branchWireAt(document, wireId, 0, { x: 50, y: 0 });
+    if (!result) throw new Error("branchWireAt returned null");
+
+    // One wire still, joining the same two pins — the tap is a bend on it,
+    // not a split.
+    const wires = Object.values(result.document.wires);
+    expect(wires).toHaveLength(1);
+
+    const tapped = result.document.wires[wireId];
+    expect(tapped.from).toEqual({ nodeId: andId, pinId: "out" });
+    expect(tapped.to).toEqual({ nodeId: ledId, pinId: "in" });
+    expect(tapped.waypoints).toEqual([{ x: 50, y: 0 }]);
+
+    expect(result.anchor).toEqual({ wireId, waypoint: 0 });
+    expect(result.world).toEqual({ x: 50, y: 0 });
+  });
+
+  it("snaps the tap to the grid", () => {
+    const { document, wireId } = wiredPair();
+
+    const result = branchWireAt(document, wireId, 0, { x: 53, y: 2 });
+    if (!result) throw new Error("branchWireAt returned null");
+
+    expect(result.world).toEqual({ x: 50, y: 0 });
+    expect(result.document.wires[wireId].waypoints).toEqual([{ x: 50, y: 0 }]);
+  });
+
+  it("puts the tap at the slot it was given, between the bends either side", () => {
+    const { document, wireId } = wiredPair();
+    const withBends = setWireWaypoints(document, wireId, [
+      { x: 30, y: 0 },
+      { x: 70, y: 0 },
+    ]);
+
+    const result = branchWireAt(withBends, wireId, 1, { x: 50, y: 0 });
+    if (!result) throw new Error("branchWireAt returned null");
+
+    expect(result.document.wires[wireId].waypoints).toEqual([
+      { x: 30, y: 0 },
+      { x: 50, y: 0 },
+      { x: 70, y: 0 },
+    ]);
+    expect(result.anchor.waypoint).toBe(1);
+  });
+
+  it("returns null for a wire id that does not exist", () => {
+    expect(branchWireAt(doc, "missing", 0, { x: 0, y: 0 })).toBeNull();
+  });
+});
+
+describe("branches", () => {
+  /** An AND wired to an LED, tapped, with a second LED on the branch. */
+  function branched() {
+    const base = wiredPair();
+    const tap = branchWireAt(base.document, base.wireId, 0, { x: 50, y: 0 });
+    if (!tap) throw new Error("branchWireAt returned null");
+
+    const second = addNode(tap.document, led, { position: { x: 100, y: 100 } });
+    const joined = connect(second.document, lookupNode, tap.anchor, {
+      nodeId: second.nodeId,
+      pinId: "in",
+    });
+    if (!joined.ok) throw new Error(joined.reason);
+
+    return {
+      ...base,
+      document: joined.document,
+      anchor: tap.anchor,
+      branchId: joined.wireId,
+      led2Id: second.nodeId,
+    };
+  }
+
+  it("stores the branch as a tap on the wire, not as a second pin", () => {
+    const { document, branchId, wireId, led2Id } = branched();
+
+    expect(document.wires[branchId].from).toEqual({ wireId, waypoint: 0 });
+    expect(document.wires[branchId].to).toEqual({
+      nodeId: led2Id,
+      pinId: "in",
+    });
+  });
+
+  it("refuses a second branch off the same bend to the same pin", () => {
+    const { document, anchor, led2Id } = branched();
+
+    const again = connect(document, lookupNode, anchor, {
+      nodeId: led2Id,
+      pinId: "in",
+    });
+    expect(again).toEqual({ ok: false, reason: "already-connected" });
+  });
+
+  it("refuses a tap on a bend that is not there", () => {
+    const { document, wireId } = wiredPair();
+    const target = addNode(document, led, { position: { x: 0, y: 100 } });
+
+    const bad = connect(
+      target.document,
+      lookupNode,
+      { wireId, waypoint: 3 },
+      { nodeId: target.nodeId, pinId: "in" },
+    );
+    expect(bad).toEqual({ ok: false, reason: "missing-pin" });
+  });
+
+  it("moves the anchor along when a bend is inserted before it", () => {
+    const { document, branchId, wireId } = branched();
+
+    const bent = insertWireWaypoint(document, wireId, 0, { x: 20, y: 0 });
+    expect(bent.wires[branchId].from).toEqual({ wireId, waypoint: 1 });
+
+    // And the bend the branch starts from is still the one it started from.
+    expect(bent.wires[wireId].waypoints?.[1]).toEqual({ x: 50, y: 0 });
+  });
+
+  it("moves the anchor back when a bend before it is removed", () => {
+    const { document, branchId, wireId } = branched();
+
+    const bent = insertWireWaypoint(document, wireId, 0, { x: 20, y: 0 });
+    const straightened = removeWireWaypoint(bent, wireId, 0);
+
+    expect(straightened.wires[branchId].from).toEqual({ wireId, waypoint: 0 });
+    expect(straightened.wires[wireId].waypoints).toEqual([{ x: 50, y: 0 }]);
+  });
+
+  it("refuses to remove the bend a branch starts from", () => {
+    const { document, wireId } = branched();
+
+    expect(removeWireWaypoint(document, wireId, 0)).toBe(document);
+  });
+
+  it("drags the branch's start with the bend", () => {
+    const { document, wireId } = branched();
+
+    const moved = moveWireWaypoint(document, wireId, 0, { x: 60, y: 20 });
+    // The branch stores no position of its own: there is one point, and the
+    // wire it taps owns it.
+    expect(moved.wires[wireId].waypoints).toEqual([{ x: 60, y: 20 }]);
+  });
+
+  it("takes branches with the wire they tap when it is deleted", () => {
+    const { document, wireId, branchId } = branched();
+
+    const deleted = deleteElements(document, { wireIds: [wireId] });
+    expect(deleted.wires[wireId]).toBeUndefined();
+    expect(deleted.wires[branchId]).toBeUndefined();
+  });
+
+  it("takes branches with the node whose wire is deleted", () => {
+    const { document, andId, branchId, wireId } = branched();
+
+    const deleted = deleteElements(document, { nodeIds: [andId] });
+    expect(deleted.wires[wireId]).toBeUndefined();
+    expect(deleted.wires[branchId]).toBeUndefined();
+  });
+
+  it("re-anchors a copied branch onto the copy of the wire it taps", () => {
+    const { document, andId, ledId, led2Id } = branched();
+
+    const fragment = extractFragment(document, {
+      nodeIds: [andId, ledId, led2Id],
+    });
+    expect(fragment.wires).toHaveLength(2);
+
+    const pasted = insertFragment(document, fragment, { x: 0, y: 200 });
+    const copies = pasted.selection.wireIds.map(
+      (id) => pasted.document.wires[id],
+    );
+    const branch = copies.find((wire) => isWireAnchor(wire.from));
+    if (!branch || !isWireAnchor(branch.from)) {
+      throw new Error("copied branch not found");
+    }
+
+    // The copy taps the copy, never the original it was lifted from.
+    expect(pasted.selection.wireIds).toContain(branch.from.wireId);
+  });
+
+  it("leaves a branch behind when the wire it taps was not copied", () => {
+    const { document, ledId, led2Id } = branched();
+
+    const fragment = extractFragment(document, { nodeIds: [ledId, led2Id] });
+    expect(fragment.wires).toHaveLength(0);
   });
 });

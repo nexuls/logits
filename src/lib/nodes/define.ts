@@ -1,8 +1,9 @@
 import type { Size } from "@/lib/circuit/geometry";
-import type {
-  CircuitDocument,
-  CircuitNode,
-  PinSpec,
+import {
+  type CircuitDocument,
+  type CircuitNode,
+  isWireAnchor,
+  type PinSpec,
 } from "@/lib/circuit/schema";
 import type { Signal } from "@/lib/sim/logic";
 
@@ -241,6 +242,10 @@ export function referencedPinsByNode(
   const byNode = new Map<string, string[]>();
   for (const wire of Object.values(document.wires)) {
     for (const ref of [wire.from, wire.to]) {
+      // A branch's `from` names a wire, not a pin, so it says nothing about
+      // what pins a vanished node used to have.
+      if (isWireAnchor(ref)) continue;
+
       const pins = byNode.get(ref.nodeId);
       if (!pins) byNode.set(ref.nodeId, [ref.pinId]);
       else if (!pins.includes(ref.pinId)) pins.push(ref.pinId);
