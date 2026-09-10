@@ -14,6 +14,8 @@ type Props = {
    * memo above still compares by value. */
   showBasicPinLabels: boolean;
   showCompoundPinLabels: boolean;
+  /** The node under the cursor, which reveals its floating pin labels. */
+  hoveredNodeId: string | null;
   /** `nodeId/pinId` keys the wire in progress could land on. */
   compatiblePinIds: ReadonlySet<string>;
   /** True while a wire is being drawn, which is when the highlight applies. */
@@ -37,6 +39,7 @@ function NodeLayer({
   interactive,
   showBasicPinLabels,
   showCompoundPinLabels,
+  hoveredNodeId,
   compatiblePinIds,
   wiring,
   onSelectNode,
@@ -57,6 +60,7 @@ function NodeLayer({
             interactive={interactive}
             showBasicPinLabels={showBasicPinLabels}
             showCompoundPinLabels={showCompoundPinLabels}
+            hovered={id === hoveredNodeId}
             compatiblePinIds={compatiblePinIds}
             wiring={wiring}
             onFocus={() => onSelectNode(id)}

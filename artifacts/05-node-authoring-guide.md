@@ -110,6 +110,9 @@ which break tree-shaking and make ordering non-deterministic.
 - [ ] Declares `kind: "basic"` **only** if its pins are obvious from where they
       sit; otherwise leave `kind` off and let the canvas label it. See "Basic or
       compound" below.
+- [ ] Declares `pinLabels: "floating"` if its body is the thing being read — a
+      switch, an LED, a keypad — so a pin name never covers its own view. See
+      "Basic or compound" below.
 - [ ] Names a `view` — `"block"` unless it has a symbol or a readout of its own.
 - [ ] Has a `shortTitle` if `title` is longer than the abbreviation a schematic
       would use for it. See "Names, and the body that has to hold one".
@@ -142,6 +145,31 @@ format, and no component holds a list of which types are which
 `registry.test.ts` fails a node that calls itself basic while putting two
 differently-named pins on one edge, so the claim cannot quietly rot as a
 definition grows pins.
+
+### Inline or floating
+
+`kind` says *whether* the names are drawn; `pinLabels` says **where**.
+
+- **`"inline"`** (the default) writes each name inside the body, against the
+  edge its pin ended up on, and the body reserves a gutter for it. Right for a
+  part whose body is a labelled rectangle with room to spare.
+- **`"floating"`** hangs the name outside the body instead, and draws it only
+  while the node is hovered or selected. It reserves nothing, so the view keeps
+  its whole body. This is what the `io.*` sources and sinks use: on an element
+  four cells across, an inline `Q` covers the very lamp or switch face the user
+  is reading, and a name that is only there when you point at it costs nothing
+  when you are not.
+
+A floating element answers to neither `kind` switch: it carries no names until
+it is pointed at, so there is nothing for the switches to be about. That also
+keeps a floating element that never declared a `kind` — `io.keypad` — from
+falling into the compound default, which is on, and being always-labelled after
+all.
+
+Hover is hit-tested against the scene in
+[use-editor-gestures.ts](../src/components/editor/use-editor-gestures.ts), not
+read off a DOM `:hover`, because node bodies take no pointer events — and
+selection reveals them too, which is the keyboard path to the same thing.
 
 ## Documenting a node
 

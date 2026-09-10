@@ -192,6 +192,17 @@ export function useEditorGestures({
    */
   const [waypointPreview, setWaypointPreview] =
     useState<WaypointPreview | null>(null);
+  /**
+   * The node under the cursor, or null. Hit-tested against the scene rather
+   * than read off a DOM `:hover`, because a node body takes no pointer events
+   * — picking is mathematical, so hovering has to be too, or the two would
+   * disagree about which of two overlapping nodes is on top.
+   *
+   * Only the id: it is compared against on every pointer move, and holding the
+   * `ResolvedNode` would make an unmoved cursor look like a change on every
+   * document edit.
+   */
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
 
   // The scene changes on every document edit, and the handlers below are
   // installed on the viewport once; a ref keeps them reading the current one
@@ -459,20 +470,32 @@ export function useEditorGestures({
         setWiring((wire) => (wire ? { ...wire, cursorWorld: world } : wire));
       }
 
+      // Which node the cursor is over, tracked while the pointer is not busy
+      // dragging something. Wiring is deliberately included: a floating pin
+      // label is most wanted exactly while a wire is looking for its landing.
+      const overNode =
+        gesture.kind === "none" && !armedDefinition
+          ? nodeAt(current, world)
+          : null;
+      const overNodeId = overNode?.node.id ?? null;
+      // Compared before it is stored, like the preview below: the cursor
+      // crosses a node once and moves within it for hundreds of events.
+      setHoveredNodeId((shown) => (shown === overNodeId ? shown : overNodeId));
+
       // The preview is a hover affordance, so it is offered only when the
       // pointer is free: not mid-gesture, not placing, not drawing a wire.
       if (gesture.kind === "none" && !armedDefinition && !wiring) {
         // A pin, a node body, or a handle already there wins — offering a new
         // bend would promise a gesture the press is not going to perform.
         const blocked =
+          overNode !== null ||
           pinAt(current, world, worldLength(PIN_SNAP_PX)) !== null ||
           waypointAt(
             current,
             world,
             getSelection().wireIds,
             worldLength(WAYPOINT_HIT_RADIUS),
-          ) !== null ||
-          nodeAt(current, world) !== null;
+          ) !== null;
         const hovered = blocked
           ? null
           : wireAt(current, world, worldLength(WIRE_HIT_RADIUS));
@@ -575,6 +598,7 @@ export function useEditorGestures({
   const onPointerLeave = useCallback(() => {
     setGhostWorld(null);
     setWaypointPreview(null);
+    setHoveredNodeId(null);
   }, []);
 
   const onPointerUp = useCallback(
@@ -676,6 +700,7 @@ export function useEditorGestures({
   return {
     band,
     ghostCenters,
+    hoveredNodeId,
     pendingWire,
     waypointGhost,
     compatiblePinIds,

@@ -107,6 +107,7 @@ is the exercise, or when you want the segment lines themselves visible.
   icon: "seven-segment",
   view: "seven-segment-readout",
   category: "instruments",
+  pinLabels: "floating",
   keywords: [
     "seven segment",
     "7 segment",

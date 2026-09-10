@@ -162,6 +162,16 @@ that helper rather than writing a second one.
   nothing but their names distinguishes, so they are on. Both have their own
   switch under **Pin labels** in the settings dialog. These are editor
   preferences and are not part of a circuit.
+- The sources and sinks — a switch, an LED, a probe, a keypad — **float** their
+  names instead (`NodeDefinition.pinLabels`): the label hangs just *outside* the
+  body, and only while the element is under the cursor or selected. Those bodies
+  are four or five cells across and are themselves the thing being read, so an
+  inline name would cover the lamp or the switch face it belongs to. Hovering is
+  hit-tested against the scene, like every other pick, so the labels that appear
+  are the ones on the element a click would select; selecting reveals the same
+  labels, which is the keyboard path to them. Neither **Pin labels** switch
+  applies to them — an element that shows its names only on approach has nothing
+  for those switches to turn off.
 - The body's title gives up the width the labels on its left and right edges
   occupy, and wraps to two lines rather than running underneath them. The
   element's own name — `node.label`, if it has one — hangs *below* the body,

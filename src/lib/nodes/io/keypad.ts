@@ -125,6 +125,7 @@ what a two-key rollover would have to model and this deliberately does not.
   title: "Keypad",
   icon: "keypad",
   category: "io",
+  pinLabels: "floating",
   keywords: ["keypad", "keyboard", "keys", "input", "digits", "hex", "entry"],
   defaultParams: {
     keys: DEFAULT_KEYS,

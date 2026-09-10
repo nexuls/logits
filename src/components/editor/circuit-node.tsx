@@ -21,6 +21,8 @@ type Props = {
   showBasicPinLabels: boolean;
   /** Pin names on elements whose pins are told apart only by name. */
   showCompoundPinLabels: boolean;
+  /** The cursor is over this node, which is what reveals floating pin names. */
+  hovered: boolean;
   /** `nodeId/pinId` keys a wire in progress could legally land on. */
   compatiblePinIds: ReadonlySet<string>;
   wiring: boolean;
@@ -59,6 +61,7 @@ export default function CircuitNode({
   interactive,
   showBasicPinLabels,
   showCompoundPinLabels,
+  hovered,
   compatiblePinIds,
   wiring,
   onFocus,
@@ -77,11 +80,33 @@ export default function CircuitNode({
 
   const View = nodeView(def.view);
 
-  // Which switch this node answers to is a property it declares, not a list of
-  // types kept here: a `kind` it never set means "compound", so a node whose
-  // author did not think about it is labelled rather than left mute.
-  const showPinLabels =
-    def.kind === "basic" ? showBasicPinLabels : showCompoundPinLabels;
+  // Where an element's pin names go is a property it declares, not a list of
+  // types kept here. A floating label hangs outside the body and is drawn only
+  // while the node is under the cursor or selected: on a switch, an LED or a
+  // keypad the body *is* the reading, and a name written across it — or a
+  // permanent fringe of names around it — hides what the user came to see.
+  //
+  // Deliberately not answerable to the `kind` switches below. Those say
+  // whether an element that carries its names is worth the ink, and a floating
+  // element carries none until it is pointed at; letting the switch pin them
+  // up would put a compound element like `io.keypad` — which never declared a
+  // `kind`, so it defaults to the one that is on — straight back to always-on,
+  // which is the thing floating exists to avoid.
+  const floatingLabels = def.pinLabels === "floating";
+
+  // Which switch a pinned element answers to: a `kind` it never set means
+  // "compound", so a node whose author did not think about it is labelled
+  // rather than left mute.
+  const showPinLabels = floatingLabels
+    ? hovered || selected
+    : def.kind === "basic"
+      ? showBasicPinLabels
+      : showCompoundPinLabels;
+
+  // What the *view* is told, which is not the same question: it reserves
+  // gutters for the names it has to make room for, and a floating name takes
+  // no room from the body at all.
+  const showInlinePinLabels = showPinLabels && !floatingLabels;
 
   const orientation = orientationOf(node.rotation);
 
@@ -132,7 +157,7 @@ export default function CircuitNode({
             def={def}
             resolved={resolved}
             orientation={orientation}
-            showPinLabels={showPinLabels}
+            showPinLabels={showInlinePinLabels}
             readPin={(pinId) => valueByPin[pinId] ?? ""}
             setParams={(patch) => updateNodeParams(node.id, patch)}
             interactive={interactive}
@@ -194,24 +219,35 @@ export default function CircuitNode({
       {showPinLabels &&
         pins.map((pin) =>
           pin.spec.name ? (
-            // Inside the body, not outside it: the outside of a pin is where
-            // its wire leaves, and a label there would sit under every route
-            // into the node. `pin.side` is post-rotation, so a turned node
-            // labels its pins along the edges they actually ended up on, and
-            // the text stays upright at every angle.
+            // Inline: inside the body, not outside it — the outside of a pin
+            // is where its wire leaves, and a label there would sit under
+            // every route into the node, which is why the body reserves a
+            // gutter for it. Floating: outside, where nothing is reserved,
+            // which is affordable because it is only drawn for the one node
+            // under the cursor rather than for all of them at once.
+            //
+            // `pin.side` is post-rotation either way, so a turned node labels
+            // its pins along the edges they actually ended up on, and the
+            // text stays upright at every angle.
             //
             // On its own opaque chip, because what is underneath varies: a
-            // scope's waveform, a seven-segment digit, the body title. The
-            // node's own background is the one colour guaranteed to sit under
-            // every pin, and it works in both themes without a second token.
+            // scope's waveform, a seven-segment digit, the body title, a wire
+            // running past. The node's own background is the one colour
+            // guaranteed to sit under every pin, and it works in both themes
+            // without a second token.
             <span
               key={pin.spec.id}
               aria-hidden
               className={cn(
                 "pointer-events-none absolute w-max rounded-[2px] bg-card px-[1px] text-[7px] leading-[1.4] font-medium text-foreground/75",
-                PIN_LABEL_CLASS[pin.side],
+                floatingLabels
+                  ? FLOATING_PIN_LABEL_CLASS[pin.side]
+                  : PIN_LABEL_CLASS[pin.side],
+                // Floating labels sit over the wires they name, so they get
+                // the node's border under them as well as its background.
+                floatingLabels && "z-10 border border-border/60 px-[2px]",
               )}
-              style={pinLabelPosition(pin, bounds)}
+              style={pinLabelPosition(pin, bounds, floatingLabels)}
             >
               {pin.spec.name}
             </span>
@@ -230,7 +266,7 @@ export default function CircuitNode({
   );
 }
 
-/** Pushes the label off the edge it is anchored to, per side. */
+/** Pushes an inline label off the edge it is anchored to, back into the body. */
 const PIN_LABEL_CLASS: Record<ResolvedPin["side"], string> = {
   left: "-translate-y-1/2",
   right: "-translate-x-full -translate-y-1/2",
@@ -238,20 +274,32 @@ const PIN_LABEL_CLASS: Record<ResolvedPin["side"], string> = {
   bottom: "-translate-x-1/2 -translate-y-full",
 };
 
-/** Node-relative placement of a pin's label, just inside the body. */
-function pinLabelPosition(pin: ResolvedPin, bounds: Rect) {
+/** The same, mirrored: a floating label hangs off the outside of its edge. */
+const FLOATING_PIN_LABEL_CLASS: Record<ResolvedPin["side"], string> = {
+  left: "-translate-x-full -translate-y-1/2",
+  right: "-translate-y-1/2",
+  top: "-translate-x-1/2 -translate-y-full",
+  bottom: "-translate-x-1/2",
+};
+
+/**
+ * Node-relative placement of a pin's label: just inside the body, or — when
+ * the element floats its labels — the same gap on the other side of the pin.
+ */
+function pinLabelPosition(pin: ResolvedPin, bounds: Rect, floating: boolean) {
   const x = pin.world.x - bounds.x;
   const y = pin.world.y - bounds.y;
+  const gap = floating ? -PIN_LABEL_GAP : PIN_LABEL_GAP;
 
   switch (pin.side) {
     case "left":
-      return { left: x + PIN_LABEL_GAP, top: y };
+      return { left: x + gap, top: y };
     case "right":
-      return { left: x - PIN_LABEL_GAP, top: y };
+      return { left: x - gap, top: y };
     case "top":
-      return { left: x, top: y + PIN_LABEL_GAP };
+      return { left: x, top: y + gap };
     default:
-      return { left: x, top: y - PIN_LABEL_GAP };
+      return { left: x, top: y - gap };
   }
 }
 

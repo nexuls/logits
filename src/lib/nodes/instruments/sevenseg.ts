@@ -90,6 +90,7 @@ one showing an odd glyph.
   title: "7-segment",
   icon: "seven-segment",
   category: "instruments",
+  pinLabels: "floating",
   keywords: ["seven segment", "7 segment", "digit", "display", "numeral"],
   defaultParams: { mode: "raw", commonAnode: false, color: "red" },
   view: "seven-segment",

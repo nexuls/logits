@@ -76,6 +76,7 @@ drive every row from that.
   icon: "matrix",
   category: "instruments",
   kind: "basic",
+  pinLabels: "floating",
   keywords: ["matrix", "grid", "panel", "dot matrix", "display", "leds"],
   defaultParams: { size: 8, color: "amber" },
   view: "matrix",

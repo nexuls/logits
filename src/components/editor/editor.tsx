@@ -292,6 +292,7 @@ export default function Editor({
           interactive={document !== null}
           showBasicPinLabels={showBasicPinLabels}
           showCompoundPinLabels={showCompoundPinLabels}
+          hoveredNodeId={gestures.hoveredNodeId}
           compatiblePinIds={gestures.compatiblePinIds}
           wiring={gestures.isWiring}
           onSelectNode={(nodeId) => selectOnly([nodeId])}

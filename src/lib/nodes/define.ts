@@ -129,6 +129,24 @@ export type NodeDefinition = {
    */
   kind?: "basic" | "compound";
   /**
+   * Where this node's pin names are drawn, when they are drawn at all.
+   *
+   * `"inline"` (the default) writes them *inside* the body, on the edge each
+   * pin ended up on, and the body reserves a gutter for them — right for a
+   * part whose body is mostly empty, like a flip-flop or a mux.
+   *
+   * `"floating"` hangs them *outside* the body instead, and only while the
+   * node is hovered or selected. It is for the elements whose body is the
+   * whole point of the element — a switch, an LED, a keypad — where a label
+   * inside would cover the very thing the user is reading. Nothing is
+   * reserved for them, so the view keeps its full body, and nothing is drawn
+   * over the wires until the pointer is actually on the node.
+   *
+   * A declaration and not a rule about a category, so an element opts into it
+   * the same way it opts into a view (Non-negotiable #4).
+   */
+  pinLabels?: "inline" | "floating";
+  /**
    * Long-form help for this node, as Markdown — what it is, how it behaves at
    * the edges, and how to wire it up on the canvas. The palette's info dialog
    * renders it (GFM, so tables work) alongside the pin and parameter tables it
