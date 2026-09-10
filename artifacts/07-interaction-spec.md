@@ -53,7 +53,7 @@ canvas header, the right one from the panel button in its own header.
 | Click the info button on a palette element | Open its help dialog — the definition's `docs`, plus pin and setting tables derived from the definition. The button appears on hover and whenever anything in the row has focus, so it is tabbable but quiet at rest |
 | Click an armed palette element again | Arm one more copy, up to 6. Right-click (or `-`/`ArrowDown` on the focused entry) takes one back off; down past one disarms |
 | Move the pointer over the canvas while armed | A dashed ghost of the batch follows the cursor, drawn at the snapped positions the click will use. It is one undo step however many copies land |
-| Left-drag on a node | Move (snapped to the 10-unit grid; hold `Alt` to bypass) |
+| Left-drag on a node | Move (snapped to the 10-unit grid; hold `Alt` to bypass). A wire with *both* ends in the move travels whole, bends included; a wire with only one end in it stretches and keeps its bends where they are |
 | Left-drag on empty canvas | Rubber-band select |
 | Shift/Ctrl + click | Add to / toggle selection |
 | Click a pin | Start a wire. It follows the cursor until it lands |

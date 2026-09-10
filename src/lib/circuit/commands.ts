@@ -105,6 +105,11 @@ export function topLeftForCenter(
  *
  * The delta is snapped rather than each node's destination, so a selection
  * keeps its internal spacing even when its members did not start on the grid.
+ *
+ * A wire whose *both* ends move comes along whole, bends included: leaving its
+ * waypoints behind would deform every routed wire inside a bulk move. A wire
+ * with only one end in the move is stretched instead, so its bends stay where
+ * the user put them.
  */
 export function moveNodes(
   document: CircuitDocument,
@@ -122,8 +127,67 @@ export function moveNodes(
     ...node,
     position: { x: node.position.x + dx, y: node.position.y + dy },
   }));
+  if (moved === document) return document;
 
-  return moved;
+  return translateWaypoints(moved, wiresMovingWhole(moved, nodeIds), dx, dy);
+}
+
+/**
+ * The wires that travel with a move of `nodeIds` rather than stretching: both
+ * ends land on moving nodes, or — for a branch — its `from` taps a wire that is
+ * itself travelling, since that anchor's position moves with the tapped bend.
+ */
+function wiresMovingWhole(
+  document: CircuitDocument,
+  nodeIds: readonly string[],
+): Set<string> {
+  const moving = new Set(nodeIds);
+  const wireIds = new Set<string>();
+
+  // Repeated until nothing new is caught, so a branch off a branch travels too.
+  // Bounded by the wire count: each pass either adds a wire or stops.
+  for (let added = true; added; ) {
+    added = false;
+    for (const wire of Object.values(document.wires)) {
+      if (wireIds.has(wire.id) || !moving.has(wire.to.nodeId)) continue;
+
+      const travels = isWireAnchor(wire.from)
+        ? wireIds.has(wire.from.wireId)
+        : moving.has(wire.from.nodeId);
+      if (!travels) continue;
+
+      wireIds.add(wire.id);
+      added = true;
+    }
+  }
+
+  return wireIds;
+}
+
+function translateWaypoints(
+  document: CircuitDocument,
+  wireIds: ReadonlySet<string>,
+  dx: number,
+  dy: number,
+): CircuitDocument {
+  const wires = { ...document.wires };
+  let changed = false;
+
+  for (const wireId of wireIds) {
+    const wire = wires[wireId];
+    if (!wire?.waypoints?.length) continue;
+
+    wires[wireId] = {
+      ...wire,
+      waypoints: wire.waypoints.map((point) => ({
+        x: point.x + dx,
+        y: point.y + dy,
+      })),
+    };
+    changed = true;
+  }
+
+  return changed ? { ...document, wires } : document;
 }
 
 /** Quarter turns, clockwise. Negative turns anticlockwise. */

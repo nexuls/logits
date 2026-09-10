@@ -175,6 +175,48 @@ describe("moveNodes", () => {
     const { document } = addNode(doc, and, { position: { x: 0, y: 0 } });
     expect(moveNodes(document, ["nope"], { x: 10, y: 10 })).toBe(document);
   });
+
+  it("carries the bends of a wire whose both ends move", () => {
+    const { document, andId, ledId, wireId } = wiredPair();
+    const bent = setWireWaypoints(document, wireId, [{ x: 50, y: 40 }]);
+
+    const moved = moveNodes(bent, [andId, ledId], { x: 20, y: -10 });
+
+    expect(moved.wires[wireId].waypoints).toEqual([{ x: 70, y: 30 }]);
+  });
+
+  it("leaves the bends of a wire with only one end moving", () => {
+    const { document, ledId, wireId } = wiredPair();
+    const bent = setWireWaypoints(document, wireId, [{ x: 50, y: 40 }]);
+
+    const moved = moveNodes(bent, [ledId], { x: 20, y: -10 });
+
+    expect(moved.wires[wireId].waypoints).toEqual([{ x: 50, y: 40 }]);
+  });
+
+  it("carries a branch off a travelling wire", () => {
+    const { document, andId, ledId, wireId } = wiredPair();
+    const bent = setWireWaypoints(document, wireId, [{ x: 50, y: 40 }]);
+    const third = addNode(bent, led, { position: { x: 100, y: 100 } });
+    const tap = branchWireAt(third.document, wireId, 0, { x: 50, y: 40 });
+    if (!tap) throw new Error("branchWireAt returned null");
+
+    const branched = connect(tap.document, lookupNode, tap.anchor, {
+      nodeId: third.nodeId,
+      pinId: "in",
+    });
+    if (!branched.ok) throw new Error(`connect failed: ${branched.reason}`);
+
+    const withBend = setWireWaypoints(branched.document, branched.wireId, [
+      { x: 60, y: 90 },
+    ]);
+    const moved = moveNodes(withBend, [andId, ledId, third.nodeId], {
+      x: 20,
+      y: -10,
+    });
+
+    expect(moved.wires[branched.wireId].waypoints).toEqual([{ x: 80, y: 80 }]);
+  });
 });
 
 describe("rotateNodes", () => {
