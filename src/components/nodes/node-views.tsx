@@ -11,6 +11,7 @@ import MatrixView from "./matrix-view";
 import PushButtonView from "./push-button-view";
 import ReadoutView from "./readout-view";
 import ScopeView from "./scope-view";
+import SegmentReadoutView from "./segment-readout-view";
 import SevenSegmentView from "./seven-segment-view";
 import ToggleView from "./toggle-view";
 import TunnelView from "./tunnel-view";
@@ -77,6 +78,7 @@ const NODE_VIEWS: Record<string, NodeView> = {
   keypad: KeypadView,
   matrix: MatrixView,
   "seven-segment": SevenSegmentView,
+  "seven-segment-readout": SegmentReadoutView,
   scope: ScopeView,
   tunnel: TunnelView,
 };

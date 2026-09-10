@@ -121,6 +121,7 @@ is how a real part avoids shorting itself during a write.
 | --- | --- | --- |
 | `scope.logic` | `ch0`…`chN` | ring-buffer waveform view; params `channels` 1–8, `timeSpanNs`, `triggerChannel` (`-1` free-runs), `triggerEdge` |
 | `disp.sevenseg` | `a`…`g`, `dp` **or** `value` (4-bit), `dp` | params `mode`: `raw` / `bcd`, `commonAnode`, `color` |
+| `disp.segreadout` | `value`, `bl`/`lt` (top), `dp` (one bit per digit, bottom) | multi-digit readout with the decoder built in; params `width`, `digits` 1–8, `radix`: dec/hex, `blankLeading`, `color` |
 | `disp.hex` | `in` | shows a `width`-bit value as hex digits |
 | `disp.bargraph` | `in` | one lamp per bit, `width` 1–16, `color` |
 | `disp.matrix` | `row0`…`rowN` | n x n lamps, one pin per row and each row `size` bits; `size` 2–16, `color` |
@@ -136,6 +137,18 @@ than copied, so a driver and a self-decoding display cannot disagree about what
 a `6` looks like. Its segment pin ids are `d<digit><segment>` with digit 0 the
 least significant, which is what lets one driver feed several displays. `bl`
 wins over `lt`, the way a real part's blanking input does.
+
+`disp.segreadout` is that driver and a row of displays as one element: a value
+in, a number on the front, and no segment wiring in between. It is a pure sink
+with no `evaluate` — what each digit shows is `readoutPatterns` in
+[segdriver.ts](../src/lib/nodes/comb/segdriver.ts), which the driver's own
+`evaluate` also goes through, so "`bl` beats `lt`" and "an unresolvable control
+makes *every* digit unknown" are decided once for both. Its `dp` is one bit per
+digit rather than a pin each, so a fixed point is a constant and a moving one is
+a shift register. It goes to eight digits where the driver stops at four: the
+driver's limit is its pin count, and a readout that decodes for itself has no
+segment pins to run out of. Reach for the driver-plus-display pairing when the
+decode is the exercise, and for this when the readout is furniture.
 
 `disp.matrix` takes one pin per row rather than one very wide bus: a 16 x 16
 panel is 256 lamps and no net here is that wide. It has no memory, so a scanned

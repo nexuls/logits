@@ -23,6 +23,7 @@ import { bargraphNode } from "./instruments/bargraph";
 import { hexDisplayNode } from "./instruments/hex";
 import { matrixNode } from "./instruments/matrix";
 import { scopeNode } from "./instruments/scope";
+import { segmentReadoutNode } from "./instruments/segreadout";
 import { sevenSegmentNode } from "./instruments/sevenseg";
 import { buttonNode } from "./io/button";
 import { constantNode } from "./io/constant";
@@ -96,6 +97,7 @@ export const nodeDefinitions: readonly NodeDefinition[] = [
   tunnelNode,
   scopeNode,
   sevenSegmentNode,
+  segmentReadoutNode,
   hexDisplayNode,
   bargraphNode,
   matrixNode,

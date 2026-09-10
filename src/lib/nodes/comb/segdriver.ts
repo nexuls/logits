@@ -10,6 +10,7 @@ import {
   HIGH,
   LOW,
   type LogicValue,
+  type Signal,
   X,
 } from "@/lib/sim/logic";
 import { SEGMENT_PATTERNS, SEGMENTS } from "../instruments/sevenseg";
@@ -88,6 +89,36 @@ export function decodeDigits(
 
     return SEGMENT_PATTERNS[Math.floor(value / place) % base];
   });
+}
+
+/**
+ * What each digit shows, least significant first, once the two control inputs
+ * have had their say: `null` is a digit nobody can resolve.
+ *
+ * The driver and the self-decoding readout both go through this, so "`BL`
+ * wins over `LT`" and "an unresolvable control makes every digit unknown, not
+ * just the ones the value could not settle" are decided once. Blanking is not
+ * per-digit, which is why an unknown control cannot be folded in digit by
+ * digit further down.
+ */
+export function readoutPatterns(
+  value: Signal,
+  digits: number,
+  base: number,
+  blankLeading: boolean,
+  bl: LogicValue,
+  lt: LogicValue,
+): (string | null)[] {
+  const blank = controlState(bl);
+  const lamp = controlState(lt);
+  const every = (pattern: string | null) =>
+    Array.from({ length: digits }, () => pattern);
+
+  if (blank === "unknown" || lamp === "unknown") return every(null);
+  if (blank === "asserted") return every(BLANK);
+  if (lamp === "asserted") return every(ALL);
+
+  return decodeDigits(fromBits(value), digits, base, blankLeading);
 }
 
 export const segmentDriverNode = defineNode({
@@ -236,29 +267,19 @@ every segment rather than guessing a glyph.
   evaluate: (ctx) => {
     const digits = digitCount(ctx.params);
     const commonAnode = boolParam(ctx.params, "commonAnode", false);
-    const blank = controlState(ctx.read("bl")[0] as LogicValue);
-    const lamp = controlState(ctx.read("lt")[0] as LogicValue);
-
-    const patterns =
-      blank === "asserted"
-        ? Array.from({ length: digits }, () => BLANK)
-        : lamp === "asserted"
-          ? Array.from({ length: digits }, () => ALL)
-          : decodeDigits(
-              fromBits(ctx.read("value")),
-              digits,
-              digitBase(ctx.params),
-              boolParam(ctx.params, "blankLeading", true),
-            );
-
-    // A control nobody can resolve makes every segment unknowable, even the
-    // ones the value would have settled: blanking is not per-digit.
-    const unknown = blank === "unknown" || lamp === "unknown";
+    const patterns = readoutPatterns(
+      ctx.read("value"),
+      digits,
+      digitBase(ctx.params),
+      boolParam(ctx.params, "blankLeading", true),
+      ctx.read("bl")[0] as LogicValue,
+      ctx.read("lt")[0] as LogicValue,
+    );
 
     for (let digit = 0; digit < digits; digit++) {
       const pattern = patterns[digit];
       for (const [index, segment] of SEGMENTS.entries()) {
-        const lit = unknown || pattern === null ? null : pattern[index] === "1";
+        const lit = pattern === null ? null : pattern[index] === "1";
         ctx.write(
           segmentPinId(digit, segment),
           createSignal(1, level(lit, commonAnode)),

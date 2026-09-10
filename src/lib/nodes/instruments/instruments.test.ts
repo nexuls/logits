@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { readoutPatterns } from "@/lib/nodes/comb/segdriver";
+import type { NodeParams } from "@/lib/nodes/define";
 import { lookupNode } from "@/lib/nodes/registry";
+import { HIGH, LOW, type LogicValue, parseSignal, X, Z } from "@/lib/sim/logic";
 import { engineFor, evaluateOnce } from "@/test/circuit";
+import { readoutBase } from "./segreadout";
 import { SEGMENT_PATTERNS, SEGMENTS } from "./sevenseg";
 
 describe("scope.logic", () => {
@@ -169,5 +173,88 @@ describe("disp.matrix", () => {
     const size = definition?.size({ size: 8 });
 
     expect(size?.width).toBe(size?.height);
+  });
+});
+
+describe("disp.segreadout", () => {
+  const definition = lookupNode("disp.segreadout");
+  if (!definition) throw new Error("disp.segreadout is missing");
+
+  const pinsOf = (params: NodeParams) =>
+    Object.fromEntries(definition.pins(params).map((pin) => [pin.id, pin]));
+
+  it("is a pure sink: a value, two controls and a decimal-point word", () => {
+    const pins = pinsOf({ ...definition.defaultParams, width: 8, digits: 4 });
+
+    expect(Object.keys(pins).sort()).toEqual(["bl", "dp", "lt", "value"]);
+    expect(pins.value.width).toBe(8);
+    expect(pins.value.side).toBe("left");
+    expect(pins.bl.side).toBe("top");
+    expect(pins.lt.side).toBe("top");
+    // The controls must not land on top of each other on the one edge.
+    expect(pins.bl.offset).not.toBe(pins.lt.offset);
+    expect(Object.values(pins).every((pin) => pin.direction === "in")).toBe(
+      true,
+    );
+    // A display drives nothing; what it shows is the view's business.
+    expect(definition.evaluate).toBeUndefined();
+  });
+
+  it("gives the decimal point one bit per digit", () => {
+    for (const digits of [1, 4, 8]) {
+      const pins = pinsOf({ ...definition.defaultParams, digits });
+      expect(pins.dp.width).toBe(digits);
+      expect(pins.dp.side).toBe("bottom");
+    }
+  });
+
+  it("clamps a hand-edited digit count rather than vanishing", () => {
+    expect(pinsOf({ digits: 0 }).dp.width).toBe(1);
+    expect(pinsOf({ digits: 999 }).dp.width).toBe(8);
+    expect(pinsOf({ digits: "four" }).dp.width).toBe(4);
+  });
+
+  it("widens with the digit count and stays wider than it is tall", () => {
+    const one = definition.size({ ...definition.defaultParams, digits: 1 });
+    const eight = definition.size({ ...definition.defaultParams, digits: 8 });
+
+    expect(eight.width).toBeGreaterThan(one.width);
+    expect(eight.height).toBe(one.height);
+    expect(eight.width).toBeGreaterThan(eight.height);
+  });
+
+  it("reads its radix as the base the shared decode is given", () => {
+    expect(readoutBase({ radix: "dec" })).toBe(10);
+    expect(readoutBase({ radix: "hex" })).toBe(16);
+    // An unknown radix in a hand-edited file falls back rather than producing
+    // a base of NaN, which would blank every digit.
+    expect(readoutBase({ radix: "octal" })).toBe(10);
+  });
+
+  it("shows the same digits the driver decodes, controls and all", () => {
+    const patterns = (value: string, bl: LogicValue, lt: LogicValue) =>
+      readoutPatterns(parseSignal(value), 3, 10, true, bl, lt);
+
+    // 42 in decimal, least significant first, the leading digit blanked.
+    expect(patterns("00101010", Z, Z)).toEqual([
+      SEGMENT_PATTERNS[2],
+      SEGMENT_PATTERNS[4],
+      "0000000",
+    ]);
+    // Blank wins over lamp test, the way a real part's blanking input does.
+    expect(patterns("00101010", HIGH, HIGH)).toEqual([
+      "0000000",
+      "0000000",
+      "0000000",
+    ]);
+    expect(patterns("00101010", LOW, HIGH)).toEqual([
+      "1111111",
+      "1111111",
+      "1111111",
+    ]);
+    // An unresolved value, or an unresolved control, is unknown everywhere
+    // rather than a guessed glyph.
+    expect(patterns("0010101X", Z, Z)).toEqual([null, null, null]);
+    expect(patterns("00101010", X, Z)).toEqual([null, null, null]);
   });
 });
