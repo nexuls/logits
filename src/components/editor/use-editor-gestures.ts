@@ -9,6 +9,7 @@ import {
 } from "react";
 
 import type { CanvasViewport } from "@/components/canvas/canvas-viewport";
+import type { ConnectResult } from "@/lib/circuit/commands";
 import { screenToWorldLength } from "@/lib/circuit/coords";
 import {
   GRID_SIZE,
@@ -29,6 +30,7 @@ import {
   addWireWaypoint,
   branchWire,
   connectPins,
+  connectPinToWire,
   dragWireWaypoint,
   dropWireWaypoint,
   moveSelection,
@@ -132,6 +134,12 @@ type Gesture =
 type Wiring = {
   from: WireEnd;
   /**
+   * Where the pointer was when the wire was armed, or null when the keyboard
+   * armed it. A release that has not travelled from there is the tail of the
+   * click that started the wire, not a drop on whatever lies under the cursor.
+   */
+  armedClient: Point | null;
+  /**
    * Where the wire is being drawn *from*: a pin's position and the edge it
    * leaves by, or — when the wire was branched off another — the tapped bend
    * and no side, since there is no body to stub out of. `spec` is null for a
@@ -152,8 +160,17 @@ type Wiring = {
 
 export type PendingWire = { points: Point[]; unresolved: boolean };
 
-/** A bend that does not exist yet, shown under the cursor on a wire. */
-export type WaypointPreview = { wireId: string; point: Point };
+/**
+ * A point on a wire that does not exist yet, shown under the cursor: the bend
+ * a press would add, or — while a wire is being drawn — the tap it would land
+ * on. One shape for both, because it is one point in both readings.
+ */
+export type WaypointPreview = {
+  wireId: string;
+  /** Where in that wire's `waypoints` the point would go. */
+  slot: number;
+  point: Point;
+};
 
 type Options = {
   scene: Scene;
@@ -222,21 +239,30 @@ export function useEditorGestures({
   );
 
   /** Arms a wire from a pin or from a tap on another wire. */
-  const beginWiring = useCallback((from: WireEnd, origin: Wiring["origin"]) => {
-    setWiring({
-      from,
-      origin,
-      cursorWorld: origin.world,
-      waypoints: [],
-      unresolved: false,
-    });
-  }, []);
+  const beginWiring = useCallback(
+    (
+      from: WireEnd,
+      origin: Wiring["origin"],
+      armedClient: Point | null = null,
+    ) => {
+      setWiring({
+        from,
+        armedClient,
+        origin,
+        cursorWorld: origin.world,
+        waypoints: [],
+        unresolved: false,
+      });
+    },
+    [],
+  );
 
   const startWiring = useCallback(
-    (hit: PinHit) => {
+    (hit: PinHit, armedClient: Point | null = null) => {
       beginWiring(
         { nodeId: hit.node.node.id, pinId: hit.pin.spec.id },
         { world: hit.pin.world, side: hit.pin.side, spec: hit.pin.spec },
+        armedClient,
       );
     },
     [beginWiring],
@@ -257,35 +283,68 @@ export function useEditorGestures({
   }, []);
 
   /**
-   * Completes a wire onto `hit`, or explains why it cannot.
+   * Clears the wire in progress, or keeps it and explains the refusal — the
+   * one place either happens, whatever the wire was landing on.
    *
-   * The refusal cases are the ones `connect` rejects structurally; a merely
-   * *wrong* circuit — mismatched widths, two drivers — is allowed through and
-   * reported by the netlist instead, which is the rule commands work by.
+   * The refusal cases are the ones the connect commands reject structurally; a
+   * merely *wrong* circuit — mismatched widths, two drivers — is allowed
+   * through and reported by the netlist instead, which is the rule commands
+   * work by.
    */
-  const finishWiring = useCallback(
-    (hit: PinHit) => {
-      if (!wiring) return;
-
-      const to: PinRef = { nodeId: hit.node.node.id, pinId: hit.pin.spec.id };
-      const result = connectPins(wiring.from, to, wiring.waypoints);
-
+  const settleWiring = useCallback(
+    (result: ConnectResult, current: Wiring) => {
       if (result.ok) {
         setWiring(null);
         return;
       }
 
-      setWiring({ ...wiring, unresolved: true });
+      setWiring({ ...current, unresolved: true });
       onNotice(
         {
           "missing-pin": "That pin no longer exists.",
           "same-pin": "A wire needs two different pins.",
           "same-node": "Wire between two nodes, not a node and itself.",
           "already-connected": "Those pins are already wired together.",
+          "branch-needs-pin": "A branch has to land on a pin.",
         }[result.reason],
       );
     },
-    [onNotice, wiring],
+    [onNotice],
+  );
+
+  /** Completes the wire onto a pin, or explains why it cannot. */
+  const finishWiring = useCallback(
+    (hit: PinHit) => {
+      if (!wiring) return;
+
+      const to: PinRef = { nodeId: hit.node.node.id, pinId: hit.pin.spec.id };
+      settleWiring(connectPins(wiring.from, to, wiring.waypoints), wiring);
+    },
+    [settleWiring, wiring],
+  );
+
+  /**
+   * Lands the wire in progress on another wire, tapping it where it was hit.
+   *
+   * The stored wire runs the other way round — the tap is `from` and the pin
+   * the user started on is `to`, because only `from` may be an anchor (ADR
+   * 0011) — but the gesture does not: the user drew away from a pin and landed
+   * on a wire, and `connectPinToWire` reverses the bends to match.
+   */
+  const finishWiringOnWire = useCallback(
+    (hit: WireHit) => {
+      if (!wiring) return;
+
+      settleWiring(
+        connectPinToWire(
+          wiring.from,
+          { wireId: hit.wire.wire.id, slot: slotFor(hit), point: hit.point },
+          wiring.waypoints,
+        ),
+        wiring,
+      );
+    },
+    [settleWiring, wiring],
   );
 
   const cancelWiring = useCallback(() => {
@@ -324,11 +383,11 @@ export function useEditorGestures({
         event.preventDefault();
         const branch = branchWire(wire.wire.wire.id, slotFor(wire), wire.point);
         if (branch) {
-          beginWiring(branch.anchor, {
-            world: branch.world,
-            side: null,
-            spec: null,
-          });
+          beginWiring(
+            branch.anchor,
+            { world: branch.world, side: null, spec: null },
+            { x: event.clientX, y: event.clientY },
+          );
         }
         return;
       }
@@ -350,18 +409,28 @@ export function useEditorGestures({
 
       const pin = pinAt(current, world, worldLength(PIN_SNAP_PX));
 
-      // A wire in progress owns the click: on a pin it lands, anywhere else it
-      // drops a bend and keeps following the cursor. Esc is the way out.
+      // A wire in progress owns the click: on a pin it lands, on another wire
+      // it taps it and lands there, and anywhere else it drops a bend and keeps
+      // following the cursor. Alt forces the bend, which is the way to route
+      // through a wire the user did not mean to join. Esc is the way out.
       if (wiring) {
         event.preventDefault();
-        if (pin) finishWiring(pin);
+        if (pin) {
+          finishWiring(pin);
+          return;
+        }
+
+        const tap = event.altKey
+          ? null
+          : tapTarget(current, wiring, world, worldLength(WIRE_HIT_RADIUS));
+        if (tap) finishWiringOnWire(tap);
         else addWaypoint(world);
         return;
       }
 
       if (pin) {
         event.preventDefault();
-        startWiring(pin);
+        startWiring(pin, { x: event.clientX, y: event.clientY });
         return;
       }
 
@@ -450,6 +519,7 @@ export function useEditorGestures({
       armedDefinition,
       beginWiring,
       finishWiring,
+      finishWiringOnWire,
       gesture.kind,
       onPlaced,
       startWiring,
@@ -483,22 +553,29 @@ export function useEditorGestures({
       setHoveredNodeId((shown) => (shown === overNodeId ? shown : overNodeId));
 
       // The preview is a hover affordance, so it is offered only when the
-      // pointer is free: not mid-gesture, not placing, not drawing a wire.
-      if (gesture.kind === "none" && !armedDefinition && !wiring) {
-        // A pin, a node body, or a handle already there wins — offering a new
-        // bend would promise a gesture the press is not going to perform.
+      // pointer is free: not mid-gesture and not placing. While a wire is being
+      // drawn the same handle marks the tap it would land on instead of the
+      // bend a press would add — one point either way.
+      if (gesture.kind === "none" && !armedDefinition) {
+        // A pin, a node body, or a handle already there wins — offering a
+        // point would promise a gesture the click is not going to perform.
+        // Handles are not in the way while wiring: they cannot be grabbed then.
         const blocked =
           overNode !== null ||
           pinAt(current, world, worldLength(PIN_SNAP_PX)) !== null ||
-          waypointAt(
-            current,
-            world,
-            getSelection().wireIds,
-            worldLength(WAYPOINT_HIT_RADIUS),
-          ) !== null;
+          (!wiring &&
+            waypointAt(
+              current,
+              world,
+              getSelection().wireIds,
+              worldLength(WAYPOINT_HIT_RADIUS),
+            ) !== null);
+        const radius = worldLength(WIRE_HIT_RADIUS);
         const hovered = blocked
           ? null
-          : wireAt(current, world, worldLength(WIRE_HIT_RADIUS));
+          : wiring
+            ? tapTarget(current, wiring, world, radius)
+            : wireAt(current, world, radius);
 
         // Compared rather than replaced: the pointer moves far more often than
         // the handle moves a pixel, and an unchanged preview must not re-render
@@ -506,7 +583,11 @@ export function useEditorGestures({
         setWaypointPreview((shown) =>
           samePreview(shown, hovered)
             ? shown
-            : hovered && { wireId: hovered.wire.wire.id, point: hovered.point },
+            : hovered && {
+                wireId: hovered.wire.wire.id,
+                slot: slotFor(hovered),
+                point: hovered.point,
+              },
         );
       } else if (waypointPreview) {
         setWaypointPreview(null);
@@ -620,7 +701,20 @@ export function useEditorGestures({
           hit.node.node.id === wiring.from.nodeId &&
           hit.pin.spec.id === wiring.from.pinId;
 
-        if (hit && !sameAsStart) finishWiring(hit);
+        if (hit && !sameAsStart) {
+          finishWiring(hit);
+        } else if (!hit && !event.altKey && travelledFrom(wiring, event)) {
+          // Only after the pointer has actually travelled: the release that
+          // arms a wire from a pin happens on top of the wires already meeting
+          // that pin, and must not land on one of them.
+          const tap = tapTarget(
+            current,
+            wiring,
+            world,
+            worldLength(WIRE_HIT_RADIUS),
+          );
+          if (tap) finishWiringOnWire(tap);
+        }
       }
 
       // Dropped on top of the vertex next door: the bend is doing nothing, so
@@ -643,7 +737,7 @@ export function useEditorGestures({
 
       if (gesture.kind !== "none") setGesture({ kind: "none" });
     },
-    [finishWiring, gesture, toWorld, wiring, worldLength],
+    [finishWiring, finishWiringOnWire, gesture, toWorld, wiring, worldLength],
   );
 
   /**
@@ -668,7 +762,9 @@ export function useEditorGestures({
         points: pendingWirePath(
           wiring.origin.world,
           wiring.origin.side,
-          wiring.cursorWorld,
+          // Snapped onto the tap it would land on, the same way it snaps to a
+          // pin, so the preview shows the connection before the click makes it.
+          waypointPreview?.point ?? wiring.cursorWorld,
           wiring.waypoints,
         ),
         unresolved: wiring.unresolved,
@@ -726,6 +822,52 @@ function slotFor(hit: WireHit): number {
   return hit.wire.slots[hit.index] ?? hit.wire.wire.waypoints?.length ?? 0;
 }
 
+/**
+ * The wire the in-progress wire would tap at `world`, or null.
+ *
+ * A wire that already *starts* on a tap has nowhere to put a second one — only
+ * `from` may be an anchor (ADR 0011) — and the wire that already ends on the
+ * pin this one started from would be the same connection drawn twice. Both are
+ * refused by `connectToWire`; they are checked here as well so the affordance
+ * never offers a landing the click would then reject.
+ */
+function tapTarget(
+  scene: Scene,
+  wiring: Wiring,
+  world: Point,
+  radius: number,
+): WireHit | null {
+  if (isWireAnchor(wiring.from)) return null;
+
+  const hit = wireAt(scene, world, radius);
+  if (!hit) return null;
+
+  const from = wiring.from;
+  const ends = [hit.wire.wire.from, hit.wire.wire.to];
+  const onOriginPin = ends.some(
+    (end) =>
+      !isWireAnchor(end) &&
+      end.nodeId === from.nodeId &&
+      end.pinId === from.pinId,
+  );
+
+  return onOriginPin ? null : hit;
+}
+
+/** Has the pointer left the point the wire was armed at? */
+function travelledFrom(
+  wiring: Wiring,
+  event: { clientX: number; clientY: number },
+): boolean {
+  if (!wiring.armedClient) return false;
+  return (
+    Math.hypot(
+      event.clientX - wiring.armedClient.x,
+      event.clientY - wiring.armedClient.y,
+    ) >= DRAG_THRESHOLD_PX
+  );
+}
+
 /** Is this preview the one already on screen? Keeps hovering from re-rendering. */
 function samePreview(
   shown: WaypointPreview | null,
@@ -734,6 +876,7 @@ function samePreview(
   if (!shown || !hit) return shown === null && hit === null;
   return (
     shown.wireId === hit.wire.wire.id &&
+    shown.slot === slotFor(hit) &&
     Math.abs(shown.point.x - hit.point.x) < 0.5 &&
     Math.abs(shown.point.y - hit.point.y) < 0.5
   );

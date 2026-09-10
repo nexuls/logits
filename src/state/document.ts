@@ -8,6 +8,7 @@ import {
   branchWireAt,
   type ConnectResult,
   connect,
+  connectToWire,
   deleteElements,
   extractFragment,
   type Fragment,
@@ -23,6 +24,7 @@ import {
   setNodeLabel,
   setNodeParams,
   topLeftForCenter,
+  type WireTap,
 } from "@/lib/circuit/commands";
 import type {
   CircuitDocument,
@@ -378,6 +380,32 @@ export function connectPins(
   if (!history) return { ok: false, reason: "missing-pin" };
 
   const result = connect(history.present, lookupNode, from, to, waypoints);
+  if (result.ok) apply("connect", () => result.document);
+
+  return result;
+}
+
+/**
+ * Lands the wire in progress on another wire instead of on a pin.
+ *
+ * The tap and the wire that reads it are one command, so this is one undo step
+ * — the same as landing on a pin, and unlike the right-click branch, which is
+ * a bend first and a wire second because the user may still be drawing it.
+ */
+export function connectPinToWire(
+  from: WireEnd,
+  tap: WireTap,
+  waypoints: readonly Point[] = [],
+): ConnectResult {
+  if (!history) return { ok: false, reason: "missing-pin" };
+
+  const result = connectToWire(
+    history.present,
+    lookupNode,
+    from,
+    tap,
+    waypoints,
+  );
   if (result.ok) apply("connect", () => result.document);
 
   return result;

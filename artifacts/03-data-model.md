@@ -102,8 +102,11 @@ pure and position-independent; [scene.ts](../src/state/scene.ts) assembles
 `ResolvedNode` and never do the maths themselves.
 
 Only `from` may be an anchor. A wire is always *landed* on a pin, so `to` stays
-a `PinRef` and the code reading it needs no guard — and a branch is always drawn
-away from the wire it taps, never into it. `buildNetlist` resolves an anchor by
+a `PinRef` and the code reading it needs no guard — a branch is stored drawn
+away from the wire it taps, never into it. That is a rule about the *record*,
+not about the gesture: a wire drawn from a pin onto a wire is stored back to
+front, tap first, with its bends reversed to match (`connectToWire`), the same
+way two pins are swapped to put the driver in `from`. `buildNetlist` resolves an anchor by
 following it to the tapped wire's own `from`, and that wire's in turn, so a
 branch is on the tapped wire's net without anything being copied; a chain that
 leads nowhere, or back to itself, resolves to nothing and is a diagnostic. See

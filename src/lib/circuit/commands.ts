@@ -221,7 +221,8 @@ export type ConnectFailure =
   | "missing-pin"
   | "same-pin"
   | "same-node"
-  | "already-connected";
+  | "already-connected"
+  | "branch-needs-pin";
 
 export type ConnectResult =
   | { ok: true; document: CircuitDocument; wireId: string }
@@ -344,6 +345,61 @@ export function branchWireAt(
     anchor: { wireId, waypoint: at },
     world,
   };
+}
+
+export type WireTap = {
+  wireId: string;
+  /** Insertion index into that wire's waypoints, as `branchWireAt` takes it. */
+  slot: number;
+  /** Where on the wire the tap goes; snapped by the branch itself. */
+  point: Point;
+};
+
+/**
+ * Lands a wire drawn from a pin *onto* another wire, as a branch off it.
+ *
+ * Only `from` may hold an anchor (ADR 0011), so the wire is stored the other
+ * way round to the way it was drawn: the tap becomes `from`, the pin the user
+ * started on becomes `to`, and the bends dropped along the way are reversed
+ * with the ends so the route is not replayed backwards. A wire that already
+ * *starts* on a tap has nowhere to put a second one, so it is refused rather
+ * than landed somewhere the user did not aim.
+ *
+ * One call, one document: the bend and the wire that reads it arrive together,
+ * so landing on a wire is a single undo step like landing on a pin.
+ */
+export function connectToWire(
+  document: CircuitDocument,
+  lookup: NodeLookup,
+  from: WireEnd,
+  tap: WireTap,
+  waypoints: readonly Point[] = [],
+): ConnectResult {
+  if (isWireAnchor(from)) return { ok: false, reason: "branch-needs-pin" };
+
+  const target = document.wires[tap.wireId];
+  if (!target) return { ok: false, reason: "missing-pin" };
+  // Tapping the wire that already ends on this pin would draw a second link
+  // across a net the pin is on — the same connection, twice.
+  if (endsOnPin(target, from)) {
+    return { ok: false, reason: "already-connected" };
+  }
+
+  const branched = branchWireAt(document, tap.wireId, tap.slot, tap.point);
+  if (!branched) return { ok: false, reason: "missing-pin" };
+
+  return connect(
+    branched.document,
+    lookup,
+    branched.anchor,
+    from,
+    [...waypoints].reverse(),
+  );
+}
+
+/** Does either end of `wire` name `pin`? An anchored end never can. */
+function endsOnPin(wire: Wire, pin: PinRef): boolean {
+  return sameEnd(wire.to, pin) || sameEnd(wire.from, pin);
 }
 
 /** Replaces a wire's bends. An empty list returns the wire to auto-routing. */

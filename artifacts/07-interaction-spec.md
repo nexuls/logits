@@ -59,11 +59,13 @@ canvas header, the right one from the panel button in its own header.
 | Click a pin | Start a wire. It follows the cursor until it lands |
 | Click empty canvas while wiring | Drop a bend there, snapped to the grid, and keep drawing |
 | Click a second pin | Connect. The bends dropped on the way are stored with the wire, in the same undo step |
-| Drag from a pin to a pin | Connects in one gesture, as before. Releasing anywhere else just leaves the wire armed and following the cursor |
+| Click a wire while wiring | Land on it: the wire is tapped where it was clicked and the two join there, as one undo step. The tap and the bends drawn on the way arrive with the wire, so `Ctrl+Z` takes the whole thing back |
+| `Alt` + click a wire while wiring | Drops an ordinary bend there instead of joining, which is how a wire is routed *across* another one it does not connect to |
+| Drag from a pin to a pin, or from a pin onto a wire | Connects in one gesture, as before. Releasing anywhere else just leaves the wire armed and following the cursor; a release that has not moved from where the wire was armed never lands, so the wires already meeting that pin are not joined by the click that started the drawing |
 | `Esc` while wiring | Cancel |
 | Click a wire | Select it; `Delete` removes it. Its bends appear as handles |
 | Right-click a wire, then drag | Branches from the point pressed: drops a bend there and arms a wire that starts at it, the same as a left-click on a pin — drag straight to a target pin to land in one gesture, or release early and keep drawing click by click. The bend is one undo step; the wire landed from it is a second, ordinary one. `Esc` abandons the wire and leaves the bend, which changes nothing about the circuit, so `Ctrl+Z` is what takes it back |
-| Hover a wire | A hollow handle follows the cursor along the wire, at the nearest point on it, showing where a bend would go |
+| Hover a wire | A hollow handle follows the cursor along the wire, at the nearest point on it, showing where a bend would go — or, while a wire is being drawn, where it would tap. The wire in progress snaps its end to that point, the same way it snaps to a pin |
 | Drag from a wire | Adds a bend at the point pressed and drags it, in one undo step. A click alone only selects — the wire body is not draggable |
 | Drag a bend handle | Moves that waypoint, snapped to the grid. Handles are only grabbable while their wire is selected |
 | Drop a bend onto its neighbour | Removes it, straightening the wire. The only way to delete a bend short of deleting the wire |
@@ -122,6 +124,16 @@ that helper rather than writing a second one.
   wires' bends along. The wire re-aims its end segments at the pins instead — a
   hand-routed wire stays attached after the node at one end moves, it just may
   not stay pretty.
+- A wire in progress **may land on another wire** as well as on a pin: the
+  click taps the wire it hit and the two join there. Only `from` may hold an
+  anchor (ADR 0011), so such a wire is stored the other way round to the way it
+  was drawn — the tap is `from`, the pin it started on is `to`, and the bends
+  are reversed with the ends, exactly as they are when two pins are swapped to
+  put the driver first. Landing on a wire is one undo step, tap included,
+  because the tap has no meaning without the wire that reads it. Two landings
+  are refused, and the hover handle is not offered for either: a wire that
+  already *starts* on a tap has no second end to anchor, and a wire that
+  already ends on the pin being drawn from is the same connection twice.
 - A branch **starts on the wire it came from**: its `from` is a tap naming that
   wire and one of its bends, not a pin ([ADR 0011](decisions/0011-branches-are-wire-anchors.md)). The bend is an
   ordinary waypoint, so dragging it moves the branch's start with it — there is

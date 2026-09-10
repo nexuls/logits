@@ -6,6 +6,7 @@ import {
   boundsOf,
   branchWireAt,
   connect,
+  connectToWire,
   deleteElements,
   extractFragment,
   fragmentBounds,
@@ -660,6 +661,98 @@ describe("branchWireAt", () => {
 
   it("returns null for a wire id that does not exist", () => {
     expect(branchWireAt(doc, "missing", 0, { x: 0, y: 0 })).toBeNull();
+  });
+});
+
+describe("connectToWire", () => {
+  it("lands the drawn wire on the tapped wire, stored tap-first", () => {
+    const { document, wireId, andId, ledId } = wiredPair();
+    const second = addNode(document, led, { position: { x: 100, y: 100 } });
+    const pin = { nodeId: second.nodeId, pinId: "in" };
+
+    const result = connectToWire(
+      second.document,
+      lookupNode,
+      pin,
+      { wireId, slot: 0, point: { x: 50, y: 0 } },
+      // Drawn from the pin towards the wire, so they come back reversed.
+      [
+        { x: 60, y: 80 },
+        { x: 50, y: 40 },
+      ],
+    );
+    if (!result.ok) throw new Error(result.reason);
+
+    const branch = result.document.wires[result.wireId];
+    expect(branch.from).toEqual({ wireId, waypoint: 0 });
+    expect(branch.to).toEqual(pin);
+    expect(branch.waypoints).toEqual([
+      { x: 50, y: 40 },
+      { x: 60, y: 80 },
+    ]);
+
+    // The wire that was tapped keeps its ends and gains the bend, nothing else.
+    const tapped = result.document.wires[wireId];
+    expect(tapped.from).toEqual({ nodeId: andId, pinId: "out" });
+    expect(tapped.to).toEqual({ nodeId: ledId, pinId: "in" });
+    expect(tapped.waypoints).toEqual([{ x: 50, y: 0 }]);
+    expect(Object.keys(result.document.wires)).toHaveLength(2);
+  });
+
+  it("snaps the tap to the grid, like any other bend", () => {
+    const { document, wireId } = wiredPair();
+    const second = addNode(document, led, { position: { x: 100, y: 100 } });
+
+    const result = connectToWire(
+      second.document,
+      lookupNode,
+      { nodeId: second.nodeId, pinId: "in" },
+      { wireId, slot: 0, point: { x: 53, y: 2 } },
+    );
+    if (!result.ok) throw new Error(result.reason);
+
+    expect(result.document.wires[wireId].waypoints).toEqual([{ x: 50, y: 0 }]);
+  });
+
+  it("refuses a wire that already starts on a tap: only `from` may be one", () => {
+    const { document, wireId } = wiredPair();
+    const tap = branchWireAt(document, wireId, 0, { x: 50, y: 0 });
+    if (!tap) throw new Error("branchWireAt returned null");
+
+    const result = connectToWire(tap.document, lookupNode, tap.anchor, {
+      wireId,
+      slot: 1,
+      point: { x: 70, y: 0 },
+    });
+
+    expect(result).toEqual({ ok: false, reason: "branch-needs-pin" });
+  });
+
+  it("refuses a tap on the wire that already ends on the pin", () => {
+    const { document, wireId, ledId } = wiredPair();
+
+    const result = connectToWire(
+      document,
+      lookupNode,
+      { nodeId: ledId, pinId: "in" },
+      { wireId, slot: 0, point: { x: 50, y: 0 } },
+    );
+
+    expect(result).toEqual({ ok: false, reason: "already-connected" });
+  });
+
+  it("leaves no bend behind when the connection is refused", () => {
+    const { document, wireId, ledId } = wiredPair();
+
+    const result = connectToWire(
+      document,
+      lookupNode,
+      { nodeId: ledId, pinId: "nope" },
+      { wireId, slot: 0, point: { x: 50, y: 0 } },
+    );
+
+    expect(result).toEqual({ ok: false, reason: "missing-pin" });
+    expect("waypoints" in document.wires[wireId]).toBe(false);
   });
 });
 

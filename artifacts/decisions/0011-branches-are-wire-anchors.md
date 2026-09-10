@@ -48,6 +48,15 @@ and both wires read it. Dragging the handle moves the branch's start because
 there is nothing else it could do; no position is stored on the branch and no
 two copies can drift. The wire the user drew stays one wire.
 
+**A wire drawn *into* a wire is stored back to front.** "Only `from` may be an
+anchor" is a rule about the record, not about which way the user drew. Landing
+a wire in progress on another wire stores the tap as `from` and the pin it
+started on as `to`, reversing the bends with the ends — the same swap `connect`
+already performed to put a driver in `from`, so nothing downstream learned a
+second shape. The one case with nowhere to go is a wire that already *starts*
+on a tap: it is refused rather than landed, since a second anchor has no end
+left to occupy.
+
 **Waypoint indices became load-bearing.** A waypoint is identified by its
 position in the list (ADR 0007), so inserting or removing one shifts the
 anchors after it. `insertWireWaypoint` and `removeWireWaypoint` re-index them
