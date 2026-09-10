@@ -170,9 +170,24 @@ describe("disp.matrix", () => {
 
   it("stays square, so a panel does not read as a column", () => {
     const definition = lookupNode("disp.matrix");
-    const size = definition?.size({ size: 8 });
 
-    expect(size?.width).toBe(size?.height);
+    for (const size of [2, 5, 8, 16]) {
+      const body = definition?.size({ size });
+      expect(body?.width).toBe(body?.height);
+    }
+  });
+
+  it("leaves one cell of margin around the row pins, not a whole pitch", () => {
+    const definition = lookupNode("disp.matrix");
+    if (!definition) throw new Error("disp.matrix is missing");
+
+    for (const size of [5, 8, 16]) {
+      const body = definition.size({ size });
+      const offsets = definition.pins({ size }).map((pin) => pin.offset);
+
+      expect(Math.min(...offsets)).toBe(1);
+      expect(body.height - Math.max(...offsets)).toBe(1);
+    }
   });
 });
 

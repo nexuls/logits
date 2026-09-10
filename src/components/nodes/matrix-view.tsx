@@ -40,7 +40,7 @@ export default function MatrixView({ node, def, readPin }: NodeViewProps) {
 
   return (
     <div
-      className="grid h-full w-full gap-[1px] p-[2px]"
+      className="grid h-full w-full gap-1 p-0.5"
       style={{
         gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))`,
         gridTemplateRows: `repeat(${size}, minmax(0, 1fr))`,
@@ -54,7 +54,7 @@ export default function MatrixView({ node, def, readPin }: NodeViewProps) {
         <span
           key={cell.id}
           className={cn(
-            "rounded-[1px] border",
+            "rounded-full border",
             cell.bit === "X"
               ? "border-destructive"
               : cell.bit === "1"
