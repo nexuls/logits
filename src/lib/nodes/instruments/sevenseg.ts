@@ -61,6 +61,10 @@ decodes itself.
 
 \`DP\` is the decimal point, on the bottom edge, in both modes.
 
+**Colour** is cosmetic and affects nothing electrically — the same LED colours
+the lamp and the matrix panel offer, so a display can be matched to the rest of
+a panel.
+
 **Common anode** inverts the sense of every segment input, so segments light on
 \`0\` rather than \`1\` — which is how a common-anode part is wired in
 hardware, and a good source of confusion worth being able to reproduce.
@@ -87,7 +91,7 @@ one showing an odd glyph.
   icon: "seven-segment",
   category: "instruments",
   keywords: ["seven segment", "7 segment", "digit", "display", "numeral"],
-  defaultParams: { mode: "raw", commonAnode: false },
+  defaultParams: { mode: "raw", commonAnode: false, color: "red" },
   view: "seven-segment",
   paramsSchema: [
     {
@@ -97,6 +101,17 @@ one showing an odd glyph.
       options: [
         { value: "raw", label: "Segment pins" },
         { value: "bcd", label: "BCD value" },
+      ],
+    },
+    {
+      key: "color",
+      label: "Colour",
+      kind: "color",
+      options: [
+        { value: "red", label: "Red", swatch: "var(--logit-led-red)" },
+        { value: "green", label: "Green", swatch: "var(--logit-led-green)" },
+        { value: "amber", label: "Amber", swatch: "var(--logit-led-amber)" },
+        { value: "blue", label: "Blue", swatch: "var(--logit-led-blue)" },
       ],
     },
     {

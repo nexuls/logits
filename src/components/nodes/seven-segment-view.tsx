@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { type CSSProperties, useMemo } from "react";
 
-import { boolParam } from "@/lib/nodes/define";
+import { boolParam, colorParam } from "@/lib/nodes/define";
 import {
   isBcd,
   SEGMENT_PATTERNS,
@@ -86,11 +86,15 @@ type SegmentState = "on" | "off" | "unknown";
 
 export default function SevenSegmentView({
   node,
+  def,
   resolved,
   readPin,
   showPinLabels,
 }: NodeViewProps) {
   const commonAnode = boolParam(node.params, "commonAnode", false);
+  // Through `colorParam` rather than a list of its own, so a red digit is the
+  // same red as a red lamp and adding a colour stays a one-file change.
+  const swatch = colorParam(def, node.params);
   const bcd = isBcd(node.params);
 
   const segments = bcd
@@ -149,6 +153,7 @@ export default function SevenSegmentView({
               id={`seg-${id}`}
               d={SEGMENT_PATHS[id]}
               className={fillClass(segments[id] ?? "off")}
+              style={segmentStyle(segments[id] ?? "off", swatch)}
             />
           ))}
         </g>
@@ -157,6 +162,7 @@ export default function SevenSegmentView({
           cy={BOTTOM}
           r={DP_RADIUS}
           className={fillClass(dp)}
+          style={segmentStyle(dp, swatch)}
         />
       </svg>
       {unknown && (
@@ -204,6 +210,21 @@ function decode(value: string): Record<string, SegmentState> {
 function fillClass(state: SegmentState): string {
   if (state === "unknown") return "fill-destructive stroke-destructive";
   return state === "on"
-    ? "fill-[var(--logit-led-red)] stroke-[var(--logit-led-red)]"
+    ? "fill-current stroke-current"
     : "fill-muted-foreground/20 stroke-muted-foreground/20";
+}
+
+/**
+ * A lit segment's hue, which is a parameter and so cannot be a class.
+ *
+ * `color` rather than `fill` so the one property drives both the fill and the
+ * stroke that rounds the corners, and the two can never be set to different
+ * colours. Only the lit state takes it: an unknown segment stays destructive
+ * and an unlit one stays muted, whatever colour the display is.
+ */
+function segmentStyle(
+  state: SegmentState,
+  swatch: string | undefined,
+): CSSProperties | undefined {
+  return state === "on" && swatch ? { color: swatch } : undefined;
 }

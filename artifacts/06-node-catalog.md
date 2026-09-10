@@ -120,7 +120,7 @@ is how a real part avoids shorting itself during a write.
 | type | pins | notes |
 | --- | --- | --- |
 | `scope.logic` | `ch0`…`chN` | ring-buffer waveform view; params `channels` 1–8, `timeSpanNs`, `triggerChannel` (`-1` free-runs), `triggerEdge` |
-| `disp.sevenseg` | `a`…`g`, `dp` **or** `value` (4-bit), `dp` | params `mode`: `raw` / `bcd`, `commonAnode` |
+| `disp.sevenseg` | `a`…`g`, `dp` **or** `value` (4-bit), `dp` | params `mode`: `raw` / `bcd`, `commonAnode`, `color` |
 | `disp.hex` | `in` | shows a `width`-bit value as hex digits |
 | `disp.bargraph` | `in` | one lamp per bit, `width` 1–16, `color` |
 | `disp.matrix` | `row0`…`rowN` | n x n lamps, one pin per row and each row `size` bits; `size` 2–16, `color` |
