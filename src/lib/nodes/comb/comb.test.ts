@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { evaluateOnce, outputOf } from "@/test/circuit";
+import { SEGMENT_PATTERNS } from "../instruments/sevenseg";
 import { ALU_OPS } from "./alu";
 
 /**
@@ -259,5 +260,107 @@ describe("comb.alu", () => {
     expect(writes.out.value).toBe("XXXX");
     expect(writes.zero.value).toBe("X");
     expect(writes.carry.value).toBe("X");
+  });
+});
+
+describe("comb.segdriver", () => {
+  const segments = (writes: ReturnType<typeof evaluateOnce>, digit: number) =>
+    ["a", "b", "c", "d", "e", "f", "g"]
+      .map((segment) => writes[`d${digit}${segment}`].value)
+      .join("");
+
+  it("decodes a digit to the same pattern the display would", () => {
+    const writes = evaluateOnce("comb.segdriver", { value: "0011" });
+
+    // 3, and the display's own BCD mode agrees because both read the one table.
+    expect(segments(writes, 0)).toBe(SEGMENT_PATTERNS[3]);
+  });
+
+  it("splits a value across digits by radix", () => {
+    const hex = evaluateOnce(
+      "comb.segdriver",
+      { value: "10100011" },
+      { width: 8, digits: 2, radix: "hex" },
+    );
+    const dec = evaluateOnce(
+      "comb.segdriver",
+      { value: "00101101" },
+      { width: 8, digits: 2, radix: "dec" },
+    );
+
+    // 0xA3: digit 0 is the low nibble.
+    expect(segments(hex, 0)).toBe(SEGMENT_PATTERNS[3]);
+    expect(segments(hex, 1)).toBe(SEGMENT_PATTERNS[0xa]);
+    // 45 in decimal, not 0x2d.
+    expect(segments(dec, 0)).toBe(SEGMENT_PATTERNS[5]);
+    expect(segments(dec, 1)).toBe(SEGMENT_PATTERNS[4]);
+  });
+
+  it("blanks leading zeros but never the last digit", () => {
+    const params = { width: 8, digits: 2, radix: "dec", blankLeading: true };
+    const seven = evaluateOnce("comb.segdriver", { value: "00000111" }, params);
+    const zero = evaluateOnce("comb.segdriver", { value: "00000000" }, params);
+
+    expect(segments(seven, 1)).toBe("0000000");
+    expect(segments(seven, 0)).toBe(SEGMENT_PATTERNS[7]);
+    // A value of zero still reads "0" rather than going dark altogether.
+    expect(segments(zero, 0)).toBe(SEGMENT_PATTERNS[0]);
+    expect(segments(zero, 1)).toBe("0000000");
+  });
+
+  it("keeps a leading zero when blanking is off", () => {
+    const writes = evaluateOnce(
+      "comb.segdriver",
+      { value: "00000111" },
+      { width: 8, digits: 2, radix: "dec", blankLeading: false },
+    );
+
+    expect(segments(writes, 1)).toBe(SEGMENT_PATTERNS[0]);
+  });
+
+  it("inverts every segment for a common-anode display", () => {
+    const writes = evaluateOnce(
+      "comb.segdriver",
+      { value: "0011" },
+      { commonAnode: true },
+    );
+
+    expect(segments(writes, 0)).toBe(
+      SEGMENT_PATTERNS[3]
+        .split("")
+        .map((bit) => (bit === "1" ? "0" : "1"))
+        .join(""),
+    );
+  });
+
+  it("blanks and lamp-tests, with blanking winning", () => {
+    const blanked = evaluateOnce("comb.segdriver", { value: "1000", bl: "1" });
+    const tested = evaluateOnce("comb.segdriver", { value: "1000", lt: "1" });
+    const both = evaluateOnce("comb.segdriver", {
+      value: "1000",
+      bl: "1",
+      lt: "1",
+    });
+
+    expect(segments(blanked, 0)).toBe("0000000");
+    expect(segments(tested, 0)).toBe("1111111");
+    expect(segments(both, 0)).toBe("0000000");
+  });
+
+  it("is X on every segment when the value or a control is unresolved", () => {
+    expect(segments(evaluateOnce("comb.segdriver", { value: "10X1" }), 0)).toBe(
+      "XXXXXXX",
+    );
+    // An unwired value is floating, which is no more decodable than X.
+    expect(segments(evaluateOnce("comb.segdriver", {}), 0)).toBe("XXXXXXX");
+    expect(
+      segments(evaluateOnce("comb.segdriver", { value: "0001", bl: "X" }), 0),
+    ).toBe("XXXXXXX");
+  });
+
+  it("runs an unwired driver, which is idle rather than blanked", () => {
+    // BL and LT unwired read Z, and Z on a control is idle (ADR 0009).
+    const writes = evaluateOnce("comb.segdriver", { value: "0001" });
+    expect(segments(writes, 0)).toBe(SEGMENT_PATTERNS[1]);
   });
 });

@@ -8,6 +8,7 @@ import { decoderNode } from "./comb/decoder";
 import { demuxNode } from "./comb/demux";
 import { encoderNode } from "./comb/encoder";
 import { muxNode } from "./comb/mux";
+import { segmentDriverNode } from "./comb/segdriver";
 import type { NodeDefinition, NodeLookup } from "./define";
 import { andGate } from "./gates/and";
 import { bufferGate } from "./gates/buffer";
@@ -20,10 +21,13 @@ import { xnorGate } from "./gates/xnor";
 import { xorGate } from "./gates/xor";
 import { bargraphNode } from "./instruments/bargraph";
 import { hexDisplayNode } from "./instruments/hex";
+import { matrixNode } from "./instruments/matrix";
 import { scopeNode } from "./instruments/scope";
 import { sevenSegmentNode } from "./instruments/sevenseg";
 import { buttonNode } from "./io/button";
 import { constantNode } from "./io/constant";
+import { keypadNode } from "./io/keypad";
+import { kickstartNode } from "./io/kickstart";
 import { ledNode } from "./io/led";
 import { probeNode } from "./io/probe";
 import { switchNode } from "./io/switch";
@@ -63,7 +67,9 @@ export const nodeDefinitions: readonly NodeDefinition[] = [
   tristateGate,
   switchNode,
   buttonNode,
+  keypadNode,
   constantNode,
+  kickstartNode,
   ledNode,
   probeNode,
   clockNode,
@@ -80,6 +86,7 @@ export const nodeDefinitions: readonly NodeDefinition[] = [
   decoderNode,
   encoderNode,
   adderNode,
+  segmentDriverNode,
   comparatorNode,
   aluNode,
   romNode,
@@ -91,6 +98,7 @@ export const nodeDefinitions: readonly NodeDefinition[] = [
   sevenSegmentNode,
   hexDisplayNode,
   bargraphNode,
+  matrixNode,
   portNode,
 ];
 

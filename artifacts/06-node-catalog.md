@@ -41,6 +41,8 @@ Two conventions decide what an *unwired* pin means, and both are
 | `io.constant` | `out` | `width`, `value` |
 | `io.led` | `in` | `color`; renders off / on / `X` (red) / `Z` (grey) |
 | `io.probe` | `in` | shows the value as text in binary/hex/decimal |
+| `io.keypad` | `out`, `valid` | `keys` (comma-separated labels), `columns`, `width`, `latch`; momentary `pressed` (`-1` = none) and the latched `value` |
+| `io.kickstart` | `out` | `widthNs`, `startDelayNs`, `active`: high/low — one pulse per reset, then idle |
 
 ## Timing — `time.*`
 
@@ -80,6 +82,7 @@ Uninitialised outputs are `X` until reset or first clock — see
 | `comb.adder` | `a`, `b`, `cin` | `sum`, `cout` | `width`; an unwired `cin` is no carry |
 | `comb.comparator` | `a`, `b` | `lt`, `eq`, `gt` | `width`, `signed` |
 | `comb.alu` | `a`, `b`, `op` (3 bits, bottom) | `out`, `zero`, `carry`, `overflow` | `width` |
+| `comb.segdriver` | `value`, `bl`/`lt` (top) | `d0a`…`d0g`, one set per digit | `width`, `digits` 1–4, `radix`: hex/dec, `blankLeading`, `commonAnode` |
 
 The ALU's `op` codes are frozen with the pin ids, because they are what a saved
 circuit drives: `0` ADD, `1` SUB, `2` AND, `3` OR, `4` XOR, `5` NOT A,
@@ -120,18 +123,37 @@ is how a real part avoids shorting itself during a write.
 | `disp.sevenseg` | `a`…`g`, `dp` **or** `value` (4-bit), `dp` | params `mode`: `raw` / `bcd`, `commonAnode` |
 | `disp.hex` | `in` | shows a `width`-bit value as hex digits |
 | `disp.bargraph` | `in` | one lamp per bit, `width` 1–16, `color` |
+| `disp.matrix` | `row0`…`rowN` | n x n lamps, one pin per row and each row `size` bits; `size` 2–16, `color` |
 
 `scope.logic` is the only node that calls `emitSample`, and its `delayNs` is
 zero so a sample lands at the instant the net moved rather than a reaction time
 later — a scope that skewed every trace by its own delay would be useless for
 the setup-and-hold questions it exists to answer.
 
+`comb.segdriver` is the decoder half of a readout, and it decodes through the
+same `SEGMENT_PATTERNS` table `disp.sevenseg` uses in BCD mode, imported rather
+than copied, so a driver and a self-decoding display cannot disagree about what
+a `6` looks like. Its segment pin ids are `d<digit><segment>` with digit 0 the
+least significant, which is what lets one driver feed several displays. `bl`
+wins over `lt`, the way a real part's blanking input does.
+
+`disp.matrix` takes one pin per row rather than one very wide bus: a 16 x 16
+panel is 256 lamps and no net here is that wide. It has no memory, so a scanned
+design shows one row at a time — the frame has to be held in registers or
+`mem.ram` and every row driven at once.
+
+`io.kickstart` is the only source that fires once and stops. It is not
+`time.oneshot` with the trigger removed: a one-shot reacts to an edge, and at
+t = 0 there is no edge to react to, which is exactly the problem a power-on
+reset exists to solve. After its pulse it stops scheduling entirely.
+
 `disp.hex` reuses the probe's `readout` view rather than owning one: both
 display one net's value, which is the point of keying views by behaviour rather
 than by node type.
 
-Every other element in this catalog names `view: "block"` — a rectangle with
-its name in it — and writes the schematic abbreviation there (`MUX`, `DEMUX`,
+`io.keypad` and `disp.matrix` own their views too — a keypad is pressed and a
+panel is read, and neither is a rectangle with a name in it. Every other
+element in this catalog names `view: "block"` — a rectangle with its name in it — and writes the schematic abbreviation there (`MUX`, `DEMUX`,
 `DFF`, `REG`, `CMP`) through `NodeDefinition.shortTitle`, while the tables
 above, the palette and the help keep the full title. Footprints are not
 hand-tuned against those names: `defineNode` widens or raises a body that

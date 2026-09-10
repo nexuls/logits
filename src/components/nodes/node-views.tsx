@@ -5,7 +5,9 @@ import { BLOCK_VIEW, type NodeDefinition } from "@/lib/nodes/define";
 import type { ResolvedNode } from "@/state/scene";
 import BargraphView from "./bargraph-view";
 import BlockView from "./block-view";
+import KeypadView from "./keypad-view";
 import LampView from "./lamp-view";
+import MatrixView from "./matrix-view";
 import PushButtonView from "./push-button-view";
 import ReadoutView from "./readout-view";
 import ScopeView from "./scope-view";
@@ -72,6 +74,8 @@ const NODE_VIEWS: Record<string, NodeView> = {
   lamp: LampView,
   readout: ReadoutView,
   bargraph: BargraphView,
+  keypad: KeypadView,
+  matrix: MatrixView,
   "seven-segment": SevenSegmentView,
   scope: ScopeView,
   tunnel: TunnelView,

@@ -124,3 +124,50 @@ describe("disp.hex and disp.bargraph", () => {
     expect(definition?.pins({ width: 12 })[0].width).toBe(12);
   });
 });
+
+describe("disp.matrix", () => {
+  it("is a pure sink with one input pin per row", () => {
+    const definition = lookupNode("disp.matrix");
+    if (!definition) throw new Error("disp.matrix is missing");
+
+    const pins = definition.pins({ size: 8 });
+
+    expect(pins).toHaveLength(8);
+    expect(pins.map((pin) => pin.id)).toEqual([
+      "row0",
+      "row1",
+      "row2",
+      "row3",
+      "row4",
+      "row5",
+      "row6",
+      "row7",
+    ]);
+    expect(definition.evaluate).toBeUndefined();
+  });
+
+  it("makes each row as wide as the panel is across", () => {
+    const definition = lookupNode("disp.matrix");
+
+    for (const size of [2, 5, 16]) {
+      const pins = definition?.pins({ size }) ?? [];
+      expect(pins).toHaveLength(size);
+      expect(pins.every((pin) => pin.width === size)).toBe(true);
+    }
+  });
+
+  it("clamps a hand-edited size rather than making zero pins", () => {
+    const definition = lookupNode("disp.matrix");
+
+    expect(definition?.pins({ size: 0 })).toHaveLength(2);
+    expect(definition?.pins({ size: 999 })).toHaveLength(16);
+    expect(definition?.pins({ size: "big" })).toHaveLength(8);
+  });
+
+  it("stays square, so a panel does not read as a column", () => {
+    const definition = lookupNode("disp.matrix");
+    const size = definition?.size({ size: 8 });
+
+    expect(size?.width).toBe(size?.height);
+  });
+});
