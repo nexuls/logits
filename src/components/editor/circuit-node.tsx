@@ -137,12 +137,12 @@ export default function CircuitNode({
         aria-pressed={selected}
         aria-label={ariaLabel(name, def.title, pinIds, valueByPin)}
         onFocus={onFocus}
-        className="pointer-events-none absolute inset-0 z-10 rounded-[4px] outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="pointer-events-none absolute inset-0 z-10 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
 
       <div
         className={cn(
-          "pointer-events-none absolute inset-0 rounded-[4px] border-2 bg-card/90",
+          "pointer-events-none absolute inset-0 rounded-lg border-2 bg-card/90",
           "flex items-center justify-center text-center",
           selected
             ? "border-primary ring-2 ring-primary/40"
@@ -151,7 +151,7 @@ export default function CircuitNode({
               : "border-border",
         )}
       >
-        <div className="pointer-events-auto absolute inset-[6px]">
+        <div className="pointer-events-auto absolute inset-1.5">
           <View
             node={node}
             def={def}
@@ -195,7 +195,7 @@ export default function CircuitNode({
             // no pointer events; it exists for Tab-and-Enter and the tooltip.
             // `click` still fires from the keyboard on a focused button.
             className={cn(
-              "pointer-events-none absolute size-[9px] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-current bg-card outline-none",
+              "pointer-events-none absolute size-2.25 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-current bg-card outline-none",
               "focus-visible:ring-2 focus-visible:ring-ring",
               valueClass(value),
               wiring &&
@@ -239,13 +239,13 @@ export default function CircuitNode({
               key={pin.spec.id}
               aria-hidden
               className={cn(
-                "pointer-events-none absolute w-max rounded-[2px] bg-card px-[1px] text-[7px] leading-[1.4] font-medium text-foreground/75",
+                "pointer-events-none absolute w-max rounded-xs bg-card px-px text-[7px] leading-[1.4] font-medium text-foreground/75",
                 floatingLabels
                   ? FLOATING_PIN_LABEL_CLASS[pin.side]
                   : PIN_LABEL_CLASS[pin.side],
                 // Floating labels sit over the wires they name, so they get
                 // the node's border under them as well as its background.
-                floatingLabels && "z-10 border border-border/60 px-[2px]",
+                floatingLabels && "z-10 border border-border/60 px-0.5",
               )}
               style={pinLabelPosition(pin, bounds, floatingLabels)}
             >

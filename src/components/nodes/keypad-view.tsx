@@ -42,7 +42,7 @@ export default function KeypadView({
 
   return (
     <div
-      className="grid h-full w-full gap-[2px] p-[2px]"
+      className="grid h-full w-full gap-0.5 p-0.5"
       style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
     >
       {keys.map((key, index) => (
@@ -70,7 +70,7 @@ export default function KeypadView({
           aria-pressed={pressed === index}
           aria-label={`${key.label} (${key.value})`}
           className={cn(
-            "flex min-h-0 min-w-0 items-center justify-center rounded-[2px] border",
+            "flex min-h-0 min-w-0 items-center justify-center rounded-xs border",
             "text-[8px] font-medium leading-none",
             "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring",
             interactive ? "cursor-pointer" : "cursor-default",
@@ -79,7 +79,7 @@ export default function KeypadView({
               : "border-border bg-muted text-muted-foreground",
           )}
         >
-          <span className="truncate px-[1px]">{key.label}</span>
+          <span className="truncate px-px">{key.label}</span>
         </button>
       ))}
     </div>
