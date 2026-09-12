@@ -23,6 +23,7 @@ describe("examples", () => {
       "SR latch (NOR)",
       "Tri-state bus",
       "Master-slave flip-flop",
+      "Four-function calculator",
     ]);
   });
 

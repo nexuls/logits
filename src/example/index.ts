@@ -1,5 +1,6 @@
 import { fromJson } from "@/lib/circuit/io";
 import type { CircuitDocument } from "@/lib/circuit/schema";
+import calculator from "./calculator.json";
 import fullAdder from "./full-adder.json";
 import gateSampler from "./gate-sampler.json";
 import halfAdder from "./half-adder.json";
@@ -44,6 +45,10 @@ const CATALOG: readonly { raw: unknown; summary: string }[] = [
   {
     raw: masterSlaveFlipFlop,
     summary: "Two latches in series, clocked by opposite edges.",
+  },
+  {
+    raw: calculator,
+    summary: "One keypad, two 4-digit operands, +, −, × and ÷ on a readout.",
   },
 ];
 
