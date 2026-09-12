@@ -41,7 +41,7 @@ Two conventions decide what an *unwired* pin means, and both are
 | `io.constant` | `out` | `width`, `value` |
 | `io.led` | `in` | `color`; renders off / on / `X` (red) / `Z` (grey) |
 | `io.probe` | `in` | shows the value as text in binary/hex/decimal |
-| `io.keypad` | `out`, `valid` | `keys` (comma-separated labels), `columns`, `width`, `latch`; momentary `pressed` (`-1` = none) and the latched `value` |
+| `io.keypad` | `out`, `valid` | `keys` (comma-separated labels), `columns`, `keySize` (grid cells per key), `width`, `latch`; momentary `pressed` (`-1` = none) and the latched `value` |
 | `io.kickstart` | `out` | `widthNs`, `startDelayNs`, `active`: high/low — one pulse per reset, then idle |
 
 ## Timing — `time.*`

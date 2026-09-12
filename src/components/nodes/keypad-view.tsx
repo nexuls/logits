@@ -1,7 +1,12 @@
 "use client";
 
 import { intParam } from "@/lib/nodes/define";
-import { keypadColumns, keypadKeys, NO_KEY } from "@/lib/nodes/io/keypad";
+import {
+  keypadColumns,
+  keypadKeySize,
+  keypadKeys,
+  NO_KEY,
+} from "@/lib/nodes/io/keypad";
 import { cn } from "@/lib/utils";
 import type { NodeViewProps } from "./node-views";
 
@@ -28,6 +33,10 @@ export default function KeypadView({
   const keys = keypadKeys(node.params);
   const columns = keypadColumns(node.params);
   const pressed = intParam(node.params, "pressed", NO_KEY);
+  // The body grows with `keySize`, so the label has to as well or a scaled-up
+  // pad is a big key with 8px type in the middle of it. The ratio is the one
+  // the default pad already had: 8px of label to a three-cell key.
+  const fontSize = (keypadKeySize(node.params) * 8) / 3;
 
   const press = (index: number) => {
     if (!interactive || pressed === index) return;
@@ -67,11 +76,12 @@ export default function KeypadView({
             setParams({ pressed: index, value: key.value });
             setParams({ pressed: NO_KEY });
           }}
+          style={{ fontSize }}
           aria-pressed={pressed === index}
           aria-label={`${key.label} (${key.value})`}
           className={cn(
             "flex min-h-0 min-w-0 items-center justify-center rounded-xs border",
-            "text-[8px] font-medium leading-none",
+            "font-medium leading-none",
             "focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring",
             interactive ? "cursor-pointer" : "cursor-default",
             pressed === index

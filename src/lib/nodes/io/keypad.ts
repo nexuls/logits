@@ -21,6 +21,19 @@ import { boundedParam, stack, widthOf, widthParam } from "../shared";
 const DEFAULT_KEYS = "0,1,2,3,4,5,6,7,8,9";
 const MAX_KEYS = 32;
 const MAX_COLUMNS = 8;
+
+/**
+ * Grid cells per key, and the range the pad can be scaled over.
+ *
+ * A pad is pressed, not read, so how big a key is on screen is a property of
+ * the element rather than of the zoom: a hex pad sitting next to a four-digit
+ * readout wants keys a finger can hit at the zoom the rest of the circuit is
+ * legible at. `DEFAULT_KEY_CELLS` is the size the pad has always been, so an
+ * existing document loads unchanged.
+ */
+const DEFAULT_KEY_CELLS = 3;
+const MIN_KEY_CELLS = 2;
+const MAX_KEY_CELLS = 8;
 export const MAX_KEYS_LENGTH = 256;
 
 /** No key is held. `pressed` is momentary, exactly like `io.button`'s. */
@@ -54,6 +67,17 @@ export function keypadKeys(params: NodeParams): KeypadKey[] {
   });
 }
 
+/** Size of one key, in grid cells — the pad's scale. */
+export function keypadKeySize(params: NodeParams): number {
+  return boundedParam(
+    params,
+    "keySize",
+    DEFAULT_KEY_CELLS,
+    MIN_KEY_CELLS,
+    MAX_KEY_CELLS,
+  );
+}
+
 export function keypadColumns(params: NodeParams): number {
   return boundedParam(params, "columns", 3, 1, MAX_COLUMNS);
 }
@@ -70,12 +94,13 @@ export function keypadGrid(params: NodeParams): {
   };
 }
 
-/** Three grid cells to a key, plus a cell of bezel on each side. */
+/** A key is `keySize` cells square, plus a cell of bezel on each side. */
 function bodySize(params: NodeParams) {
   const { columns, rows } = keypadGrid(params);
+  const key = keypadKeySize(params);
   return {
-    width: Math.max(6, columns * 3 + 2),
-    height: Math.max(6, rows * 3 + 2),
+    width: Math.max(6, columns * key + 2),
+    height: Math.max(6, rows * key + 2),
   };
 }
 
@@ -97,7 +122,9 @@ only ever on the bus while it is down.
 number pad. A label that reads as a number *is* that number — \`0x0A\` and
 \`10\` are the same key — and a label that does not, like \`ENT\`, takes its
 position in the list as its value. **Columns** wraps the list into a grid, so
-\`0…9\` in 3 columns is a phone pad and \`0…F\` in 4 is a hex pad.
+\`0…9\` in 3 columns is a phone pad and \`0…F\` in 4 is a hex pad. **Key
+size** scales the pad itself — how many grid cells a key takes — for a pad
+that has to stay hittable at the zoom the rest of the circuit reads at.
 
 Nothing is debounced, because nothing here bounces. A real pad does, and
 \`time.oneshot\` on \`VLD\` is the fix a real one needs.
@@ -130,6 +157,7 @@ what a two-key rollover would have to model and this deliberately does not.
   defaultParams: {
     keys: DEFAULT_KEYS,
     columns: 3,
+    keySize: DEFAULT_KEY_CELLS,
     width: 4,
     latch: true,
     pressed: NO_KEY,
@@ -150,6 +178,14 @@ what a two-key rollover would have to model and this deliberately does not.
       kind: "int",
       min: 1,
       max: MAX_COLUMNS,
+    },
+    {
+      key: "keySize",
+      label: "Key size",
+      kind: "int",
+      min: MIN_KEY_CELLS,
+      max: MAX_KEY_CELLS,
+      hint: "Grid cells per key. Scales the whole pad up.",
     },
     widthParam("Width of the value the pad drives."),
     {
