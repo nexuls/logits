@@ -21,9 +21,9 @@ import {
   rotateNodes,
   type Selection,
   setDefaultZoom,
+  setLinkedNodeParams,
   setNodeLabel,
   setNodeLabelPosition,
-  setNodeParams,
   topLeftForCenter,
   type WireTap,
 } from "@/lib/circuit/commands";
@@ -343,7 +343,7 @@ export function updateNodeParams(
 ): boolean {
   return apply(
     "params",
-    (document) => setNodeParams(document, nodeId, patch),
+    (document) => setLinkedNodeParams(document, lookupNode, nodeId, patch),
     options,
   );
 }

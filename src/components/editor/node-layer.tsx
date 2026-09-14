@@ -2,6 +2,7 @@
 
 import { memo } from "react";
 
+import { groupId } from "@/lib/circuit/groups";
 import type { Scene } from "@/state/scene";
 import CircuitNode from "./circuit-node";
 
@@ -47,6 +48,21 @@ function NodeLayer({
 }: Props) {
   const selected = new Set(selectedNodeIds);
 
+  // Selecting one member of a group — a tunnel — lights up the rest of it,
+  // since nothing else on the sheet shows what a named net is joined to.
+  const selectedGroups = new Set<string>();
+  for (const id of selectedNodeIds) {
+    const resolved = scene.nodes[id];
+    const group = resolved && groupId(resolved.node, resolved.def);
+    if (group) selectedGroups.add(group);
+  }
+  const linked = (id: string) => {
+    if (selectedGroups.size === 0 || selected.has(id)) return false;
+    const { node, def } = scene.nodes[id];
+    const group = groupId(node, def);
+    return group !== null && selectedGroups.has(group);
+  };
+
   return (
     <>
       {Object.keys(scene.nodes)
@@ -56,6 +72,7 @@ function NodeLayer({
             key={id}
             resolved={scene.nodes[id]}
             selected={selected.has(id)}
+            linked={linked(id)}
             faulted={faultedNodeIds.has(id)}
             interactive={interactive}
             showBasicPinLabels={showBasicPinLabels}

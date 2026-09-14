@@ -33,8 +33,10 @@ A **blank name joins nothing**, so a freshly placed tunnel is inert rather than
 shorting itself onto every other unnamed one. Names are matched exactly, after
 trimming whitespace.
 
-Set **Bit width** to match the signal. Two tunnels sharing a name but not a
-width is a mistake the wire diagnostics will flag.
+Every tunnel on one network has one **Bit width**. Joining a network adopts
+its width, and changing the width of any tunnel on it changes all of them, in
+one undo step. A saved circuit whose tunnels disagree still loads; the network
+list marks its width as mixed until one is set.
 
 ## Use it sparingly
 
@@ -85,6 +87,8 @@ wire when it would not.
     },
   ],
   size: () => ({ width: 6, height: 4 }),
+  // A network is the group; one net has one width, so width is shared.
+  group: { key: "name", shared: ["width"], noun: "network" },
   netAliases: (params): Record<string, string> => {
     const name = stringParam(params, "name", "").trim();
     return name.length > 0 ? { io: name } : {};

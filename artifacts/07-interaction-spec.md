@@ -70,6 +70,7 @@ canvas header, the right one from the panel button in its own header.
 | Drag a bend handle | Moves that waypoint, snapped to the grid. Handles are only grabbable while their wire is selected |
 | Drop a bend onto its neighbour | Removes it, straightening the wire. The only way to delete a bend short of deleting the wire |
 | Click a node | Select it. The inspector popover, anchored over the node itself, opens on the *release*, not the press — so a press that turns into a drag never flashes a panel — and stays away for as long as any pointer gesture is held, which is what keeps it out of the way of the node being moved. It comes back where the selection ended up |
+| Select a grouped node (a tunnel) | Every other member of its group — the rest of the network — gets a dashed highlight, a shape as well as a colour. The inspector's name field is a searchable list of the groups in the document; typing a name that is not there offers an "Add" row that creates it |
 | `Tab` | Move through node bodies and pins; focusing a node selects it |
 | `Enter` on a pin | Start a wire, then `Enter` on a second pin to finish it |
 | Click an `io.switch` / `io.button` | Toggle / press. It works while paused too — the engine settles the edit — and the position is a param, so it undoes |

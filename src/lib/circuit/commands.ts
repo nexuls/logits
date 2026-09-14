@@ -12,6 +12,7 @@ import {
   snapPointToGrid,
   snapToGrid,
 } from "./geometry";
+import { groupKey, sameValue } from "./groups";
 import { createNodeId, createWireId } from "./ids";
 import {
   type CircuitDocument,
@@ -229,6 +230,75 @@ export function setNodeParams(
   }
 
   return replaceNode(document, { ...node, params });
+}
+
+/**
+ * `setNodeParams`, keeping a node's group in step — see
+ * `NodeDefinition.group`.
+ *
+ * Two things happen beyond the plain merge. A patch that moves the node into
+ * a group which already has members adopts that group's shared params, except
+ * ones the patch sets itself — picking a network is also picking its width.
+ * Then every shared param the patch *does* set is written to the rest of the
+ * group, so the members cannot drift apart one edit at a time. It is one
+ * document change, so one undo step, however many nodes it touches.
+ */
+export function setLinkedNodeParams(
+  document: CircuitDocument,
+  lookup: NodeLookup,
+  nodeId: string,
+  patch: Record<string, unknown>,
+): CircuitDocument {
+  const node = document.nodes[nodeId];
+  const definition = node && lookup(node.type);
+  const shared = definition?.group?.shared ?? [];
+  if (!node || !definition?.group || shared.length === 0) {
+    return setNodeParams(document, nodeId, patch);
+  }
+
+  const changed = setNodeParams(document, nodeId, patch);
+  const updated = changed.nodes[nodeId];
+  const name = groupKey(updated, definition);
+  if (name === null) return changed;
+
+  const peers = Object.keys(changed.nodes)
+    .sort()
+    .filter(
+      (id) =>
+        id !== nodeId &&
+        changed.nodes[id].type === node.type &&
+        groupKey(changed.nodes[id], definition) === name,
+    );
+  if (peers.length === 0) return changed;
+
+  const joined = groupKey(node, definition) !== name;
+  let next = changed;
+
+  if (joined) {
+    const source = changed.nodes[peers[0]].params;
+    const adopted: Record<string, unknown> = {};
+    for (const key of shared) {
+      if (key in patch || source[key] === undefined) continue;
+      if (!sameValue(updated.params[key], source[key]))
+        adopted[key] = source[key];
+    }
+    if (Object.keys(adopted).length > 0) {
+      next = setNodeParams(next, nodeId, adopted);
+    }
+  }
+
+  const spread: Record<string, unknown> = {};
+  for (const key of shared) if (key in patch) spread[key] = patch[key];
+
+  for (const id of peers) {
+    const params = next.nodes[id].params;
+    const differs = Object.entries(spread).some(
+      ([key, value]) => !sameValue(params[key], value),
+    );
+    if (differs) next = setNodeParams(next, id, spread);
+  }
+
+  return next;
 }
 
 export function setNodeLabel(

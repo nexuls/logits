@@ -18,6 +18,8 @@ import { useNodeValues } from "@/state/simulation";
 type Props = {
   resolved: ResolvedNode;
   selected: boolean;
+  /** In the same group as a selected node — another tunnel on its network. */
+  linked: boolean;
   /** A diagnostic names this node — it gets a marker, not only a colour. */
   faulted: boolean;
   /** False while no document is open, which disables the interactive views. */
@@ -62,6 +64,7 @@ type Props = {
 export default function CircuitNode({
   resolved,
   selected,
+  linked,
   faulted,
   interactive,
   showBasicPinLabels,
@@ -146,7 +149,7 @@ export default function CircuitNode({
       <button
         type="button"
         aria-pressed={selected}
-        aria-label={ariaLabel(name, def.title, pinIds, valueByPin)}
+        aria-label={`${ariaLabel(name, def.title, pinIds, valueByPin)}${linked ? ", linked to the selection" : ""}`}
         onFocus={onFocus}
         className="pointer-events-none absolute inset-0 z-10 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
@@ -157,9 +160,13 @@ export default function CircuitNode({
           "flex items-center justify-center text-center",
           selected
             ? "border-primary ring-2 ring-primary/40"
-            : faulted
-              ? "border-destructive"
-              : "border-border",
+            : linked
+              ? // Dashed, so a peer reads differently from the selection
+                // itself without leaning on colour.
+                "border-dashed border-primary ring-2 ring-primary/20"
+              : faulted
+                ? "border-destructive"
+                : "border-border",
         )}
       >
         <div className="pointer-events-auto absolute inset-1.5">

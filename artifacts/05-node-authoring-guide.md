@@ -207,13 +207,20 @@ run of literal backticks and is invisible until someone opens the dialog.
 
 ## When a node is more than pins and an `evaluate`
 
-Three optional hooks on `NodeDefinition` let a node do something structural
+Four optional hooks on `NodeDefinition` let a node do something structural
 without any other file learning its `type`. Each is answered by exactly one
 family today, and each is the reason a rule in `AGENTS.md` still holds:
 
 - **`netAliases(params)`** — pin id to net *name*. Every pin naming the same net
   is merged into one net with no wire between them. `bus.tunnel` is the only
   user; `buildNetlist` applies it without knowing what a tunnel is.
+- **`group`** — `{ key, shared, noun }`. Nodes of one type whose `key` param
+  holds the same text are a group. The inspector offers that param as a
+  searchable list of the groups in the document (with an "add" row for a new
+  name), joining a group adopts its `shared` params, editing a shared param on
+  one member writes all of them in one undo step (`setLinkedNodeParams`), and
+  the canvas highlights a selected member's peers. `bus.tunnel` is the only
+  user: a network is the group, `width` is shared.
 - **`subcircuit(params)`** — "which chip am I an instance of". Only the
   definitions synthesized by
   [circuit/subcircuit.ts](../src/lib/circuit/subcircuit.ts) answer.

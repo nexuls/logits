@@ -11,17 +11,27 @@ import {
   PlusIcon,
   RotateCwIcon,
   Trash2Icon,
+  TriangleAlertIcon,
 } from "lucide-react";
 import {
   type ReactNode,
   type RefObject,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 import {
   InputGroup,
@@ -40,8 +50,13 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import type { Rect } from "@/lib/circuit/geometry";
-import type { LabelPosition } from "@/lib/circuit/schema";
-import type { NodeParams, ParamSpec } from "@/lib/nodes/define";
+import { listGroups, type NodeGroup } from "@/lib/circuit/groups";
+import type {
+  CircuitDocument,
+  CircuitNode,
+  LabelPosition,
+} from "@/lib/circuit/schema";
+import type { NodeDefinition, NodeParams, ParamSpec } from "@/lib/nodes/define";
 import { lookupNode } from "@/lib/nodes/registry";
 import {
   deleteSelection,
@@ -206,16 +221,29 @@ function SelectionPopover({
             )}
 
             {node &&
-              definition?.paramsSchema?.map((spec) => (
-                <ParamField
-                  key={spec.key}
-                  spec={spec}
-                  params={node.params}
-                  onChange={(value) =>
-                    updateNodeParams(node.id, { [spec.key]: value })
-                  }
-                />
-              ))}
+              document &&
+              definition?.paramsSchema?.map((spec) =>
+                // The param that names a group is picked from the groups that
+                // exist rather than typed blind; see `NodeDefinition.group`.
+                spec.kind === "text" && definition.group?.key === spec.key ? (
+                  <GroupField
+                    key={spec.key}
+                    spec={spec}
+                    node={node}
+                    definition={definition}
+                    document={document}
+                  />
+                ) : (
+                  <ParamField
+                    key={spec.key}
+                    spec={spec}
+                    params={node.params}
+                    onChange={(value) =>
+                      updateNodeParams(node.id, { [spec.key]: value })
+                    }
+                  />
+                ),
+              )}
 
             {node && !definition && (
               <p className="text-xs text-destructive">
@@ -499,6 +527,184 @@ function CommitInput({
       className="h-9"
     />
   );
+}
+
+/**
+ * A group's name — a tunnel's network — as a searchable list of the groups
+ * already in the document, each with its member count and shared params, plus
+ * an "add" row when what is typed names none of them.
+ *
+ * Picking commits at once, through `updateNodeParams`, so the command adopts
+ * the group's shared params and the pick is one undo step. Typing alone never
+ * commits: a name is chosen or added, not half-typed into a network that then
+ * silently joins something. While the list is closed the input shows the
+ * document's value, so an undo with the popover open is not hidden behind a
+ * stale query.
+ */
+function GroupField({
+  spec,
+  node,
+  definition,
+  document,
+}: {
+  spec: Extract<ParamSpec, { kind: "text" }>;
+  node: CircuitNode;
+  definition: NodeDefinition;
+  document: CircuitDocument;
+}) {
+  const id = `param-${spec.key}`;
+  const noun = definition.group?.noun ?? "group";
+  const raw = node.params[spec.key];
+  const current = typeof raw === "string" ? raw.trim() : "";
+
+  const groups = useMemo(
+    () => listGroups(document, node.type, lookupNode),
+    [document, node.type],
+  );
+  const byName = useMemo(
+    () => new Map(groups.map((group) => [group.name, group])),
+    [groups],
+  );
+
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState(current);
+  // What the list is filtered by — only what the user typed, so opening the
+  // list on a named node shows every group rather than just its own.
+  const [filter, setFilter] = useState("");
+
+  const needle = filter.trim();
+  const items = useMemo(() => {
+    const lower = needle.toLowerCase();
+    const names = groups
+      .filter((group) => group.name.toLowerCase().includes(lower))
+      .map((group) => group.name);
+    // The new name goes last, so Enter on an exact-prefix match still picks
+    // the existing group.
+    if (needle.length > 0 && !byName.has(needle)) names.push(needle);
+    return names;
+  }, [groups, byName, needle]);
+
+  const commit = (name: string) => {
+    if (name !== current) updateNodeParams(node.id, { [spec.key]: name });
+  };
+
+  const own = current ? byName.get(current) : undefined;
+  const peers = own ? own.memberIds.length - 1 : 0;
+  const hint =
+    peers > 0
+      ? `Linked to ${countOf(peers, definition.title)}; shared settings change on all of them.`
+      : spec.hint;
+
+  return (
+    <Field htmlFor={id} label={spec.label} hint={hint}>
+      <Combobox<string>
+        items={items}
+        // Filtered above, so a query can offer a row that is not in `groups`.
+        filter={null}
+        value={current || null}
+        inputValue={open ? query : current}
+        open={open}
+        onOpenChange={(next) => {
+          setOpen(next);
+          setQuery(current);
+          setFilter("");
+        }}
+        onInputValueChange={(value, details) => {
+          setQuery(value);
+          if (details.reason === "input-change") setFilter(value);
+        }}
+        onValueChange={(value) => {
+          commit(typeof value === "string" ? value.trim() : "");
+          setFilter("");
+        }}
+        autoHighlight
+      >
+        <ComboboxInput
+          id={id}
+          placeholder={`Pick or add a ${noun}`}
+          maxLength={spec.maxLength}
+          showClear={current.length > 0}
+          className="h-9 w-full"
+        />
+        <ComboboxContent>
+          <ComboboxEmpty>
+            {groups.length === 0
+              ? `No ${noun}s yet — type a name to add one.`
+              : `No ${noun} matches.`}
+          </ComboboxEmpty>
+          <ComboboxList>
+            {(name: string) => {
+              const group = byName.get(name);
+              return group ? (
+                <ComboboxItem key={name} value={name}>
+                  <GroupOption
+                    group={group}
+                    definition={definition}
+                    current={name === current}
+                  />
+                </ComboboxItem>
+              ) : (
+                <ComboboxItem key={name} value={name}>
+                  <PlusIcon />
+                  <span className="min-w-0 truncate">
+                    Add {noun} “<span className="font-mono">{name}</span>”
+                  </span>
+                </ComboboxItem>
+              );
+            }}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
+    </Field>
+  );
+}
+
+/** One existing group in the list: its name, then what is on it. */
+function GroupOption({
+  group,
+  definition,
+  current,
+}: {
+  group: NodeGroup;
+  definition: NodeDefinition;
+  current: boolean;
+}) {
+  const details = Object.entries(group.shared).map(([key, entry]) => {
+    const label =
+      definition.paramsSchema?.find((spec) => spec.key === key)?.label ?? key;
+    return { key, label, value: entry.value, mixed: entry.mixed };
+  });
+
+  return (
+    <span className="flex min-w-0 flex-col gap-0.5">
+      <span className="truncate font-mono text-xs">{group.name}</span>
+      <span className="flex flex-wrap items-center gap-x-1.5 text-[11px] text-muted-foreground">
+        <span>
+          {countOf(group.memberIds.length, definition.title)}
+          {current && " (incl. this one)"}
+        </span>
+        {details.map(({ key, label, value, mixed }) => (
+          <span key={key} className="inline-flex items-center gap-1">
+            <span aria-hidden>·</span>
+            {mixed ? (
+              <>
+                <TriangleAlertIcon className="size-3 text-destructive" />
+                {label}: mixed
+              </>
+            ) : (
+              `${label}: ${String(value ?? "—")}`
+            )}
+          </span>
+        ))}
+      </span>
+    </span>
+  );
+}
+
+/** "1 tunnel", "3 tunnels" — the member noun is the definition's title. */
+function countOf(count: number, title: string): string {
+  const noun = title.toLowerCase();
+  return `${count} ${count === 1 ? noun : `${noun}s`}`;
 }
 
 /**

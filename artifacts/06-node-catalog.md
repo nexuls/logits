@@ -192,6 +192,12 @@ configured into disagreeing.
 through the `netAliases` contract, so two tunnels are genuinely one net rather
 than a pair of buffers pretending to be one.
 
+Tunnels sharing a name are a **network**, declared through the `group` hook.
+The inspector picks the name from a searchable list of the networks in the
+document — each showing its tunnel count and width — or adds a new one; a
+tunnel joining a network takes its width, a width change on any tunnel applies
+to the whole network, and selecting a tunnel highlights the rest of its network.
+
 There is no `sub.instance`: an instance's `type` is `sub.<key>`, and its
 definition is derived from the document rather than built into the app — see
 [ADR 0010](decisions/0010-subcircuits-are-derived-node-types.md), which also

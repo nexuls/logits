@@ -198,6 +198,22 @@ export type NodeDefinition = {
    */
   netAliases?: (params: NodeParams) => Record<string, string>;
   /**
+   * Nodes of this type whose `key` param holds the same (trimmed, non-blank)
+   * text are one *group* — every tunnel naming the same network, say.
+   *
+   * What that buys, without any component learning the type: the inspector
+   * offers the key as a searchable list of the groups already in the
+   * document; joining a group adopts its `shared` params; editing a `shared`
+   * param on one member writes it to all of them, as one undo step; and the
+   * canvas highlights a selected member's peers. `noun` is what one group is
+   * called in that UI ("network").
+   */
+  group?: {
+    key: string;
+    shared?: readonly string[];
+    noun: string;
+  };
+  /**
    * Key into the document's `subcircuits` that this node instantiates, if it
    * is an instance at all.
    *
