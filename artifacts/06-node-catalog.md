@@ -42,6 +42,7 @@ Two conventions decide what an *unwired* pin means, and both are
 | `io.led` | `in` | `color`; renders off / on / `X` (red) / `Z` (grey) |
 | `io.probe` | `in` | shows the value as text in binary/hex/decimal |
 | `io.keypad` | `out`, `valid` | `keys` (comma-separated labels), `columns`, `keySize` (grid cells per key), `width`, `latch`; momentary `pressed` (`-1` = none) and the latched `value` |
+| `io.keyboard` | `data` (8), `valid`, `ovf`; `brk` when `releases` and not PS/2; in `clr` (top), `rd` (bottom, handshake only) | `encoding`: ascii/hid/ps2, `protocol`: handshake/strobe, `depth` 1–64, `pulseNs`, `releases`, `repeat`, `exitKey`: escape/shift-escape/ctrl-bracket; `events` is the typed-key log (`{seq, code, key, up?, ctrl?}`, last 64) |
 | `io.kickstart` | `out` | `widthNs`, `startDelayNs`, `active`: high/low — one pulse per reset, then idle |
 
 ## Timing — `time.*`
@@ -164,7 +165,19 @@ reset exists to solve. After its pulse it stops scheduling entirely.
 display one net's value, which is the point of keying views by behaviour rather
 than by node type.
 
-`io.keypad` and `disp.matrix` own their views too — a keypad is pressed and a
+`io.keyboard` takes typing as an **event log**, not a level: each key event is
+appended to `events` with a sequence number, and `evaluate` moves every event
+newer than the last one it consumed into a FIFO held in `state`. A level would
+lose a press and release that land with no simulated time between them — the
+failure the keypad has from the keyboard. The circuit reads the FIFO by one of
+two transfer protocols: **handshake** (ready/valid — `VLD` while non-empty,
+`D` is the oldest byte, a rising `RD` edge consumes it) or **strobe** (each
+byte gets a `VLD` pulse of `pulseNs`, then a gap of the same width). Encodings
+are 7-bit ASCII (Enter = CR, Ctrl+letter = C0 control code), USB HID Keyboard
+page usage IDs, and PS/2 Scan Code Set 2 bytes with in-band `E0`/`F0`. A reset
+empties the FIFO and never replays the log.
+
+`io.keyboard`, `io.keypad` and `disp.matrix` own their views too — a keypad is pressed and a
 panel is read, and neither is a rectangle with a name in it. Every other
 element in this catalog names `view: "block"` — a rectangle with its name in it — and writes the schematic abbreviation there (`MUX`, `DEMUX`,
 `DFF`, `REG`, `CMP`) through `NodeDefinition.shortTitle`, while the tables

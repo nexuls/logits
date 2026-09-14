@@ -321,6 +321,13 @@ to survive a reload and undo with everything else, whereas `state` is re-created
 on every reset by design. Reserve `state` for what a reset should forget — a
 latched value, a counter.
 
+A view that turns one gesture into many writes — typing into `io.keyboard` —
+passes `setParams(patch, { coalesce: true })` for every write after the first,
+so the gesture is one undo step. And input that is a *stream* rather than a
+level belongs in an event log with sequence numbers, drained by `evaluate`:
+two level writes with no simulated time between them coalesce, and the circuit
+never sees the first.
+
 Note which params are *not* structural. `syncDocument` rebuilds the engine only
 when the pins, the wiring or a `delayNs` change; a param that only `evaluate`
 reads is pushed into the running engine instead, which is what lets a switch be

@@ -5,6 +5,7 @@ import { BLOCK_VIEW, type NodeDefinition } from "@/lib/nodes/define";
 import type { ResolvedNode } from "@/state/scene";
 import BargraphView from "./bargraph-view";
 import BlockView from "./block-view";
+import KeyboardView from "./keyboard-view";
 import KeypadView from "./keypad-view";
 import LampView from "./lamp-view";
 import MatrixView from "./matrix-view";
@@ -60,8 +61,14 @@ export type NodeViewProps = {
    * Edits this node's params through the document command, so the change
    * undoes and autosaves like any other. A view must never call `ctx.write`
    * or reach into the engine — see artifacts/05-node-authoring-guide.md.
+   *
+   * `coalesce` folds the edit into the previous params edit's undo step, for a
+   * view that turns one gesture into many writes — a typing session.
    */
-  setParams: (patch: Record<string, unknown>) => void;
+  setParams: (
+    patch: Record<string, unknown>,
+    options?: { coalesce?: boolean },
+  ) => void;
   /** False when the editor is in a state where input would go nowhere. */
   interactive: boolean;
 };
@@ -76,6 +83,7 @@ const NODE_VIEWS: Record<string, NodeView> = {
   readout: ReadoutView,
   bargraph: BargraphView,
   keypad: KeypadView,
+  keyboard: KeyboardView,
   matrix: MatrixView,
   "seven-segment": SevenSegmentView,
   "seven-segment-readout": SegmentReadoutView,

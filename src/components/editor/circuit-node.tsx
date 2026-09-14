@@ -177,7 +177,9 @@ export default function CircuitNode({
             orientation={orientation}
             showPinLabels={showInlinePinLabels}
             readPin={(pinId) => valueByPin[pinId] ?? ""}
-            setParams={(patch) => updateNodeParams(node.id, patch)}
+            setParams={(patch, options) =>
+              updateNodeParams(node.id, patch, options)
+            }
             interactive={interactive}
           />
         </div>
