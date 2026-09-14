@@ -2,6 +2,7 @@
 
 import {
   type CSSProperties,
+  type MouseEvent,
   type PointerEvent,
   type ReactNode,
   useEffect,
@@ -72,6 +73,12 @@ type Props = {
   onContentPointerUp?: (event: PointerEvent<HTMLDivElement>) => void;
   /** The pointer left the canvas — what a cursor-following preview hides on. */
   onContentPointerLeave?: () => void;
+  /**
+   * A double-click on the content, after both of its presses have gone
+   * through `onContentPointerDown`. The editing gestures open a node for
+   * editing on it.
+   */
+  onContentDoubleClick?: (event: MouseEvent<HTMLDivElement>) => void;
   /** Cursor for the viewport while an editing gesture is armed. */
   cursor?: string;
   /**
@@ -101,6 +108,7 @@ export default function Canvas({
   onContentPointerMove,
   onContentPointerUp,
   onContentPointerLeave,
+  onContentDoubleClick,
   cursor,
   onViewportChange,
 }: Props) {
@@ -217,7 +225,7 @@ export default function Canvas({
         // (button 2); this only has to keep the browser's own menu off it.
         onContextMenu={(event) => event.preventDefault()}
         onWheel={onWheel}
-        // onDoubleClick={onDoubleClick}
+        onDoubleClick={onContentDoubleClick}
         style={{
           overscrollBehavior: "none",
           cursor: isPanning

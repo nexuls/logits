@@ -18,6 +18,7 @@ import type { LabelPosition } from "@/lib/circuit/schema";
 import { PIN_LABEL_GAP } from "@/lib/nodes/label-metrics";
 import { cn } from "@/lib/utils";
 import { updateNodeParams } from "@/state/document";
+import { endInPlaceEdit } from "@/state/in-place-edit";
 import type { ResolvedNode, ResolvedPin } from "@/state/scene";
 import { useNodeValues } from "@/state/simulation";
 
@@ -38,6 +39,8 @@ type Props = {
   hovered: boolean;
   /** Draw the resize handles — the sole selection, with a `resize` spec. */
   resizable: boolean;
+  /** Being edited on the canvas — see `NodeDefinition.editInPlace`. */
+  editing: boolean;
   /** `nodeId/pinId` keys a wire in progress could legally land on. */
   compatiblePinIds: ReadonlySet<string>;
   wiring: boolean;
@@ -79,6 +82,7 @@ export default function CircuitNode({
   showCompoundPinLabels,
   hovered,
   resizable,
+  editing,
   compatiblePinIds,
   wiring,
   onFocus,
@@ -147,7 +151,9 @@ export default function CircuitNode({
 
   return (
     <div
-      className="pointer-events-none absolute"
+      // Above its neighbours while it is being edited, so the editor and the
+      // confirm button under it are not covered by a node drawn later.
+      className={cn("pointer-events-none absolute", editing && "z-40")}
       style={{
         left: bounds.x,
         top: bounds.y,
@@ -211,6 +217,8 @@ export default function CircuitNode({
               updateNodeParams(node.id, patch, options)
             }
             interactive={interactive}
+            editing={editing}
+            onEditEnd={() => endInPlaceEdit(node.id)}
           />
         </div>
 

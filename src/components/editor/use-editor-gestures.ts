@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type MouseEvent,
   type PointerEvent,
   useCallback,
   useEffect,
@@ -57,6 +58,7 @@ import {
   wireAt,
   withEnclosedNodes,
 } from "@/state/hit-test";
+import { beginInPlaceEdit } from "@/state/in-place-edit";
 import {
   isEnclosure,
   type ResolvedNode,
@@ -621,6 +623,24 @@ export function useEditorGestures({
     ],
   );
 
+  /**
+   * Double-click on a node that edits in place opens its editor — the pointer
+   * path; Enter and the inspector's Edit button are the others. Both presses
+   * have already selected the node by the time this fires.
+   */
+  const onDoubleClick = useCallback(
+    (event: MouseEvent<HTMLDivElement>) => {
+      if (event.button !== 0 || armedDefinition || wiring) return;
+
+      const node = nodeAt(sceneRef.current, toWorld(event));
+      if (!node?.def.editInPlace) return;
+
+      selectOnly([node.node.id]);
+      beginInPlaceEdit(node.node.id);
+    },
+    [armedDefinition, toWorld, wiring],
+  );
+
   const onPointerMove = useCallback(
     (event: PointerEvent<HTMLDivElement>) => {
       const world = toWorld(event);
@@ -937,6 +957,7 @@ export function useEditorGestures({
     activatePin,
     cancelWiring,
     onPointerDown,
+    onDoubleClick,
     onPointerMove,
     onPointerUp,
     onPointerLeave,

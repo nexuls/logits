@@ -42,7 +42,7 @@ one, that is a design error — pass it in as an argument.
 | `src/lib/perf/` | Allocation-free measurement primitives (`RollingWindow`: mean, nearest-rank percentile, history). Pure — no clock of its own; callers push samples. | Built |
 | `src/lib/sim/` | Event queue, engine, four-valued logic, runner, waveform buffer. | Partial — `logic.ts`, `queue.ts`, `engine.ts` and `runner.ts` built; the waveform ring buffer arrives with the instruments in phase 4 |
 | `src/lib/nodes/` | Node definitions + registry, one file per node type. | Built — `defineNode`, the registry, `paramsSchema`, `view`, and the `gate.*` / `io.*` definitions; the rest of the catalog is phase 4 |
-| `src/state/` | External stores bridging domain → React, plus `storage.ts`, the derived `scene.ts` and `hit-test.ts`. | Built — storage, scene, hit-test, `editor-settings.ts`, `document.ts`, `history.ts`, `selection.ts` and `simulation.ts`. The viewport stayed in the canvas component and is published to the editor as a prop; see below |
+| `src/state/` | External stores bridging domain → React, plus `storage.ts`, the derived `scene.ts` and `hit-test.ts`. | Built — storage, scene, hit-test, `editor-settings.ts`, `document.ts`, `history.ts`, `selection.ts`, `in-place-edit.ts` (the node being edited on the canvas) and `simulation.ts`. The viewport stayed in the canvas component and is published to the editor as a prop; see below |
 | `artifacts/` | These design docs. | Built |
 
 ## Rendering model

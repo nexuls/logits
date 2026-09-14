@@ -19,6 +19,7 @@ import {
   useDocument,
   useIsEphemeral,
 } from "@/state/document";
+import { endInPlaceEdit, useEditingNodeId } from "@/state/in-place-edit";
 import { buildScene, sceneClusters } from "@/state/scene";
 import { pruneSelection, selectOnly, useSelection } from "@/state/selection";
 import { getNetlist, syncDocument, useDiagnostics } from "@/state/simulation";
@@ -74,6 +75,7 @@ export default function Editor({
   const ephemeral = useIsEphemeral();
   const selection = useSelection();
   const diagnostics = useDiagnostics();
+  const editingNodeId = useEditingNodeId();
 
   const [notice, setNotice] = useState<string | null>(null);
   const [commandMenuOpen, setCommandMenuOpen] = useState(false);
@@ -104,6 +106,14 @@ export default function Editor({
       (id) => id in document.wires,
     );
   }, [document]);
+
+  // A note removed while it is being edited — deleted, or undone away — ends
+  // its session, so bringing it back does not reopen the editor.
+  useEffect(() => {
+    if (editingNodeId && !document?.nodes[editingNodeId]) {
+      endInPlaceEdit(editingNodeId);
+    }
+  }, [document, editingNodeId]);
 
   const netlist = getNetlist();
   // The document's own chips are node types as far as the scene is concerned,
@@ -243,6 +253,7 @@ export default function Editor({
         }}
         onContentPointerUp={gestures.onPointerUp}
         onContentPointerLeave={gestures.onPointerLeave}
+        onContentDoubleClick={gestures.onDoubleClick}
         overlay={
           <>
             <RunControls
@@ -314,6 +325,7 @@ export default function Editor({
           showBasicPinLabels={showBasicPinLabels}
           showCompoundPinLabels={showCompoundPinLabels}
           hoveredNodeId={gestures.hoveredNodeId}
+          editingNodeId={editingNodeId}
           compatiblePinIds={gestures.compatiblePinIds}
           wiring={gestures.isWiring}
           onSelectNode={(nodeId) => selectOnly([nodeId])}
@@ -342,6 +354,7 @@ export default function Editor({
           showBasicPinLabels={showBasicPinLabels}
           showCompoundPinLabels={showCompoundPinLabels}
           hoveredNodeId={gestures.hoveredNodeId}
+          editingNodeId={editingNodeId}
           compatiblePinIds={gestures.compatiblePinIds}
           wiring={gestures.isWiring}
           onSelectNode={(nodeId) => selectOnly([nodeId])}
@@ -363,7 +376,9 @@ export default function Editor({
       <Inspector
         bounds={inspectorBounds}
         anchorRef={inspectorAnchorRef}
-        suppressed={gestures.isInteracting}
+        // Out of the way while a note is edited in place: the edit is on the
+        // canvas, and the popover would sit over the text being typed.
+        suppressed={gestures.isInteracting || editingNodeId !== null}
       />
 
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />

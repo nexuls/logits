@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
-import ReactMarkdown, { type Components } from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { CheckIcon } from "lucide-react";
+import dynamic from "next/dynamic";
+import { useCallback, useEffect, useRef } from "react";
 import {
+  MAX_TEXT_LENGTH,
   textAlign,
   textContent,
   textFontSize,
@@ -11,46 +12,51 @@ import {
 } from "@/lib/nodes/deco/text";
 import { colorParam } from "@/lib/nodes/define";
 import { cn } from "@/lib/utils";
+import { NOTE_PREVIEW_CLASS } from "./markdown/draftly";
+import { useNoteHtml } from "./markdown/note-html";
 import type { NodeViewProps } from "./node-views";
+
+// Loaded when the first editing session opens, so the canvas does not ship
+// CodeMirror to someone who never edits a note.
+const NoteEditor = dynamic(() => import("./markdown/note-editor"), {
+  ssr: false,
+});
 
 /**
  * Text on the canvas, plain or Markdown, at the font size the user set.
  *
- * Not `ui/markdown.tsx`: that one is sized for a help dialog in rem, and this
- * has to scale with the box's own font size, so every size and gap here is in
- * `em`. The subset is deliberately the everyday one — headings, emphasis,
- * lists, quotes, code, links, tables. Raw HTML is skipped rather than run, and
- * an image is shown as its alt text, so a note can never fetch anything.
+ * At rest a Markdown note is static HTML, rendered once through draftly and
+ * cached against its text (`note-html.ts`), so a board of notes costs DOM and
+ * nothing else. Editing swaps in CodeMirror with draftly's live styling for the
+ * length of the session, and drops it again when the session ends.
+ *
+ * The preview wears draftly's own generated CSS (`markdown/draftly.ts`), whose
+ * sizes are in `em`, so it scales with the box's own font size. Raw HTML is shown as text and an image
+ * as its alt text, so a note can never fetch anything.
  */
-export default function AnnotationView({ node, def }: NodeViewProps) {
+export default function AnnotationView({
+  node,
+  def,
+  editing,
+  onEditEnd,
+  setParams,
+}: NodeViewProps) {
   const text = textContent(node.params);
   const markdown = textFormat(node.params) === "markdown";
   const ink = colorParam(def, node.params, "color") ?? "var(--foreground)";
   const wash = colorParam(def, node.params, "background");
   const tinted = wash !== undefined && wash !== "transparent";
 
-  const body = useMemo(
-    () =>
-      markdown ? (
-        <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
-          components={COMPONENTS}
-          skipHtml
-        >
-          {text}
-        </ReactMarkdown>
-      ) : (
-        text
-      ),
-    [markdown, text],
-  );
+  const html = useNoteHtml(markdown && !editing ? text : null);
 
   return (
     <div
       className={cn(
-        "absolute inset-0 overflow-hidden rounded-md break-words",
+        "absolute inset-0 rounded-md break-words",
         tinted ? "border px-[0.6em] py-[0.4em]" : "px-[0.1em]",
-        !markdown && "whitespace-pre-wrap",
+        // The confirm button hangs just below the box while editing.
+        editing ? "overflow-visible" : "overflow-hidden",
+        !markdown && !editing && "whitespace-pre-wrap",
       )}
       style={{
         fontSize: textFontSize(node.params),
@@ -67,105 +73,146 @@ export default function AnnotationView({ node, def }: NodeViewProps) {
           : undefined,
       }}
     >
-      {body}
+      {editing ? (
+        <EditSession
+          text={text}
+          markdown={markdown}
+          label={`${def.title} text`}
+          onCommit={(value) => setParams({ text: value })}
+          onEnd={onEditEnd}
+        />
+      ) : markdown ? (
+        html !== undefined && <NoteHtml html={html} />
+      ) : (
+        text
+      )}
     </div>
   );
 }
 
-const COMPONENTS: Components = {
-  h1: ({ node: _, ...props }) => (
-    <h1
-      className="mt-[0.5em] mb-[0.25em] text-[1.6em] leading-tight font-bold first:mt-0"
-      {...props}
+function NoteHtml({ html }: { html: string }) {
+  return (
+    <div
+      className={NOTE_PREVIEW_CLASS}
+      // biome-ignore lint/security/noDangerouslySetInnerHtml: sanitized against an allow-list with no images, styles or event attributes in markdown/draftly.ts.
+      dangerouslySetInnerHTML={{ __html: html }}
     />
-  ),
-  h2: ({ node: _, ...props }) => (
-    <h2
-      className="mt-[0.5em] mb-[0.25em] text-[1.3em] leading-tight font-semibold first:mt-0"
-      {...props}
-    />
-  ),
-  h3: ({ node: _, ...props }) => (
-    <h3
-      className="mt-[0.5em] mb-[0.2em] text-[1.12em] leading-snug font-semibold first:mt-0"
-      {...props}
-    />
-  ),
-  h4: ({ node: _, ...props }) => (
-    <h4 className="mt-[0.4em] font-semibold first:mt-0" {...props} />
-  ),
-  h5: ({ node: _, ...props }) => (
-    <h5 className="mt-[0.4em] font-semibold first:mt-0" {...props} />
-  ),
-  h6: ({ node: _, ...props }) => (
-    <h6 className="mt-[0.4em] font-semibold first:mt-0" {...props} />
-  ),
-  p: ({ node: _, ...props }) => (
-    <p className="my-[0.35em] first:mt-0 last:mb-0" {...props} />
-  ),
-  ul: ({ node: _, ...props }) => (
-    <ul
-      className="my-[0.35em] list-disc pl-[1.3em] first:mt-0 last:mb-0"
-      {...props}
-    />
-  ),
-  ol: ({ node: _, ...props }) => (
-    <ol
-      className="my-[0.35em] list-decimal pl-[1.4em] first:mt-0 last:mb-0"
-      {...props}
-    />
-  ),
-  blockquote: ({ node: _, ...props }) => (
-    <blockquote
-      className="my-[0.4em] border-l-[0.2em] border-current/30 pl-[0.6em] opacity-80"
-      {...props}
-    />
-  ),
-  hr: ({ node: _, ...props }) => (
-    <hr className="my-[0.5em] border-current/25" {...props} />
-  ),
-  a: ({ node: _, ...props }) => (
-    <a
-      className="text-primary underline underline-offset-2"
-      target="_blank"
-      rel="noreferrer"
-      {...props}
-    />
-  ),
-  code: ({ node: _, className, ...props }) => (
-    <code
-      className={cn(
-        "font-mono text-[0.9em]",
-        // A fenced block sits in `pre`, which has the background already.
-        !className?.includes("language-") &&
-          "rounded-[0.25em] bg-muted/70 px-[0.3em]",
-      )}
-      {...props}
-    />
-  ),
-  pre: ({ node: _, ...props }) => (
-    <pre
-      className="my-[0.4em] overflow-hidden rounded-[0.4em] bg-muted/70 p-[0.5em] text-[0.9em] whitespace-pre-wrap"
-      {...props}
-    />
-  ),
-  table: ({ node: _, ...props }) => (
-    <table
-      className="my-[0.4em] border-collapse text-[0.9em] first:mt-0"
-      {...props}
-    />
-  ),
-  th: ({ node: _, ...props }) => (
-    <th
-      className="border border-current/20 px-[0.4em] py-[0.15em] text-left font-semibold"
-      {...props}
-    />
-  ),
-  td: ({ node: _, ...props }) => (
-    <td
-      className="border border-current/20 px-[0.4em] py-[0.15em]"
-      {...props}
-    />
-  ),
-  img: ({ alt }) => <span className="italic opacity-70">{alt}</span>,
+  );
+}
+
+const CONTAINED_EVENTS = ["pointerdown", "dblclick", "keydown", "keyup"];
+
+type SessionProps = {
+  text: string;
+  markdown: boolean;
+  label: string;
+  onCommit: (text: string) => void;
+  onEnd: () => void;
 };
+
+/**
+ * One editing session: the editor, a confirm button under the box, and the
+ * rules for when it ends. The text reaches the document once, through one
+ * `setParams`, so a session is one undo step however long the typing was.
+ */
+function EditSession({ text, markdown, label, onCommit, onEnd }: SessionProps) {
+  const surface = useRef<HTMLDivElement>(null);
+  const typed = useRef(text);
+  const committed = useRef(text);
+  const handlers = useRef({ onCommit, onEnd });
+  handlers.current = { onCommit, onEnd };
+
+  // Safe to call more than once: the button, Esc, an outside press and the
+  // unmount can all follow one another for the same edit.
+  const commit = useCallback(() => {
+    if (typed.current === committed.current) return;
+    committed.current = typed.current;
+    handlers.current.onCommit(typed.current);
+  }, []);
+
+  const finish = useCallback(() => {
+    commit();
+    handlers.current.onEnd();
+  }, [commit]);
+
+  // A press anywhere outside the note confirms it. On the window, captured,
+  // like `io.keyboard`: the canvas takes presses without taking focus, so a
+  // blur alone would miss a click on empty canvas.
+  useEffect(() => {
+    const onPointerDown = (event: PointerEvent) => {
+      if (
+        event.target instanceof Node &&
+        surface.current?.contains(event.target)
+      ) {
+        return;
+      }
+      finish();
+    };
+    window.addEventListener("pointerdown", onPointerDown, { capture: true });
+    return () =>
+      window.removeEventListener("pointerdown", onPointerDown, {
+        capture: true,
+      });
+  }, [finish]);
+
+  // Inside the editor a press places the caret, Delete and Ctrl+Z edit the
+  // text and the wheel scrolls it — so none of those may reach the canvas,
+  // which would drag the note, zoom, or run the editor shortcuts on the
+  // window. Stopped natively, as `io.keyboard` does, before React's root
+  // listener sees them. The wheel scrolls by hand because the viewport cancels
+  // native wheel scrolling to own zoom and pan.
+  useEffect(() => {
+    const element = surface.current;
+    if (!element) return;
+
+    const contain = (event: Event) => event.stopPropagation();
+    const onWheel = (event: WheelEvent) => {
+      event.stopPropagation();
+      element
+        .querySelector(".cm-scroller")
+        ?.scrollBy(event.deltaX, event.deltaY);
+    };
+
+    for (const kind of CONTAINED_EVENTS) {
+      element.addEventListener(kind, contain);
+    }
+    element.addEventListener("wheel", onWheel);
+    return () => {
+      for (const kind of CONTAINED_EVENTS) {
+        element.removeEventListener(kind, contain);
+      }
+      element.removeEventListener("wheel", onWheel);
+    };
+  }, []);
+
+  // Unmount commits but does not end the session: a note undone away mid-edit
+  // keeps what was typed, and ending here would also close the editor under
+  // React's development double-mount. The editor ends a vanished note's
+  // session itself.
+  useEffect(() => commit, [commit]);
+
+  return (
+    <div ref={surface} className="h-full">
+      <NoteEditor
+        initial={text}
+        markdown={markdown}
+        maxLength={MAX_TEXT_LENGTH}
+        label={label}
+        onChange={(value) => {
+          typed.current = value;
+        }}
+        onDone={finish}
+      />
+      <button
+        type="button"
+        onClick={finish}
+        aria-label="Confirm edit"
+        title="Confirm — or click outside, or press Esc"
+        className="absolute top-full left-1/2 -translate-x-1/2 mt-1 flex px-1 py-0.5 items-center justify-center rounded-md border border-border bg-popover text-popover-foreground shadow-sm outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <CheckIcon className="size-2" />
+        <span className="text-[0.5rem] ml-1">Confirm</span>
+      </button>
+    </div>
+  );
+}

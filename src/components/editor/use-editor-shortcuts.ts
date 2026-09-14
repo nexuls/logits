@@ -4,16 +4,19 @@ import { useEffect, useRef } from "react";
 import type { Fragment } from "@/lib/circuit/commands";
 import { GRID_SIZE } from "@/lib/circuit/geometry";
 import type { Point } from "@/lib/circuit/schema";
+import { lookupNode } from "@/lib/nodes/registry";
 import {
   copySelection,
   deleteSelection,
   duplicateSelection,
   flushSave,
+  getDocument,
   pasteFragment,
   redo,
   rotateSelection,
   undo,
 } from "@/state/document";
+import { beginInPlaceEdit } from "@/state/in-place-edit";
 import { clearSelection, getSelection, selectOnly } from "@/state/selection";
 import { stepSimulation, togglePlay } from "@/state/simulation";
 
@@ -60,6 +63,20 @@ function isInDialog(target: EventTarget | null): boolean {
   return (
     target instanceof Element &&
     target.closest('[data-slot="dialog-content"]') !== null
+  );
+}
+
+/**
+ * Focus is on the canvas — a node's own focus target — or on nothing at all.
+ * Anywhere else Enter already means the control it is on, and on a pin it
+ * wires.
+ */
+function isCanvasOrBody(target: EventTarget | null): boolean {
+  if (target === document.body) return true;
+  return (
+    target instanceof Element &&
+    target.closest('[role="application"]') !== null &&
+    target.closest("[data-pin-id]") === null
   );
 }
 
@@ -198,6 +215,21 @@ export function useEditorShortcuts({
           if (selection.nodeIds.length === 0) return;
           event.preventDefault();
           rotateSelection(selection.nodeIds, event.shiftKey ? -1 : 1);
+          return;
+        }
+        case "Enter": {
+          // Opens the selected note for editing: the keyboard path to a
+          // double-click.
+          if (!isCanvasOrBody(event.target)) return;
+          const selection = getSelection();
+          const circuit = getDocument();
+          const node =
+            selection.nodeIds.length === 1 && selection.wireIds.length === 0
+              ? circuit?.nodes[selection.nodeIds[0]]
+              : undefined;
+          if (!node || !lookupNode(node.type)?.editInPlace) return;
+          event.preventDefault();
+          beginInPlaceEdit(node.id);
           return;
         }
         case ".":

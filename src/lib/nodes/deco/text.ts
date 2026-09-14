@@ -10,7 +10,7 @@ const MIN_FONT_SIZE = 6;
 const MAX_FONT_SIZE = 96;
 
 /** Enough for a paragraph of notes; a document belongs somewhere else. */
-const MAX_TEXT_LENGTH = 10_000;
+export const MAX_TEXT_LENGTH = 10_000;
 
 export type TextFormat = "markdown" | "plain";
 export type TextAlign = "left" | "center" | "right";
@@ -52,8 +52,8 @@ only — no pins, and the simulation never sees it.
 
 With **Format** set to Markdown the text understands the everyday subset:
 \`#\` headings, **bold**, *italic*, \`inline code\`, bulleted and numbered
-lists, \`>\` quotes, links, rules and simple tables. Raw HTML is shown as
-text, not run. **Plain** writes the text exactly as typed, line breaks and
+lists, \`>\` quotes, links and rules. Raw HTML is shown as
+text, not run, and an image as its alt text. **Plain** writes the text exactly as typed, line breaks and
 all.
 
 Text that does not fit the box is clipped, so size the box to the words — or
@@ -67,8 +67,11 @@ lower **Font size**.
 
 ## On the canvas
 
-1. Place it from the palette and type into **Text** in the inspector; the
-   field saves when you click away.
+1. Place it from the palette, then double-click it — or press Enter while it
+   is selected, or **Edit text** in the inspector — and type where it sits.
+   Markdown styles itself as you write, showing its marks only on the line
+   you are on. Click outside, press the check mark under the box, or press
+   Esc to finish; the whole edit is one undo step.
 2. Drag the handles on its corners and edges to size it, or set **Width** and
    **Height** in the inspector.
 3. **Font size**, **Align**, **Colour** and **Background** style it. Text
@@ -160,4 +163,5 @@ lower **Font size**.
   size: (params) => decorationSize(params, DEFAULT_SIZE, MIN),
   resize: resizeSpec(MIN.width, MIN.height),
   decoration: {},
+  editInPlace: "text",
 });

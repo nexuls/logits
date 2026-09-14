@@ -207,7 +207,7 @@ run of literal backticks and is invisible until someone opens the dialog.
 
 ## When a node is more than pins and an `evaluate`
 
-Six optional hooks on `NodeDefinition` let a node do something structural
+Seven optional hooks on `NodeDefinition` let a node do something structural
 without any other file learning its `type`. Each is answered by exactly one
 family today, and each is the reason a rule in `AGENTS.md` still holds:
 
@@ -242,6 +242,14 @@ family today, and each is the reason a rule in `AGENTS.md` still holds:
   edge, a rubber band has to surround it, and when `carries(params)` a drag
   brings everything lying wholly inside it (`withEnclosedNodes`). `deco.group`
   is the only enclosure.
+- **`editInPlace`** — the key of a multiline `text` param that the node's own
+  view edits on the canvas. A double-click on the node, `Enter` while it is
+  the sole selection, and an **Edit** button the inspector shows in place of
+  that param's field all open it through
+  [in-place-edit.ts](../src/state/in-place-edit.ts). The view is handed
+  `editing`, commits with one `setParams` so a session is one undo step, and
+  calls `onEditEnd`. `registry.test.ts` checks the key names a multiline text
+  param. `deco.text` is the only user.
 
 If a node needs something structural that none of these covers, the fix is a
 new hook on the contract, not a `type` comparison in the netlist.
@@ -281,6 +289,7 @@ Views receive `NodeViewProps`:
 | `orientation` | `"vertical"` after a quarter turn; a symbol with a direction draws itself along this |
 | `showPinLabels` | whether the canvas is drawing this element's pin names right now |
 | `readPin`, `setParams`, `interactive` | the value on a pin, an edit through a command, and whether input goes anywhere |
+| `editing`, `onEditEnd` | whether the node is being edited on the canvas (only ever true with `editInPlace`), and the call that ends the session once the edit is committed |
 
 A view must:
 

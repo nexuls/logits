@@ -65,6 +65,15 @@ describe("registry", () => {
 
     // The handles write these two params and nothing else, so a `size` that
     // derived its footprint from anything more would fight the drag.
+    it("edits in place only a multiline text param it declares", () => {
+      const key = definition.editInPlace;
+      if (key === undefined) return;
+
+      const spec = definition.paramsSchema?.find((entry) => entry.key === key);
+      expect(spec?.kind).toBe("text");
+      expect(spec?.kind === "text" && spec.multiline).toBe(true);
+    });
+
     it("sizes itself from exactly the params its resize handles write", () => {
       const { resize } = definition;
       if (!resize) return;

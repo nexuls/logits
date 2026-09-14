@@ -74,6 +74,13 @@ export type NodeViewProps = {
   ) => void;
   /** False when the editor is in a state where input would go nowhere. */
   interactive: boolean;
+  /**
+   * The user is editing this node on the canvas. Only a definition that
+   * declares `editInPlace` is ever handed `true`; its view draws its editor
+   * instead of its face, commits through `setParams`, then calls `onEditEnd`.
+   */
+  editing: boolean;
+  onEditEnd: () => void;
 };
 
 export type NodeView = ComponentType<NodeViewProps>;

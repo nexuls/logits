@@ -22,6 +22,8 @@ type Props = {
   showCompoundPinLabels: boolean;
   /** The node under the cursor, which reveals its floating pin labels. */
   hoveredNodeId: string | null;
+  /** The node being edited on the canvas, if any. */
+  editingNodeId: string | null;
   /** `nodeId/pinId` keys the wire in progress could land on. */
   compatiblePinIds: ReadonlySet<string>;
   /** True while a wire is being drawn, which is when the highlight applies. */
@@ -47,6 +49,7 @@ function NodeLayer({
   showBasicPinLabels,
   showCompoundPinLabels,
   hoveredNodeId,
+  editingNodeId,
   compatiblePinIds,
   wiring,
   onSelectNode,
@@ -86,6 +89,7 @@ function NodeLayer({
             showBasicPinLabels={showBasicPinLabels}
             showCompoundPinLabels={showCompoundPinLabels}
             hovered={id === hoveredNodeId}
+            editing={id === editingNodeId}
             resizable={
               selectedNodeIds.length === 1 &&
               selected.has(id) &&

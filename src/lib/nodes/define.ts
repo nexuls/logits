@@ -273,6 +273,17 @@ export type NodeDefinition = {
     };
   };
   /**
+   * Key of a multiline `text` param that the node's own view edits on the
+   * canvas, where the words sit, instead of the inspector offering a field
+   * for it.
+   *
+   * Declared rather than recognised, so a double-click on the node, Enter on
+   * it and the inspector's Edit button all open the editor without any of them
+   * learning a type. The view is handed `editing`, commits through one
+   * `setParams` — so a session is one undo step — and then calls `onEditEnd`.
+   */
+  editInPlace?: string;
+  /**
    * Nanoseconds from an input changing to this node reacting. Omit for the
    * engine's `DEFAULT_DELAY_NS`. A function of params because `time.delay`
    * exists to make it one.

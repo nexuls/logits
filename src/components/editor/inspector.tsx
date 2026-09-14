@@ -9,6 +9,7 @@ import {
   InfoIcon,
   type LucideIcon,
   MinusIcon,
+  PencilIcon,
   PlusIcon,
   RotateCwIcon,
   Trash2Icon,
@@ -69,6 +70,7 @@ import {
   updateNodeParams,
   useDocument,
 } from "@/state/document";
+import { beginInPlaceEdit } from "@/state/in-place-edit";
 import type { Scene } from "@/state/scene";
 import {
   clearSelection,
@@ -260,7 +262,12 @@ function SelectionPopover({
               definition?.paramsSchema?.map((spec) =>
                 // The param that names a group is picked from the groups that
                 // exist rather than typed blind; see `NodeDefinition.group`.
-                spec.kind === "text" && definition.group?.key === spec.key ? (
+                spec.kind === "text" && definition.editInPlace === spec.key ? (
+                  // Edited where it sits on the canvas, not in a second,
+                  // cramped copy of the editor here.
+                  <InPlaceField key={spec.key} spec={spec} nodeId={node.id} />
+                ) : spec.kind === "text" &&
+                  definition.group?.key === spec.key ? (
                   <GroupField
                     key={spec.key}
                     spec={spec}
@@ -753,6 +760,37 @@ function GroupOption({
 function countOf(count: number, title: string): string {
   const noun = title.toLowerCase();
   return `${count} ${count === 1 ? noun : `${noun}s`}`;
+}
+
+/**
+ * A param the node edits on the canvas (`NodeDefinition.editInPlace`): a
+ * button that opens that editor. Double-clicking the node, or Enter while it
+ * is selected, does the same.
+ */
+function InPlaceField({
+  spec,
+  nodeId,
+}: {
+  spec: Extract<ParamSpec, { kind: "text" }>;
+  nodeId: string;
+}) {
+  return (
+    <Field
+      label={spec.label}
+      hint={spec.hint ?? "Or double-click it on the canvas."}
+    >
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="w-full justify-start"
+        onClick={() => beginInPlaceEdit(nodeId)}
+      >
+        <PencilIcon />
+        Edit {spec.label.toLowerCase()}
+      </Button>
+    </Field>
+  );
 }
 
 /**
