@@ -40,6 +40,17 @@ type Props = {
   anchorRef: RefObject<HTMLDivElement | null>;
 };
 
+type InspectorProps = Props & {
+  /**
+   * A pointer gesture is in progress — the press that selects, or the drag
+   * that moves what is selected. The popover stays away until it ends, so it
+   * opens on the release rather than under the finger that is still pressing,
+   * and is not in the way of the node being dragged
+   * (artifacts/07-interaction-spec.md).
+   */
+  suppressed?: boolean;
+};
+
 /**
  * The property editor for the selection, shown on the canvas over what it
  * edits rather than in a panel across the screen from it.
@@ -60,12 +71,16 @@ type Props = {
  * send every click in the form to the canvas's pointer handlers, which would
  * hit-test empty space and clear the selection out from under it.
  */
-export default function Inspector({ bounds, anchorRef }: Props) {
+export default function Inspector({
+  bounds,
+  anchorRef,
+  suppressed = false,
+}: InspectorProps) {
   const selection = useSelection();
 
   // The same `bounds` the anchor was drawn from, so the popover cannot outlive
   // the element it is placed against by a frame.
-  if (!bounds) return null;
+  if (!bounds || suppressed) return null;
 
   // Keyed by what is selected: a new selection is a new popover, so the
   // uncontrolled fields inside reset to the node they now describe instead of
@@ -123,10 +138,11 @@ function SelectionPopover({
       open
       onOpenChange={(_open, details) => {
         // The popover is a view of the selection, not a menu: the only
-        // dismissal is dropping the selection. Ignoring `outside-press`
-        // matters — the press that starts dragging the selected node is
-        // "outside", and closing on it would make the panel flicker away
-        // every time the node moved.
+        // dismissal is dropping the selection. `outside-press` is ignored
+        // because the press that starts dragging the selected node is
+        // "outside", and a close there would not come back on release —
+        // hiding for the length of a gesture is `suppressed`'s job, and it
+        // knows when the gesture ends.
         if (details.reason === "escape-key") clearSelection();
       }}
     >

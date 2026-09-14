@@ -3,6 +3,7 @@
 import {
   type PointerEvent,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -226,6 +227,32 @@ export function useEditorGestures({
   // without re-binding a listener per frame of a drag.
   const sceneRef = useRef(scene);
   sceneRef.current = scene;
+
+  /**
+   * A release outside the viewport never reaches `onPointerUp`, which used to
+   * leave a stale gesture for the next press to overwrite harmlessly. It is no
+   * longer harmless: the inspector is hidden for as long as a gesture is held
+   * (`isInteracting`), so a gesture that never ends would hide it for good.
+   *
+   * The viewport's own handler runs first for a release over the canvas and
+   * clears the gesture, so this sees `"none"` and does nothing.
+   */
+  const gestureRef = useRef(gesture);
+  gestureRef.current = gesture;
+
+  useEffect(() => {
+    const endStrandedGesture = () => {
+      if (gestureRef.current.kind !== "none") setGesture({ kind: "none" });
+    };
+
+    window.addEventListener("pointerup", endStrandedGesture);
+    window.addEventListener("pointercancel", endStrandedGesture);
+
+    return () => {
+      window.removeEventListener("pointerup", endStrandedGesture);
+      window.removeEventListener("pointercancel", endStrandedGesture);
+    };
+  }, []);
 
   const toWorld = useCallback(
     (event: { clientX: number; clientY: number }) =>
@@ -801,6 +828,13 @@ export function useEditorGestures({
     waypointGhost,
     compatiblePinIds,
     isWiring: wiring !== null,
+    /**
+     * Is the pointer in the middle of an editing gesture? True from the press
+     * until the release, which is what the inspector hides on: it appears when
+     * the click finishes rather than when it starts, and gets out of the way
+     * while the selection is being dragged.
+     */
+    isInteracting: gesture.kind !== "none",
     activatePin,
     cancelWiring,
     onPointerDown,

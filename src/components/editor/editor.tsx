@@ -329,7 +329,11 @@ export default function Editor({
           React tree, so a popup mounted under the canvas would feed every
           click in the form to the canvas pointer handlers, which would
           hit-test empty space and clear the selection it is editing. */}
-      <Inspector bounds={inspectorBounds} anchorRef={inspectorAnchorRef} />
+      <Inspector
+        bounds={inspectorBounds}
+        anchorRef={inspectorAnchorRef}
+        suppressed={gestures.isInteracting}
+      />
 
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
 
