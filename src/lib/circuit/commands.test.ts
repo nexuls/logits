@@ -19,6 +19,7 @@ import {
   rotateNodes,
   setDefaultZoom,
   setNodeLabel,
+  setNodeLabelPosition,
   setNodeParams,
   setWireWaypoints,
   topLeftForCenter,
@@ -276,6 +277,20 @@ describe("params and labels", () => {
 
     const cleared = setNodeLabel(labelled, nodeId, "   ");
     expect("label" in cleared.nodes[nodeId]).toBe(false);
+  });
+
+  it("places a label and stores the default as absent", () => {
+    const { document, nodeId } = addNode(doc, and, {
+      position: { x: 0, y: 0 },
+    });
+
+    const centred = setNodeLabelPosition(document, nodeId, "center");
+    expect(centred.nodes[nodeId].labelPosition).toBe("center");
+    expect(setNodeLabelPosition(centred, nodeId, "center")).toBe(centred);
+
+    const reset = setNodeLabelPosition(centred, nodeId, "bottom");
+    expect("labelPosition" in reset.nodes[nodeId]).toBe(false);
+    expect(setNodeLabelPosition(document, nodeId, "bottom")).toBe(document);
   });
 
   it("renames the document but refuses an empty name", () => {

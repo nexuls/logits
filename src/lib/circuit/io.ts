@@ -17,7 +17,7 @@ import {
  * `localStorage`. The browser side of persistence lives in `src/state/`.
  */
 
-export const CURRENT_VERSION = 3;
+export const CURRENT_VERSION = 4;
 
 export const FILE_EXTENSION = ".logits.json";
 export const FILE_MIME_TYPE = "application/json";
@@ -30,7 +30,11 @@ export const FILE_MIME_TYPE = "application/json";
  */
 const MIGRATIONS: readonly ((
   doc: Record<string, unknown>,
-) => Record<string, unknown>)[] = [migrate_1_to_2, migrate_2_to_3];
+) => Record<string, unknown>)[] = [
+  migrate_1_to_2,
+  migrate_2_to_3,
+  migrate_3_to_4,
+];
 
 /**
  * v2 added the optional `defaultZoom`. A v1 document is already a valid v2 one
@@ -51,6 +55,15 @@ function migrate_1_to_2(doc: Record<string, unknown>): Record<string, unknown> {
  * anchored end as a malformed `PinRef` and drop the wire.
  */
 function migrate_2_to_3(doc: Record<string, unknown>): Record<string, unknown> {
+  return doc;
+}
+
+/**
+ * v4 added a node's optional `labelPosition`. Absent means below the body,
+ * which is where every v3 label is drawn, so nothing is rewritten — the bump
+ * keeps a v3 build from opening a v4 file and dropping the placement on save.
+ */
+function migrate_3_to_4(doc: Record<string, unknown>): Record<string, unknown> {
   return doc;
 }
 

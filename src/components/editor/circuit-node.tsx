@@ -2,8 +2,13 @@
 
 import { useMemo } from "react";
 
-import { nodeView, valueClass } from "@/components/nodes/node-views";
+import {
+  nodeView,
+  valueClass,
+  viewDrawsName,
+} from "@/components/nodes/node-views";
 import { GRID_SIZE, orientationOf, type Rect } from "@/lib/circuit/geometry";
+import type { LabelPosition } from "@/lib/circuit/schema";
 import { PIN_LABEL_GAP } from "@/lib/nodes/label-metrics";
 import { cn } from "@/lib/utils";
 import { updateNodeParams } from "@/state/document";
@@ -111,11 +116,17 @@ export default function CircuitNode({
   const orientation = orientationOf(node.rotation);
 
   // The body says what the element *is*; `node.label` says which one it is,
-  // and hangs under the body where nothing competes with it. Keeping the two
-  // apart is what stops a renamed gate truncating its own name against a pin
-  // label, and it means the same node reads the same whether or not it has a
-  // custom view.
+  // and hangs off the side the user placed it on — below, unless told
+  // otherwise — where nothing competes with it. Keeping the two apart is what
+  // stops a renamed gate truncating its own name against a pin label. The
+  // exception is a label placed at the centre, which replaces the name: a
+  // block writes it in the name's place, and a view with no name gets it on a
+  // chip across its face.
   const name = node.label ?? def.title;
+  const labelPosition = node.labelPosition ?? "bottom";
+  const showLabelChip =
+    node.label !== undefined &&
+    (labelPosition !== "center" || !viewDrawsName(def.view));
 
   return (
     <div
@@ -254,16 +265,50 @@ export default function CircuitNode({
           ) : null,
         )}
 
-      {node.label && (
+      {showLabelChip && (
+        // Opaque and above everything else in the world layer — wires, other
+        // nodes, floating pin names — because a label sits outside the body
+        // with nothing reserved for it, and one crossed by a wire or tucked
+        // under a neighbour is not a label. Every node shares the transformed
+        // layer's stacking context, so this outranks siblings drawn later.
         <span
-          className="pointer-events-none absolute left-1/2 w-max -translate-x-1/2 text-[8px] text-muted-foreground"
-          style={{ top: bounds.height + GRID_SIZE / 4 }}
+          className={cn(
+            "pointer-events-none absolute z-50 w-max rounded-sm border border-border bg-card px-1 text-[8px] leading-[1.5] font-medium text-foreground",
+            LABEL_CHIP_CLASS[labelPosition],
+          )}
+          style={labelChipPosition(labelPosition, bounds)}
         >
           {node.label}
         </span>
       )}
     </div>
   );
+}
+
+/** Pulls the label chip off the point it is anchored to, onto its side. */
+const LABEL_CHIP_CLASS: Record<LabelPosition, string> = {
+  top: "-translate-x-1/2 -translate-y-full",
+  right: "-translate-y-1/2",
+  bottom: "-translate-x-1/2",
+  left: "-translate-x-full -translate-y-1/2",
+  center: "-translate-x-1/2 -translate-y-1/2",
+};
+
+/** Node-relative anchor for the label chip: a quarter cell off the body. */
+function labelChipPosition(position: LabelPosition, bounds: Rect) {
+  const gap = GRID_SIZE / 4;
+  switch (position) {
+    case "top":
+      return { left: bounds.width / 2, top: -gap };
+    case "right":
+      return { left: bounds.width + gap, top: bounds.height / 2 };
+    case "left":
+      return { left: -gap, top: bounds.height / 2 };
+    case "center":
+      return { left: bounds.width / 2, top: bounds.height / 2 };
+    default:
+      return { left: bounds.width / 2, top: bounds.height + gap };
+  }
 }
 
 /** Pushes an inline label off the edge it is anchored to, back into the body. */

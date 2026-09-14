@@ -22,12 +22,14 @@ import {
   type Selection,
   setDefaultZoom,
   setNodeLabel,
+  setNodeLabelPosition,
   setNodeParams,
   topLeftForCenter,
   type WireTap,
 } from "@/lib/circuit/commands";
 import type {
   CircuitDocument,
+  LabelPosition,
   PinRef,
   Point,
   Rotation,
@@ -348,6 +350,15 @@ export function updateNodeParams(
 
 export function updateNodeLabel(nodeId: string, label: string): boolean {
   return apply("label", (document) => setNodeLabel(document, nodeId, label));
+}
+
+export function updateNodeLabelPosition(
+  nodeId: string,
+  position: LabelPosition,
+): boolean {
+  return apply("label position", (document) =>
+    setNodeLabelPosition(document, nodeId, position),
+  );
 }
 
 /**

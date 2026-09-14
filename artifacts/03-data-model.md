@@ -28,6 +28,7 @@ type CircuitNode = {
   position: Point;              // world coords of the node's top-left
   rotation?: 0 | 90 | 180 | 270;
   label?: string;
+  labelPosition?: "top" | "right" | "bottom" | "left" | "center";  // absent = bottom
   params: Record<string, JsonValue>;   // validated against the definition
 };
 

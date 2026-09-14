@@ -22,6 +22,7 @@ import type { NodeViewProps } from "./node-views";
  * rather than hyphenating it into syllables.
  */
 export default function BlockView({
+  node,
   def,
   resolved,
   showPinLabels,
@@ -29,8 +30,13 @@ export default function BlockView({
   const { bounds, pins } = resolved;
 
   // What the element is called *on a schematic*: `MUX`, not `Multiplexer`.
-  // The palette, the inspector and the docs dialog keep the long name.
-  const label = def.shortTitle ?? def.title;
+  // The palette, the inspector and the docs dialog keep the long name. A label
+  // placed at the centre takes the name's place, and its fitting with it —
+  // the canvas draws no second copy over a block (`viewDrawsName`).
+  const label =
+    node.labelPosition === "center" && node.label
+      ? node.label
+      : (def.shortTitle ?? def.title);
 
   const { gutters, layout } = useMemo(() => {
     const gutters = bodyGutters(

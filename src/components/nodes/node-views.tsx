@@ -94,6 +94,15 @@ export function nodeView(name: string | undefined): NodeView {
 }
 
 /**
+ * Whether a view writes the element's name across its body. Such a view shows
+ * a centred `node.label` in the name's place itself; any other gets it drawn
+ * over its face by the canvas, since it has no name to replace.
+ */
+export function viewDrawsName(name: string | undefined): boolean {
+  return nodeView(name) === BlockView;
+}
+
+/**
  * The class for a value, shared by every view and by the wire layer, so a `1`
  * is the same colour wherever it appears.
  *

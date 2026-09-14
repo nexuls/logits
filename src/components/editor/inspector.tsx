@@ -1,12 +1,24 @@
 "use client";
 
-import { MinusIcon, PlusIcon, RotateCwIcon, Trash2Icon } from "lucide-react";
+import {
+  ArrowDownIcon,
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  ArrowUpIcon,
+  CircleDotIcon,
+  type LucideIcon,
+  MinusIcon,
+  PlusIcon,
+  RotateCwIcon,
+  Trash2Icon,
+} from "lucide-react";
 import {
   type ReactNode,
   type RefObject,
   useCallback,
   useEffect,
   useRef,
+  useState,
 } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -19,16 +31,23 @@ import {
 } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
-import { Popover, PopoverContent, PopoverTitle } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import type { Rect } from "@/lib/circuit/geometry";
+import type { LabelPosition } from "@/lib/circuit/schema";
 import type { NodeParams, ParamSpec } from "@/lib/nodes/define";
 import { lookupNode } from "@/lib/nodes/registry";
 import {
   deleteSelection,
   rotateSelection,
   updateNodeLabel,
+  updateNodeLabelPosition,
   updateNodeParams,
   useDocument,
 } from "@/state/document";
@@ -180,6 +199,7 @@ function SelectionPopover({
                 <LabelField
                   nodeId={node.id}
                   label={node.label ?? ""}
+                  position={node.labelPosition ?? "bottom"}
                   placeholder={definition?.title ?? node.type}
                 />
               </Field>
@@ -284,26 +304,145 @@ type FieldProps = {
 };
 
 /**
- * The node's own name, overriding the definition's title on the canvas.
- * Uncontrolled — the popover is keyed by the selection, so a new node is a new
- * field.
+ * The node's own name, overriding the definition's title on the canvas, and
+ * the side of the body it is drawn on. Uncontrolled — the popover is keyed by
+ * the selection, so a new node is a new field.
  */
 function LabelField({
   nodeId,
   label,
+  position,
   placeholder,
 }: {
   nodeId: string;
   label: string;
+  position: LabelPosition;
   placeholder: string;
 }) {
   return (
-    <CommitInput
-      id="inspector-label"
-      initial={label}
-      placeholder={placeholder}
-      onCommit={(value) => updateNodeLabel(nodeId, value)}
-    />
+    <div className="flex gap-1.5">
+      <div className="min-w-0 flex-1">
+        <CommitInput
+          id="inspector-label"
+          initial={label}
+          placeholder={placeholder}
+          onCommit={(value) => updateNodeLabel(nodeId, value)}
+        />
+      </div>
+      <LabelPositionPicker nodeId={nodeId} position={position} />
+    </div>
+  );
+}
+
+/**
+ * The five placements in the order a reader meets them, each with the grid
+ * cell it sits in — so the picker is laid out as the node it describes, with
+ * the centre in the middle, and Tab walks it top to bottom.
+ */
+const LABEL_POSITIONS: readonly {
+  value: LabelPosition;
+  label: string;
+  Icon: LucideIcon;
+  cell: string;
+}[] = [
+  {
+    value: "top",
+    label: "Top",
+    Icon: ArrowUpIcon,
+    cell: "col-start-2 row-start-1",
+  },
+  {
+    value: "left",
+    label: "Left",
+    Icon: ArrowLeftIcon,
+    cell: "col-start-1 row-start-2",
+  },
+  {
+    value: "center",
+    label: "Center",
+    Icon: CircleDotIcon,
+    cell: "col-start-2 row-start-2",
+  },
+  {
+    value: "right",
+    label: "Right",
+    Icon: ArrowRightIcon,
+    cell: "col-start-3 row-start-2",
+  },
+  {
+    value: "bottom",
+    label: "Bottom",
+    Icon: ArrowDownIcon,
+    cell: "col-start-2 row-start-3",
+  },
+];
+
+/**
+ * Where the label goes, as a pad of five buttons in a popup of its own rather
+ * than a select: the choice is spatial, and a cross of arrows around the
+ * middle says "which side" at a glance where a list of words has to be read.
+ *
+ * Each press is one command, so one undo entry. The trigger wears the current
+ * placement's icon, and the chosen button is marked with `aria-pressed` and a
+ * filled style — a shape difference, not only a colour one.
+ */
+function LabelPositionPicker({
+  nodeId,
+  position,
+}: {
+  nodeId: string;
+  position: LabelPosition;
+}) {
+  const [open, setOpen] = useState(false);
+  const current =
+    LABEL_POSITIONS.find((option) => option.value === position) ??
+    LABEL_POSITIONS[LABEL_POSITIONS.length - 1];
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        render={
+          <Button
+            type="button"
+            variant="outline"
+            size="icon-lg"
+            aria-label={`Label position: ${current.label}`}
+            title={`Label position: ${current.label}`}
+          />
+        }
+      >
+        <current.Icon />
+      </PopoverTrigger>
+      <PopoverContent
+        side="bottom"
+        align="end"
+        className="w-auto gap-0 rounded-xl p-2"
+      >
+        <fieldset
+          aria-label="Label position"
+          className="m-0 grid grid-cols-3 grid-rows-3 gap-1 border-0 p-0"
+        >
+          {LABEL_POSITIONS.map(({ value, label, Icon, cell }) => (
+            <Button
+              key={value}
+              type="button"
+              variant={value === position ? "default" : "outline"}
+              size="icon-sm"
+              aria-label={label}
+              aria-pressed={value === position}
+              title={label}
+              className={cell}
+              onClick={() => {
+                updateNodeLabelPosition(nodeId, value);
+                setOpen(false);
+              }}
+            >
+              <Icon />
+            </Button>
+          ))}
+        </fieldset>
+      </PopoverContent>
+    </Popover>
   );
 }
 

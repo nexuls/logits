@@ -186,9 +186,14 @@ that helper rather than writing a second one.
   for those switches to turn off.
 - The body's title gives up the width the labels on its left and right edges
   occupy, and wraps to two lines rather than running underneath them. The
-  element's own name — `node.label`, if it has one — hangs *below* the body,
-  never inside it, so a renamed element does not fight its own pins for the
-  same row.
+  element's own name — `node.label`, if it has one — hangs *outside* the body,
+  below it unless the inspector's position pad (the button beside the label
+  field: top, left, centre, right, bottom) says otherwise, so a renamed element
+  does not fight its own pins for the same row. It sits on an opaque chip above
+  everything else in the world layer, wires and neighbouring nodes included.
+  **Centre** is the one placement inside the body: a block writes the label in
+  place of the element's name, and a view with no name gets the chip across
+  its face.
 - Never rely on colour alone: `X` gets a `!` on the wire and a badge on the
   node, a floating net gets `~`, and every diagnostic is a row in the
   diagnostics panel that selects the element it is about when clicked.

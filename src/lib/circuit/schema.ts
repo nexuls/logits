@@ -28,6 +28,20 @@ export type PinRef = z.infer<typeof pinRefSchema>;
 export const rotationSchema = z.literal([0, 90, 180, 270]);
 export type Rotation = z.infer<typeof rotationSchema>;
 
+/**
+ * Which side of the body `label` is drawn on. `"center"` writes it inside the
+ * body in place of the element's own name. Absent means `"bottom"`, which is
+ * where every label went before this field existed.
+ */
+export const labelPositionSchema = z.enum([
+  "top",
+  "right",
+  "bottom",
+  "left",
+  "center",
+]);
+export type LabelPosition = z.infer<typeof labelPositionSchema>;
+
 export const circuitNodeSchema = z.object({
   id: idSchema,
   /** Registry key, e.g. `"gate.and"`. Part of the save format; never renamed. */
@@ -36,6 +50,9 @@ export const circuitNodeSchema = z.object({
   position: pointSchema,
   rotation: rotationSchema.optional(),
   label: z.string().max(200).optional(),
+  // An unrecognised placement falls back to the default rather than dropping
+  // the node: where a name is drawn is not worth losing the element over.
+  labelPosition: labelPositionSchema.optional().catch(undefined),
   /** Shape is validated against the node definition's `paramsSchema`, not here. */
   params: z.record(z.string(), z.json()),
 });

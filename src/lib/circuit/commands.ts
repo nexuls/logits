@@ -17,6 +17,7 @@ import {
   type CircuitDocument,
   type CircuitNode,
   isWireAnchor,
+  type LabelPosition,
   type PinRef,
   type Point,
   type Rotation,
@@ -244,6 +245,26 @@ export function setNodeLabel(
   const next = { ...node };
   if (trimmed) next.label = trimmed;
   else delete next.label;
+
+  return replaceNode(document, next);
+}
+
+/**
+ * Where the label is drawn. `"bottom"` is stored as absent, so a node that was
+ * moved back to the default serialises exactly as one that never moved.
+ */
+export function setNodeLabelPosition(
+  document: CircuitDocument,
+  nodeId: string,
+  position: LabelPosition,
+): CircuitDocument {
+  const node = document.nodes[nodeId];
+  if (!node) return document;
+  if ((node.labelPosition ?? "bottom") === position) return document;
+
+  const next = { ...node };
+  if (position === "bottom") delete next.labelPosition;
+  else next.labelPosition = position;
 
   return replaceNode(document, next);
 }
