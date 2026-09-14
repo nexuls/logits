@@ -6,6 +6,7 @@ import {
   ArrowRightIcon,
   ArrowUpIcon,
   CircleDotIcon,
+  InfoIcon,
   type LucideIcon,
   MinusIcon,
   PlusIcon,
@@ -72,6 +73,7 @@ import {
   type SelectionState,
   useSelection,
 } from "@/state/selection";
+import NodeDocsDialog from "./node-docs-dialog";
 
 type Props = {
   /** The selection's world-space box, or null when nothing is selected. */
@@ -172,6 +174,7 @@ function SelectionPopover({
       : undefined;
   const definition = node ? lookupNode(node.type) : undefined;
   const total = selection.nodeIds.length + selection.wireIds.length;
+  const [docsOpen, setDocsOpen] = useState(false);
 
   return (
     <Popover
@@ -201,11 +204,40 @@ function SelectionPopover({
         // undifferentiated column of controls.
         className="w-68 gap-0 overflow-hidden rounded-xl p-0"
       >
-        <PopoverTitle className="border-b border-border/60 px-3.5 py-2.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          {node
-            ? (definition?.title ?? node.type)
-            : `${total} element${total === 1 ? "" : "s"} selected`}
-        </PopoverTitle>
+        {/* The help button is a sibling of the title, not inside it, so the
+            popover's accessible name stays the element's title alone. */}
+        <div className="flex items-center gap-2 border-b border-border/60 py-1.5 pr-2 pl-3.5">
+          <PopoverTitle className="min-w-0 flex-1 truncate py-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            {node
+              ? (definition?.title ?? node.type)
+              : `${total} element${total === 1 ? "" : "s"} selected`}
+          </PopoverTitle>
+          {definition && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => setDocsOpen(true)}
+              aria-label={`About ${definition.title}`}
+              aria-haspopup="dialog"
+              title={`About ${definition.title}`}
+              className="text-muted-foreground"
+            >
+              <InfoIcon />
+            </Button>
+          )}
+        </div>
+
+        {/* Mounted only once opened, like the palette's. The editor shortcuts
+            stand down inside a dialog, so Delete or Esc here act on the
+            dialog, not on the node it describes. */}
+        {definition && docsOpen && (
+          <NodeDocsDialog
+            definition={definition}
+            open={docsOpen}
+            onOpenChange={setDocsOpen}
+          />
+        )}
 
         {(node || !definition) && (
           <div className="flex flex-col gap-4 px-3.5 py-3.5">

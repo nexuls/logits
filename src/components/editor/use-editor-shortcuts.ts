@@ -49,6 +49,20 @@ export function isEditableTarget(target: EventTarget | null): boolean {
   );
 }
 
+/**
+ * A modal dialog owns the keyboard while it is open — it traps focus, so every
+ * key pressed then targets something inside it. The editor stands down rather
+ * than acting on a selection the user cannot see: Delete while reading a
+ * node's docs must not delete the node, and Esc closes the dialog, not the
+ * dialog *and* the selection behind it.
+ */
+function isInDialog(target: EventTarget | null): boolean {
+  return (
+    target instanceof Element &&
+    target.closest('[data-slot="dialog-content"]') !== null
+  );
+}
+
 type Options = {
   /** Where the pointer last was, for pasting at the cursor. */
   pointerWorld: () => Point;
@@ -81,6 +95,8 @@ export function useEditorShortcuts({
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
+      if (isInDialog(event.target)) return;
+
       const editable = isEditableTarget(event.target);
       const accel = event.ctrlKey || event.metaKey;
 
@@ -194,7 +210,13 @@ export function useEditorShortcuts({
     };
 
     const onKeyUp = (event: KeyboardEvent) => {
-      if (event.code !== "Space" || isEditableTarget(event.target)) return;
+      if (
+        event.code !== "Space" ||
+        isEditableTarget(event.target) ||
+        isInDialog(event.target)
+      ) {
+        return;
+      }
 
       const held = event.timeStamp - spaceDown.at;
       if (!spaceDown.pointerUsed && held < SPACE_TAP_MS) togglePlay();

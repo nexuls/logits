@@ -60,7 +60,7 @@ canvas header, the right one from the panel button in its own header.
 | Gesture | Action |
 | --- | --- |
 | Click a palette element, then click the canvas / `Ctrl+K` command menu | Place a node. The command menu places at the last pointer position |
-| Click the info button on a palette element | Open its help dialog — the definition's `docs`, plus pin and setting tables derived from the definition. The button appears on hover and whenever anything in the row has focus, so it is tabbable but quiet at rest |
+| Click the info button on a palette element, or beside the title of the inspector popover | Open its help dialog — the definition's `docs`, plus pin and setting tables derived from the definition. In the palette the button appears on hover and whenever anything in the row has focus, so it is tabbable but quiet at rest; in the inspector it is always shown when a single node with a known definition is selected |
 | Click an armed palette element again | Arm one more copy, up to 6. Right-click (or `-`/`ArrowDown` on the focused entry) takes one back off; down past one disarms |
 | Move the pointer over the canvas while armed | A dashed ghost of the batch follows the cursor, drawn at the snapped positions the click will use. It is one undo step however many copies land |
 | Left-drag on a node | Move (snapped to the 10-unit grid; hold `Alt` to bypass). A wire with *both* ends in the move travels whole, bends included; a wire with only one end in it stretches and keeps its bends where they are |
@@ -98,6 +98,11 @@ canvas header, the right one from the panel button in its own header.
 Never bind a plain letter key while a text input or `contentEditable` has focus.
 `use-canvas-mouse-actions.ts` already has an `isEditableTarget` guard — reuse
 that helper rather than writing a second one.
+
+While a modal dialog (help, settings, the command menu) has focus, none of the
+editor shortcuts above fire. The dialog owns the keyboard: `Delete` while
+reading a node's help must not delete the node, and `Esc` closes the dialog
+without also clearing the selection behind it.
 
 ## Wiring rules
 
