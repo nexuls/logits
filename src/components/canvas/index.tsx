@@ -52,8 +52,11 @@ type Props = {
    * where "reset view" goes regardless of this.
    */
   restoredView?: Viewport | null;
-  /** World-space extent of `children`, for the minimap. Null when empty. */
-  contentBounds?: Rect | null;
+  /**
+   * World-space extent of `children`, one box per connected group, for the
+   * minimap. Empty when there is nothing on the canvas.
+   */
+  contentGroups?: readonly Rect[];
   /** Passed through to the minimap, which samples theme colours imperatively. */
   themeKey?: string;
   onTitleChange?: (newTitle: string) => void;
@@ -78,6 +81,9 @@ type Props = {
   onViewportChange?: (viewport: CanvasViewport) => void;
 };
 
+/** Stable identity, so the default does not re-render the minimap every frame. */
+const EMPTY_GROUPS: readonly Rect[] = [];
+
 export default function Canvas({
   children,
   overlay,
@@ -87,7 +93,7 @@ export default function Canvas({
   defaultZoom = DEFAULT_SCALE,
   viewKey,
   restoredView = null,
-  contentBounds = null,
+  contentGroups = EMPTY_GROUPS,
   themeKey,
   onTitleChange,
   onOpenSettings,
@@ -243,7 +249,7 @@ export default function Canvas({
           scale={scale}
           offset={offset}
           viewportSize={viewportSize}
-          contentBounds={contentBounds}
+          contentGroups={contentGroups}
           themeKey={themeKey}
           onZoomIn={zoomIn}
           onZoomOut={zoomOut}

@@ -26,11 +26,13 @@ type Props = {
   offset: Point;
   viewportSize: Size;
   /**
-   * World-space box around everything on the canvas, or null when it is empty.
-   * The minimap draws it as the content footprint and fits the preview around
-   * it, so panning away from the circuit still shows where the circuit is.
+   * World-space boxes, one per connected group on the canvas — empty when the
+   * canvas is. The minimap draws each as its own footprint and fits the
+   * preview around all of them, so panning away from the circuit still shows
+   * where the circuit is, and two circuits far apart read as two footprints
+   * rather than one rectangle spanning the gap between them.
    */
-  contentBounds: Rect | null;
+  contentGroups: readonly Rect[];
   /**
    * Opaque repaint key. The minimap samples `--sidebar` / `--foreground` /
    * `--primary` imperatively, so a theme change is invisible to React and the
@@ -51,18 +53,27 @@ const VIEWER_HEIGHT = 84;
 const VIEWER_PADDING = 5;
 
 /**
+ * A group of one small node is a fraction of a pixel once a wide canvas is fit
+ * into 142px, so every footprint is drawn at least this big — visible as a
+ * mark, still honest about where it is.
+ */
+const MIN_GROUP_PX = 3;
+const GROUP_ALPHA = 0.45;
+const GROUP_RADIUS = 2;
+
+/**
  * Renders a minimap-style canvas viewer for the main infinite canvas.
  *
  * The viewer projects world coordinates into a fixed-size preview and draws:
  * 1) minimap background + dot field,
- * 2) optional content footprint,
+ * 2) one translucent footprint per connected group,
  * 3) current viewport as a rounded overlay.
  */
 export default function Minimap({
   scale,
   offset,
   viewportSize,
-  contentBounds,
+  contentGroups,
   themeKey,
   onZoomIn,
   onZoomOut,
@@ -89,17 +100,18 @@ export default function Minimap({
     const viewW = width / safeScale;
     const viewH = height / safeScale;
 
-    // With nothing on the canvas the footprint collapses onto the viewport, so
-    // the fit below is driven by the viewport alone.
-    const contentX = contentBounds?.x ?? viewX;
-    const contentY = contentBounds?.y ?? viewY;
-    const contentW = contentBounds?.width ?? 0;
-    const contentH = contentBounds?.height ?? 0;
+    // With nothing on the canvas the fit is driven by the viewport alone.
+    let minX = viewX;
+    let minY = viewY;
+    let maxX = viewX + viewW;
+    let maxY = viewY + viewH;
 
-    const minX = Math.min(viewX, contentX);
-    const minY = Math.min(viewY, contentY);
-    const maxX = Math.max(viewX + viewW, contentX + contentW);
-    const maxY = Math.max(viewY + viewH, contentY + contentH);
+    for (const group of contentGroups) {
+      minX = Math.min(minX, group.x);
+      minY = Math.min(minY, group.y);
+      maxX = Math.max(maxX, group.x + group.width);
+      maxY = Math.max(maxY, group.y + group.height);
+    }
 
     return {
       minX,
@@ -112,15 +124,9 @@ export default function Minimap({
         width: viewW,
         height: viewH,
       },
-      content: {
-        x: contentX,
-        y: contentY,
-        width: contentW,
-        height: contentH,
-      },
     };
   }, [
-    contentBounds,
+    contentGroups,
     offset.x,
     offset.y,
     scale,
@@ -187,16 +193,20 @@ export default function Minimap({
     const worldToMiniY = (y: number) =>
       drawY + (y - worldView.minY) * scaleToMini;
 
-    // Show the content footprint in minimap space when content exists.
-    ctx.globalAlpha = 0.5;
-    if (contentBounds) {
-      const contentX = worldToMiniX(worldView.content.x);
-      const contentY = worldToMiniY(worldView.content.y);
-      const contentW = Math.max(worldView.content.width * scaleToMini, 10);
-      const contentH = Math.max(worldView.content.height * scaleToMini, 6);
+    // One footprint per connected group. They are drawn translucent and may
+    // overlap — a group's box is its bounding box, not its shape, so two
+    // interleaved circuits legitimately cover the same ground.
+    ctx.globalAlpha = GROUP_ALPHA;
+    ctx.fillStyle = foregroundColor;
+    for (const group of contentGroups) {
+      const groupX = worldToMiniX(group.x);
+      const groupY = worldToMiniY(group.y);
+      const groupW = Math.max(group.width * scaleToMini, MIN_GROUP_PX);
+      const groupH = Math.max(group.height * scaleToMini, MIN_GROUP_PX);
 
-      ctx.fillStyle = foregroundColor;
-      ctx.fillRect(contentX, contentY, contentW, contentH);
+      ctx.beginPath();
+      ctx.roundRect(groupX, groupY, groupW, groupH, GROUP_RADIUS);
+      ctx.fill();
     }
 
     const viewX = worldToMiniX(worldView.viewport.x);
@@ -211,7 +221,7 @@ export default function Minimap({
     ctx.roundRect(viewX, viewY, viewW, viewH, 4);
     ctx.fill();
     ctx.globalAlpha = 1;
-  }, [contentBounds, worldView, themeKey]);
+  }, [contentGroups, worldView, themeKey]);
 
   return (
     <div className="absolute left-0 bottom-0 w-44 rounded-tr-lg bg-sidebar p-2">

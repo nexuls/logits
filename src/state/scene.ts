@@ -261,3 +261,109 @@ function stableStringify(value: unknown): string {
 export function clearSceneCaches(): void {
   layoutCache.clear();
 }
+
+/**
+ * The scene's connected groups, each as one world-space box.
+ *
+ * Two nodes are in the same group when a wire joins them, directly or through
+ * other nodes; a branch belongs to the wire it taps. An unwired node is a
+ * group of one. The minimap draws these rather than one box around everything,
+ * so two circuits sitting far apart on the canvas read as two circuits instead
+ * of one rectangle spanning the empty space between them.
+ *
+ * Deterministic: groups come out in the document's own node order, which is
+ * the order `buildScene` walked, so the same document always yields the same
+ * list.
+ */
+export function sceneClusters(scene: Scene): Rect[] {
+  // Wires get their own keys, not just the nodes they join: a branch's `from`
+  // is a bend on another *wire*, so wire-to-wire is a real edge here.
+  const parent = new Map<string, string>();
+
+  const find = (key: string): string => {
+    let root = parent.get(key);
+    if (root === undefined) {
+      parent.set(key, key);
+      return key;
+    }
+    while (root !== key) {
+      key = root;
+      root = parent.get(key) ?? key;
+    }
+    return root;
+  };
+
+  const union = (a: string, b: string) => {
+    const rootA = find(a);
+    const rootB = find(b);
+    if (rootA !== rootB) parent.set(rootA, rootB);
+  };
+
+  const nodeKey = (id: string) => `node:${id}`;
+  const wireKey = (id: string) => `wire:${id}`;
+
+  // Seeded in document order so the output order follows it rather than
+  // whichever end a wire happened to mention first.
+  for (const id of Object.keys(scene.nodes)) find(nodeKey(id));
+
+  for (const [id, resolved] of Object.entries(scene.wires)) {
+    const key = wireKey(id);
+    find(key);
+
+    const from = resolved.wire.from;
+    union(
+      key,
+      isWireAnchor(from) ? wireKey(from.wireId) : nodeKey(from.nodeId),
+    );
+    union(key, nodeKey(resolved.wire.to.nodeId));
+  }
+
+  const boxes = new Map<string, Rect>();
+
+  const cover = (key: string, x: number, y: number, width = 0, height = 0) => {
+    const root = find(key);
+    const box = boxes.get(root);
+    if (!box) {
+      boxes.set(root, { x, y, width, height });
+      return;
+    }
+    const maxX = Math.max(box.x + box.width, x + width);
+    const maxY = Math.max(box.y + box.height, y + height);
+    box.x = Math.min(box.x, x);
+    box.y = Math.min(box.y, y);
+    box.width = maxX - box.x;
+    box.height = maxY - box.y;
+  };
+
+  for (const [id, node] of Object.entries(scene.nodes)) {
+    const { x, y, width, height } = node.bounds;
+    cover(nodeKey(id), x, y, width, height);
+  }
+
+  // Wire points too, so a hand-routed detour that leaves its nodes' box is
+  // still inside the group's.
+  for (const [id, wire] of Object.entries(scene.wires)) {
+    for (const point of wire.points) cover(wireKey(id), point.x, point.y);
+  }
+
+  return [...boxes.values()];
+}
+
+/** One box around every group — the whole scene's extent, or null when empty. */
+export function boundsOf(rects: readonly Rect[]): Rect | null {
+  if (rects.length === 0) return null;
+
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+
+  for (const rect of rects) {
+    minX = Math.min(minX, rect.x);
+    minY = Math.min(minY, rect.y);
+    maxX = Math.max(maxX, rect.x + rect.width);
+    maxY = Math.max(maxY, rect.y + rect.height);
+  }
+
+  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+}

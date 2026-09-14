@@ -7,7 +7,6 @@ import {
   type CanvasViewport,
   IDENTITY_VIEWPORT,
 } from "@/components/canvas/canvas-viewport";
-import type { Rect } from "@/lib/circuit/geometry";
 import type { Point } from "@/lib/circuit/schema";
 import { subcircuitLookup } from "@/lib/circuit/subcircuit";
 import type { NodeDefinition } from "@/lib/nodes/define";
@@ -20,7 +19,7 @@ import {
   useDocument,
   useIsEphemeral,
 } from "@/state/document";
-import { buildScene, type Scene } from "@/state/scene";
+import { buildScene, sceneClusters } from "@/state/scene";
 import { pruneSelection, selectOnly, useSelection } from "@/state/selection";
 import { getNetlist, syncDocument, useDiagnostics } from "@/state/simulation";
 import CommandMenu from "./command-menu";
@@ -199,7 +198,9 @@ export default function Editor({
     return { nodes, wires };
   }, [diagnostics]);
 
-  const contentBounds = useMemo(() => sceneBounds(scene), [scene]);
+  // One box per connected group, not one around everything: the minimap draws
+  // them separately, and the canvas fits the preview to their union.
+  const contentGroups = useMemo(() => sceneClusters(scene), [scene]);
 
   const placeFromMenu = useCallback((definition: NodeDefinition) => {
     // The command menu has no click to place at, so it uses wherever the
@@ -220,7 +221,7 @@ export default function Editor({
         // re-framing then would use the outgoing circuit's zoom.
         viewKey={document?.id ?? ""}
         restoredView={restoredView}
-        contentBounds={contentBounds}
+        contentGroups={contentGroups}
         themeKey={themeKey}
         cursor={gestures.cursor}
         onViewportChange={onViewportChange}
@@ -339,37 +340,4 @@ export default function Editor({
       />
     </>
   );
-}
-
-/**
- * World-space extent of everything drawn, for the minimap. Null when the
- * circuit is empty, which is what tells the minimap to frame the viewport
- * instead.
- */
-function sceneBounds(scene: Scene): Rect | null {
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-
-  for (const node of Object.values(scene.nodes)) {
-    minX = Math.min(minX, node.bounds.x);
-    minY = Math.min(minY, node.bounds.y);
-    maxX = Math.max(maxX, node.bounds.x + node.bounds.width);
-    maxY = Math.max(maxY, node.bounds.y + node.bounds.height);
-  }
-
-  // Wires too, so a hand-routed detour that leaves the nodes' box is still in
-  // frame rather than being clipped out of the preview.
-  for (const wire of Object.values(scene.wires)) {
-    for (const point of wire.points) {
-      minX = Math.min(minX, point.x);
-      minY = Math.min(minY, point.y);
-      maxX = Math.max(maxX, point.x);
-      maxY = Math.max(maxY, point.y);
-    }
-  }
-
-  if (minX === Infinity) return null;
-  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
 }
