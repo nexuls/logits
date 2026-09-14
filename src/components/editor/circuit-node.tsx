@@ -213,7 +213,11 @@ export default function CircuitNode({
             // no pointer events; it exists for Tab-and-Enter and the tooltip.
             // `click` still fires from the keyboard on a focused button.
             className={cn(
-              "pointer-events-none absolute size-2.25 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-current bg-card outline-none",
+              "pointer-events-none absolute size-2.25 -translate-x-1/2 -translate-y-1/2 border-2 border-current bg-card outline-none",
+              // Direction is told by shape, not colour, which already carries
+              // the signal value: a pin that drives (out, inout) is round, a
+              // pin that only listens is a rounded square.
+              pin.spec.direction === "in" ? "rounded-xs" : "rounded-full",
               "focus-visible:ring-2 focus-visible:ring-ring",
               valueClass(value),
               wiring &&

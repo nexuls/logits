@@ -159,6 +159,9 @@ that helper rather than writing a second one.
   wire is the same weight at every zoom. The value label sits at the middle of
   the wire's *longest* segment, which on a diagonal route is the only place it
   is reliably clear of both nodes.
+- A pin's shape says which way it points, since its colour is already the
+  signal value: a pin that drives (`out`, `inout`) is a circle, a pin that only
+  listens (`in`) is a square with rounded corners.
 - Each pin is named on the element it belongs to, just *inside* the body on the
   edge the pin ended up on after rotation — the outside is where its wire
   leaves, and a label there would sit under every route into the node. The text
