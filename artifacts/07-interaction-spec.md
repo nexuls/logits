@@ -85,6 +85,7 @@ canvas header, the right one from the panel button in its own header.
 | `Enter` on a pin | Start a wire, then `Enter` on a second pin to finish it |
 | Click an `io.switch` / `io.button` | Toggle / press. It works while paused too — the engine settles the edit — and the position is a param, so it undoes |
 | Click an `io.keyboard`, or `Enter` on it | Capture the keyboard: every key, `Space`/`Delete`/`Tab`/`Ctrl+Z` included, goes to the circuit and none reaches the editor. The configured exit chord (`Esc` by default, or `Shift+Esc` / `Ctrl+]`) hands it back and is not sent; a press outside the element or leaving the window also ends capture, releasing any held keys. The face reads *Typing* and shows the exit chord, so the mode is not told by the ring colour alone |
+| Press and drag on an `io.drawpad` | Paint. The first pixel pressed flips, and the rest of the stroke sets every pixel it crosses to that same value, so one stroke only draws or only erases; one stroke is one undo step. Focused (`Tab`), the arrow keys move a cursor, `Shift`+arrow draws as it moves, and `Space`/`Enter` flips the pixel under the cursor. **Clear** on the face empties the pad |
 | `R` | Rotate selection 90° |
 | `Ctrl+D` | Duplicate |
 | `Ctrl+Z` / `Ctrl+Shift+Z` | Undo / redo |

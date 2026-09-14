@@ -1,6 +1,7 @@
 import {
   ActivityIcon,
   BinaryIcon,
+  BrushIcon,
   CalculatorIcon,
   ChevronsLeftRightIcon,
   CircleDotIcon,
@@ -232,6 +233,7 @@ const NODE_ICONS: Record<string, NodeIcon> = {
   bargraph: lucide(SignalHighIcon),
   matrix: lucide(Grid3x3Icon),
   keypad: lucide(KeyboardIcon),
+  brush: lucide(BrushIcon),
   power: lucide(PowerIcon),
   chip: lucide(CpuIcon),
   port: lucide(PlugIcon),

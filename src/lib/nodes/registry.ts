@@ -27,6 +27,7 @@ import { segmentReadoutNode } from "./instruments/segreadout";
 import { sevenSegmentNode } from "./instruments/sevenseg";
 import { buttonNode } from "./io/button";
 import { constantNode } from "./io/constant";
+import { drawpadNode } from "./io/drawpad";
 import { keyboardNode } from "./io/keyboard";
 import { keypadNode } from "./io/keypad";
 import { kickstartNode } from "./io/kickstart";
@@ -71,6 +72,7 @@ export const nodeDefinitions: readonly NodeDefinition[] = [
   buttonNode,
   keypadNode,
   keyboardNode,
+  drawpadNode,
   constantNode,
   kickstartNode,
   ledNode,
