@@ -4,6 +4,7 @@ import { AlertTriangleIcon, ChevronUpIcon } from "lucide-react";
 import { type PointerEvent, useId, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatSimTime } from "@/lib/sim/time";
 import { cn } from "@/lib/utils";
 import {
@@ -65,9 +66,14 @@ export default function PerformanceMonitor({ expanded, onToggle }: Props) {
         <div className="min-h-0 overflow-hidden">
           {/* Laid out at the expanded width throughout, so collapsing clips
               the details rather than reflowing them as the box narrows. */}
-          <div className="max-h-[min(34rem,calc(100dvh-9rem))] w-120 max-w-[100vw] overflow-y-auto border-b border-border p-3">
-            <Details snapshot={snapshot} />
-          </div>
+          {/* The cap goes on the viewport, not the root: the root has no
+              definite height, so the viewport's `size-full` would otherwise
+              grow to the content and never scroll. */}
+          <ScrollArea className="w-120 max-w-[100vw] border-b border-border *:data-[slot=scroll-area-viewport]:max-h-[min(34rem,calc(100dvh-9rem))]">
+            <div className="p-3">
+              <Details snapshot={snapshot} />
+            </div>
+          </ScrollArea>
         </div>
       </div>
 

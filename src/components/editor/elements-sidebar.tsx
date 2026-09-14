@@ -132,7 +132,9 @@ function Body({ selectedType, selectedCount = 0, onAdjustCount }: Props) {
 
         <SidebarSeparator className="mx-0" />
 
-        <SidebarContent>
+        {/* shadcn hides overflow in icon mode, which assumes a rail short
+            enough to fit; the palette is not, so the rail scrolls too. */}
+        <SidebarContent className="overscroll-contain group-data-[collapsible=icon]:overflow-x-hidden group-data-[collapsible=icon]:overflow-y-auto">
           {groups.map((category) => (
             // While searching every group is forced open: a hit hidden behind
             // a collapsed header reads as no hit at all. The collapsed set is

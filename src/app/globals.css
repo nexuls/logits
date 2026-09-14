@@ -143,9 +143,12 @@
   html {
     @apply font-sans;
   }
+  /* The app is a fixed full-viewport editor; every scrolling region is its
+     own. Without this, a fast wheel that runs off the end of one chains to
+     the document, which flashes the browser's scrollbar. */
   html,
   body {
-    @apply h-full w-full;
+    @apply h-full w-full overflow-hidden overscroll-none;
   }
 }
 
