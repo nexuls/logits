@@ -47,11 +47,37 @@ describe("registry", () => {
       }
     });
 
-    it("has unique pin ids and at least one pin", () => {
+    it("has unique pin ids, and pins unless it is a decoration", () => {
       const ids = pins.map((pin) => pin.id);
+
+      // A decoration is not part of the circuit, so a pin or an `evaluate` on
+      // one is a part pretending to be a note. Anything else without pins is
+      // a definition that forgot them.
+      if (definition.decoration) {
+        expect(ids).toHaveLength(0);
+        expect(definition.evaluate).toBeUndefined();
+        return;
+      }
 
       expect(ids.length).toBeGreaterThan(0);
       expect(new Set(ids).size).toBe(ids.length);
+    });
+
+    // The handles write these two params and nothing else, so a `size` that
+    // derived its footprint from anything more would fight the drag.
+    it("sizes itself from exactly the params its resize handles write", () => {
+      const { resize } = definition;
+      if (!resize) return;
+
+      const params = {
+        ...definition.defaultParams,
+        [resize.width.key]: resize.width.min + 3,
+        [resize.height.key]: resize.height.min + 5,
+      };
+      expect(definition.size(params)).toEqual({
+        width: resize.width.min + 3,
+        height: resize.height.min + 5,
+      });
     });
 
     // The palette's info dialog is driven straight off `docs`, so a node

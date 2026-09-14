@@ -91,9 +91,9 @@ which break tree-shaking and make ordering non-deterministic.
       work that out for itself.
 - [ ] `size()` is in grid units and leaves room for every pin.
 - [ ] Every configurable param has a `paramsSchema` entry, so the inspector can
-      offer it. The `kind` picks the control (`int` — a stepper, `bool`, `text`,
-      `select`, `color` — a row of swatches); never edit the inspector to add a
-      node. A `color` option carries a `swatch` CSS colour, and the node's own
+      offer it. The `kind` picks the control (`int` — a stepper, `bool`, `text`
+      — a textarea with `multiline: true`, `select`, `color` — a row of
+      swatches); never edit the inspector to add a node. A `color` option carries a `swatch` CSS colour, and the node's own
       view reads it back through `colorParam`, so the palette is declared once
       in the definition rather than duplicated in the view.
 - [ ] Stateful nodes implement `createState`; state is JSON-serialisable and
@@ -207,7 +207,7 @@ run of literal backticks and is invisible until someone opens the dialog.
 
 ## When a node is more than pins and an `evaluate`
 
-Four optional hooks on `NodeDefinition` let a node do something structural
+Six optional hooks on `NodeDefinition` let a node do something structural
 without any other file learning its `type`. Each is answered by exactly one
 family today, and each is the reason a rule in `AGENTS.md` still holds:
 
@@ -228,8 +228,23 @@ family today, and each is the reason a rule in `AGENTS.md` still holds:
   inside a chip. Only `sub.port` answers. See
   [ADR 0010](decisions/0010-subcircuits-are-derived-node-types.md).
 
+- **`resize`** — `{ width: { key, min, max }, height: { key, min, max } }`,
+  in grid cells. The canvas draws eight handles on the sole selected node and
+  the drag writes those two params (and the position, for a top or left edge)
+  as one undo step through `resizeNode`; the inspector's steppers for the same
+  params are the keyboard path. `size` must return exactly those params, and
+  `registry.test.ts` checks it. `deco.text` and `deco.group` use it.
+- **`decoration`** — the element is not part of the circuit: no pins, no
+  `evaluate` (`registry.test.ts` holds both), drawn without the card every part
+  sits on, and with no node label. `decoration.enclosure` makes it a container:
+  `paintOrder` in [scene.ts](../src/state/scene.ts) paints it beneath the wires
+  and every other node, `nodeAt` picks it only by its `headerCells` and its
+  edge, a rubber band has to surround it, and when `carries(params)` a drag
+  brings everything lying wholly inside it (`withEnclosedNodes`). `deco.group`
+  is the only enclosure.
+
 If a node needs something structural that none of these covers, the fix is a
-fourth hook on the contract, not a `type` comparison in the netlist.
+new hook on the contract, not a `type` comparison in the netlist.
 
 ## How a node is drawn
 

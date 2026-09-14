@@ -42,6 +42,8 @@ export type ParamSpec =
       label: string;
       kind: "text";
       maxLength?: number;
+      /** A textarea rather than a one-line input, for prose and Markdown. */
+      multiline?: boolean;
       hint?: string;
     }
   | {
@@ -239,6 +241,38 @@ export type NodeDefinition = {
   /** In grid cells. Must leave room for every pin `pins()` returns. */
   size: (params: NodeParams) => Size;
   /**
+   * The params the canvas's resize handles write, in grid cells, for a node
+   * whose footprint is whatever the user drags it to — a text box, a group.
+   *
+   * Declared rather than recognised, so the handles, the gesture and the
+   * inspector's steppers (the keyboard path to the same edit) all come from
+   * this and no component learns which types can be resized. `size` must
+   * return exactly these two params, before rotation.
+   */
+  resize?: {
+    width: { key: string; min: number; max: number };
+    height: { key: string; min: number; max: number };
+  };
+  /**
+   * Marks an element that is not part of the circuit at all — a heading, a
+   * note, a box drawn round a stage of it. It has no pins and no `evaluate`,
+   * the canvas draws it without the card every part sits on, and it takes no
+   * node label, since what it says is its own content.
+   *
+   * `enclosure` makes it a *container*: painted beneath the wires and every
+   * other node, picked only by its header and its edge so a press inside it
+   * still reaches the circuit or starts a rubber band, caught by a band only
+   * when the band surrounds it, and — when `carries` says so — dragging it
+   * brings along everything lying wholly inside it.
+   */
+  decoration?: {
+    enclosure?: {
+      /** Grid cells along the top edge that grab it like a solid body. */
+      headerCells: (params: NodeParams) => number;
+      carries: (params: NodeParams) => boolean;
+    };
+  };
+  /**
    * Nanoseconds from an input changing to this node reacting. Omit for the
    * engine's `DEFAULT_DELAY_NS`. A function of params because `time.delay`
    * exists to make it one.
@@ -432,12 +466,19 @@ export function stringParam(
  * the colour the node renders itself in cannot drift apart, and so a node
  * that wants a colour declares it in one place. Returns undefined for a
  * definition with no colour param at all.
+ *
+ * `key` picks one colour param when a definition has several — a text box's
+ * ink and its background; without it the first is used.
  */
 export function colorParam(
   def: NodeDefinition,
   params: NodeParams,
+  key?: string,
 ): string | undefined {
-  const spec = def.paramsSchema?.find((entry) => entry.kind === "color");
+  const spec = def.paramsSchema?.find(
+    (entry) =>
+      entry.kind === "color" && (key === undefined || entry.key === key),
+  );
   if (!spec || spec.kind !== "color") return undefined;
 
   const value = params[spec.key];

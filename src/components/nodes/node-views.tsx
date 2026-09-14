@@ -3,9 +3,11 @@ import type { ComponentType } from "react";
 import type { CircuitNode } from "@/lib/circuit/schema";
 import { BLOCK_VIEW, type NodeDefinition } from "@/lib/nodes/define";
 import type { ResolvedNode } from "@/state/scene";
+import AnnotationView from "./annotation-view";
 import BargraphView from "./bargraph-view";
 import BlockView from "./block-view";
 import DrawpadView from "./drawpad-view";
+import EnclosureView from "./enclosure-view";
 import KeyboardView from "./keyboard-view";
 import KeypadView from "./keypad-view";
 import LampView from "./lamp-view";
@@ -91,6 +93,8 @@ const NODE_VIEWS: Record<string, NodeView> = {
   "seven-segment-readout": SegmentReadoutView,
   scope: ScopeView,
   tunnel: TunnelView,
+  annotation: AnnotationView,
+  enclosure: EnclosureView,
 };
 
 /**

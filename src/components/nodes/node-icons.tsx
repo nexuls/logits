@@ -10,6 +10,7 @@ import {
   CpuIcon,
   DatabaseIcon,
   EqualIcon,
+  FrameIcon,
   GaugeIcon,
   GitMergeIcon,
   GitPullRequestArrowIcon,
@@ -32,6 +33,7 @@ import {
   SplitIcon,
   SquareChevronRightIcon,
   ToggleRightIcon,
+  TypeIcon,
   ZapIcon,
 } from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
@@ -237,6 +239,8 @@ const NODE_ICONS: Record<string, NodeIcon> = {
   power: lucide(PowerIcon),
   chip: lucide(CpuIcon),
   port: lucide(PlugIcon),
+  text: lucide(TypeIcon),
+  frame: lucide(FrameIcon),
 };
 
 /**

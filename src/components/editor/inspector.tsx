@@ -15,6 +15,7 @@ import {
   TriangleAlertIcon,
 } from "lucide-react";
 import {
+  type ChangeEvent,
   type ReactNode,
   type RefObject,
   useCallback,
@@ -50,6 +51,7 @@ import {
 } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import type { Rect } from "@/lib/circuit/geometry";
 import { listGroups, type NodeGroup } from "@/lib/circuit/groups";
 import type {
@@ -241,7 +243,8 @@ function SelectionPopover({
 
         {(node || !definition) && (
           <div className="flex flex-col gap-4 px-3.5 py-3.5">
-            {node && (
+            {/* A decoration's words are its own content, so it has no label. */}
+            {node && !definition?.decoration && (
               <Field htmlFor="inspector-label" label="Label">
                 <LabelField
                   nodeId={node.id}
@@ -521,12 +524,15 @@ function CommitInput({
   initial,
   placeholder,
   maxLength,
+  multiline = false,
   onCommit,
 }: {
   id: string;
   initial: string;
   placeholder?: string;
   maxLength?: number;
+  /** A textarea, for prose — Enter is a new line, not the end of the edit. */
+  multiline?: boolean;
   onCommit: (value: string) => void;
 }) {
   // Refs, not state: these are only read back at commit time, and a render per
@@ -546,18 +552,28 @@ function CommitInput({
 
   useEffect(() => commit, [commit]);
 
-  return (
-    <Input
-      id={id}
-      defaultValue={initial}
-      placeholder={placeholder}
-      maxLength={maxLength}
-      onChange={(event) => {
-        typed.current = event.target.value;
-      }}
-      onBlur={commit}
-      className="h-9"
+  const field = {
+    id,
+    defaultValue: initial,
+    placeholder,
+    maxLength,
+    onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      typed.current = event.target.value;
+    },
+    onBlur: commit,
+  };
+
+  return multiline ? (
+    <Textarea
+      {...field}
+      rows={5}
+      spellCheck
+      // Grows with its content up to a point, then scrolls, so a long note
+      // does not push the popover's actions off the screen.
+      className="max-h-56 min-h-24 rounded-lg font-mono text-xs md:text-xs"
     />
+  ) : (
+    <Input {...field} className="h-9" />
   );
 }
 
@@ -854,6 +870,7 @@ function ParamField({ spec, params, onChange }: FieldProps) {
           id={id}
           initial={typeof raw === "string" ? raw : ""}
           maxLength={spec.maxLength}
+          multiline={spec.multiline}
           onCommit={onChange}
         />
       </Field>

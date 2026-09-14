@@ -257,6 +257,40 @@ function stableStringify(value: unknown): string {
   return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${stableStringify(v)}`).join(",")}}`;
 }
 
+/**
+ * Is this node a container drawn round others — see
+ * `NodeDefinition.decoration`? Asked of the definition, never of a `type`.
+ */
+export function isEnclosure(resolved: ResolvedNode): boolean {
+  return resolved.def.decoration?.enclosure !== undefined;
+}
+
+/**
+ * Node ids bottom first: the order the canvas paints them in, and so the
+ * order picking walks, since what is drawn on top is what a press means.
+ *
+ * Enclosures go beneath everything — they frame the circuit, and one drawn
+ * over it would hide what it is labelling — largest first, so a group nested
+ * in another is drawn over its parent. Every other node follows in id order.
+ */
+export function paintOrder(scene: Scene): string[] {
+  const enclosures: string[] = [];
+  const rest: string[] = [];
+
+  for (const id of Object.keys(scene.nodes).sort()) {
+    (isEnclosure(scene.nodes[id]) ? enclosures : rest).push(id);
+  }
+
+  const area = (id: string) => {
+    const { width, height } = scene.nodes[id].bounds;
+    return width * height;
+  };
+  // `sort` is stable and the ids went in sorted, so equal areas keep id order.
+  enclosures.sort((a, b) => area(b) - area(a));
+
+  return [...enclosures, ...rest];
+}
+
 /** Test seam — the caches are process-global and otherwise never cleared. */
 export function clearSceneCaches(): void {
   layoutCache.clear();

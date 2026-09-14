@@ -303,6 +303,22 @@ export default function Editor({
           </>
         }
       >
+        {/* Enclosures first, beneath the wires: a group frames the circuit,
+            and one painted over it would hide the parts it is labelling. */}
+        <NodeLayer
+          layer="enclosures"
+          scene={scene}
+          selectedNodeIds={selection.nodeIds}
+          faultedNodeIds={faulted.nodes}
+          interactive={document !== null}
+          showBasicPinLabels={showBasicPinLabels}
+          showCompoundPinLabels={showCompoundPinLabels}
+          hoveredNodeId={gestures.hoveredNodeId}
+          compatiblePinIds={gestures.compatiblePinIds}
+          wiring={gestures.isWiring}
+          onSelectNode={(nodeId) => selectOnly([nodeId])}
+          onPinActivate={gestures.activatePin}
+        />
         <WireLayer
           scene={scene}
           selectedWireIds={selection.wireIds}
@@ -318,6 +334,7 @@ export default function Editor({
           />
         )}
         <NodeLayer
+          layer="circuit"
           scene={scene}
           selectedNodeIds={selection.nodeIds}
           faultedNodeIds={faulted.nodes}

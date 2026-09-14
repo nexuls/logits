@@ -1,10 +1,22 @@
 import {
+  GRID_SIZE,
+  handlePoint,
+  RESIZE_HANDLES,
   type Rect,
+  type ResizeHandle,
   rectContains,
   rectsIntersect,
 } from "@/lib/circuit/geometry";
 import type { Point } from "@/lib/circuit/schema";
-import type { ResolvedNode, ResolvedPin, ResolvedWire, Scene } from "./scene";
+import type { NodeDefinition } from "@/lib/nodes/define";
+import {
+  isEnclosure,
+  paintOrder,
+  type ResolvedNode,
+  type ResolvedPin,
+  type ResolvedWire,
+  type Scene,
+} from "./scene";
 
 /**
  * Picking: what is under a world point, and what falls inside a world rect.
@@ -32,6 +44,16 @@ export const WIRE_HIT_RADIUS = 6;
 
 /** How near a waypoint handle counts as on it. Slightly wider than it draws. */
 export const WAYPOINT_HIT_RADIUS = 7;
+
+/** How near a resize handle counts as on it. */
+export const RESIZE_HANDLE_HIT_RADIUS = 7;
+
+/**
+ * How far in from its outline an enclosure can be grabbed, in world units. A
+ * fixed world length rather than a screen one: it is a strip of the drawing,
+ * and the header — the grip that matters — scales with it anyway.
+ */
+export const ENCLOSURE_EDGE = GRID_SIZE / 2;
 
 export type PinHit = { node: ResolvedNode; pin: ResolvedPin };
 
@@ -72,7 +94,7 @@ export function pinAt(
   let best: PinHit | null = null;
   let bestDistance = Infinity;
 
-  const nodeIds = Object.keys(scene.nodes).sort();
+  const nodeIds = paintOrder(scene);
   for (const [order, nodeId] of nodeIds.entries()) {
     const node = scene.nodes[nodeId];
     if (coveredAbove(scene, nodeIds, order, world)) continue;
@@ -93,16 +115,118 @@ export function pinAt(
 /**
  * The topmost node whose body contains `world`.
  *
- * "Topmost" is the last in sorted id order, matching the order the node layer
- * renders in — so what the user clicks is what they see on top.
+ * "Topmost" is the last in `paintOrder`, the order the node layer renders in
+ * — so what the user clicks is what they see on top.
+ *
+ * An enclosure only counts by its header and its edge. Its interior is where
+ * the circuit it frames lives, and a press there has to reach that circuit, or
+ * start a rubber band on the empty space between its parts.
  */
 export function nodeAt(scene: Scene, world: Point): ResolvedNode | null {
   let found: ResolvedNode | null = null;
-  for (const nodeId of Object.keys(scene.nodes).sort()) {
+  for (const nodeId of paintOrder(scene)) {
     const node = scene.nodes[nodeId];
-    if (rectContains(node.bounds, world)) found = node;
+    const hit = isEnclosure(node)
+      ? grabsEnclosure(node, world)
+      : rectContains(node.bounds, world);
+    if (hit) found = node;
   }
   return found;
+}
+
+/**
+ * Nodes that are *solid* at `world` — every body but an enclosure's, which is
+ * painted beneath the wires and so hides none of them.
+ */
+function solidNodeAt(scene: Scene, world: Point): boolean {
+  const node = nodeAt(scene, world);
+  return node !== null && !isEnclosure(node);
+}
+
+function grabsEnclosure(node: ResolvedNode, world: Point): boolean {
+  const { x, y, width, height } = node.bounds;
+  if (!rectContains(node.bounds, world)) return false;
+
+  const header =
+    (node.def.decoration?.enclosure?.headerCells(node.node.params) ?? 0) *
+    GRID_SIZE;
+
+  return (
+    world.y <= y + Math.max(header, ENCLOSURE_EDGE) ||
+    world.y >= y + height - ENCLOSURE_EDGE ||
+    world.x <= x + ENCLOSURE_EDGE ||
+    world.x >= x + width - ENCLOSURE_EDGE
+  );
+}
+
+export type ResizeHit = {
+  node: ResolvedNode;
+  handle: ResizeHandle;
+  spec: NonNullable<NodeDefinition["resize"]>;
+};
+
+/**
+ * The resize handle nearest `world` within `radius`, or null.
+ *
+ * Handles exist only while exactly one resizable node is selected, which is
+ * when the canvas draws them — a handle nobody can see must not be grabbable.
+ * They are checked before bodies, because they sit on the outline where a
+ * press would otherwise pick the node up or start a band beside it.
+ */
+export function resizeHandleAt(
+  scene: Scene,
+  world: Point,
+  selectedNodeIds: readonly string[],
+  radius = RESIZE_HANDLE_HIT_RADIUS,
+): ResizeHit | null {
+  if (selectedNodeIds.length !== 1) return null;
+  const node = scene.nodes[selectedNodeIds[0]];
+  const spec = node?.def.resize;
+  if (!node || !spec) return null;
+
+  let best: ResizeHit | null = null;
+  let bestDistance = Infinity;
+
+  // Corners come first in the list and ties keep the earlier entry, so on a
+  // box shrunk small enough for handles to overlap the corner wins.
+  for (const handle of RESIZE_HANDLES) {
+    const point = handlePoint(node.bounds, handle);
+    const distance = Math.hypot(point.x - world.x, point.y - world.y);
+    if (distance <= radius && distance < bestDistance) {
+      best = { node, handle, spec };
+      bestDistance = distance;
+    }
+  }
+
+  return best;
+}
+
+/**
+ * `nodeIds`, plus everything lying wholly inside any of them that is an
+ * enclosure set to carry its contents — what a drag of that selection moves.
+ *
+ * Computed once when the drag starts, not per frame: a group dragged across
+ * the board must not collect every part it passes over.
+ */
+export function withEnclosedNodes(
+  scene: Scene,
+  nodeIds: readonly string[],
+): string[] {
+  const ids = new Set(nodeIds);
+
+  for (const id of nodeIds) {
+    const node = scene.nodes[id];
+    const enclosure = node?.def.decoration?.enclosure;
+    if (!node || !enclosure?.carries(node.node.params)) continue;
+
+    for (const [otherId, other] of Object.entries(scene.nodes)) {
+      if (otherId !== id && encloses(node.bounds, other.bounds)) {
+        ids.add(otherId);
+      }
+    }
+  }
+
+  return [...ids].sort();
 }
 
 /**
@@ -115,13 +239,14 @@ export function nodeAt(scene: Scene, world: Point): ResolvedNode | null {
  *
  * A point inside a node body misses every wire: the wire layer is painted
  * beneath the nodes, so a wire running under one is not there to be clicked.
+ * Enclosures are the exception, painted beneath the wires in turn.
  */
 export function wireAt(
   scene: Scene,
   world: Point,
   radius = WIRE_HIT_RADIUS,
 ): WireHit | null {
-  if (nodeAt(scene, world)) return null;
+  if (solidNodeAt(scene, world)) return null;
 
   let best: WireHit | null = null;
 
@@ -158,7 +283,7 @@ export function waypointAt(
   wireIds: readonly string[],
   radius = WAYPOINT_HIT_RADIUS,
 ): WaypointHit | null {
-  if (nodeAt(scene, world)) return null;
+  if (solidNodeAt(scene, world)) return null;
 
   let best: WaypointHit | null = null;
 
@@ -190,10 +315,19 @@ export type RectSelection = { nodeIds: string[]; wireIds: string[] };
  * is what a schematic editor's lasso does — enclosure would make selecting a
  * wide bus impossible without zooming out. A wire is caught when any of its
  * segments crosses the band, so dragging across a bundle picks all of it up.
+ *
+ * An enclosure is the exception and has to be surrounded: every band drawn
+ * inside a group touches it, and a sweep over three gates in one must select
+ * the gates, not the box they sit in.
  */
 export function elementsInRect(scene: Scene, rect: Rect): RectSelection {
   const nodeIds = Object.keys(scene.nodes)
-    .filter((id) => rectsIntersect(scene.nodes[id].bounds, rect))
+    .filter((id) => {
+      const node = scene.nodes[id];
+      return isEnclosure(node)
+        ? encloses(rect, node.bounds)
+        : rectsIntersect(node.bounds, rect);
+    })
     .sort();
 
   const wireIds = Object.keys(scene.wires)
@@ -246,9 +380,19 @@ export function pinsMatchExactly(a: HasSpec, b: HasSpec): boolean {
  */
 type HasSpec = Pick<ResolvedPin, "spec">;
 
+/** Does `outer` contain all of `inner`, edges included? */
+function encloses(outer: Rect, inner: Rect): boolean {
+  return (
+    inner.x >= outer.x &&
+    inner.y >= outer.y &&
+    inner.x + inner.width <= outer.x + outer.width &&
+    inner.y + inner.height <= outer.y + outer.height
+  );
+}
+
 /**
  * Does a node painted after `nodeIds[order]` have `world` strictly inside its
- * body? `nodeIds` is the sorted paint order, the same one `nodeAt` walks.
+ * body? `nodeIds` is `paintOrder`, the same one `nodeAt` walks.
  */
 function coveredAbove(
   scene: Scene,

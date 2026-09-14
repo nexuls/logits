@@ -16,7 +16,10 @@ import {
   GRID_SIZE,
   placementCenters,
   type Rect,
+  type ResizeHandle,
+  resizeBox,
   rotateSize,
+  type SizeLimits,
   snapPointToGrid,
 } from "@/lib/circuit/geometry";
 import {
@@ -36,6 +39,7 @@ import {
   dropWireWaypoint,
   moveSelection,
   placeNodes,
+  resizeNode,
 } from "@/state/document";
 import {
   elementsInRect,
@@ -43,14 +47,23 @@ import {
   type PinHit,
   pinAt,
   pinsCompatible,
+  RESIZE_HANDLE_HIT_RADIUS,
   rectBetween,
+  resizeHandleAt,
   WAYPOINT_HIT_RADIUS,
   WIRE_HIT_RADIUS,
   type WireHit,
   waypointAt,
   wireAt,
+  withEnclosedNodes,
 } from "@/state/hit-test";
-import type { ResolvedPin, ResolvedWire, Scene } from "@/state/scene";
+import {
+  isEnclosure,
+  type ResolvedNode,
+  type ResolvedPin,
+  type ResolvedWire,
+  type Scene,
+} from "@/state/scene";
 import {
   addToSelection,
   clearSelection,
@@ -125,6 +138,17 @@ type Gesture =
       /** Where the bend sat when the drag began. */
       origin: Point;
       startWorld: Point;
+    }
+  | {
+      kind: "resize-node";
+      nodeId: string;
+      handle: ResizeHandle;
+      /** The node's box when the drag began; every frame resizes from it. */
+      startBounds: Rect;
+      startWorld: Point;
+      /** The definition's limits, turned to match the node's rotation. */
+      limits: SizeLimits;
+      snap: boolean;
     };
 
 /**
@@ -221,6 +245,8 @@ export function useEditorGestures({
    * document edit.
    */
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  /** The resize handle under the cursor, which only changes the cursor. */
+  const [hoveredHandle, setHoveredHandle] = useState<ResizeHandle | null>(null);
 
   // The scene changes on every document edit, and the handlers below are
   // installed on the viewport once; a ref keeps them reading the current one
@@ -461,6 +487,34 @@ export function useEditorGestures({
         return;
       }
 
+      // A selected box's resize handles sit on its outline, where the press
+      // would otherwise pick the box up or start a band beside it.
+      const resize = resizeHandleAt(
+        current,
+        world,
+        getSelection().nodeIds,
+        worldLength(RESIZE_HANDLE_HIT_RADIUS),
+      );
+      if (resize) {
+        event.preventDefault();
+        const rotation = resize.node.node.rotation ?? 0;
+        const { width, height } = resize.spec;
+        setGesture({
+          kind: "resize-node",
+          nodeId: resize.node.node.id,
+          handle: resize.handle,
+          startBounds: resize.node.bounds,
+          startWorld: world,
+          limits: {
+            min: rotateSize({ width: width.min, height: height.min }, rotation),
+            max: rotateSize({ width: width.max, height: height.max }, rotation),
+          },
+          // Alt bypasses the grid, as it does for a move.
+          snap: !event.altKey,
+        });
+        return;
+      }
+
       // A handle on a selected wire outranks the wire body and empty canvas:
       // it is small and deliberate. `waypointAt` already misses one hidden
       // under a node, so it cannot steal a press on that node.
@@ -482,8 +536,7 @@ export function useEditorGestures({
         return;
       }
 
-      const node = nodeAt(current, world);
-      if (node) {
+      const pressNode = (node: ResolvedNode) => {
         event.preventDefault();
         const additive = event.shiftKey || event.ctrlKey || event.metaKey;
         const id = node.node.id;
@@ -502,10 +555,21 @@ export function useEditorGestures({
           // Alt bypasses the grid, which is the only way to nudge a node off it.
           snap: !event.altKey,
         });
+      };
+
+      const node = nodeAt(current, world);
+      // An enclosure is painted beneath the wires, so a wire crossing its
+      // header is what a press there lands on, as it looks.
+      if (node && !isEnclosure(node)) {
+        pressNode(node);
         return;
       }
 
       const wire = wireAt(current, world, worldLength(WIRE_HIT_RADIUS));
+      if (!wire && node) {
+        pressNode(node);
+        return;
+      }
       if (wire) {
         event.preventDefault();
         const id = wire.wire.wire.id;
@@ -580,6 +644,19 @@ export function useEditorGestures({
       // crosses a node once and moves within it for hundreds of events.
       setHoveredNodeId((shown) => (shown === overNodeId ? shown : overNodeId));
 
+      const overHandle =
+        gesture.kind === "none" && !armedDefinition && !wiring
+          ? (resizeHandleAt(
+              current,
+              world,
+              getSelection().nodeIds,
+              worldLength(RESIZE_HANDLE_HIT_RADIUS),
+            )?.handle ?? null)
+          : null;
+      setHoveredHandle((shown) =>
+        sameHandle(shown, overHandle) ? shown : overHandle,
+      );
+
       // The preview is a hover affordance, so it is offered only when the
       // pointer is free: not mid-gesture and not placing. While a wire is being
       // drawn the same handle marks the tap it would land on instead of the
@@ -589,7 +666,8 @@ export function useEditorGestures({
         // point would promise a gesture the click is not going to perform.
         // Handles are not in the way while wiring: they cannot be grabbed then.
         const blocked =
-          overNode !== null ||
+          (overNode !== null && !isEnclosure(overNode)) ||
+          overHandle !== null ||
           pinAt(current, world, worldLength(PIN_SNAP_PX)) !== null ||
           (!wiring &&
             waypointAt(
@@ -633,7 +711,9 @@ export function useEditorGestures({
           // that wobbles by a pixel does not land in the undo stack as a move.
           setGesture({
             kind: "move-nodes",
-            nodeIds: getSelection().nodeIds,
+            // Fixed here, at the start: a group dragged across the board
+            // must not pick up every part it passes over.
+            nodeIds: withEnclosedNodes(current, getSelection().nodeIds),
             startWorld: gesture.startWorld,
             applied: { x: 0, y: 0 },
             snap: gesture.snap,
@@ -696,6 +776,23 @@ export function useEditorGestures({
           return;
         }
 
+        case "resize-node": {
+          // From the starting box every frame, like a move, so rounding to
+          // whole cells never accumulates drift.
+          const box = resizeBox(
+            gesture.startBounds,
+            gesture.handle,
+            {
+              x: world.x - gesture.startWorld.x,
+              y: world.y - gesture.startWorld.y,
+            },
+            gesture.limits,
+            gesture.snap,
+          );
+          resizeNode(gesture.nodeId, box, { coalesce: true });
+          return;
+        }
+
         default:
           return;
       }
@@ -708,6 +805,7 @@ export function useEditorGestures({
     setGhostWorld(null);
     setWaypointPreview(null);
     setHoveredNodeId(null);
+    setHoveredHandle(null);
   }, []);
 
   const onPointerUp = useCallback(
@@ -846,10 +944,25 @@ export function useEditorGestures({
     cursor:
       armedDefinition || wiring
         ? "var(--logit-cursor-cross)"
-        : gesture.kind === "move-nodes" || gesture.kind === "drag-waypoint"
-          ? "var(--logit-cursor-move)"
-          : undefined,
+        : gesture.kind === "resize-node"
+          ? resizeCursor(gesture.handle)
+          : gesture.kind === "move-nodes" || gesture.kind === "drag-waypoint"
+            ? "var(--logit-cursor-move)"
+            : hoveredHandle
+              ? resizeCursor(hoveredHandle)
+              : undefined,
   };
+}
+
+/** The system resize cursor that points the way a handle drags. */
+function resizeCursor(handle: ResizeHandle): string {
+  if (handle.x === 0) return "ns-resize";
+  if (handle.y === 0) return "ew-resize";
+  return handle.x === handle.y ? "nwse-resize" : "nesw-resize";
+}
+
+function sameHandle(a: ResizeHandle | null, b: ResizeHandle | null): boolean {
+  return a === b || (a !== null && b !== null && a.x === b.x && a.y === b.y);
 }
 
 /** Where in `Wire.waypoints` a bend dropped on this hit belongs. */

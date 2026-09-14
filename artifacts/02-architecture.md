@@ -87,7 +87,12 @@ input, and they stop the event so a click toggles rather than starting a drag.
 Because the DOM is not consulted, two things it would have given for free are
 done by hand. **Occlusion:** picking follows paint order — wires and their
 handles are painted beneath every node, so none is pickable inside a node body,
-and a pin under a node painted above its own is skipped. **Chrome:** the
+and a pin under a node painted above its own is skipped. The one layer beneath
+the wires is the *enclosures* (a `deco.group`): `paintOrder` in
+[scene.ts](../src/state/scene.ts) puts them first, the editor renders them as a
+separate `NodeLayer` pass before the wire layer, and `nodeAt` picks one only by
+its header and edge, so the circuit it frames is picked as if it were not
+there. **Chrome:** the
 canvas's screen-space `overlay` (the run controls, the diagnostics panel) is a
 sibling of the viewport, not a child, so a press on it never bubbles into the
 scene hit-test. A content gesture captures the pointer instead, so a drag keeps

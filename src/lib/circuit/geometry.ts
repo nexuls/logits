@@ -142,6 +142,95 @@ export function rectsIntersect(a: Rect, b: Rect): boolean {
 }
 
 /**
+ * A resize handle, by which way it faces: `-1` is the left or top edge, `1`
+ * the right or bottom, `0` the middle of the other two.
+ */
+export type ResizeHandle = { x: -1 | 0 | 1; y: -1 | 0 | 1 };
+
+/** Corners first, so where handles overlap on a small box a corner wins. */
+export const RESIZE_HANDLES: readonly ResizeHandle[] = [
+  { x: -1, y: -1 },
+  { x: 1, y: -1 },
+  { x: 1, y: 1 },
+  { x: -1, y: 1 },
+  { x: 0, y: -1 },
+  { x: 1, y: 0 },
+  { x: 0, y: 1 },
+  { x: -1, y: 0 },
+];
+
+/** Where a handle sits on a box, in the box's own units. */
+export function handlePoint(rect: Rect, handle: ResizeHandle): Point {
+  return {
+    x: rect.x + ((handle.x + 1) / 2) * rect.width,
+    y: rect.y + ((handle.y + 1) / 2) * rect.height,
+  };
+}
+
+/** Footprint bounds in grid cells, already rotated to match the box. */
+export type SizeLimits = { min: Size; max: Size };
+
+/**
+ * Where a box ends up when one of its handles is dragged by a world `delta`.
+ *
+ * The edge opposite the handle stays put, and the moving edge snaps to the
+ * grid rather than the delta — a box off the grid lands back on it, the way a
+ * moved node does. The size comes out in whole cells, clamped, so a box
+ * dragged past its minimum stops against the fixed edge instead of flipping
+ * inside out. A handle in the middle of an edge leaves the other axis alone.
+ */
+export function resizeBox(
+  start: Rect,
+  handle: ResizeHandle,
+  delta: Point,
+  limits: SizeLimits,
+  snap = true,
+): { position: Point; size: Size } {
+  const axis = (
+    from: number,
+    length: number,
+    direction: -1 | 0 | 1,
+    moved: number,
+    min: number,
+    max: number,
+  ) => {
+    if (direction === 0) {
+      return { from, cells: Math.round(length / GRID_SIZE) };
+    }
+
+    const end = from + length;
+    const raw = (direction < 0 ? from : end) + moved;
+    const edge = snap ? snapToGrid(raw) : raw;
+    const span = direction < 0 ? end - edge : edge - from;
+    const cells = Math.min(max, Math.max(min, Math.round(span / GRID_SIZE)));
+
+    return { from: direction < 0 ? end - cells * GRID_SIZE : from, cells };
+  };
+
+  const x = axis(
+    start.x,
+    start.width,
+    handle.x,
+    delta.x,
+    limits.min.width,
+    limits.max.width,
+  );
+  const y = axis(
+    start.y,
+    start.height,
+    handle.y,
+    delta.y,
+    limits.min.height,
+    limits.max.height,
+  );
+
+  return {
+    position: { x: x.from, y: y.from },
+    size: { width: x.cells, height: y.cells },
+  };
+}
+
+/**
  * Most copies of one element a single palette click may queue up.
  *
  * A cap exists because the batch is drawn as a ghost under the cursor and

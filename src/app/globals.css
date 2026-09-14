@@ -209,3 +209,21 @@
   --logit-led-amber: oklch(0.828 0.189 84.429);
   --logit-led-blue: oklch(0.746 0.16 232.661);
 }
+
+/**
+ * Decoration tints: a group's fill, a note's background. Mid-lightness on
+ * purpose and the same in both themes — the views never paint these solid,
+ * they `color-mix` them with transparent or with the foreground, so one hue
+ * yields a faint wash on either background and header text that contrasts
+ * with it.
+ */
+:root {
+  --logit-tint-gray: oklch(0.62 0.02 250);
+  --logit-tint-blue: oklch(0.62 0.13 250);
+  --logit-tint-teal: oklch(0.64 0.1 190);
+  --logit-tint-green: oklch(0.65 0.13 150);
+  --logit-tint-amber: oklch(0.72 0.14 75);
+  --logit-tint-red: oklch(0.62 0.17 25);
+  --logit-tint-purple: oklch(0.6 0.14 300);
+  --logit-tint-pink: oklch(0.65 0.15 350);
+}

@@ -228,3 +228,22 @@ simulation are done and tested. What does **not** exist yet is the authoring
 surface: nothing in the editor can make a chip out of a selection or open one
 to edit, so a `sub.<key>` node can only arrive today in a hand-written or
 imported document.
+
+## Annotations — `deco.*`
+
+Not part of the circuit: no pins, no `evaluate`, and nothing the netlist or
+the engine does changes because one is there. Both declare the `decoration`
+hook and are sized by the `resize` hook — see
+[05-node-authoring-guide.md](05-node-authoring-guide.md). `width` and `height`
+are grid cells, written by the canvas's resize handles as well as the
+inspector.
+
+| type | params |
+| --- | --- |
+| `deco.text` | `text` (up to 10 000 characters), `format`: markdown/plain, `fontSize` 6–96, `align`: left/center/right, `color`: default/muted or a tint, `background`: none or a tint, `width` 2–400, `height` 2–400 |
+| `deco.group` | `title`, `subtitle`, `fontSize` 8–48 (the subtitle follows at 72%), `color`: a tint, `style`: filled/outlined/dashed, `carry` (a drag brings what lies wholly inside), `width` 8–400, `height` 4–400 |
+
+The tints are `gray`, `blue`, `teal`, `green`, `amber`, `red`, `purple` and
+`pink`, the `--logit-tint-*` tokens in `globals.css`. A group is an
+*enclosure*: painted beneath the wires and every other node, picked only by
+its header and its edge.

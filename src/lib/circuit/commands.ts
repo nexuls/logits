@@ -233,6 +233,33 @@ export function setNodeParams(
 }
 
 /**
+ * Moves a node and merges `patch` into its params as one change — what a
+ * resize handle does, since dragging a top or left edge moves the corner a
+ * node is positioned by as well as changing its size.
+ */
+export function setNodeFrame(
+  document: CircuitDocument,
+  nodeId: string,
+  position: Point,
+  patch: Record<string, NodeParams[string]>,
+): CircuitDocument {
+  const node = document.nodes[nodeId];
+  if (!node) return document;
+
+  const unchanged =
+    node.position.x === position.x &&
+    node.position.y === position.y &&
+    Object.entries(patch).every(([key, value]) => node.params[key] === value);
+  if (unchanged) return document;
+
+  return replaceNode(document, {
+    ...node,
+    position,
+    params: { ...node.params, ...patch },
+  });
+}
+
+/**
  * `setNodeParams`, keeping a node's group in step — see
  * `NodeDefinition.group`.
  *

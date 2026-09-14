@@ -9,6 +9,8 @@ import { demuxNode } from "./comb/demux";
 import { encoderNode } from "./comb/encoder";
 import { muxNode } from "./comb/mux";
 import { segmentDriverNode } from "./comb/segdriver";
+import { groupNode } from "./deco/group";
+import { textNode } from "./deco/text";
 import type { NodeDefinition, NodeLookup } from "./define";
 import { andGate } from "./gates/and";
 import { bufferGate } from "./gates/buffer";
@@ -106,6 +108,8 @@ export const nodeDefinitions: readonly NodeDefinition[] = [
   bargraphNode,
   matrixNode,
   portNode,
+  textNode,
+  groupNode,
 ];
 
 /**
@@ -126,6 +130,7 @@ export const nodeCategories: readonly { id: string; label: string }[] = [
   { id: "bus", label: "Buses" },
   { id: "instruments", label: "Instruments" },
   { id: "sub", label: "Subcircuits" },
+  { id: "deco", label: "Annotations" },
 ];
 
 const byType = new Map(

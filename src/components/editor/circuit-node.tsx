@@ -7,7 +7,13 @@ import {
   valueClass,
   viewDrawsName,
 } from "@/components/nodes/node-views";
-import { GRID_SIZE, orientationOf, type Rect } from "@/lib/circuit/geometry";
+import {
+  GRID_SIZE,
+  handlePoint,
+  orientationOf,
+  RESIZE_HANDLES,
+  type Rect,
+} from "@/lib/circuit/geometry";
 import type { LabelPosition } from "@/lib/circuit/schema";
 import { PIN_LABEL_GAP } from "@/lib/nodes/label-metrics";
 import { cn } from "@/lib/utils";
@@ -30,6 +36,8 @@ type Props = {
   showCompoundPinLabels: boolean;
   /** The cursor is over this node, which is what reveals floating pin names. */
   hovered: boolean;
+  /** Draw the resize handles — the sole selection, with a `resize` spec. */
+  resizable: boolean;
   /** `nodeId/pinId` keys a wire in progress could legally land on. */
   compatiblePinIds: ReadonlySet<string>;
   wiring: boolean;
@@ -70,12 +78,17 @@ export default function CircuitNode({
   showBasicPinLabels,
   showCompoundPinLabels,
   hovered,
+  resizable,
   compatiblePinIds,
   wiring,
   onFocus,
   onPinActivate,
 }: Props) {
   const { node, def, bounds, pins } = resolved;
+
+  // A decoration is not a part, so it is not drawn on a part's card and wears
+  // no label: what it says is its own content (`NodeDefinition.decoration`).
+  const decoration = def.decoration !== undefined;
 
   const pinIds = useMemo(() => pins.map((pin) => pin.spec.id), [pins]);
   const values = useNodeValues(node.id, pinIds);
@@ -128,6 +141,7 @@ export default function CircuitNode({
   const name = node.label ?? def.title;
   const labelPosition = node.labelPosition ?? "bottom";
   const showLabelChip =
+    !decoration &&
     node.label !== undefined &&
     (labelPosition !== "center" || !viewDrawsName(def.view));
 
@@ -156,20 +170,36 @@ export default function CircuitNode({
 
       <div
         className={cn(
-          "pointer-events-none absolute inset-0 rounded-lg border-2 bg-card/90",
+          "pointer-events-none absolute inset-0",
           "flex items-center justify-center text-center",
-          selected
-            ? "border-primary ring-2 ring-primary/40"
-            : linked
-              ? // Dashed, so a peer reads differently from the selection
-                // itself without leaning on colour.
-                "border-dashed border-primary ring-2 ring-primary/20"
-              : faulted
-                ? "border-destructive"
-                : "border-border",
+          decoration
+            ? cn(
+                "rounded-md",
+                // Offset, so the selection reads as a frame round the
+                // decoration's own outline rather than a recolouring of it.
+                selected &&
+                  "ring-2 ring-primary ring-offset-2 ring-offset-background",
+              )
+            : cn(
+                "rounded-lg border-2 bg-card/90",
+                selected
+                  ? "border-primary ring-2 ring-primary/40"
+                  : linked
+                    ? // Dashed, so a peer reads differently from the
+                      // selection itself without leaning on colour.
+                      "border-dashed border-primary ring-2 ring-primary/20"
+                    : faulted
+                      ? "border-destructive"
+                      : "border-border",
+              ),
         )}
       >
-        <div className="pointer-events-auto absolute inset-1.5">
+        <div
+          className={cn(
+            "pointer-events-auto absolute",
+            decoration ? "inset-0" : "inset-1.5",
+          )}
+        >
           <View
             node={node}
             def={def}
@@ -277,6 +307,25 @@ export default function CircuitNode({
             </span>
           ) : null,
         )}
+
+      {resizable &&
+        // Drawn only; the press is hit-tested against the same points by
+        // `resizeHandleAt`. Above the wires, so a handle on a group framing a
+        // circuit is not hidden under what it frames.
+        RESIZE_HANDLES.map((handle) => {
+          const point = handlePoint(
+            { x: 0, y: 0, width: bounds.width, height: bounds.height },
+            handle,
+          );
+          return (
+            <span
+              key={`${handle.x}/${handle.y}`}
+              aria-hidden
+              className="pointer-events-none absolute z-40 size-2 -translate-x-1/2 -translate-y-1/2 rounded-[2px] border-[1.5px] border-primary bg-background"
+              style={{ left: point.x, top: point.y }}
+            />
+          );
+        })}
 
       {showLabelChip && (
         // Opaque and above everything else in the world layer — wires, other

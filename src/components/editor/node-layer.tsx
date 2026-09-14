@@ -3,11 +3,16 @@
 import { memo } from "react";
 
 import { groupId } from "@/lib/circuit/groups";
-import type { Scene } from "@/state/scene";
+import { isEnclosure, paintOrder, type Scene } from "@/state/scene";
 import CircuitNode from "./circuit-node";
 
 type Props = {
   scene: Scene;
+  /**
+   * Which nodes this pass draws: the enclosures, which the editor renders
+   * beneath the wires, or everything else, above them.
+   */
+  layer: "enclosures" | "circuit";
   selectedNodeIds: readonly string[];
   faultedNodeIds: ReadonlySet<string>;
   interactive: boolean;
@@ -26,15 +31,16 @@ type Props = {
 };
 
 /**
- * Every node, absolutely positioned in world coordinates.
+ * Every node in one layer, absolutely positioned in world coordinates.
  *
- * Sorted by id so the paint order is stable — and so it matches what
+ * Drawn in `paintOrder` so the stacking is stable — and so it matches what
  * `nodeAt` in `hit-test.ts` calls "topmost", which is the last one drawn.
  * Without that agreement a click could select a node that is visibly behind
  * another.
  */
 function NodeLayer({
   scene,
+  layer,
   selectedNodeIds,
   faultedNodeIds,
   interactive,
@@ -65,8 +71,10 @@ function NodeLayer({
 
   return (
     <>
-      {Object.keys(scene.nodes)
-        .sort()
+      {paintOrder(scene)
+        .filter(
+          (id) => isEnclosure(scene.nodes[id]) === (layer === "enclosures"),
+        )
         .map((id) => (
           <CircuitNode
             key={id}
@@ -78,6 +86,11 @@ function NodeLayer({
             showBasicPinLabels={showBasicPinLabels}
             showCompoundPinLabels={showCompoundPinLabels}
             hovered={id === hoveredNodeId}
+            resizable={
+              selectedNodeIds.length === 1 &&
+              selected.has(id) &&
+              scene.nodes[id].def.resize !== undefined
+            }
             compatiblePinIds={compatiblePinIds}
             wiring={wiring}
             onFocus={() => onSelectNode(id)}

@@ -22,11 +22,13 @@ import {
   type Selection,
   setDefaultZoom,
   setLinkedNodeParams,
+  setNodeFrame,
   setNodeLabel,
   setNodeLabelPosition,
   topLeftForCenter,
   type WireTap,
 } from "@/lib/circuit/commands";
+import { rotateSize, type Size } from "@/lib/circuit/geometry";
 import type {
   CircuitDocument,
   LabelPosition,
@@ -344,6 +346,36 @@ export function updateNodeParams(
   return apply(
     "params",
     (document) => setLinkedNodeParams(document, lookupNode, nodeId, patch),
+    options,
+  );
+}
+
+/**
+ * Gives a resizable node a new box — `position` in world units, `size` in grid
+ * cells as it appears on the canvas. The size is turned back through the
+ * node's rotation into the params its definition's `resize` names, so a group
+ * turned on its side still grows along the axis the user dragged.
+ *
+ * `coalesce` folds a drag into one undo step, the same way a move does.
+ */
+export function resizeNode(
+  nodeId: string,
+  box: { position: Point; size: Size },
+  options: { coalesce?: boolean } = {},
+): boolean {
+  return apply(
+    "resize",
+    (document) => {
+      const node = document.nodes[nodeId];
+      const resize = node && lookupNode(node.type)?.resize;
+      if (!node || !resize) return document;
+
+      const size = rotateSize(box.size, node.rotation ?? 0);
+      return setNodeFrame(document, nodeId, box.position, {
+        [resize.width.key]: size.width,
+        [resize.height.key]: size.height,
+      });
+    },
     options,
   );
 }
