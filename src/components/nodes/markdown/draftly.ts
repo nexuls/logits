@@ -223,7 +223,11 @@ export const noteTheme = createTheme({
       },
     ".cm-draftly-paragraph": { paddingTop: "0em", paddingBottom: "0em" },
     ".cm-draftly-preview": { paddingLeft: "1.3em", margin: "0.35em 0" },
-    ".draftly-preview ul, .cm-draftly-preview ol": { margin: "0", padding: "0", listStylePosition: "inside" },
+    ".draftly-preview ul, .cm-draftly-preview ol": {
+      margin: "0",
+      padding: "0",
+      listStylePosition: "inside",
+    },
     ".draftly-preview li": { marginBottom: "0" },
     ".draftly-preview li > *": { display: "inline-block" },
     ".cm-draftly-quote-line": {

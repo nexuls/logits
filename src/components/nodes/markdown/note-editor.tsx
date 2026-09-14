@@ -16,6 +16,11 @@ type Props = {
   onChange: (text: string) => void;
   /** Esc or Mod-Enter: the keyboard's way to finish. */
   onDone: () => void;
+  /**
+   * The height the text needs, in layout pixels — world units. Reported
+   * whenever it may have changed.
+   */
+  onContentHeight: (height: number) => void;
 };
 
 /**
@@ -33,11 +38,12 @@ export default function NoteEditor({
   label,
   onChange,
   onDone,
+  onContentHeight,
 }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const setup = useRef({ initial, markdown, maxLength, label });
-  const handlers = useRef({ onChange, onDone });
-  handlers.current = { onChange, onDone };
+  const handlers = useRef({ onChange, onDone, onContentHeight });
+  handlers.current = { onChange, onDone, onContentHeight };
 
   useEffect(() => {
     const parent = host.current;
@@ -81,6 +87,14 @@ export default function NoteEditor({
             if (update.docChanged) {
               handlers.current.onChange(update.state.doc.toString());
             }
+            // Wrapping changes the height as well as typing does.
+            if (
+              update.docChanged ||
+              update.heightChanged ||
+              update.geometryChanged
+            ) {
+              handlers.current.onContentHeight(layoutHeight(update.view));
+            }
           }),
           EditorView.contentAttributes.of({ "aria-label": label }),
           // The same look the preview's generated CSS carries, over draftly's
@@ -90,11 +104,26 @@ export default function NoteEditor({
       }),
     });
     view.focus();
+    // A note opened already overflowing fits itself before the first key.
+    view.requestMeasure({
+      read: () => layoutHeight(view),
+      write: (height) => handlers.current.onContentHeight(height),
+    });
 
     return () => view.destroy();
   }, []);
 
   return <div ref={host} className="h-full w-full cursor-text" />;
+}
+
+/**
+ * CodeMirror measures in screen pixels, so under the canvas zoom its
+ * `contentHeight` is scaled by it; dividing by `scaleY` (as CodeMirror does for
+ * its own layout) gives the size in the box's own units. Taken raw, the box
+ * grew by the zoom factor, and kept growing as the zoom changed.
+ */
+function layoutHeight(view: EditorView): number {
+  return view.contentHeight / view.scaleY;
 }
 
 /**

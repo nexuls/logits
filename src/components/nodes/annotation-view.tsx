@@ -3,6 +3,7 @@
 import { CheckIcon } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef } from "react";
+import { GRID_SIZE } from "@/lib/circuit/geometry";
 import {
   MAX_TEXT_LENGTH,
   textAlign,
@@ -37,6 +38,8 @@ const NoteEditor = dynamic(() => import("./markdown/note-editor"), {
 export default function AnnotationView({
   node,
   def,
+  resolved,
+  orientation,
   editing,
   onEditEnd,
   setParams,
@@ -48,6 +51,18 @@ export default function AnnotationView({
   const tinted = wash !== undefined && wash !== "transparent";
 
   const html = useNoteHtml(markdown && !editing ? text : null);
+
+  // Growing while typed writes the size param the definition's `resize`
+  // names — whichever of the two is vertical on screen after rotation.
+  const axis =
+    def.resize &&
+    (orientation === "vertical" ? def.resize.width : def.resize.height);
+  const grow: Grow | undefined = axis && {
+    current: Math.round(resolved.bounds.height / GRID_SIZE),
+    min: axis.min,
+    max: axis.max,
+    apply: (cells, options) => setParams({ [axis.key]: cells }, options),
+  };
 
   return (
     <div
@@ -78,7 +93,8 @@ export default function AnnotationView({
           text={text}
           markdown={markdown}
           label={`${def.title} text`}
-          onCommit={(value) => setParams({ text: value })}
+          grow={grow}
+          onCommit={(value, options) => setParams({ text: value }, options)}
           onEnd={onEditEnd}
         />
       ) : markdown ? (
@@ -102,32 +118,81 @@ function NoteHtml({ html }: { html: string }) {
 
 const CONTAINED_EVENTS = ["pointerdown", "dblclick", "keydown", "keyup"];
 
+type Grow = {
+  /** The box's on-screen height, in grid cells. */
+  current: number;
+  min: number;
+  max: number;
+  apply: (cells: number, options: { coalesce: boolean }) => void;
+};
+
 type SessionProps = {
   text: string;
   markdown: boolean;
   label: string;
-  onCommit: (text: string) => void;
+  /** How the box may grow to fit the text; undefined when it cannot. */
+  grow: Grow | undefined;
+  onCommit: (text: string, options: { coalesce: boolean }) => void;
   onEnd: () => void;
 };
 
 /**
  * One editing session: the editor, a confirm button under the box, and the
  * rules for when it ends. The text reaches the document once, through one
- * `setParams`, so a session is one undo step however long the typing was.
+ * `setParams`, so a session is one undo step however long the typing was —
+ * the box growing to fit it included.
  */
-function EditSession({ text, markdown, label, onCommit, onEnd }: SessionProps) {
+function EditSession({
+  text,
+  markdown,
+  label,
+  grow,
+  onCommit,
+  onEnd,
+}: SessionProps) {
   const surface = useRef<HTMLDivElement>(null);
   const typed = useRef(text);
   const committed = useRef(text);
-  const handlers = useRef({ onCommit, onEnd });
-  handlers.current = { onCommit, onEnd };
+  const handlers = useRef({ onCommit, onEnd, grow });
+  handlers.current = { onCommit, onEnd, grow };
+
+  // The height the user left the box at is the floor: it grows to fit the
+  // text and shrinks back as text is deleted, but never below that.
+  const floor = useRef(grow?.current);
+  // The last size written, since the props lag a write by a render.
+  const applied = useRef<number | null>(null);
+
+  const fitHeight = useCallback((contentHeight: number) => {
+    const { grow } = handlers.current;
+    const element = surface.current;
+    const box = element?.parentElement;
+    const scroller = element?.querySelector(".cm-scroller");
+    if (!grow || !box || !(scroller instanceof HTMLElement)) return;
+
+    // Layout sizes, not bounding rects: they are world units at any zoom. What
+    // the box adds round the text is its padding and border.
+    const chrome = box.offsetHeight - scroller.clientHeight;
+    const needed = Math.ceil((chrome + contentHeight) / GRID_SIZE);
+    const cells = Math.min(
+      grow.max,
+      Math.max(grow.min, floor.current ?? grow.current, needed),
+    );
+    if (cells === (applied.current ?? grow.current)) return;
+
+    // The first write of a session is a new undo step; every later one, and
+    // the text commit, folds into it.
+    grow.apply(cells, { coalesce: applied.current !== null });
+    applied.current = cells;
+  }, []);
 
   // Safe to call more than once: the button, Esc, an outside press and the
   // unmount can all follow one another for the same edit.
   const commit = useCallback(() => {
     if (typed.current === committed.current) return;
     committed.current = typed.current;
-    handlers.current.onCommit(typed.current);
+    handlers.current.onCommit(typed.current, {
+      coalesce: applied.current !== null,
+    });
   }, []);
 
   const finish = useCallback(() => {
@@ -202,6 +267,7 @@ function EditSession({ text, markdown, label, onCommit, onEnd }: SessionProps) {
           typed.current = value;
         }}
         onDone={finish}
+        onContentHeight={fitHeight}
       />
       <button
         type="button"

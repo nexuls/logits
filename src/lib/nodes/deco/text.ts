@@ -56,8 +56,9 @@ lists, \`>\` quotes, links and rules. Raw HTML is shown as
 text, not run, and an image as its alt text. **Plain** writes the text exactly as typed, line breaks and
 all.
 
-Text that does not fit the box is clipped, so size the box to the words — or
-lower **Font size**.
+While you type, the box grows taller to fit the words and shrinks back as
+you delete — never below the height it had when you started. Text that no
+longer fits a box made smaller afterwards is clipped.
 
 ## Typical uses
 
