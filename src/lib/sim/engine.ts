@@ -107,6 +107,8 @@ export class Engine {
   private currentTime = 0;
   private currentVersion = 0;
   private runtimeDiagnostics: Diagnostic[] = [];
+  /** `diagnostics`, built once per change; cleared wherever the list moves. */
+  private diagnosticsCache: Diagnostic[] | null = null;
 
   /** Per-net change counter for the current advance — the oscillation witness. */
   private churn: Int32Array;
@@ -188,9 +190,20 @@ export class Engine {
     return this.currentVersion;
   }
 
-  /** Compile-time netlist diagnostics plus anything the run has found. */
+  /**
+   * Compile-time netlist diagnostics plus anything the run has found.
+   *
+   * The same array until the list changes. The UI reads this every frame as a
+   * `useSyncExternalStore` snapshot, and a fresh copy per read never compares
+   * equal — which re-rendered the whole editor, every node included, on every
+   * frame the simulation ran.
+   */
   get diagnostics(): Diagnostic[] {
-    return [...this.netlist.diagnostics, ...this.runtimeDiagnostics];
+    this.diagnosticsCache ??= [
+      ...this.netlist.diagnostics,
+      ...this.runtimeDiagnostics,
+    ];
+    return this.diagnosticsCache;
   }
 
   /**
@@ -218,6 +231,7 @@ export class Engine {
     this.queue.clear();
     this.currentTime = 0;
     this.runtimeDiagnostics = [];
+    this.diagnosticsCache = null;
     this.recorder.clear();
 
     for (const [netId, net] of this.netlist.nets.entries()) {
@@ -456,6 +470,7 @@ export class Engine {
     }
 
     this.queue.clear();
+    this.diagnosticsCache = null;
     this.runtimeDiagnostics.push({
       code: "oscillation",
       severity: "error",

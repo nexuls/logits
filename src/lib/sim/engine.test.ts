@@ -683,6 +683,25 @@ describe("oscillation", () => {
     expect(diagnostic?.nodeIds?.length).toBeGreaterThan(0);
   });
 
+  it("hands out the same diagnostics array until the list changes", () => {
+    // The UI reads it as a `useSyncExternalStore` snapshot every frame; a
+    // fresh copy per read re-renders the whole editor per frame.
+    const { engine } = instantRing();
+    const quiet = engine.diagnostics;
+    engine.runUntil(engine.now + 1);
+    expect(engine.diagnostics).toBe(quiet);
+
+    engine.setNodeParams("en", { width: 1, value: 1 });
+    engine.runUntil(engine.now + 1);
+    const reported = engine.diagnostics;
+    expect(reported).not.toBe(quiet);
+    expect(reported.map((d) => d.code)).toContain("oscillation");
+    expect(engine.diagnostics).toBe(reported);
+
+    engine.reset();
+    expect(engine.diagnostics.map((d) => d.code)).not.toContain("oscillation");
+  });
+
   it("forces the oscillating nets to X rather than a plausible value", () => {
     const { engine, netOf } = instantRing();
     engine.setNodeParams("en", { width: 1, value: 1 });
