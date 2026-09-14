@@ -33,12 +33,13 @@ one, that is a design error — pass it in as an argument.
 | --- | --- | --- |
 | `src/app/` | Next.js App Router entry. The editor is one route; keep page files thin. | Built |
 | `src/components/canvas/` | Viewport only: pan, zoom, grid, minimap. Knows nothing about logic. | Built |
-| `src/components/editor/` | Palette, toolbar, inspector (a popover on the canvas, anchored to the selection), node layer, wire layer, gestures, command menu, diagnostics, the palette's per-element info dialog. | Built |
+| `src/components/editor/` | Palette, toolbar, inspector (a popover on the canvas, anchored to the selection), node layer, wire layer, gestures, command menu, diagnostics, performance monitor, the palette's per-element info dialog. | Built |
 | `src/components/nodes/` | React views for nodes that need custom rendering (scope, displays), and the palette icon set. | Built — `node-icons.tsx` plus `node-views.tsx` and the switch/button/lamp/readout views; the instrument views arrive in phase 4 |
 | `src/components/ui/` | shadcn primitives. Generated — see AGENTS.md. | Built |
 | `src/example/` | The circuits shipped with the app: one `.logits.json` per example plus an `index.ts` that validates them through `fromJson`. Pure data — no React, no storage. | Built — see [ADR 0008](decisions/0008-examples-are-ephemeral.md) |
 | `src/hooks/` | Generic React hooks (`use-mobile`, `use-debounced-callback`). | Built |
 | `src/lib/circuit/` | Document model, ids, geometry, wire routing, netlist derivation, serialize/migrate. | Built |
+| `src/lib/perf/` | Allocation-free measurement primitives (`RollingWindow`: mean, nearest-rank percentile, history). Pure — no clock of its own; callers push samples. | Built |
 | `src/lib/sim/` | Event queue, engine, four-valued logic, runner, waveform buffer. | Partial — `logic.ts`, `queue.ts`, `engine.ts` and `runner.ts` built; the waveform ring buffer arrives with the instruments in phase 4 |
 | `src/lib/nodes/` | Node definitions + registry, one file per node type. | Built — `defineNode`, the registry, `paramsSchema`, `view`, and the `gate.*` / `io.*` definitions; the rest of the catalog is phase 4 |
 | `src/state/` | External stores bridging domain → React, plus `storage.ts`, the derived `scene.ts` and `hit-test.ts`. | Built — storage, scene, hit-test, `editor-settings.ts`, `document.ts`, `history.ts`, `selection.ts` and `simulation.ts`. The viewport stayed in the canvas component and is published to the editor as a prop; see below |
@@ -104,6 +105,29 @@ The engine ticks far faster than React should re-render. Therefore:
   re-render the canvas.
 - The oscilloscope reads a ring buffer directly in a `useEffect`/rAF draw call
   and paints to its own `<canvas>` — it never turns samples into React state.
+
+## Performance monitor
+
+[performance.ts](../src/state/performance.ts) samples the editor while the
+monitor is mounted, and [performance-monitor.tsx](../src/components/editor/performance-monitor.tsx)
+draws it in the bottom-right corner, mirroring the minimap.
+
+- **Its own rAF loop, a snapshot every 500 ms.** Frame times, input latency and
+  the simulation counters are read every frame into `RollingWindow`s; React
+  hears about it twice a second. A per-frame React consumer would put its own
+  render cost into the frame times it reports.
+- **The runner counts, the store divides.** `Runner.stats` are lifetime totals
+  (frames, events, simulated ns, engine ms, budget-limited frames), and
+  `readSimulationCounters` adds the totals of runners already rebuilt away, so
+  sampling twice and dividing by the interval never goes negative after an edit.
+- **The runner never reads the wall clock.** Engine time per frame is measured
+  through an injected `clock`, which `simulation.ts` supplies as
+  `performance.now`. It feeds the stats only; without one, costs read 0 and the
+  run is identical (`runner.test.ts` checks both).
+- **What the numbers mean.** FPS is `requestAnimationFrame` cadence. TPS is
+  engine events per second while running. Latency is an input event's
+  timestamp to the start of the next frame's callbacks. Long tasks and JS heap
+  are shown only where the browser reports them (Chromium).
 
 ## Editing vs. running
 

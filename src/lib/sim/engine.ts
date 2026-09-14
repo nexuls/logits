@@ -177,6 +177,11 @@ export class Engine {
     this.reset();
   }
 
+  /** Events scheduled and not yet run — the backlog a busy circuit builds up. */
+  get pendingEvents(): number {
+    return this.queue.size;
+  }
+
   /** Simulated time, in nanoseconds. */
   get now(): number {
     return this.currentTime;

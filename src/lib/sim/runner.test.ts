@@ -282,3 +282,57 @@ describe("dispose", () => {
     expect(frames.waiting).toBe(0);
   });
 });
+
+describe("stats", () => {
+  it("totals the frames, events and simulated time it ran", () => {
+    runner.play();
+    frames.tick(0);
+    frames.tick(16);
+    frames.tick(32);
+
+    const stats = runner.stats;
+    // The first frame only sets the baseline, but it is still a frame.
+    expect(stats.frames).toBe(3);
+    expect(stats.events).toBeGreaterThan(0);
+    expect(stats.simulatedNs).toBe(3_200);
+    expect(stats.saturatedFrames).toBe(0);
+  });
+
+  it("reads zero cost without a clock, and changes nothing about the run", () => {
+    const clocked = new Engine(
+      buildNetlist(runningRing(), lookupNode),
+      lookupNode,
+    );
+    clocked.runUntil(100);
+    clocked.setNodeParams("en", { width: 1, value: 1 });
+    let reads = 0;
+    const withClock = new Runner(clocked, {
+      frames: new FakeFrames(),
+      speedNsPerSecond: 100_000,
+      clock: () => (reads++ % 2 === 0 ? 10 : 12.5),
+    });
+
+    runner.play();
+    withClock.play();
+    for (const time of [0, 16]) {
+      frames.tick(time);
+      withClock.onFrame(time);
+    }
+
+    expect(runner.stats.costMs).toBe(0);
+    expect(withClock.stats.lastFrameCostMs).toBe(2.5);
+    expect(withClock.stats.costMs).toBe(5);
+    // The clock is for measurement only: the waveform is identical.
+    expect(clocked.now).toBe(engine.now);
+    expect(withClock.stats.events).toBe(runner.stats.events);
+  });
+
+  it("counts a frame that stopped on its event budget", () => {
+    runner.setSpeed(1e12);
+    runner.play();
+    frames.tick(0);
+    frames.tick(16);
+
+    expect(runner.stats.saturatedFrames).toBeGreaterThan(0);
+  });
+});

@@ -27,6 +27,7 @@ import DiagnosticsPanel from "./diagnostics-panel";
 import GhostLayer from "./ghost-layer";
 import Inspector, { InspectorAnchor, selectionBounds } from "./inspector";
 import NodeLayer from "./node-layer";
+import PerformanceMonitor from "./performance-monitor";
 import RunControls from "./run-controls";
 import SettingsDialog from "./settings-dialog";
 import { useEditorGestures } from "./use-editor-gestures";
@@ -77,6 +78,7 @@ export default function Editor({
   const [notice, setNotice] = useState<string | null>(null);
   const [commandMenuOpen, setCommandMenuOpen] = useState(false);
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
+  const [performanceOpen, setPerformanceOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
@@ -246,17 +248,29 @@ export default function Editor({
             <RunControls
               diagnosticsOpen={diagnosticsOpen}
               onToggleDiagnostics={() => setDiagnosticsOpen((open) => !open)}
+              performanceOpen={performanceOpen}
+              onTogglePerformance={() => setPerformanceOpen((open) => !open)}
               onNotice={notify}
             />
 
-            {diagnosticsOpen && (
-              <DiagnosticsPanel
-                onClose={() => setDiagnosticsOpen(false)}
-                onFocusElements={(nodeIds, wireIds) =>
-                  selectOnly(nodeIds, wireIds)
-                }
+            {/* One column for the bottom-right corner, so the diagnostics
+                panel stacks above the performance monitor instead of both
+                claiming the corner. It passes presses through where it is
+                empty; its children opt back in. */}
+            <div className="pointer-events-none absolute top-14 right-0 bottom-0 z-20 flex flex-col items-end justify-end gap-2">
+              {diagnosticsOpen && (
+                <DiagnosticsPanel
+                  onClose={() => setDiagnosticsOpen(false)}
+                  onFocusElements={(nodeIds, wireIds) =>
+                    selectOnly(nodeIds, wireIds)
+                  }
+                />
+              )}
+              <PerformanceMonitor
+                expanded={performanceOpen}
+                onToggle={() => setPerformanceOpen((open) => !open)}
               />
-            )}
+            </div>
 
             {/* An example is fully editable, so nothing else on screen would
                 tell the user their edits are going nowhere. */}

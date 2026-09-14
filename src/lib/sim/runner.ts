@@ -28,6 +28,30 @@ export type RunnerOptions = {
   /** Events one frame may process before it yields and reports a slow rate. */
   eventBudgetPerFrame?: number;
   frames?: FrameScheduler;
+  /**
+   * Real milliseconds, read only to measure what a frame cost the engine.
+   * Injected rather than read off `performance` so this module never touches
+   * the wall clock itself; it never reaches the engine, and without one every
+   * cost reads 0 while the simulation is exactly the same.
+   */
+  clock?: () => number;
+};
+
+/**
+ * Running totals over this runner's lifetime, for the performance monitor.
+ * Totals rather than rates, so a reader samples twice and divides by whatever
+ * interval it likes without the runner holding a clock of its own.
+ */
+export type RunnerStats = {
+  /** Frames that advanced the engine. Steps and `advance` are not frames. */
+  frames: number;
+  events: number;
+  simulatedNs: number;
+  /** Real ms spent inside `runUntil`; 0 without a `clock`. */
+  costMs: number;
+  /** Frames that stopped on the event budget instead of reaching their target. */
+  saturatedFrames: number;
+  lastFrameCostMs: number;
 };
 
 /** 1 µs of simulated time per real second: slow enough for a gate to be visible. */
@@ -76,12 +100,23 @@ export class Runner {
   /** Simulated ns actually advanced in the last real second, for the UI. */
   private achieved = 0;
 
+  private readonly clock: (() => number) | undefined;
+  private readonly counters: RunnerStats = {
+    frames: 0,
+    events: 0,
+    simulatedNs: 0,
+    costMs: 0,
+    saturatedFrames: 0,
+    lastFrameCostMs: 0,
+  };
+
   constructor(engine: Engine, options: RunnerOptions = {}) {
     this.engine = engine;
     this.frames = options.frames ?? browserFrames();
     this.speed = options.speedNsPerSecond ?? DEFAULT_SPEED_NS_PER_SECOND;
     this.eventBudget =
       options.eventBudgetPerFrame ?? DEFAULT_EVENT_BUDGET_PER_FRAME;
+    this.clock = options.clock;
   }
 
   get mode(): RunnerMode {
@@ -99,6 +134,11 @@ export class Runner {
    */
   get achievedNsPerSecond(): number {
     return this.achieved;
+  }
+
+  /** Live totals — the same object every read, so sampling it per frame is free. */
+  get stats(): Readonly<RunnerStats> {
+    return this.counters;
   }
 
   /** `useSyncExternalStore` pair. The snapshot is the engine's version. */
@@ -176,7 +216,17 @@ export class Runner {
     const target =
       this.engine.now + Math.trunc((elapsedMs / 1000) * this.speed);
     const before = this.engine.now;
+    const startedMs = this.clock?.() ?? 0;
     const result = this.engine.runUntil(target, this.eventBudget);
+    const costMs = this.clock ? this.clock() - startedMs : 0;
+
+    const counters = this.counters;
+    counters.frames++;
+    counters.events += result.events;
+    counters.simulatedNs += this.engine.now - before;
+    counters.costMs += costMs;
+    counters.lastFrameCostMs = costMs;
+    if (!result.settled && !result.oscillating) counters.saturatedFrames++;
 
     // Measured from what the engine actually advanced, not from what was
     // asked for: a frame that hit the event budget fell behind, and the UI

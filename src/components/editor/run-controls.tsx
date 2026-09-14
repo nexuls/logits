@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ActivityIcon,
   AlertTriangleIcon,
   DownloadIcon,
   PauseIcon,
@@ -18,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Separator } from "@/components/ui/separator";
 import { deserialize, FILE_EXTENSION, serialize } from "@/lib/circuit/io";
+import { formatSimTime } from "@/lib/sim/time";
 import { cn } from "@/lib/utils";
 import {
   flushSave,
@@ -40,11 +42,14 @@ import {
 type Props = {
   diagnosticsOpen: boolean;
   onToggleDiagnostics: () => void;
+  performanceOpen: boolean;
+  onTogglePerformance: () => void;
   onNotice: (message: string) => void;
 };
 
 /**
- * The floating toolbar: run controls, history, persistence, diagnostics.
+ * The floating toolbar: run controls, history, persistence, diagnostics, and
+ * the switch that opens the performance monitor out into its detailed view.
  *
  * It reads the simulation through `useSimulationStatus`, which is one
  * subscription for the whole bar rather than one per button — the runner
@@ -63,6 +68,8 @@ const SPEEDS = [
 export default function RunControls({
   diagnosticsOpen,
   onToggleDiagnostics,
+  performanceOpen,
+  onTogglePerformance,
   onNotice,
 }: Props) {
   const document = useDocument();
@@ -168,7 +175,7 @@ export default function RunControls({
         // would make a screen reader unusable.
         aria-hidden
       >
-        {formatTime(status.time)}
+        {formatSimTime(status.time)}
       </span>
 
       <Separator orientation="vertical" className="mx-1 h-6" />
@@ -246,6 +253,18 @@ export default function RunControls({
 
       <Button
         type="button"
+        variant={performanceOpen ? "secondary" : "ghost"}
+        size="icon"
+        onClick={onTogglePerformance}
+        aria-pressed={performanceOpen}
+        aria-label="Performance details"
+        title="Performance details"
+      >
+        <ActivityIcon />
+      </Button>
+
+      <Button
+        type="button"
         variant={diagnosticsOpen ? "secondary" : "ghost"}
         size="sm"
         onClick={onToggleDiagnostics}
@@ -258,12 +277,4 @@ export default function RunControls({
       </Button>
     </div>
   );
-}
-
-/** Simulated nanoseconds, in the largest unit that keeps the number small. */
-function formatTime(ns: number): string {
-  if (ns < 1_000) return `${ns} ns`;
-  if (ns < 1_000_000) return `${(ns / 1_000).toFixed(2)} µs`;
-  if (ns < 1_000_000_000) return `${(ns / 1_000_000).toFixed(2)} ms`;
-  return `${(ns / 1_000_000_000).toFixed(2)} s`;
 }

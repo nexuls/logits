@@ -29,7 +29,7 @@ export default function DiagnosticsPanel({ onClose, onFocusElements }: Props) {
   const diagnostics = useDiagnostics();
 
   return (
-    <div className="pointer-events-auto absolute right-2 bottom-2 z-20 flex max-h-64 w-96 max-w-[calc(100%-1rem)] flex-col rounded-lg border border-border bg-sidebar shadow-lg">
+    <div className="pointer-events-auto mr-2 flex max-h-64 min-h-0 w-96 max-w-[calc(100%-1rem)] flex-col rounded-lg border border-border bg-sidebar shadow-lg">
       <div className="flex items-center gap-2 border-b border-border px-3 py-2">
         <h2 className="flex-1 text-xs font-semibold">
           Diagnostics

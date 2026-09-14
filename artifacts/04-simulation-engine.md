@@ -144,6 +144,10 @@ directly, which is what keeps `src/lib/` runnable in a plain Node test.
 - Each frame: `runUntil(simTime + dt * speed)`, then bump the version counter
   once and notify subscribers. One notification per frame, never per event.
 - The runner is the only writer of simulation state that React observes.
+- `stats` are lifetime totals — frames, events, simulated ns, engine ms,
+  frames that stopped on the budget — for the performance monitor to sample and
+  divide. Engine ms comes from an injected `clock`; the runner has no wall-clock
+  read of its own, and the clock never reaches the engine.
 
 ## Instruments
 

@@ -15,6 +15,7 @@ import {
   Runner,
   type RunnerMode,
   type RunnerOptions,
+  type RunnerStats,
 } from "@/lib/sim/runner";
 import type { WaveformSample } from "@/lib/sim/waveform";
 
@@ -54,6 +55,35 @@ let lookup: NodeLookup = lookupNode;
 /** `lookup` plus the open document's subcircuits. Rebuilt on every sync. */
 let documentLookup: NodeLookup = lookupNode;
 let runnerOptions: RunnerOptions = {};
+
+/** Frame costs for the performance monitor. Absent during SSR. */
+const wallClock =
+  typeof performance === "undefined" ? undefined : () => performance.now();
+
+type RunnerTotals = Omit<RunnerStats, "lastFrameCostMs">;
+
+/**
+ * What runners already thrown away had counted. An edit rebuilds the runner,
+ * and totals that dropped to zero on every wire drawn would read as a negative
+ * rate to anything sampling them.
+ */
+const retired: RunnerTotals = {
+  frames: 0,
+  events: 0,
+  simulatedNs: 0,
+  costMs: 0,
+  saturatedFrames: 0,
+};
+
+function retireRunner(): void {
+  if (!runner) return;
+  const stats = runner.stats;
+  retired.frames += stats.frames;
+  retired.events += stats.events;
+  retired.simulatedNs += stats.simulatedNs;
+  retired.costMs += stats.costMs;
+  retired.saturatedFrames += stats.saturatedFrames;
+}
 
 /**
  * Simulated time a paused engine is allowed to advance so the canvas shows a
@@ -175,6 +205,7 @@ function rebuild(compiled: Netlist, nextSignature: string): void {
   const wasRunning = runner?.mode === "running";
   const speed = runner?.speedNsPerSecond ?? DEFAULT_SPEED_NS_PER_SECOND;
 
+  retireRunner();
   runner?.dispose();
 
   netlist = compiled;
@@ -182,7 +213,11 @@ function rebuild(compiled: Netlist, nextSignature: string): void {
   engine = new Engine(compiled, documentLookup);
   engineParams = new Map(compiled.nodes.map((node) => [node.id, node.params]));
 
-  runner = new Runner(engine, { ...runnerOptions, speedNsPerSecond: speed });
+  runner = new Runner(engine, {
+    clock: wallClock,
+    ...runnerOptions,
+    speedNsPerSecond: speed,
+  });
   runner.subscribe(emit);
 
   // An edit made while running keeps running — the alternative is that wiring
@@ -205,6 +240,7 @@ function sameParams(a: NodeParams, b: NodeParams): boolean {
 }
 
 export function disposeSimulation(): void {
+  retireRunner();
   runner?.dispose();
   runner = null;
   engine = null;
@@ -212,6 +248,63 @@ export function disposeSimulation(): void {
   signature = "";
   engineParams = new Map();
   emit();
+}
+
+/** Totals across every runner this session, plus the live circuit's shape. */
+export type SimulationCounters = RunnerStats & {
+  ready: boolean;
+  running: boolean;
+  speedNsPerSecond: number;
+  pendingEvents: number;
+  timeNs: number;
+  nodes: number;
+  nets: number;
+};
+
+export function createSimulationCounters(): SimulationCounters {
+  return {
+    frames: 0,
+    events: 0,
+    simulatedNs: 0,
+    costMs: 0,
+    saturatedFrames: 0,
+    lastFrameCostMs: 0,
+    ready: false,
+    running: false,
+    speedNsPerSecond: DEFAULT_SPEED_NS_PER_SECOND,
+    pendingEvents: 0,
+    timeNs: 0,
+    nodes: 0,
+    nets: 0,
+  };
+}
+
+/**
+ * Fills `into` rather than returning a fresh object: the performance monitor
+ * reads this on every animation frame, and it should not be the thing
+ * producing garbage while it measures jank. Not a React snapshot — nothing
+ * here is comparable, and the monitor publishes on its own cadence.
+ */
+export function readSimulationCounters(
+  into: SimulationCounters,
+): SimulationCounters {
+  const stats = runner?.stats;
+  into.frames = retired.frames + (stats?.frames ?? 0);
+  into.events = retired.events + (stats?.events ?? 0);
+  into.simulatedNs = retired.simulatedNs + (stats?.simulatedNs ?? 0);
+  into.costMs = retired.costMs + (stats?.costMs ?? 0);
+  into.saturatedFrames =
+    retired.saturatedFrames + (stats?.saturatedFrames ?? 0);
+  into.lastFrameCostMs = stats?.lastFrameCostMs ?? 0;
+  into.ready = engine !== null && runner !== null;
+  into.running = runner?.mode === "running";
+  into.speedNsPerSecond =
+    runner?.speedNsPerSecond ?? DEFAULT_SPEED_NS_PER_SECOND;
+  into.pendingEvents = engine?.pendingEvents ?? 0;
+  into.timeNs = engine?.now ?? 0;
+  into.nodes = netlist?.nodes.length ?? 0;
+  into.nets = netlist?.nets.length ?? 0;
+  return into;
 }
 
 export function getNetlist(): Netlist | null {

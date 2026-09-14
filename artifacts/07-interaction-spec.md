@@ -41,6 +41,16 @@ editor adds `--logit-cursor-cross` while placing or wiring and
 | `Ctrl/Cmd + B` | Toggle the projects sidebar (left) |
 | `Ctrl/Cmd + J` | Toggle the elements sidebar (right), between full width and its icon rail |
 
+The **performance monitor** is always on screen as a one-line status bar in
+the bottom-right corner — FPS, TPS (simulation events per second), input
+latency, and simulation speed as a share of the requested speed. A value past
+its threshold turns red *and* gains a warning icon. The activity button in the
+toolbar, or the chevron on the bar itself, grows the same box upward into the
+detailed view (trend sparklines with hover readouts, then rendering, simulation,
+input and circuit figures as text). The transition is skipped under
+`prefers-reduced-motion`, and the collapsed details are `inert`. The diagnostics
+panel stacks above it in the same corner.
+
 The two sidebars are independent — separate providers, separate cookies,
 separate shortcuts. Both are also reachable by pointer: the left one from the
 canvas header, the right one from the panel button in its own header.
