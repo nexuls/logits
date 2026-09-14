@@ -83,6 +83,15 @@ that module is a world length converted from screen pixels. The exceptions that
 *do* take pointer events are the parts of a node view that genuinely accept
 input, and they stop the event so a click toggles rather than starting a drag.
 
+Because the DOM is not consulted, two things it would have given for free are
+done by hand. **Occlusion:** picking follows paint order — wires and their
+handles are painted beneath every node, so none is pickable inside a node body,
+and a pin under a node painted above its own is skipped. **Chrome:** the
+canvas's screen-space `overlay` (the run controls, the diagnostics panel) is a
+sibling of the viewport, not a child, so a press on it never bubbles into the
+scene hit-test. A content gesture captures the pointer instead, so a drag keeps
+tracking while it crosses that chrome.
+
 ## The React ↔ simulation boundary
 
 The engine ticks far faster than React should re-render. Therefore:

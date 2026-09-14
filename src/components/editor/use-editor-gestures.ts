@@ -461,8 +461,9 @@ export function useEditorGestures({
         return;
       }
 
-      // A handle on a selected wire outranks the node it may be sitting over:
-      // it is small, deliberate, and only drawn where the user can see it.
+      // A handle on a selected wire outranks the wire body and empty canvas:
+      // it is small and deliberate. `waypointAt` already misses one hidden
+      // under a node, so it cannot steal a press on that node.
       const handle = waypointAt(
         current,
         world,

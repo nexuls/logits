@@ -262,11 +262,80 @@ describe("wireAt", () => {
     const bent = setWireWaypoints(doc, wireId, [{ x: 100, y: 60 }]);
     const built = buildScene(bent, lookupNode);
 
-    const before = wireAt(built, { x: 60, y: 30 }, 40);
-    const after = wireAt(built, { x: 150, y: 30 }, 40);
+    // On open canvas either side of the bend, clear of both bodies.
+    const before = wireAt(built, { x: 85, y: 40 }, 40);
+    const after = wireAt(built, { x: 150, y: 38 }, 40);
 
     // Either side of the bend inserts either side of it in the list.
     expect(before?.wire.slots[before.index]).toBe(0);
     expect(after?.wire.slots[after.index]).toBe(1);
+  });
+});
+
+describe("occlusion by a node body", () => {
+  /**
+   * `document` with a gate centred on `center` under the id `id`. The id is
+   * chosen rather than generated because paint order is sorted id order, and
+   * that is exactly what these tests are about.
+   */
+  function withCover(
+    document: CircuitDocument,
+    center: { x: number; y: number },
+    id: string,
+  ): CircuitDocument {
+    const placed = addNode(document, and, {
+      position: { x: 0, y: 0 },
+      snap: false,
+    });
+    const { width, height } = buildScene(placed.document, lookupNode).nodes[
+      placed.nodeId
+    ].bounds;
+    const { [placed.nodeId]: node, ...nodes } = placed.document.nodes;
+
+    return {
+      ...placed.document,
+      nodes: {
+        ...nodes,
+        [id]: {
+          ...node,
+          id,
+          position: { x: center.x - width / 2, y: center.y - height / 2 },
+        },
+      },
+    };
+  }
+
+  it("misses a wire running under a node", () => {
+    const wire = Object.values(scene().wires)[0];
+    const [a, b] = wire.points;
+    const midpoint = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+
+    const built = buildScene(withCover(doc, midpoint, "cover"), lookupNode);
+    expect(nodeAt(built, midpoint)?.node.id).toBe("cover");
+    expect(wireAt(built, midpoint)).toBeNull();
+  });
+
+  it("misses a waypoint handle under a node", () => {
+    const wireId = Object.keys(doc.wires)[0];
+    const bent = setWireWaypoints(doc, wireId, [{ x: 100, y: 120 }]);
+    const handle = { x: 100, y: 120 };
+
+    expect(
+      waypointAt(buildScene(bent, lookupNode), handle, [wireId]),
+    ).not.toBeNull();
+
+    const covered = buildScene(withCover(bent, handle, "cover"), lookupNode);
+    expect(waypointAt(covered, handle, [wireId])).toBeNull();
+  });
+
+  it("hides a pin under a node painted above its own, not below", () => {
+    const pin = scene().nodes[andId].pinsById.in0.world;
+
+    // "~" sorts after every generated id, "!" before: above and below.
+    const above = buildScene(withCover(doc, pin, "~cover"), lookupNode);
+    const below = buildScene(withCover(doc, pin, "!cover"), lookupNode);
+
+    expect(pinAt(above, pin)?.node.node.id).not.toBe(andId);
+    expect(pinAt(below, pin)?.node.node.id).toBe(andId);
   });
 });

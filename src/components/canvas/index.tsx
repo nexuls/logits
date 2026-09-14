@@ -190,7 +190,13 @@ export default function Canvas({
           // gestures must not get first refusal on a pan the user asked for.
           if (!isSpacePressed && event.pointerType !== "touch") {
             onContentPointerDown?.(event);
-            if (event.defaultPrevented) return;
+            if (event.defaultPrevented) {
+              // Captured so a drag keeps its moves and its release while the
+              // pointer crosses the overlay, header or minimap, which are
+              // siblings of the viewport and would otherwise swallow them.
+              event.currentTarget.setPointerCapture(event.pointerId);
+              return;
+            }
           }
           onPointerDown(event);
         }}
@@ -234,9 +240,12 @@ export default function Canvas({
         >
           {children}
         </div>
-
-        {overlay}
       </div>
+
+      {/* A sibling of the viewport, not a child: picking is arithmetic against
+          the scene, so a press on a toolbar button that bubbled into the
+          viewport would also select or start a wire on whatever lies under it. */}
+      {overlay}
 
       <Header
         title={title}

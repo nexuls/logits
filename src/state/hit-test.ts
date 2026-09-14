@@ -59,6 +59,10 @@ export type WaypointHit = {
  * Nearest rather than first: pins on a small node at low zoom overlap, and the
  * user means the one they aimed at. Ties break on node then pin id so the
  * result does not depend on scene iteration order.
+ *
+ * A pin is skipped when a node painted above its own covers `world`, so a pin
+ * hidden under another body cannot be wired through it. Only the interior
+ * covers: two nodes that merely abut still expose each other's edge pins.
  */
 export function pinAt(
   scene: Scene,
@@ -68,8 +72,10 @@ export function pinAt(
   let best: PinHit | null = null;
   let bestDistance = Infinity;
 
-  for (const nodeId of Object.keys(scene.nodes).sort()) {
+  const nodeIds = Object.keys(scene.nodes).sort();
+  for (const [order, nodeId] of nodeIds.entries()) {
     const node = scene.nodes[nodeId];
+    if (coveredAbove(scene, nodeIds, order, world)) continue;
     for (const pin of node.pins) {
       const distance = Math.hypot(pin.world.x - world.x, pin.world.y - world.y);
       // Strictly nearer, so an exact tie keeps the earlier id and the walk
@@ -106,12 +112,17 @@ export function nodeAt(scene: Scene, world: Point): ResolvedNode | null {
  * dropped here would land — so the preview handle the editor draws under the
  * cursor and the waypoint a press actually inserts are the same point, and
  * cannot drift apart (ADR 0007).
+ *
+ * A point inside a node body misses every wire: the wire layer is painted
+ * beneath the nodes, so a wire running under one is not there to be clicked.
  */
 export function wireAt(
   scene: Scene,
   world: Point,
   radius = WIRE_HIT_RADIUS,
 ): WireHit | null {
+  if (nodeAt(scene, world)) return null;
+
   let best: WireHit | null = null;
 
   for (const wireId of Object.keys(scene.wires).sort()) {
@@ -137,7 +148,9 @@ export function wireAt(
  *
  * Scoped to a caller-supplied set rather than the whole scene because handles
  * are only drawn for selected wires: a handle nobody can see must not be
- * grabbable, or a press near an unselected wire would silently bend it.
+ * grabbable, or a press near an unselected wire would silently bend it. For
+ * the same reason a handle under a node body misses: it is drawn in the wire
+ * layer, beneath the node.
  */
 export function waypointAt(
   scene: Scene,
@@ -145,6 +158,8 @@ export function waypointAt(
   wireIds: readonly string[],
   radius = WAYPOINT_HIT_RADIUS,
 ): WaypointHit | null {
+  if (nodeAt(scene, world)) return null;
+
   let best: WaypointHit | null = null;
 
   for (const wireId of [...wireIds].sort()) {
@@ -230,6 +245,30 @@ export function pinsMatchExactly(a: HasSpec, b: HasSpec): boolean {
  * invent the rest of a `ResolvedPin` to ask.
  */
 type HasSpec = Pick<ResolvedPin, "spec">;
+
+/**
+ * Does a node painted after `nodeIds[order]` have `world` strictly inside its
+ * body? `nodeIds` is the sorted paint order, the same one `nodeAt` walks.
+ */
+function coveredAbove(
+  scene: Scene,
+  nodeIds: readonly string[],
+  order: number,
+  world: Point,
+): boolean {
+  for (let above = order + 1; above < nodeIds.length; above++) {
+    const { x, y, width, height } = scene.nodes[nodeIds[above]].bounds;
+    if (
+      world.x > x &&
+      world.x < x + width &&
+      world.y > y &&
+      world.y < y + height
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
 
 /** The point of segment `a → b` nearest `point`, endpoints included. */
 function closestPointOnSegment(point: Point, a: Point, b: Point): Point {
