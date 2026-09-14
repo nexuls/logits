@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { clampScale, type Viewport } from "@/lib/circuit/coords";
 import { fromJson, type LoadResult, serialize } from "@/lib/circuit/io";
 import {
   type CircuitDocument,
@@ -109,6 +110,9 @@ export function removeDocument(id: string): StorageResult {
   } catch (error) {
     return { ok: false, error: describe(error) };
   }
+  // The remembered view goes with it — an id is never reused, so leaving it
+  // behind would only ever be an orphan.
+  removeViewport(id);
   return writeProjects(readProjects().filter((project) => project.id !== id));
 }
 
@@ -171,6 +175,79 @@ function writeProjects(projects: ProjectMeta[]): StorageResult {
       INDEX_KEY,
       JSON.stringify({ version: INDEX_VERSION, projects }),
     );
+  } catch (error) {
+    return { ok: false, error: describe(error) };
+  }
+  return { ok: true };
+}
+
+/**
+ * Where the user last left the view on a project.
+ *
+ * Deliberately not part of the document: it is per-browser workspace state
+ * like `editor-settings.ts`, nobody opening a shared `.logits.json` should
+ * inherit someone else's scroll position, and keeping it out of the save
+ * format means it needs no migration.
+ */
+
+export const VIEW_KEY_PREFIX = "logits:view:";
+
+export const viewKey = (id: string) => `${VIEW_KEY_PREFIX}${id}`;
+
+const storedViewSchema = z.object({
+  scale: z.number().finite(),
+  offset: z.object({ x: z.number().finite(), y: z.number().finite() }),
+});
+
+/** Returns `null` when nothing usable is stored for `id`. */
+export function readViewport(id: string): Viewport | null {
+  const store = storage();
+  if (!store) return null;
+
+  let text: string | null;
+  try {
+    text = store.getItem(viewKey(id));
+  } catch {
+    return null;
+  }
+  if (text === null) return null;
+
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    return null;
+  }
+
+  const view = storedViewSchema.safeParse(raw);
+  if (!view.success) return null;
+
+  // Clamped on the way out, not on the way in: the limits are the current
+  // build's, and a view written by an older one must still be usable.
+  return {
+    scale: clampScale(view.data.scale),
+    offset: view.data.offset,
+  };
+}
+
+export function writeViewport(id: string, view: Viewport): StorageResult {
+  const store = storage();
+  if (!store) return { ok: false, error: "Storage is unavailable" };
+
+  try {
+    store.setItem(viewKey(id), JSON.stringify(view));
+  } catch (error) {
+    return { ok: false, error: describe(error) };
+  }
+  return { ok: true };
+}
+
+export function removeViewport(id: string): StorageResult {
+  const store = storage();
+  if (!store) return { ok: false, error: "Storage is unavailable" };
+
+  try {
+    store.removeItem(viewKey(id));
   } catch (error) {
     return { ok: false, error: describe(error) };
   }

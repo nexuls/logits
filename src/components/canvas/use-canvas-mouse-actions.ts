@@ -29,9 +29,19 @@ type UseCanvasMouseActionsParams = {
   initialScale?: number;
   initialOffset?: Point;
   /**
-   * Changing this re-frames the view on the initial scale and offset. It is
-   * how swapping the document under the canvas starts at that circuit's zoom
-   * rather than inheriting the last one's.
+   * Where the view starts for the current `viewKey`: the transform this
+   * circuit was last left at, restored from storage. `null` for a circuit
+   * with no remembered view, which starts on the initial scale and offset.
+   *
+   * It is *not* where `resetView` goes — reset means "back to the default
+   * framing", which stays `initialScale` at `initialOffset`.
+   */
+  restoredView?: Viewport | null;
+  /**
+   * Changing this re-frames the view on the restored view, or on the initial
+   * scale and offset when there is none. It is how swapping the document
+   * under the canvas starts where that circuit was left rather than
+   * inheriting the last one's view.
    */
   viewKey?: string;
 };
@@ -68,12 +78,12 @@ export function useCanvasMouseActions({
   zoomIntensity = DEFAULT_ZOOM_INTENSITY,
   initialScale = DEFAULT_SCALE,
   initialOffset = ORIGIN,
+  restoredView = null,
   viewKey,
 }: UseCanvasMouseActionsParams) {
-  const [viewState, setViewState] = useState<ViewState>({
-    scale: initialScale,
-    offset: initialOffset,
-  });
+  const [viewState, setViewState] = useState<ViewState>(
+    restoredView ?? { scale: initialScale, offset: initialOffset },
+  );
   const [isPanning, setIsPanning] = useState(false);
   const [isSpacePressed, setIsSpacePressed] = useState(false);
   const panPointerIdRef = useRef<number | null>(null);
@@ -247,6 +257,13 @@ export function useCanvasMouseActions({
     });
   }, [initialOffset, initialScale]);
 
+  // Read through a ref so the re-framing effect can depend on `viewKey`
+  // alone: `restoredView` is a fresh object most renders, and depending on it
+  // would make the effect's guard the only thing standing between the user
+  // and their view being reset mid-pan.
+  const restoredViewRef = useRef(restoredView);
+  restoredViewRef.current = restoredView;
+
   // Re-frames when the caller swaps what is on the canvas, and only then: a
   // change to `initialScale` alone is the user editing the project's default
   // zoom, which must not yank the view out from under the edit they are
@@ -255,8 +272,10 @@ export function useCanvasMouseActions({
   useEffect(() => {
     if (framedKeyRef.current === viewKey) return;
     framedKeyRef.current = viewKey;
-    resetView();
-  }, [viewKey, resetView]);
+    setViewState(
+      restoredViewRef.current ?? { scale: initialScale, offset: initialOffset },
+    );
+  }, [viewKey, initialScale, initialOffset]);
 
   const onPointerDown = useCallback(
     (event: PointerEvent<HTMLDivElement>) => {

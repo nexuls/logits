@@ -32,6 +32,7 @@ import RunControls from "./run-controls";
 import SettingsDialog from "./settings-dialog";
 import { useEditorGestures } from "./use-editor-gestures";
 import { useEditorShortcuts } from "./use-editor-shortcuts";
+import { useViewPersistence } from "./use-view-persistence";
 import WireLayer from "./wire-layer";
 
 type Props = {
@@ -136,6 +137,21 @@ export default function Editor({
   // pointer positions with exactly the numbers the canvas drew with.
   const [viewport, setViewport] = useState<CanvasViewport>(IDENTITY_VIEWPORT);
 
+  // Where this circuit was last left, and where it is left next. An example
+  // is not persisted for the same reason its edits are not (ADR 0008).
+  const { restoredView, saveView } = useViewPersistence(
+    document?.id ?? null,
+    !ephemeral,
+  );
+
+  const onViewportChange = useCallback(
+    (next: CanvasViewport) => {
+      setViewport(next);
+      saveView({ scale: next.scale, offset: next.offset });
+    },
+    [saveView],
+  );
+
   const gestures = useEditorGestures({
     scene,
     viewport,
@@ -203,10 +219,11 @@ export default function Editor({
         // render between asking for a project and the store having it, and
         // re-framing then would use the outgoing circuit's zoom.
         viewKey={document?.id ?? ""}
+        restoredView={restoredView}
         contentBounds={contentBounds}
         themeKey={themeKey}
         cursor={gestures.cursor}
-        onViewportChange={setViewport}
+        onViewportChange={onViewportChange}
         onTitleChange={
           document ? (name) => renameOpenDocument(name) : undefined
         }

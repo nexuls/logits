@@ -10,7 +10,12 @@ import {
   useState,
 } from "react";
 
-import { DEFAULT_SCALE, MAX_SCALE, MIN_SCALE } from "@/lib/circuit/coords";
+import {
+  DEFAULT_SCALE,
+  MAX_SCALE,
+  MIN_SCALE,
+  type Viewport,
+} from "@/lib/circuit/coords";
 import type { Rect } from "@/lib/circuit/geometry";
 import CanvasGrid from "./canvas-grid";
 import { type CanvasViewport, createCanvasViewport } from "./canvas-viewport";
@@ -36,10 +41,17 @@ type Props = {
   defaultZoom?: number;
   /**
    * Identifies what is on the canvas. When it changes the view re-frames on
-   * `defaultZoom` — how opening another circuit starts at its own zoom
-   * instead of inheriting the previous one's.
+   * `restoredView`, or on `defaultZoom` when there is none — how opening
+   * another circuit starts where that circuit was left instead of inheriting
+   * the previous one's view.
    */
   viewKey?: string;
+  /**
+   * The transform to start `viewKey` at: where the user last left this
+   * circuit. `null` starts on `defaultZoom` at the origin, which is also
+   * where "reset view" goes regardless of this.
+   */
+  restoredView?: Viewport | null;
   /** World-space extent of `children`, for the minimap. Null when empty. */
   contentBounds?: Rect | null;
   /** Passed through to the minimap, which samples theme colours imperatively. */
@@ -74,6 +86,7 @@ export default function Canvas({
   showMinimap = true,
   defaultZoom = DEFAULT_SCALE,
   viewKey,
+  restoredView = null,
   contentBounds = null,
   themeKey,
   onTitleChange,
@@ -106,6 +119,7 @@ export default function Canvas({
     minScale: MIN_SCALE,
     maxScale: MAX_SCALE,
     initialScale: defaultZoom,
+    restoredView,
     viewKey,
   });
 

@@ -220,6 +220,13 @@ and the `nodeIds` / `wireIds` / `pins` / `netId` the editor should mark.
   flushes on `beforeunload` and before it swaps documents.
   A project index for the sidebar lives under `logits:index` as
   `{ version, projects: ProjectMeta[] }`, derived from documents on save.
+- Where each project was last left — the canvas pan and zoom — is stored apart
+  from the document, under `logits:view:<id>`, debounced and flushed by
+  [use-view-persistence.ts](../src/components/editor/use-view-persistence.ts).
+  It is workspace state like `logits:settings`: per browser, never exported, and
+  deliberately outside the save format so it needs no migration. A stored scale
+  is clamped on read, so a view written by a build with different zoom limits is
+  still usable, and deleting a project deletes its view with it.
 - `serialize` / `deserialize` live in `src/lib/circuit/io.ts` and are the only
   code that knows about `version`. They are pure and take strings — the
   `localStorage` calls live in [src/state/storage.ts](../src/state/storage.ts),
