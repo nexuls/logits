@@ -81,6 +81,11 @@
   --sidebar-accent-foreground: oklch(0.218 0.008 223.9);
   --sidebar-border: oklch(0.925 0.005 214.3);
   --sidebar-ring: oklch(0.723 0.014 214.4);
+  /* Canvas chrome floats over nodes that share its surface colour, so it needs
+     a tight contact shadow plus a wide falloff to read as a separate layer. */
+  --shadow-chrome:
+    0 1px 2px oklch(0 0 0 / 18%), 0 4px 10px oklch(0 0 0 / 16%),
+    0 12px 32px oklch(0 0 0 / 14%);
 }
 
 .dark {
@@ -115,6 +120,13 @@
   --sidebar-accent-foreground: oklch(0.987 0.002 197.1);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.56 0.021 213.5);
+  --shadow-chrome:
+    0 1px 3px oklch(0 0 0 / 60%), 0 6px 16px oklch(0 0 0 / 55%),
+    0 16px 48px oklch(0 0 0 / 50%);
+}
+
+@utility shadow-chrome {
+  box-shadow: var(--shadow-chrome);
 }
 
 @layer base {

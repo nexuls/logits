@@ -120,7 +120,7 @@ export default function RunControls({
   };
 
   return (
-    <div className="pointer-events-auto absolute top-2 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-lg bg-sidebar px-1.5 py-1 shadow-sm">
+    <div className="pointer-events-auto absolute top-2 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-lg bg-sidebar px-1.5 py-1 shadow-chrome border border-border">
       <Button
         type="button"
         variant={running ? "secondary" : "ghost"}

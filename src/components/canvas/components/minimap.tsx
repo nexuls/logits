@@ -224,7 +224,7 @@ export default function Minimap({
   }, [contentGroups, worldView, themeKey]);
 
   return (
-    <div className="absolute left-0 bottom-0 w-44 rounded-tr-lg bg-sidebar p-2">
+    <div className="absolute left-0 bottom-0 w-44 rounded-tr-lg bg-sidebar p-2 border-t border-r border-border shadow-chrome">
       <div className="mb-2 flex h-6 items-center gap-2 text-xs">
         <Button
           type="button"
