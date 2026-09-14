@@ -1,7 +1,13 @@
 "use client";
 
 import { MinusIcon, PlusIcon, RotateCwIcon, Trash2Icon } from "lucide-react";
-import { type ReactNode, type RefObject, useEffect, useRef } from "react";
+import {
+  type ReactNode,
+  type RefObject,
+  useCallback,
+  useEffect,
+  useRef,
+} from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -279,12 +285,8 @@ type FieldProps = {
 
 /**
  * The node's own name, overriding the definition's title on the canvas.
- *
  * Uncontrolled — the popover is keyed by the selection, so a new node is a new
- * field — and committed on blur *and* on unmount. The unmount commit is the
- * one that matters: the click that clears the selection removes this input
- * while it still has focus, and a removed element fires no blur, so without it
- * a label typed and then clicked away from was silently thrown away.
+ * field.
  */
 function LabelField({
   nodeId,
@@ -295,28 +297,66 @@ function LabelField({
   label: string;
   placeholder: string;
 }) {
-  // A ref, not state: this is only ever read back at commit time, and a render
-  // per keystroke would rebuild the scene for a field the canvas cannot see.
-  const typed = useRef(label);
-
-  useEffect(
-    () => () => {
-      updateNodeLabel(nodeId, typed.current);
-    },
-    [nodeId],
+  return (
+    <CommitInput
+      id="inspector-label"
+      initial={label}
+      placeholder={placeholder}
+      onCommit={(value) => updateNodeLabel(nodeId, value)}
+    />
   );
+}
+
+/**
+ * A text input that writes to the document when editing ends rather than per
+ * keystroke, so one editing session is one undo entry.
+ *
+ * "Ends" is blur *and* unmount. The unmount commit is the one that matters: a
+ * press anywhere on the canvas — clearing the selection, picking another node,
+ * starting a drag — removes the popover while this input still has focus, and
+ * a removed element fires no blur, so without it a value typed and then
+ * clicked away from was silently thrown away.
+ */
+function CommitInput({
+  id,
+  initial,
+  placeholder,
+  maxLength,
+  onCommit,
+}: {
+  id: string;
+  initial: string;
+  placeholder?: string;
+  maxLength?: number;
+  onCommit: (value: string) => void;
+}) {
+  // Refs, not state: these are only read back at commit time, and a render per
+  // keystroke would rebuild the scene for a field the canvas cannot see.
+  const typed = useRef(initial);
+  const committed = useRef(initial);
+  const onCommitRef = useRef(onCommit);
+  onCommitRef.current = onCommit;
+
+  // Skipping an unchanged value keeps a click through the field from leaving
+  // an empty entry on the undo stack.
+  const commit = useCallback(() => {
+    if (typed.current === committed.current) return;
+    committed.current = typed.current;
+    onCommitRef.current(typed.current);
+  }, []);
+
+  useEffect(() => commit, [commit]);
 
   return (
     <Input
-      id="inspector-label"
-      defaultValue={label}
+      id={id}
+      defaultValue={initial}
       placeholder={placeholder}
+      maxLength={maxLength}
       onChange={(event) => {
         typed.current = event.target.value;
       }}
-      // Committing here too keeps one undo entry per editing session rather
-      // than deferring every label to whenever the popover happens to close.
-      onBlur={(event) => updateNodeLabel(nodeId, event.target.value)}
+      onBlur={commit}
       className="h-9"
     />
   );
@@ -433,12 +473,11 @@ function ParamField({ spec, params, onChange }: FieldProps) {
   if (spec.kind === "text") {
     return (
       <Field htmlFor={id} label={spec.label} hint={spec.hint}>
-        <Input
+        <CommitInput
           id={id}
-          defaultValue={typeof raw === "string" ? raw : ""}
+          initial={typeof raw === "string" ? raw : ""}
           maxLength={spec.maxLength}
-          onBlur={(event) => onChange(event.target.value)}
-          className="h-9"
+          onCommit={onChange}
         />
       </Field>
     );
