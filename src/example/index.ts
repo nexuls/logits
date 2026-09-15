@@ -7,6 +7,7 @@ import halfAdder from "./half-adder.json";
 import masterSlaveFlipFlop from "./master-slave-flipflop.json";
 import mod16SyncCounter from "./mod-16-sync-counter.json";
 import mux2to1 from "./mux-2to1.json";
+import snake from "./snake.json";
 import srLatch from "./sr-latch.json";
 import tristateBus from "./tristate-bus.json";
 
@@ -54,6 +55,10 @@ const CATALOG: readonly { raw: unknown; summary: string }[] = [
   {
     raw: calculator,
     summary: "One keypad, two 4-digit operands, +, −, × and ÷ on a readout.",
+  },
+  {
+    raw: snake,
+    summary: "Snake on a 16×16 matrix: keyboard in, RAM body, LFSR food.",
   },
 ];
 
