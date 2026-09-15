@@ -1,0 +1,754 @@
+{
+  "version": 4,
+  "id": "d_decoder2to4",
+  "name": "2-to-4 decoder",
+  "nodes": {
+    "n_sw_S1": {
+      "id": "n_sw_S1",
+      "type": "io.switch",
+      "position": {
+        "x": 120,
+        "y": 230
+      },
+      "params": {
+        "width": 1,
+        "value": 1
+      },
+      "label": "S1"
+    },
+    "n_not_S1": {
+      "id": "n_not_S1",
+      "type": "gate.not",
+      "position": {
+        "x": 230,
+        "y": 280
+      },
+      "params": {
+        "width": 1
+      }
+    },
+    "n_t_S1": {
+      "id": "n_t_S1",
+      "type": "bus.tunnel",
+      "position": {
+        "x": 330,
+        "y": 230
+      },
+      "params": {
+        "name": "S1",
+        "width": 1
+      }
+    },
+    "n_t_S1N": {
+      "id": "n_t_S1N",
+      "type": "bus.tunnel",
+      "position": {
+        "x": 330,
+        "y": 280
+      },
+      "params": {
+        "name": "S1N",
+        "width": 1
+      }
+    },
+    "n_sw_S0": {
+      "id": "n_sw_S0",
+      "type": "io.switch",
+      "position": {
+        "x": 120,
+        "y": 350
+      },
+      "params": {
+        "width": 1,
+        "value": 0
+      },
+      "label": "S0"
+    },
+    "n_not_S0": {
+      "id": "n_not_S0",
+      "type": "gate.not",
+      "position": {
+        "x": 230,
+        "y": 400
+      },
+      "params": {
+        "width": 1
+      }
+    },
+    "n_t_S0": {
+      "id": "n_t_S0",
+      "type": "bus.tunnel",
+      "position": {
+        "x": 330,
+        "y": 350
+      },
+      "params": {
+        "name": "S0",
+        "width": 1
+      }
+    },
+    "n_t_S0N": {
+      "id": "n_t_S0N",
+      "type": "bus.tunnel",
+      "position": {
+        "x": 330,
+        "y": 400
+      },
+      "params": {
+        "name": "S0N",
+        "width": 1
+      }
+    },
+    "n_sw_EN": {
+      "id": "n_sw_EN",
+      "type": "io.switch",
+      "position": {
+        "x": 120,
+        "y": 470
+      },
+      "params": {
+        "width": 1,
+        "value": 1
+      },
+      "label": "EN"
+    },
+    "n_t_EN": {
+      "id": "n_t_EN",
+      "type": "bus.tunnel",
+      "position": {
+        "x": 330,
+        "y": 470
+      },
+      "params": {
+        "name": "EN",
+        "width": 1
+      }
+    },
+    "n_and0": {
+      "id": "n_and0",
+      "type": "gate.and",
+      "position": {
+        "x": 800,
+        "y": 500
+      },
+      "params": {
+        "inputs": 3,
+        "width": 1
+      }
+    },
+    "n_led0": {
+      "id": "n_led0",
+      "type": "io.led",
+      "position": {
+        "x": 920,
+        "y": 510
+      },
+      "params": {
+        "color": "green"
+      },
+      "label": "Y0"
+    },
+    "n_and1": {
+      "id": "n_and1",
+      "type": "gate.and",
+      "position": {
+        "x": 800,
+        "y": 590
+      },
+      "params": {
+        "inputs": 3,
+        "width": 1
+      }
+    },
+    "n_led1": {
+      "id": "n_led1",
+      "type": "io.led",
+      "position": {
+        "x": 920,
+        "y": 600
+      },
+      "params": {
+        "color": "green"
+      },
+      "label": "Y1"
+    },
+    "n_and2": {
+      "id": "n_and2",
+      "type": "gate.and",
+      "position": {
+        "x": 800,
+        "y": 680
+      },
+      "params": {
+        "inputs": 3,
+        "width": 1
+      }
+    },
+    "n_led2": {
+      "id": "n_led2",
+      "type": "io.led",
+      "position": {
+        "x": 920,
+        "y": 690
+      },
+      "params": {
+        "color": "green"
+      },
+      "label": "Y2"
+    },
+    "n_and3": {
+      "id": "n_and3",
+      "type": "gate.and",
+      "position": {
+        "x": 800,
+        "y": 770
+      },
+      "params": {
+        "inputs": 3,
+        "width": 1
+      }
+    },
+    "n_led3": {
+      "id": "n_led3",
+      "type": "io.led",
+      "position": {
+        "x": 920,
+        "y": 780
+      },
+      "params": {
+        "color": "green"
+      },
+      "label": "Y3"
+    },
+    "n_r_EN": {
+      "id": "n_r_EN",
+      "type": "bus.tunnel",
+      "position": {
+        "x": 440,
+        "y": 240
+      },
+      "params": {
+        "name": "EN",
+        "width": 1
+      },
+      "rotation": 180
+    },
+    "n_r_S0N": {
+      "id": "n_r_S0N",
+      "type": "bus.tunnel",
+      "position": {
+        "x": 440,
+        "y": 290
+      },
+      "params": {
+        "name": "S0N",
+        "width": 1
+      },
+      "rotation": 180
+    },
+    "n_r_S0": {
+      "id": "n_r_S0",
+      "type": "bus.tunnel",
+      "position": {
+        "x": 440,
+        "y": 340
+      },
+      "params": {
+        "name": "S0",
+        "width": 1
+      },
+      "rotation": 180
+    },
+    "n_r_S1N": {
+      "id": "n_r_S1N",
+      "type": "bus.tunnel",
+      "position": {
+        "x": 440,
+        "y": 390
+      },
+      "params": {
+        "name": "S1N",
+        "width": 1
+      },
+      "rotation": 180
+    },
+    "n_r_S1": {
+      "id": "n_r_S1",
+      "type": "bus.tunnel",
+      "position": {
+        "x": 440,
+        "y": 440
+      },
+      "params": {
+        "name": "S1",
+        "width": 1
+      },
+      "rotation": 180
+    },
+    "n_grp_all": {
+      "id": "n_grp_all",
+      "type": "deco.group",
+      "position": {
+        "x": 80,
+        "y": 110
+      },
+      "params": {
+        "title": "2-to-4 decoder",
+        "subtitle": "Two select bits light exactly one of four outputs",
+        "color": "teal",
+        "style": "filled",
+        "fontSize": 16,
+        "carry": true,
+        "width": 92,
+        "height": 76
+      }
+    },
+    "n_grp_in": {
+      "id": "n_grp_in",
+      "type": "deco.group",
+      "position": {
+        "x": 100,
+        "y": 180
+      },
+      "params": {
+        "title": "Inputs",
+        "subtitle": "Select bits, their complements, enable",
+        "color": "blue",
+        "style": "filled",
+        "fontSize": 11,
+        "carry": true,
+        "width": 31,
+        "height": 36
+      }
+    },
+    "n_grp_dec": {
+      "id": "n_grp_dec",
+      "type": "deco.group",
+      "position": {
+        "x": 430,
+        "y": 190
+      },
+      "params": {
+        "title": "Decoder",
+        "subtitle": "One 3-input AND per output",
+        "color": "green",
+        "style": "filled",
+        "fontSize": 11,
+        "carry": true,
+        "width": 45,
+        "height": 66
+      }
+    },
+    "n_grp_out": {
+      "id": "n_grp_out",
+      "type": "deco.group",
+      "position": {
+        "x": 900,
+        "y": 450
+      },
+      "params": {
+        "title": "Outputs",
+        "subtitle": "One-hot",
+        "color": "purple",
+        "style": "filled",
+        "fontSize": 11,
+        "carry": true,
+        "width": 9,
+        "height": 40
+      }
+    },
+    "n_note_try": {
+      "id": "n_note_try",
+      "type": "deco.text",
+      "position": {
+        "x": 100,
+        "y": 570
+      },
+      "params": {
+        "text": "## Try it\n- Flip **S1** and **S0**.\n- One of **Y0**\u2013**Y3** lights.\n- Turn **EN** off: all go dark.",
+        "format": "markdown",
+        "fontSize": 12,
+        "align": "left",
+        "color": "default",
+        "background": "none",
+        "width": 31,
+        "height": 10
+      }
+    },
+    "n_note_how": {
+      "id": "n_note_how",
+      "type": "deco.text",
+      "position": {
+        "x": 100,
+        "y": 700
+      },
+      "params": {
+        "text": "### How it works\nEach AND listens for one combination \u2014 a select bit or its complement from each pair, plus **EN**. Tunnels carry the five signals to vertical rails, and every gate input taps the rail it needs.",
+        "format": "markdown",
+        "fontSize": 12,
+        "align": "left",
+        "color": "default",
+        "background": "none",
+        "width": 31,
+        "height": 14
+      }
+    }
+  },
+  "wires": {
+    "w_S1": {
+      "id": "w_S1",
+      "from": {
+        "nodeId": "n_sw_S1",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_t_S1",
+        "pinId": "io"
+      },
+      "waypoints": [
+        {
+          "x": 190,
+          "y": 250
+        }
+      ]
+    },
+    "w_S1_not": {
+      "id": "w_S1_not",
+      "from": {
+        "wireId": "w_S1",
+        "waypoint": 0
+      },
+      "to": {
+        "nodeId": "n_not_S1",
+        "pinId": "in"
+      },
+      "waypoints": [
+        {
+          "x": 190,
+          "y": 300
+        }
+      ]
+    },
+    "w_S1N": {
+      "id": "w_S1N",
+      "from": {
+        "nodeId": "n_not_S1",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_t_S1N",
+        "pinId": "io"
+      }
+    },
+    "w_S0": {
+      "id": "w_S0",
+      "from": {
+        "nodeId": "n_sw_S0",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_t_S0",
+        "pinId": "io"
+      },
+      "waypoints": [
+        {
+          "x": 190,
+          "y": 370
+        }
+      ]
+    },
+    "w_S0_not": {
+      "id": "w_S0_not",
+      "from": {
+        "wireId": "w_S0",
+        "waypoint": 0
+      },
+      "to": {
+        "nodeId": "n_not_S0",
+        "pinId": "in"
+      },
+      "waypoints": [
+        {
+          "x": 190,
+          "y": 420
+        }
+      ]
+    },
+    "w_S0N": {
+      "id": "w_S0N",
+      "from": {
+        "nodeId": "n_not_S0",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_t_S0N",
+        "pinId": "io"
+      }
+    },
+    "w_EN": {
+      "id": "w_EN",
+      "from": {
+        "nodeId": "n_sw_EN",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_t_EN",
+        "pinId": "io"
+      }
+    },
+    "w_y0": {
+      "id": "w_y0",
+      "from": {
+        "nodeId": "n_and0",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_led0",
+        "pinId": "in"
+      }
+    },
+    "w_y1": {
+      "id": "w_y1",
+      "from": {
+        "nodeId": "n_and1",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_led1",
+        "pinId": "in"
+      }
+    },
+    "w_y2": {
+      "id": "w_y2",
+      "from": {
+        "nodeId": "n_and2",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_led2",
+        "pinId": "in"
+      }
+    },
+    "w_y3": {
+      "id": "w_y3",
+      "from": {
+        "nodeId": "n_and3",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_led3",
+        "pinId": "in"
+      }
+    },
+    "w_rail_EN": {
+      "id": "w_rail_EN",
+      "from": {
+        "nodeId": "n_r_EN",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_and3",
+        "pinId": "in2"
+      },
+      "waypoints": [
+        {
+          "x": 720,
+          "y": 260
+        },
+        {
+          "x": 720,
+          "y": 550
+        },
+        {
+          "x": 720,
+          "y": 640
+        },
+        {
+          "x": 720,
+          "y": 730
+        },
+        {
+          "x": 720,
+          "y": 820
+        }
+      ]
+    },
+    "w_EN_n_and0_in2": {
+      "id": "w_EN_n_and0_in2",
+      "from": {
+        "wireId": "w_rail_EN",
+        "waypoint": 1
+      },
+      "to": {
+        "nodeId": "n_and0",
+        "pinId": "in2"
+      }
+    },
+    "w_EN_n_and1_in2": {
+      "id": "w_EN_n_and1_in2",
+      "from": {
+        "wireId": "w_rail_EN",
+        "waypoint": 2
+      },
+      "to": {
+        "nodeId": "n_and1",
+        "pinId": "in2"
+      }
+    },
+    "w_EN_n_and2_in2": {
+      "id": "w_EN_n_and2_in2",
+      "from": {
+        "wireId": "w_rail_EN",
+        "waypoint": 3
+      },
+      "to": {
+        "nodeId": "n_and2",
+        "pinId": "in2"
+      }
+    },
+    "w_rail_S0N": {
+      "id": "w_rail_S0N",
+      "from": {
+        "nodeId": "n_r_S0N",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_and2",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 670,
+          "y": 310
+        },
+        {
+          "x": 670,
+          "y": 530
+        },
+        {
+          "x": 670,
+          "y": 710
+        }
+      ]
+    },
+    "w_S0N_n_and0_in1": {
+      "id": "w_S0N_n_and0_in1",
+      "from": {
+        "wireId": "w_rail_S0N",
+        "waypoint": 1
+      },
+      "to": {
+        "nodeId": "n_and0",
+        "pinId": "in1"
+      }
+    },
+    "w_rail_S0": {
+      "id": "w_rail_S0",
+      "from": {
+        "nodeId": "n_r_S0",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_and3",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 620,
+          "y": 360
+        },
+        {
+          "x": 620,
+          "y": 620
+        },
+        {
+          "x": 620,
+          "y": 800
+        }
+      ]
+    },
+    "w_S0_n_and1_in1": {
+      "id": "w_S0_n_and1_in1",
+      "from": {
+        "wireId": "w_rail_S0",
+        "waypoint": 1
+      },
+      "to": {
+        "nodeId": "n_and1",
+        "pinId": "in1"
+      }
+    },
+    "w_rail_S1N": {
+      "id": "w_rail_S1N",
+      "from": {
+        "nodeId": "n_r_S1N",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_and1",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 570,
+          "y": 410
+        },
+        {
+          "x": 570,
+          "y": 510
+        },
+        {
+          "x": 570,
+          "y": 600
+        }
+      ]
+    },
+    "w_S1N_n_and0_in0": {
+      "id": "w_S1N_n_and0_in0",
+      "from": {
+        "wireId": "w_rail_S1N",
+        "waypoint": 1
+      },
+      "to": {
+        "nodeId": "n_and0",
+        "pinId": "in0"
+      }
+    },
+    "w_rail_S1": {
+      "id": "w_rail_S1",
+      "from": {
+        "nodeId": "n_r_S1",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_and3",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 520,
+          "y": 460
+        },
+        {
+          "x": 520,
+          "y": 690
+        },
+        {
+          "x": 520,
+          "y": 780
+        }
+      ]
+    },
+    "w_S1_n_and2_in0": {
+      "id": "w_S1_n_and2_in0",
+      "from": {
+        "wireId": "w_rail_S1",
+        "waypoint": 1
+      },
+      "to": {
+        "nodeId": "n_and2",
+        "pinId": "in0"
+      }
+    }
+  }
+}

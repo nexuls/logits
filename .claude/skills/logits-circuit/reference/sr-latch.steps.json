@@ -1,0 +1,19 @@
+[
+  {
+    "name": "set",
+    "set": { "Set": 1, "Reset": 0 },
+    "expect": { "Q": "1", "Q'": "0" }
+  },
+  {
+    "name": "hold after set",
+    "set": { "Set": 0 },
+    "runNs": 100,
+    "expect": { "Q": "1", "Q'": "0" }
+  },
+  { "name": "reset", "set": { "Reset": 1 }, "expect": { "Q": "0", "Q'": "1" } },
+  {
+    "name": "hold after reset",
+    "set": { "Reset": 0 },
+    "expect": { "Q": "0", "Q'": "1" }
+  }
+]

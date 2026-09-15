@@ -29,6 +29,7 @@ touching:
 | Document, netlist, save format | [03-data-model.md](artifacts/03-data-model.md) |
 | `src/lib/sim/`, any `evaluate` | [04-simulation-engine.md](artifacts/04-simulation-engine.md) |
 | **Adding a node** | [05-node-authoring-guide.md](artifacts/05-node-authoring-guide.md) + [06-node-catalog.md](artifacts/06-node-catalog.md) |
+| Building a circuit or example (`.logits.json`) | [.claude/skills/logits-circuit/SKILL.md](.claude/skills/logits-circuit/SKILL.md) |
 | Input, gestures, shortcuts | [07-interaction-spec.md](artifacts/07-interaction-spec.md) |
 | Picking up work | [08-roadmap.md](artifacts/08-roadmap.md) |
 | "Why is it like this?" | [artifacts/decisions/](artifacts/decisions/) |
