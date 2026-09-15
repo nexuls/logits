@@ -64,18 +64,43 @@ export function copyProjectLink(id: string): Promise<CopyLinkResult> {
  * Puts the circuit's `/preview` link on the clipboard. The link carries the
  * whole document, so it shows the circuit as it is now and does not follow
  * later edits.
+ *
+ * The data rides in the fragment, not the query: servers refuse a request line
+ * past about 16 KB (HTTP 431), and a fragment is never sent to the server.
  */
 export async function copyCircuitLink(
   document: CircuitDocument,
 ): Promise<CopyLinkResult> {
+  const url = encodeShareParam(document).then(
+    (data) => `${window.location.origin}/preview#data=${data}`,
+  );
   try {
-    const url = `${window.location.origin}/preview?data=${encodeShareParam(document)}`;
-    await navigator.clipboard.writeText(url);
+    await writeClipboardText(url);
     return { ok: true, message: "Link copied." };
   } catch {
     // No clipboard outside a secure context, or permission refused.
     return { ok: false, message: "The link could not be copied." };
   }
+}
+
+async function writeClipboardText(text: Promise<string>): Promise<void> {
+  if (typeof ClipboardItem === "function") {
+    try {
+      // Handed over as a pending item so the write starts inside the click:
+      // Safari drops the user activation across the await compression takes.
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          "text/plain": text.then(
+            (value) => new Blob([value], { type: "text/plain" }),
+          ),
+        }),
+      ]);
+      return;
+    } catch {
+      // A browser that has `ClipboardItem` but not pending items: plain text.
+    }
+  }
+  await navigator.clipboard.writeText(await text);
 }
 
 export function downloadCircuit(document: CircuitDocument): void {

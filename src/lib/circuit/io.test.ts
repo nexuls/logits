@@ -225,16 +225,31 @@ describe("defaultZoom", () => {
 });
 
 describe("share param", () => {
-  it("round-trips a document, including non-Latin-1 text", () => {
+  it("round-trips a document compressed, including non-Latin-1 text", async () => {
     const document = { ...documentFixture(), name: "Addierer — ½ ✓" };
-    const encoded = encodeShareParam(document);
+    const encoded = await encodeShareParam(document);
 
-    expect(encoded).toMatch(/^[A-Za-z0-9_-]+$/);
-    const loaded = decodeShareParam(encoded);
+    expect(encoded).toMatch(/^z\.[A-Za-z0-9_-]+$/);
+    const loaded = await decodeShareParam(encoded);
     expect(loaded.ok && loaded.document).toEqual(document);
   });
 
-  it("accepts plain base64, padded or not, with + decoded to a space", () => {
+  it("is a fraction of the JSON's length for a real-sized circuit", async () => {
+    const document = documentFixture();
+    for (let i = 0; i < 200; i++) {
+      document.nodes[`n_${i}`] = {
+        id: `n_${i}`,
+        type: "gate.and",
+        position: { x: i * 20, y: 0 },
+        params: {},
+      };
+    }
+
+    const encoded = await encodeShareParam(document);
+    expect(encoded.length).toBeLessThan(serialize(document).length / 3);
+  });
+
+  it("still reads an uncompressed link: padded or not, + as a space", async () => {
     const document = { ...documentFixture(), name: "~~~>>>???" };
     const base64 = btoa(serialize(document));
     expect(base64).toMatch(/[+/=]/);
@@ -244,15 +259,33 @@ describe("share param", () => {
       base64.replace(/=+$/, ""),
       base64.replace(/\+/g, " "),
     ]) {
-      const loaded = decodeShareParam(text);
+      const loaded = await decodeShareParam(text);
       expect(loaded.ok && loaded.document.name).toBe(document.name);
     }
   });
 
-  it("reports bad base64 and bad JSON as issues rather than throwing", () => {
-    expect(codes(decodeShareParam("%%%").issues)).toEqual(["invalid-encoding"]);
-    expect(codes(decodeShareParam(btoa("{not json")).issues)).toEqual([
-      "invalid-json",
-    ]);
+  it("reports bad data as issues rather than throwing", async () => {
+    const issueCodes = async (text: string) =>
+      codes((await decodeShareParam(text)).issues);
+
+    expect(await issueCodes("%%%")).toEqual(["invalid-encoding"]);
+    expect(await issueCodes("z.AAAA")).toEqual(["invalid-encoding"]);
+    expect(await issueCodes(btoa("{not json"))).toEqual(["invalid-json"]);
+  });
+
+  it("refuses data that inflates past the size limit", async () => {
+    const zeros = new Uint8Array(17 * 1024 * 1024);
+    const deflated = new Uint8Array(
+      await new Response(
+        new Blob([zeros])
+          .stream()
+          .pipeThrough(new CompressionStream("deflate-raw")),
+      ).arrayBuffer(),
+    );
+    let binary = "";
+    for (const byte of deflated) binary += String.fromCharCode(byte);
+
+    const loaded = await decodeShareParam(`z.${btoa(binary)}`);
+    expect(codes(loaded.issues)).toEqual(["invalid-encoding"]);
   });
 });

@@ -232,10 +232,13 @@ and the `nodeIds` / `wireIds` / `pins` / `netId` the editor should mark.
   code that knows about `version`. They are pure and take strings — the
   `localStorage` calls live in [src/state/storage.ts](../src/state/storage.ts),
   so replacing the store never touches the domain layer.
-- A link to `/preview?data=` carries the document itself: `serialize` output,
-  UTF-8, then base64url without padding (`encodeShareParam`).
-  `decodeShareParam` also takes plain base64, and goes through `deserialize`,
-  so a linked document is migrated and salvaged exactly like a file.
+- A link to `/preview#data=` carries the document itself: `serialize` output,
+  UTF-8, `deflate-raw`, then base64url without padding, behind a `z.` prefix
+  (`encodeShareParam`). It is in the fragment because servers refuse a query
+  past about 16 KB. `decodeShareParam` also takes plain base64 JSON with no
+  prefix — the older `?data=` links — caps inflation at 16 MB, and goes
+  through `deserialize`, so a linked document is migrated and salvaged
+  exactly like a file.
 - The circuits in [`src/example/`](../src/example/) are ordinary documents of
   this format, compiled into the bundle rather than stored. They open
   *ephemeral* — editable, but `scheduleSave` refuses to write them — so

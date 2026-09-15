@@ -130,13 +130,66 @@ export function deserialize(text: string): LoadResult {
   return fromJson(raw);
 }
 
+/** Marks compressed link data. `.` is not a base64 character, so an older plain link can never start with it. */
+const COMPRESSED_PREFIX = "z.";
+
 /**
- * A document as a URL-safe base64 string, for `/preview?data=`. Base64url with
- * no padding, so it needs no percent-encoding; the JSON goes through UTF-8
- * first because `btoa` only takes Latin-1 and a name or note can be anything.
+ * The most link data may inflate to. A few kilobytes of deflate can expand to
+ * gigabytes, and a link is untrusted input.
  */
-export function encodeShareParam(document: CircuitDocument): string {
-  const bytes = new TextEncoder().encode(serialize(document));
+const MAX_LINK_BYTES = 16 * 1024 * 1024;
+
+/**
+ * A document as link data for `/preview#data=`: the serialized JSON as UTF-8,
+ * deflated, then base64url with no padding, behind `z.`. Compression is what
+ * lets a large circuit be shared at all — the calculator is 126 KB as plain
+ * base64 and 29 KB deflated.
+ */
+export async function encodeShareParam(
+  document: CircuitDocument,
+): Promise<string> {
+  const json = new TextEncoder().encode(serialize(document));
+  const deflated = await readBytes(
+    new Blob([json]).stream().pipeThrough(new CompressionStream("deflate-raw")),
+  );
+  return COMPRESSED_PREFIX + toBase64Url(deflated);
+}
+
+/**
+ * `deserialize` for link data. Reads `encodeShareParam` output, and plain
+ * base64 JSON as links carried before compression — so an old or hand-built
+ * link still opens.
+ */
+export async function decodeShareParam(text: string): Promise<LoadResult> {
+  const trimmed = text.trim();
+  const compressed = trimmed.startsWith(COMPRESSED_PREFIX);
+  let json: string;
+  try {
+    const bytes = fromBase64(
+      compressed ? trimmed.slice(COMPRESSED_PREFIX.length) : trimmed,
+    );
+    const inflated = compressed
+      ? await readBytes(
+          new Blob([bytes])
+            .stream()
+            .pipeThrough(new DecompressionStream("deflate-raw")),
+          MAX_LINK_BYTES,
+        )
+      : bytes;
+    json = new TextDecoder("utf-8", { fatal: true }).decode(inflated);
+  } catch {
+    return {
+      ok: false,
+      issues: [
+        { code: "invalid-encoding", message: "Not valid circuit link data" },
+      ],
+    };
+  }
+  return deserialize(json);
+}
+
+/** URL-safe with no padding, so link data needs no percent-encoding. */
+function toBase64Url(bytes: Uint8Array): string {
   let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
   return btoa(binary)
@@ -146,30 +199,46 @@ export function encodeShareParam(document: CircuitDocument): string {
 }
 
 /**
- * `deserialize` for an `encodeShareParam` string. Accepts plain base64 too,
- * since a hand-built link will use it — including the `+` a query string has
- * already decoded to a space — and padding or its absence.
+ * Base64url or plain base64, padded or not — including the `+` a query string
+ * or `URLSearchParams` has already decoded to a space.
  */
-export function decodeShareParam(text: string): LoadResult {
+function fromBase64(text: string): Uint8Array<ArrayBuffer> {
   const normalized = text
-    .trim()
     .replace(/[-\s]/g, "+")
     .replace(/_/g, "/")
     .replace(/=+$/, "");
-  let json: string;
-  try {
-    const binary = atob(
-      normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "="),
-    );
-    const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
-    json = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
-  } catch {
-    return {
-      ok: false,
-      issues: [{ code: "invalid-encoding", message: "Not valid base64 data" }],
-    };
+  const binary = atob(
+    normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "="),
+  );
+  return Uint8Array.from(binary, (c) => c.charCodeAt(0));
+}
+
+/** Drains a byte stream, giving up once it passes `limit`. */
+async function readBytes(
+  stream: ReadableStream<Uint8Array>,
+  limit = Number.POSITIVE_INFINITY,
+): Promise<Uint8Array<ArrayBuffer>> {
+  const reader = stream.getReader();
+  const chunks: Uint8Array[] = [];
+  let length = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    length += value.length;
+    if (length > limit) {
+      await reader.cancel();
+      throw new Error("Link data is too large");
+    }
+    chunks.push(value);
   }
-  return deserialize(json);
+
+  const bytes = new Uint8Array(length);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return bytes;
 }
 
 /** `deserialize` for a value that has already been through `JSON.parse`. */

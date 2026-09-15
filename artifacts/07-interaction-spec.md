@@ -72,10 +72,12 @@ Pressing anywhere in a preview focuses it, so its keys work straight after a
 click. With both `pannable` and `zoomable` off the wheel and touch go back to
 the page, so a fixed preview does not trap the scroll passing over it.
 
-`/preview?data=<base64>` is a preview on a page of its own, for embedding in an
-`<iframe>`: the whole frame, running on open, with the header, run controls and
-diagnostics and without the performance monitor. A missing or unreadable
-`data` shows a one-line explanation instead of a canvas.
+`/preview#data=<link data>` is a preview on a page of its own, for embedding in
+an `<iframe>`: the whole frame, running on open, with the header, run controls
+and diagnostics and without the performance monitor. The circuit appears once
+the browser has decoded the fragment, and a changed fragment opens the new
+circuit. Older `/preview?data=<base64>` links still open. Missing or unreadable
+data shows a one-line explanation instead of a canvas.
 
 ## Menus (built)
 
@@ -91,7 +93,7 @@ open circuit; items that need one are disabled when none is open.
 | Set view as origin | Shifts every node and wire bend by the current pan offset (snapped to the grid) and pans the view back by the same amount, so nothing moves on screen but **Reset view** now returns here. One undo step; undo moves the circuit back but leaves the view where it is |
 | Import / Export → Import circuit file… | Picks a `.json` file and adds it as a **new project** with a fresh id, then opens it. It never replaces the open circuit: a file exported from this browser carries its source project's id, and loading it under that id would overwrite that project on the next autosave |
 | Import / Export → Export as JSON | Downloads the open circuit as `<name>.logits.json` |
-| Copy link | Copies the open circuit's embeddable `/preview?data=` link, unsaved edits included. A snapshot: later edits need a new link. Same as the **Share** button |
+| Copy link | Copies the open circuit's embeddable `/preview#data=` link, unsaved edits included. A snapshot: later edits need a new link. Same as the **Share** button |
 | Settings → Preferences… / Project settings… | Opens the settings dialog on that tab |
 | Keyboard shortcuts | Opens the shortcuts dialog (also `?`) |
 | Delete project | Asks for confirmation, then deletes. Disabled on an example |
