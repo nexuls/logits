@@ -164,7 +164,7 @@ directly, which is what keeps `src/lib/` runnable in a plain Node test.
   every trace by its own delay would be useless for the setup-and-hold
   questions it exists to answer.
 
-  The view reads the buffer through `readWaveform` in the simulation store and
+  The view reads the buffer through `readWaveform` on the simulation it is drawn under (`useSimulation()`) and
   subscribes with `useSimulationRevision` — a comparable number that changes
   once per frame. The samples themselves are *not* a `useSyncExternalStore`
   snapshot: they allocate, so `Object.is` would never match and the component

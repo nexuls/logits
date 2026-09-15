@@ -44,6 +44,15 @@ type UseCanvasMouseActionsParams = {
    * inheriting the last one's view.
    */
   viewKey?: string;
+  /** Wheel, middle-drag, space-drag and one-finger pan. */
+  pannable?: boolean;
+  /** Ctrl/Cmd + wheel, pinch and `zoomIn` / `zoomOut`. */
+  zoomable?: boolean;
+  /**
+   * A plain left-drag pans too. Off in the editor, where that drag selects;
+   * on where nothing on the canvas can be edited.
+   */
+  dragToPan?: boolean;
 };
 
 const DEFAULT_ZOOM_INTENSITY = 0.0015;
@@ -80,6 +89,9 @@ export function useCanvasMouseActions({
   initialOffset = ORIGIN,
   restoredView = null,
   viewKey,
+  pannable = true,
+  zoomable = true,
+  dragToPan = false,
 }: UseCanvasMouseActionsParams) {
   const [viewState, setViewState] = useState<ViewState>(
     restoredView ?? { scale: initialScale, offset: initialOffset },
@@ -87,13 +99,17 @@ export function useCanvasMouseActions({
   const [isPanning, setIsPanning] = useState(false);
   const [isSpacePressed, setIsSpacePressed] = useState(false);
   const panPointerIdRef = useRef<number | null>(null);
-  const panTriggerRef = useRef<"touch" | "middle" | "space" | null>(null);
+  const panTriggerRef = useRef<"touch" | "middle" | "space" | "drag" | null>(
+    null,
+  );
   const activeTouchesRef = useRef<Map<number, Point>>(new Map());
   const lastPanPointRef = useRef<Point | null>(null);
   const lastPinchCenterRef = useRef<Point | null>(null);
   const lastPinchDistanceRef = useRef<number | null>(null);
 
   useEffect(() => {
+    if (!pannable) return;
+
     const isEditableTarget = (target: EventTarget | null) => {
       if (!(target instanceof HTMLElement)) {
         return false;
@@ -152,12 +168,14 @@ export function useCanvasMouseActions({
       window.removeEventListener("keyup", onKeyUp);
       window.removeEventListener("blur", onWindowBlur);
     };
-  }, [isSpacePressed]);
+  }, [isSpacePressed, pannable]);
 
   useEffect(() => {
     const viewport = viewportRef.current;
 
-    if (!viewport) {
+    // Neither gesture is on, so the wheel is the page's again: an embedded
+    // canvas that cannot move must not trap the scroll passing over it.
+    if (!viewport || (!pannable && !zoomable)) {
       return;
     }
 
@@ -175,16 +193,20 @@ export function useCanvasMouseActions({
         capture: true,
       });
     };
-  }, [viewportRef]);
+  }, [viewportRef, pannable, zoomable]);
 
   const onWheel = useCallback(
     (event: WheelEvent<HTMLDivElement>) => {
+      if (!pannable && !zoomable) return;
+
       event.preventDefault();
       event.stopPropagation();
 
       if (isPanning) return;
 
       if (!isZoomGesture(event)) {
+        if (!pannable) return;
+
         const panX =
           event.deltaX +
           (event.shiftKey && event.deltaX === 0 ? event.deltaY : 0);
@@ -194,6 +216,8 @@ export function useCanvasMouseActions({
 
         return;
       }
+
+      if (!zoomable) return;
 
       const viewport = viewportRef.current;
 
@@ -219,11 +243,21 @@ export function useCanvasMouseActions({
         return zoomAt(prev, { x: pointerX, y: pointerY }, nextScale);
       });
     },
-    [maxScale, minScale, viewportRef, zoomIntensity, isPanning],
+    [
+      maxScale,
+      minScale,
+      viewportRef,
+      zoomIntensity,
+      isPanning,
+      pannable,
+      zoomable,
+    ],
   );
 
   const zoomByFactor = useCallback(
     (factor: number) => {
+      if (!zoomable) return;
+
       const viewport = viewportRef.current;
 
       if (!viewport) {
@@ -239,7 +273,7 @@ export function useCanvasMouseActions({
         return zoomAt(prev, { x: pointerX, y: pointerY }, nextScale);
       });
     },
-    [maxScale, minScale, viewportRef],
+    [maxScale, minScale, viewportRef, zoomable],
   );
 
   const zoomIn = useCallback(() => {
@@ -284,6 +318,8 @@ export function useCanvasMouseActions({
   const onPointerDown = useCallback(
     (event: PointerEvent<HTMLDivElement>) => {
       if (event.pointerType === "touch") {
+        if (!pannable && !zoomable) return;
+
         event.preventDefault();
         event.currentTarget.setPointerCapture(event.pointerId);
 
@@ -319,8 +355,11 @@ export function useCanvasMouseActions({
         return;
       }
 
+      if (!pannable) return;
+
       const isMiddleMousePan = event.button === 1;
-      const isSpaceDragPan = event.button === 0 && isSpacePressed;
+      const isSpaceDragPan =
+        event.button === 0 && (isSpacePressed || dragToPan);
 
       if (!isMiddleMousePan && !isSpaceDragPan) {
         return;
@@ -329,10 +368,14 @@ export function useCanvasMouseActions({
       event.preventDefault();
       event.currentTarget.setPointerCapture(event.pointerId);
       panPointerIdRef.current = event.pointerId;
-      panTriggerRef.current = isMiddleMousePan ? "middle" : "space";
+      panTriggerRef.current = isMiddleMousePan
+        ? "middle"
+        : isSpacePressed
+          ? "space"
+          : "drag";
       setIsPanning(true);
     },
-    [isSpacePressed],
+    [isSpacePressed, pannable, zoomable, dragToPan],
   );
 
   const onPointerMove = useCallback(
@@ -350,7 +393,7 @@ export function useCanvasMouseActions({
         if (touches.length === 1) {
           const previous = lastPanPointRef.current;
 
-          if (previous) {
+          if (previous && pannable) {
             const deltaX = point.x - previous.x;
             const deltaY = point.y - previous.y;
 
@@ -374,8 +417,10 @@ export function useCanvasMouseActions({
         const previousCenter = lastPinchCenterRef.current;
         const previousDistance = lastPinchDistanceRef.current;
 
-        const panDeltaX = previousCenter ? center.x - previousCenter.x : 0;
-        const panDeltaY = previousCenter ? center.y - previousCenter.y : 0;
+        const panDeltaX =
+          pannable && previousCenter ? center.x - previousCenter.x : 0;
+        const panDeltaY =
+          pannable && previousCenter ? center.y - previousCenter.y : 0;
 
         const rect = event.currentTarget.getBoundingClientRect();
         const pointerX = center.x - rect.left;
@@ -383,7 +428,7 @@ export function useCanvasMouseActions({
 
         setViewState((prev) => {
           const scaleFactor =
-            previousDistance && previousDistance > 0
+            zoomable && previousDistance && previousDistance > 0
               ? distance / previousDistance
               : 1;
           const nextScale = clampScale(
@@ -412,7 +457,7 @@ export function useCanvasMouseActions({
         panByScreen(prev, event.movementX, event.movementY),
       );
     },
-    [isPanning, maxScale, minScale],
+    [isPanning, maxScale, minScale, pannable, zoomable],
   );
 
   const endPan = useCallback((event: PointerEvent<HTMLDivElement>) => {

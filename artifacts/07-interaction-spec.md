@@ -55,6 +55,23 @@ The two sidebars are independent — separate providers, separate cookies,
 separate shortcuts. Both are also reachable by pointer: the left one from the
 canvas header, the right one from the panel button in its own header.
 
+## Preview (built)
+
+[`CircuitPreview`](../src/components/preview/circuit-preview.tsx) has the
+viewport gestures above, less anything its props turn off (`pannable`,
+`zoomable`), and none of the editing ones below.
+
+| Input | Action |
+| --- | --- |
+| Left-drag anywhere | Pan — there is nothing to select, so the drag the editor spends on a rubber band pans instead |
+| Click / press on a node view | Operates it (switch, button, keypad, keyboard, drawpad), unless `interactive` is off |
+| `Space` (tap) | Run / pause, while focus is inside the preview and not on a control |
+| `.` | Step one event, while focus is inside the preview |
+
+Pressing anywhere in a preview focuses it, so its keys work straight after a
+click. With both `pannable` and `zoomable` off the wheel and touch go back to
+the page, so a fixed preview does not trap the scroll passing over it.
+
 ## Menus (built)
 
 **Canvas header menu** (the ⋯ beside the title,

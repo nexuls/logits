@@ -1,37 +1,15 @@
 "use client";
 
 import {
-  ActivityIcon,
-  AlertTriangleIcon,
-  ChevronDownIcon,
   DownloadIcon,
-  PauseIcon,
-  PlayIcon,
   RedoIcon,
-  RotateCcwIcon,
   SaveIcon,
-  SkipForwardIcon,
   UndoIcon,
   UploadIcon,
 } from "lucide-react";
-import type { ReactElement } from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Kbd } from "@/components/ui/kbd";
 import { Separator } from "@/components/ui/separator";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { formatSimTime } from "@/lib/sim/time";
 import { cn } from "@/lib/utils";
 import {
   flushSave,
@@ -41,14 +19,12 @@ import {
   useHistoryState,
   useSaveState,
 } from "@/state/document";
-import {
-  pause,
-  play,
-  resetSimulation,
-  setSimulationSpeed,
-  stepSimulation,
-  useSimulationStatus,
-} from "@/state/simulation";
+import SimulationControls, {
+  DiagnosticsToggle,
+  PerformanceToggle,
+  Toolbar,
+  ToolbarTooltip,
+} from "./simulation-controls";
 
 type Props = {
   diagnosticsOpen: boolean;
@@ -62,23 +38,13 @@ type Props = {
 };
 
 /**
- * The floating toolbar: run controls, history, persistence, diagnostics, and
- * the switch that opens the performance monitor out into its detailed view.
+ * The editor's floating toolbar: run controls, history, persistence,
+ * diagnostics, and the switch that opens the performance monitor out into its
+ * detailed view.
  *
- * It reads the simulation through `useSimulationStatus`, which is one
- * subscription for the whole bar rather than one per button — the runner
- * notifies once a frame and this is a coarse consumer, unlike a LED.
+ * The simulation half is `SimulationControls`, shared with the read-only
+ * preview; what is here is the half that edits or saves a document.
  */
-
-/** Simulated nanoseconds per real second. */
-const SPEEDS = [
-  { value: 100, label: "0.1 µs/s" },
-  { value: 1_000, label: "1 µs/s" },
-  { value: 10_000, label: "10 µs/s" },
-  { value: 100_000, label: "100 µs/s" },
-  { value: 1_000_000, label: "1 ms/s" },
-];
-
 export default function RunControls({
   diagnosticsOpen,
   onToggleDiagnostics,
@@ -89,103 +55,12 @@ export default function RunControls({
   onNotice,
 }: Props) {
   const document = useDocument();
-  const status = useSimulationStatus();
   const { canUndo, canRedo } = useHistoryState();
   const save = useSaveState();
 
-  const running = status.mode === "running";
-  const problems = status.errorCount + status.warningCount;
-  const speedLabel =
-    SPEEDS.find((speed) => speed.value === status.speedNsPerSecond)?.label ??
-    "Custom";
-
   return (
-    <div className="pointer-events-auto absolute top-2 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-lg bg-sidebar px-1.5 py-1 shadow-chrome border border-border">
-      <ToolbarTooltip label={running ? "Pause" : "Run"} shortcut="Space">
-        <Button
-          type="button"
-          variant={running ? "secondary" : "ghost"}
-          size="icon"
-          disabled={!status.ready}
-          onClick={() => (running ? pause() : play())}
-          aria-label={running ? "Pause simulation" : "Run simulation"}
-          aria-pressed={running}
-          aria-keyshortcuts="Space"
-        >
-          {running ? <PauseIcon /> : <PlayIcon />}
-        </Button>
-      </ToolbarTooltip>
-
-      <ToolbarTooltip label="Step one event" shortcut=".">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          disabled={!status.ready}
-          onClick={stepSimulation}
-          aria-label="Step one event"
-          aria-keyshortcuts="."
-        >
-          <SkipForwardIcon />
-        </Button>
-      </ToolbarTooltip>
-
-      <ToolbarTooltip label="Reset simulation">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          disabled={!status.ready}
-          onClick={resetSimulation}
-          aria-label="Reset simulation"
-        >
-          <RotateCcwIcon />
-        </Button>
-      </ToolbarTooltip>
-
-      <DropdownMenu>
-        <ToolbarTooltip label="Simulation speed">
-          <DropdownMenuTrigger
-            render={
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                aria-label={`Simulation speed: ${speedLabel}`}
-                className="ml-1 font-mono text-xs tabular-nums"
-              >
-                {speedLabel}
-                <ChevronDownIcon className="text-muted-foreground" />
-              </Button>
-            }
-          />
-        </ToolbarTooltip>
-        <DropdownMenuContent align="start" className="w-36">
-          <DropdownMenuRadioGroup
-            value={status.speedNsPerSecond}
-            onValueChange={(value) => setSimulationSpeed(Number(value))}
-          >
-            {SPEEDS.map((speed) => (
-              <DropdownMenuRadioItem
-                key={speed.value}
-                value={speed.value}
-                className="font-mono text-xs tabular-nums"
-              >
-                {speed.label}
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      <span
-        className="ml-1 w-20 shrink-0 text-right font-mono text-[11px] tabular-nums text-muted-foreground"
-        // Simulated time changes every frame while running; announcing it
-        // would make a screen reader unusable.
-        aria-hidden
-      >
-        {formatSimTime(status.time)}
-      </span>
+    <Toolbar>
+      <SimulationControls />
 
       <Separator orientation="vertical" className="mx-1 h-6" />
 
@@ -265,59 +140,14 @@ export default function RunControls({
       </ToolbarTooltip>
       <Separator orientation="vertical" className="mx-1 h-6" />
 
-      <ToolbarTooltip label="Performance details">
-        <Button
-          type="button"
-          variant={performanceOpen ? "secondary" : "ghost"}
-          size="icon"
-          onClick={onTogglePerformance}
-          aria-pressed={performanceOpen}
-          aria-label="Performance details"
-        >
-          <ActivityIcon />
-        </Button>
-      </ToolbarTooltip>
-
-      <ToolbarTooltip
-        label={`${status.errorCount} errors, ${status.warningCount} warnings`}
-      >
-        <Button
-          type="button"
-          variant={diagnosticsOpen ? "secondary" : "ghost"}
-          size="sm"
-          onClick={onToggleDiagnostics}
-          aria-pressed={diagnosticsOpen}
-          aria-label={`Diagnostics: ${status.errorCount} errors, ${status.warningCount} warnings`}
-          className={cn(status.errorCount > 0 && "text-destructive")}
-        >
-          <AlertTriangleIcon />
-          {problems > 0 ? problems : "OK"}
-        </Button>
-      </ToolbarTooltip>
-    </div>
-  );
-}
-
-/**
- * Below the bar rather than the default above it: the bar sits at the top of
- * the canvas, so a tooltip on top would be clipped by the viewport edge.
- */
-function ToolbarTooltip({
-  label,
-  shortcut,
-  children,
-}: {
-  label: string;
-  shortcut?: string;
-  children: ReactElement;
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger render={children} />
-      <TooltipContent side="bottom">
-        {label}
-        {shortcut && <Kbd>{shortcut}</Kbd>}
-      </TooltipContent>
-    </Tooltip>
+      <PerformanceToggle
+        pressed={performanceOpen}
+        onToggle={onTogglePerformance}
+      />
+      <DiagnosticsToggle
+        pressed={diagnosticsOpen}
+        onToggle={onToggleDiagnostics}
+      />
+    </Toolbar>
   );
 }

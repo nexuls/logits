@@ -38,7 +38,7 @@ const DUPLICATE_OFFSET: Point = { x: GRID_SIZE * 2, y: GRID_SIZE * 2 };
  * The two share a key by design (the interaction spec lists both), so the tap
  * is defined as a short press during which no pointer went down.
  */
-const SPACE_TAP_MS = 400;
+export const SPACE_TAP_MS = 400;
 
 export function isEditableTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
@@ -65,6 +65,17 @@ function isInDialog(target: EventTarget | null): boolean {
     target.closest(
       '[data-slot="dialog-content"], [data-slot="alert-dialog-content"]',
     ) !== null
+  );
+}
+
+/**
+ * A `CircuitPreview` on the same page runs its own simulation and binds its
+ * own keys; a Space meant for it must not also play the editor's circuit.
+ */
+function isInPreview(target: EventTarget | null): boolean {
+  return (
+    target instanceof Element &&
+    target.closest("[data-circuit-preview]") !== null
   );
 }
 
@@ -129,7 +140,7 @@ export function useEditorShortcuts({
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (isInDialog(event.target)) return;
+      if (isInDialog(event.target) || isInPreview(event.target)) return;
 
       const editable = isEditableTarget(event.target);
       const accel = event.ctrlKey || event.metaKey;
@@ -268,7 +279,8 @@ export function useEditorShortcuts({
       if (
         event.code !== "Space" ||
         isEditableTarget(event.target) ||
-        isInDialog(event.target)
+        isInDialog(event.target) ||
+        isInPreview(event.target)
       ) {
         return;
       }

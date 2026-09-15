@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { createContext, useContext, useSyncExternalStore } from "react";
 
 import type { Diagnostic } from "@/lib/circuit/netlist";
 import { buildNetlist, type Netlist, pinKey } from "@/lib/circuit/netlist";
@@ -20,7 +20,7 @@ import {
 import type { WaveformSample } from "@/lib/sim/waveform";
 
 /**
- * The compiled circuit and the thing running it, for the open document.
+ * The compiled circuit and the thing running it, for one document.
  *
  * This is the React to simulation boundary described in
  * artifacts/02-architecture.md. The engine owns the net values and never calls
@@ -32,58 +32,12 @@ import type { WaveformSample } from "@/lib/sim/waveform";
  * in through `syncDocument`, which decides between a rebuild and a live param
  * update. That decision lives here because it is the only place that knows
  * both what the document now says and what the engine was built from.
+ *
+ * A factory, not module state: the editor runs the default instance, and a
+ * `CircuitPreview` runs one of its own beside it. The hooks read whichever
+ * instance the nearest `SimulationContext` provides, so a node view never
+ * knows which it is drawing for.
  */
-
-let netlist: Netlist | null = null;
-let engine: Engine | null = null;
-let runner: Runner | null = null;
-
-/** What the current engine was compiled from — the rebuild test. */
-let signature = "";
-/** Params the engine holds per node, so a live update knows what changed. */
-let engineParams = new Map<string, NodeParams>();
-
-const listeners = new Set<() => void>();
-
-/**
- * Monotonic across engine rebuilds, unlike `Engine.version`, which restarts at
- * zero every time one is constructed. The hooks key their caches off it.
- */
-let revision = 0;
-
-let lookup: NodeLookup = lookupNode;
-/** `lookup` plus the open document's subcircuits. Rebuilt on every sync. */
-let documentLookup: NodeLookup = lookupNode;
-let runnerOptions: RunnerOptions = {};
-
-/** Frame costs for the performance monitor. Absent during SSR. */
-const wallClock =
-  typeof performance === "undefined" ? undefined : () => performance.now();
-
-type RunnerTotals = Omit<RunnerStats, "lastFrameCostMs">;
-
-/**
- * What runners already thrown away had counted. An edit rebuilds the runner,
- * and totals that dropped to zero on every wire drawn would read as a negative
- * rate to anything sampling them.
- */
-const retired: RunnerTotals = {
-  frames: 0,
-  events: 0,
-  simulatedNs: 0,
-  costMs: 0,
-  saturatedFrames: 0,
-};
-
-function retireRunner(): void {
-  if (!runner) return;
-  const stats = runner.stats;
-  retired.frames += stats.frames;
-  retired.events += stats.events;
-  retired.simulatedNs += stats.simulatedNs;
-  retired.costMs += stats.costMs;
-  retired.saturatedFrames += stats.saturatedFrames;
-}
 
 /**
  * Simulated time a paused engine is allowed to advance so the canvas shows a
@@ -99,36 +53,363 @@ function retireRunner(): void {
 const SETTLE_NS = 10_000;
 const SETTLE_EVENT_BUDGET = 10_000;
 
-/**
- * Runs a paused circuit out to a stable state. A no-op while running, where
- * the runner is already advancing time every frame.
- *
- * Event by event rather than one `runUntil` to the deadline, so simulated time
- * lands on the last event that actually happened instead of jumping the whole
- * leash forward every time — a reset should read `2 ns`, not `10 µs`.
- */
-function settleIfPaused() {
-  if (!engine || runner?.mode === "running") return;
+/** Frame costs for the performance monitor. Absent during SSR. */
+const wallClock =
+  typeof performance === "undefined" ? undefined : () => performance.now();
 
-  const deadline = engine.now + SETTLE_NS;
-  let events = 0;
+type RunnerTotals = Omit<RunnerStats, "lastFrameCostMs">;
 
-  while (engine.now < deadline && events < SETTLE_EVENT_BUDGET) {
-    const result = engine.step();
-    if (result.events === 0 || result.oscillating) break;
-    events += result.events;
+/** Totals across every runner an instance has had, plus the live circuit's shape. */
+export type SimulationCounters = RunnerStats & {
+  ready: boolean;
+  running: boolean;
+  speedNsPerSecond: number;
+  pendingEvents: number;
+  timeNs: number;
+  nodes: number;
+  nets: number;
+};
+
+export type SimulationStatus = {
+  ready: boolean;
+  mode: RunnerMode;
+  /** Simulated nanoseconds. */
+  time: number;
+  speedNsPerSecond: number;
+  /** Below `speedNsPerSecond` means the circuit is outrunning the machine. */
+  achievedNsPerSecond: number;
+  errorCount: number;
+  warningCount: number;
+};
+
+export type SimulationOptions = {
+  lookup?: NodeLookup;
+  /** `speedNsPerSecond` here is the speed the first runner starts at. */
+  runner?: RunnerOptions;
+};
+
+export type Simulation = {
+  subscribe: (listener: () => void) => () => void;
+  /** Rebuilds the netlist and, when the topology actually moved, the engine. */
+  syncDocument: (document: CircuitDocument | null) => void;
+  dispose: () => void;
+  /** Test seam: a `FrameScheduler` and a lookup that do not need a browser. */
+  configure: (options: SimulationOptions) => void;
+  readCounters: (into: SimulationCounters) => SimulationCounters;
+  getNetlist: () => Netlist | null;
+  getEngine: () => Engine | null;
+  /** Bumped once per frame the simulation changed anything. */
+  getRevision: () => number;
+  getStatus: () => SimulationStatus;
+  getDiagnostics: () => Diagnostic[];
+  readWaveform: (nodeId: string, channel: string) => WaveformSample[];
+  readNetValue: (netId: number | null) => string;
+  readPinValue: (nodeId: string, pinId: string) => string;
+  play: () => void;
+  pause: () => void;
+  togglePlay: () => void;
+  /** One event's worth of simulated time, paused. */
+  step: () => void;
+  reset: () => void;
+  setSpeed: (nsPerSecond: number) => void;
+};
+
+const IDLE_STATUS: SimulationStatus = {
+  ready: false,
+  mode: "paused",
+  time: 0,
+  speedNsPerSecond: DEFAULT_SPEED_NS_PER_SECOND,
+  achievedNsPerSecond: 0,
+  errorCount: 0,
+  warningCount: 0,
+};
+
+const NO_DIAGNOSTICS: Diagnostic[] = [];
+
+export function createSimulation(options: SimulationOptions = {}): Simulation {
+  let netlist: Netlist | null = null;
+  let engine: Engine | null = null;
+  let runner: Runner | null = null;
+
+  /** What the current engine was compiled from — the rebuild test. */
+  let signature = "";
+  /** Params the engine holds per node, so a live update knows what changed. */
+  let engineParams = new Map<string, NodeParams>();
+
+  const listeners = new Set<() => void>();
+
+  /**
+   * Monotonic across engine rebuilds, unlike `Engine.version`, which restarts
+   * at zero every time one is constructed. The hooks key their caches off it.
+   */
+  let revision = 0;
+
+  let lookup: NodeLookup = options.lookup ?? lookupNode;
+  /** `lookup` plus the open document's subcircuits. Rebuilt on every sync. */
+  let documentLookup: NodeLookup = lookup;
+  let runnerOptions: RunnerOptions = options.runner ?? {};
+
+  /**
+   * What runners already thrown away had counted. An edit rebuilds the runner,
+   * and totals that dropped to zero on every wire drawn would read as a
+   * negative rate to anything sampling them.
+   */
+  const retired: RunnerTotals = {
+    frames: 0,
+    events: 0,
+    simulatedNs: 0,
+    costMs: 0,
+    saturatedFrames: 0,
+  };
+
+  function retireRunner(): void {
+    if (!runner) return;
+    const stats = runner.stats;
+    retired.frames += stats.frames;
+    retired.events += stats.events;
+    retired.simulatedNs += stats.simulatedNs;
+    retired.costMs += stats.costMs;
+    retired.saturatedFrames += stats.saturatedFrames;
   }
-}
 
-function emit() {
-  revision++;
-  for (const listener of listeners) listener();
-}
+  /**
+   * Runs a paused circuit out to a stable state. A no-op while running, where
+   * the runner is already advancing time every frame.
+   *
+   * Event by event rather than one `runUntil` to the deadline, so simulated
+   * time lands on the last event that actually happened instead of jumping the
+   * whole leash forward every time — a reset should read `2 ns`, not `10 µs`.
+   */
+  function settleIfPaused() {
+    if (!engine || runner?.mode === "running") return;
 
-function subscribe(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
+    const deadline = engine.now + SETTLE_NS;
+    let events = 0;
+
+    while (engine.now < deadline && events < SETTLE_EVENT_BUDGET) {
+      const result = engine.step();
+      if (result.events === 0 || result.oscillating) break;
+      events += result.events;
+    }
+  }
+
+  function emit() {
+    revision++;
+    for (const listener of listeners) listener();
+  }
+
+  function subscribe(listener: () => void): () => void {
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  }
+
+  /**
+   * Called on every document change, including every frame of a drag — which
+   * is why the cheap path matters: moving a node recompiles the netlist
+   * (positions are not in it, so the signature comes out identical) and stops
+   * there.
+   */
+  function syncDocument(document: CircuitDocument | null): void {
+    if (!document) {
+      dispose();
+      return;
+    }
+
+    // The document's own chips are node types too, so the lookup the engine
+    // is built from is derived per document rather than being the bare
+    // registry.
+    documentLookup = subcircuitLookup(document, lookup);
+
+    const compiled = buildNetlist(document, documentLookup);
+    const nextSignature = topologySignature(compiled, documentLookup);
+
+    if (!engine || nextSignature !== signature) {
+      rebuild(compiled, nextSignature);
+      return;
+    }
+
+    netlist = compiled;
+
+    // Same shape, so the engine survives: hand it whatever params changed and
+    // let it re-evaluate those nodes at the current simulated time.
+    let changed = false;
+    for (const node of compiled.nodes) {
+      const previous = engineParams.get(node.id);
+      if (previous && sameParams(previous, node.params)) continue;
+
+      engineParams.set(node.id, node.params);
+      engine.setNodeParams(node.id, node.params);
+      changed = true;
+    }
+
+    // A switch flipped while paused must still light the LED downstream of it.
+    if (changed) {
+      settleIfPaused();
+      emit();
+    }
+  }
+
+  function rebuild(compiled: Netlist, nextSignature: string): void {
+    const wasRunning = runner?.mode === "running";
+    const speed =
+      runner?.speedNsPerSecond ??
+      runnerOptions.speedNsPerSecond ??
+      DEFAULT_SPEED_NS_PER_SECOND;
+
+    retireRunner();
+    runner?.dispose();
+
+    netlist = compiled;
+    signature = nextSignature;
+    engine = new Engine(compiled, documentLookup);
+    engineParams = new Map(
+      compiled.nodes.map((node) => [node.id, node.params]),
+    );
+
+    runner = new Runner(engine, {
+      clock: wallClock,
+      ...runnerOptions,
+      speedNsPerSecond: speed,
+    });
+    runner.subscribe(emit);
+
+    // An edit made while running keeps running — the alternative is that
+    // wiring one gate silently stops the clock the user was watching.
+    if (wasRunning) runner.play();
+    else settleIfPaused();
+
+    emit();
+  }
+
+  function dispose(): void {
+    retireRunner();
+    runner?.dispose();
+    runner = null;
+    engine = null;
+    netlist = null;
+    signature = "";
+    engineParams = new Map();
+    emit();
+  }
+
+  /**
+   * Fills `into` rather than returning a fresh object: the performance monitor
+   * reads this on every animation frame, and it should not be the thing
+   * producing garbage while it measures jank. Not a React snapshot — nothing
+   * here is comparable, and the monitor publishes on its own cadence.
+   */
+  function readCounters(into: SimulationCounters): SimulationCounters {
+    const stats = runner?.stats;
+    into.frames = retired.frames + (stats?.frames ?? 0);
+    into.events = retired.events + (stats?.events ?? 0);
+    into.simulatedNs = retired.simulatedNs + (stats?.simulatedNs ?? 0);
+    into.costMs = retired.costMs + (stats?.costMs ?? 0);
+    into.saturatedFrames =
+      retired.saturatedFrames + (stats?.saturatedFrames ?? 0);
+    into.lastFrameCostMs = stats?.lastFrameCostMs ?? 0;
+    into.ready = engine !== null && runner !== null;
+    into.running = runner?.mode === "running";
+    into.speedNsPerSecond =
+      runner?.speedNsPerSecond ?? DEFAULT_SPEED_NS_PER_SECOND;
+    into.pendingEvents = engine?.pendingEvents ?? 0;
+    into.timeNs = engine?.now ?? 0;
+    into.nodes = netlist?.nodes.length ?? 0;
+    into.nets = netlist?.nets.length ?? 0;
+    return into;
+  }
+
+  /**
+   * The value on a net, MSB first: `"0"`, `"1"`, `"X"`, `"Z"`, `"1011"`.
+   *
+   * A string rather than a `Signal` on purpose. `useSyncExternalStore`
+   * compares snapshots with `Object.is`, and a fresh `Uint8Array` per call
+   * would never compare equal and would re-render forever. It is also what the
+   * UI wants — every consumer either draws it or measures its length.
+   */
+  function readNetValue(netId: number | null): string {
+    if (engine === null || netId === null) return "";
+    return formatSignal(engine.readNet(netId));
+  }
+
+  function readPinValue(nodeId: string, pinId: string): string {
+    if (!engine || !netlist) return "";
+
+    const netId = netlist.pinToNet[pinKey(nodeId, pinId)];
+    return netId === undefined ? "" : formatSignal(engine.readNet(netId));
+  }
+
+  /** Cached against `revision`, because the hook needs a stable reference. */
+  let diagnosticsRevision = -1;
+  let diagnostics: Diagnostic[] = NO_DIAGNOSTICS;
+
+  function getDiagnostics(): Diagnostic[] {
+    if (diagnosticsRevision === revision) return diagnostics;
+    diagnosticsRevision = revision;
+    diagnostics = engine ? engine.diagnostics : NO_DIAGNOSTICS;
+    return diagnostics;
+  }
+
+  let statusRevision = -1;
+  let status: SimulationStatus = IDLE_STATUS;
+
+  function getStatus(): SimulationStatus {
+    if (statusRevision === revision) return status;
+    statusRevision = revision;
+
+    if (!engine || !runner) {
+      status = IDLE_STATUS;
+      return status;
+    }
+
+    const current = getDiagnostics();
+    status = {
+      ready: true,
+      mode: runner.mode,
+      time: engine.now,
+      speedNsPerSecond: runner.speedNsPerSecond,
+      achievedNsPerSecond: runner.achievedNsPerSecond,
+      errorCount: current.filter((entry) => entry.severity === "error").length,
+      warningCount: current.filter((entry) => entry.severity === "warning")
+        .length,
+    };
+    return status;
+  }
+
+  return {
+    subscribe,
+    syncDocument,
+    dispose,
+    configure: (next) => {
+      if (next.lookup) lookup = next.lookup;
+      if (next.runner) runnerOptions = next.runner;
+    },
+    readCounters,
+    getNetlist: () => netlist,
+    getEngine: () => engine,
+    getRevision: () => revision,
+    getStatus,
+    getDiagnostics,
+    readWaveform: (nodeId, channel) => engine?.waveform(nodeId, channel) ?? [],
+    readNetValue,
+    readPinValue,
+    play: () => runner?.play(),
+    pause: () => runner?.pause(),
+    togglePlay: () => {
+      if (!runner) return;
+      if (runner.mode === "running") runner.pause();
+      else runner.play();
+    },
+    step: () => runner?.step(),
+    reset: () => {
+      runner?.reset();
+      settleIfPaused();
+    },
+    setSpeed: (nsPerSecond) => {
+      runner?.setSpeed(nsPerSecond);
+      emit();
+    },
   };
 }
 
@@ -155,79 +436,6 @@ function topologySignature(compiled: Netlist, lookupType: NodeLookup) {
   return parts.join("");
 }
 
-/**
- * Rebuilds the netlist and, when the topology actually moved, the engine.
- *
- * Called on every document change, including every frame of a drag — which is
- * why the cheap path matters: moving a node recompiles the netlist (positions
- * are not in it, so the signature comes out identical) and stops there.
- */
-export function syncDocument(document: CircuitDocument | null): void {
-  if (!document) {
-    disposeSimulation();
-    return;
-  }
-
-  // The document's own chips are node types too, so the lookup the engine is
-  // built from is derived per document rather than being the bare registry.
-  documentLookup = subcircuitLookup(document, lookup);
-
-  const compiled = buildNetlist(document, documentLookup);
-  const nextSignature = topologySignature(compiled, documentLookup);
-
-  if (!engine || nextSignature !== signature) {
-    rebuild(compiled, nextSignature);
-    return;
-  }
-
-  netlist = compiled;
-
-  // Same shape, so the engine survives: hand it whatever params changed and
-  // let it re-evaluate those nodes at the current simulated time.
-  let changed = false;
-  for (const node of compiled.nodes) {
-    const previous = engineParams.get(node.id);
-    if (previous && sameParams(previous, node.params)) continue;
-
-    engineParams.set(node.id, node.params);
-    engine.setNodeParams(node.id, node.params);
-    changed = true;
-  }
-
-  // A switch flipped while paused must still light the LED downstream of it.
-  if (changed) {
-    settleIfPaused();
-    emit();
-  }
-}
-
-function rebuild(compiled: Netlist, nextSignature: string): void {
-  const wasRunning = runner?.mode === "running";
-  const speed = runner?.speedNsPerSecond ?? DEFAULT_SPEED_NS_PER_SECOND;
-
-  retireRunner();
-  runner?.dispose();
-
-  netlist = compiled;
-  signature = nextSignature;
-  engine = new Engine(compiled, documentLookup);
-  engineParams = new Map(compiled.nodes.map((node) => [node.id, node.params]));
-
-  runner = new Runner(engine, {
-    clock: wallClock,
-    ...runnerOptions,
-    speedNsPerSecond: speed,
-  });
-  runner.subscribe(emit);
-
-  // An edit made while running keeps running — the alternative is that wiring
-  // one gate silently stops the clock the user was watching.
-  if (wasRunning) runner.play();
-  else settleIfPaused();
-
-  emit();
-}
-
 function sameParams(a: NodeParams, b: NodeParams): boolean {
   if (a === b) return true;
 
@@ -238,28 +446,6 @@ function sameParams(a: NodeParams, b: NodeParams): boolean {
   // compares unequal here and costs one extra evaluation, never a wrong answer.
   return keys.every((key) => Object.is(a[key], b[key]));
 }
-
-export function disposeSimulation(): void {
-  retireRunner();
-  runner?.dispose();
-  runner = null;
-  engine = null;
-  netlist = null;
-  signature = "";
-  engineParams = new Map();
-  emit();
-}
-
-/** Totals across every runner this session, plus the live circuit's shape. */
-export type SimulationCounters = RunnerStats & {
-  ready: boolean;
-  running: boolean;
-  speedNsPerSecond: number;
-  pendingEvents: number;
-  timeNs: number;
-  nodes: number;
-  nets: number;
-};
 
 export function createSimulationCounters(): SimulationCounters {
   return {
@@ -279,137 +465,129 @@ export function createSimulationCounters(): SimulationCounters {
   };
 }
 
+/** The editor's simulation — the open document's. */
+const defaultSimulation = createSimulation();
+
 /**
- * Fills `into` rather than returning a fresh object: the performance monitor
- * reads this on every animation frame, and it should not be the thing
- * producing garbage while it measures jank. Not a React snapshot — nothing
- * here is comparable, and the monitor publishes on its own cadence.
+ * Which simulation the hooks below read. Unprovided, it is the editor's, so
+ * nothing in the editor has to mount a provider.
  */
+export const SimulationContext = createContext<Simulation>(defaultSimulation);
+
+export function useSimulation(): Simulation {
+  return useContext(SimulationContext);
+}
+
+// The editor's instance, as plain functions: what the editor, its shortcuts
+// and the tests call.
+
+export function syncDocument(document: CircuitDocument | null): void {
+  defaultSimulation.syncDocument(document);
+}
+
+export function disposeSimulation(): void {
+  defaultSimulation.dispose();
+}
+
 export function readSimulationCounters(
   into: SimulationCounters,
 ): SimulationCounters {
-  const stats = runner?.stats;
-  into.frames = retired.frames + (stats?.frames ?? 0);
-  into.events = retired.events + (stats?.events ?? 0);
-  into.simulatedNs = retired.simulatedNs + (stats?.simulatedNs ?? 0);
-  into.costMs = retired.costMs + (stats?.costMs ?? 0);
-  into.saturatedFrames =
-    retired.saturatedFrames + (stats?.saturatedFrames ?? 0);
-  into.lastFrameCostMs = stats?.lastFrameCostMs ?? 0;
-  into.ready = engine !== null && runner !== null;
-  into.running = runner?.mode === "running";
-  into.speedNsPerSecond =
-    runner?.speedNsPerSecond ?? DEFAULT_SPEED_NS_PER_SECOND;
-  into.pendingEvents = engine?.pendingEvents ?? 0;
-  into.timeNs = engine?.now ?? 0;
-  into.nodes = netlist?.nodes.length ?? 0;
-  into.nets = netlist?.nets.length ?? 0;
-  return into;
+  return defaultSimulation.readCounters(into);
 }
 
 export function getNetlist(): Netlist | null {
-  return netlist;
+  return defaultSimulation.getNetlist();
 }
 
 export function getEngine(): Engine | null {
-  return engine;
+  return defaultSimulation.getEngine();
+}
+
+export function configureSimulation(options: SimulationOptions): void {
+  defaultSimulation.configure(options);
+}
+
+export function play(): void {
+  defaultSimulation.play();
+}
+
+export function pause(): void {
+  defaultSimulation.pause();
+}
+
+export function togglePlay(): void {
+  defaultSimulation.togglePlay();
+}
+
+export function stepSimulation(): void {
+  defaultSimulation.step();
+}
+
+export function resetSimulation(): void {
+  defaultSimulation.reset();
+}
+
+export function setSimulationSpeed(nsPerSecond: number): void {
+  defaultSimulation.setSpeed(nsPerSecond);
+}
+
+export function readNetValue(netId: number | null): string {
+  return defaultSimulation.readNetValue(netId);
+}
+
+export function readPinValue(nodeId: string, pinId: string): string {
+  return defaultSimulation.readPinValue(nodeId, pinId);
+}
+
+export function getDiagnostics(): Diagnostic[] {
+  return defaultSimulation.getDiagnostics();
 }
 
 /**
- * Recorded samples for one node channel, oldest first.
+ * Bumped once per frame the simulation changed anything.
  *
- * Not a `useSyncExternalStore` snapshot: it allocates, so comparing it with
- * `Object.is` would re-render forever. A view pairs it with
- * `useSimulationRevision`, which *is* a comparable snapshot, and reads this
- * during the render that revision triggers.
+ * Recorded samples (`Simulation.readWaveform`) are not a snapshot: they
+ * allocate, so comparing them with `Object.is` would re-render forever. A view
+ * pairs this, which *is* comparable, with reading the samples during the
+ * render it triggers.
  */
-export function readWaveform(
-  nodeId: string,
-  channel: string,
-): WaveformSample[] {
-  return engine?.waveform(nodeId, channel) ?? [];
-}
-
-/** Bumped once per frame the simulation changed anything. */
 export function useSimulationRevision(): number {
+  const simulation = useSimulation();
   return useSyncExternalStore(
-    subscribe,
-    () => revision,
+    simulation.subscribe,
+    simulation.getRevision,
     () => 0,
   );
 }
 
-/** Test seam: a `FrameScheduler` and a lookup that do not need a browser. */
-export function configureSimulation(options: {
-  lookup?: NodeLookup;
-  runner?: RunnerOptions;
-}): void {
-  if (options.lookup) lookup = options.lookup;
-  if (options.runner) runnerOptions = options.runner;
-}
-
-export function play(): void {
-  runner?.play();
-}
-
-export function pause(): void {
-  runner?.pause();
-}
-
-export function togglePlay(): void {
-  if (!runner) return;
-  if (runner.mode === "running") runner.pause();
-  else runner.play();
-}
-
-/** One event's worth of simulated time, paused. */
-export function stepSimulation(): void {
-  runner?.step();
-}
-
-export function resetSimulation(): void {
-  runner?.reset();
-  settleIfPaused();
-}
-
-export function setSimulationSpeed(nsPerSecond: number): void {
-  runner?.setSpeed(nsPerSecond);
-  emit();
-}
-
 /**
- * The value on a net, MSB first: `"0"`, `"1"`, `"X"`, `"Z"`, `"1011"`.
- *
- * A string rather than a `Signal` on purpose. `useSyncExternalStore` compares
- * snapshots with `Object.is`, and a fresh `Uint8Array` per call would never
- * compare equal and would re-render forever. It is also what the UI wants —
- * every consumer either draws it or measures its length.
+ * The compiled netlist, which changes identity on every sync. Coarse — for
+ * whatever derives the scene from it, never for a per-frame reader.
  */
-export function readNetValue(netId: number | null): string {
-  if (engine === null || netId === null) return "";
-  return formatSignal(engine.readNet(netId));
-}
-
-export function readPinValue(nodeId: string, pinId: string): string {
-  if (!engine || !netlist) return "";
-
-  const netId = netlist.pinToNet[pinKey(nodeId, pinId)];
-  return netId === undefined ? "" : formatSignal(engine.readNet(netId));
+export function useNetlist(): Netlist | null {
+  const simulation = useSimulation();
+  return useSyncExternalStore(
+    simulation.subscribe,
+    simulation.getNetlist,
+    () => null,
+  );
 }
 
 /** Subscribes to one net. A LED using this does not re-render the canvas. */
 export function useNetValue(netId: number | null): string {
+  const simulation = useSimulation();
   return useSyncExternalStore(
-    subscribe,
-    () => readNetValue(netId),
+    simulation.subscribe,
+    () => simulation.readNetValue(netId),
     () => "",
   );
 }
 
 export function usePinValue(nodeId: string, pinId: string): string {
+  const simulation = useSimulation();
   return useSyncExternalStore(
-    subscribe,
-    () => readPinValue(nodeId, pinId),
+    simulation.subscribe,
+    () => simulation.readPinValue(nodeId, pinId),
     () => "",
   );
 }
@@ -420,88 +598,38 @@ export function usePinValue(nodeId: string, pinId: string): string {
  * once, and one subscription yielding a comparable string beats one per pin.
  */
 export function useNodeValues(nodeId: string, pinIds: readonly string[]) {
+  const simulation = useSimulation();
   // Joined into the closure's dependency rather than captured as an array, so
   // a fresh array of the same pin ids does not resubscribe.
   const key = pinIds.join(" ");
 
   return useSyncExternalStore(
-    subscribe,
+    simulation.subscribe,
     () =>
       key.length === 0
         ? ""
         : key
             .split(" ")
-            .map((pinId) => readPinValue(nodeId, pinId))
+            .map((pinId) => simulation.readPinValue(nodeId, pinId))
             .join(" "),
     () => "",
   );
 }
 
-export type SimulationStatus = {
-  ready: boolean;
-  mode: RunnerMode;
-  /** Simulated nanoseconds. */
-  time: number;
-  speedNsPerSecond: number;
-  /** Below `speedNsPerSecond` means the circuit is outrunning the machine. */
-  achievedNsPerSecond: number;
-  errorCount: number;
-  warningCount: number;
-};
-
-const IDLE_STATUS: SimulationStatus = {
-  ready: false,
-  mode: "paused",
-  time: 0,
-  speedNsPerSecond: DEFAULT_SPEED_NS_PER_SECOND,
-  achievedNsPerSecond: 0,
-  errorCount: 0,
-  warningCount: 0,
-};
-
-/** Cached against `revision`, because the hook needs a stable reference. */
-let statusRevision = -1;
-let status: SimulationStatus = IDLE_STATUS;
-
-function getStatus(): SimulationStatus {
-  if (statusRevision === revision) return status;
-  statusRevision = revision;
-
-  if (!engine || !runner) {
-    status = IDLE_STATUS;
-    return status;
-  }
-
-  const current = getDiagnostics();
-  status = {
-    ready: true,
-    mode: runner.mode,
-    time: engine.now,
-    speedNsPerSecond: runner.speedNsPerSecond,
-    achievedNsPerSecond: runner.achievedNsPerSecond,
-    errorCount: current.filter((entry) => entry.severity === "error").length,
-    warningCount: current.filter((entry) => entry.severity === "warning")
-      .length,
-  };
-  return status;
-}
-
 export function useSimulationStatus(): SimulationStatus {
-  return useSyncExternalStore(subscribe, getStatus, () => IDLE_STATUS);
-}
-
-const NO_DIAGNOSTICS: Diagnostic[] = [];
-
-let diagnosticsRevision = -1;
-let diagnostics: Diagnostic[] = NO_DIAGNOSTICS;
-
-export function getDiagnostics(): Diagnostic[] {
-  if (diagnosticsRevision === revision) return diagnostics;
-  diagnosticsRevision = revision;
-  diagnostics = engine ? engine.diagnostics : NO_DIAGNOSTICS;
-  return diagnostics;
+  const simulation = useSimulation();
+  return useSyncExternalStore(
+    simulation.subscribe,
+    simulation.getStatus,
+    () => IDLE_STATUS,
+  );
 }
 
 export function useDiagnostics(): Diagnostic[] {
-  return useSyncExternalStore(subscribe, getDiagnostics, () => NO_DIAGNOSTICS);
+  const simulation = useSimulation();
+  return useSyncExternalStore(
+    simulation.subscribe,
+    simulation.getDiagnostics,
+    () => NO_DIAGNOSTICS,
+  );
 }

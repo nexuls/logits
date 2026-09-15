@@ -23,6 +23,7 @@ import {
   placeNode,
   renameOpenDocument,
   shiftOpenDocument,
+  updateNodeParams,
   useDocument,
   useIsEphemeral,
 } from "@/state/document";
@@ -434,6 +435,7 @@ export default function Editor({
           wiring={gestures.isWiring}
           onSelectNode={(nodeId) => selectOnly([nodeId])}
           onPinActivate={gestures.activatePin}
+          onSetNodeParams={updateNodeParams}
         />
         <WireLayer
           scene={scene}
@@ -463,6 +465,7 @@ export default function Editor({
           wiring={gestures.isWiring}
           onSelectNode={(nodeId) => selectOnly([nodeId])}
           onPinActivate={gestures.activatePin}
+          onSetNodeParams={updateNodeParams}
         />
         {/* Only the anchor lives in the transformed layer, so the inspector
             can be placed against the selection's real on-screen box. The

@@ -5,6 +5,7 @@ import fullAdder from "./full-adder.json";
 import gateSampler from "./gate-sampler.json";
 import halfAdder from "./half-adder.json";
 import masterSlaveFlipFlop from "./master-slave-flipflop.json";
+import mod16SyncCounter from "./mod-16-sync-counter.json";
 import mux2to1 from "./mux-2to1.json";
 import srLatch from "./sr-latch.json";
 import tristateBus from "./tristate-bus.json";
@@ -45,6 +46,10 @@ const CATALOG: readonly { raw: unknown; summary: string }[] = [
   {
     raw: masterSlaveFlipFlop,
     summary: "Two latches in series, clocked by opposite edges.",
+  },
+  {
+    raw: mod16SyncCounter,
+    summary: "A 4-bit counter that counts 0–15 and wraps back to 0.",
   },
   {
     raw: calculator,

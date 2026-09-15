@@ -30,6 +30,15 @@ type Props = {
   wiring: boolean;
   onSelectNode: (nodeId: string) => void;
   onPinActivate: (nodeId: string, pinId: string) => void;
+  /**
+   * Where a node view's param edits go: the document store in the editor, a
+   * preview's own copy of its circuit in a preview.
+   */
+  onSetNodeParams: (
+    nodeId: string,
+    patch: Record<string, unknown>,
+    options?: { coalesce?: boolean },
+  ) => void;
 };
 
 /**
@@ -54,6 +63,7 @@ function NodeLayer({
   wiring,
   onSelectNode,
   onPinActivate,
+  onSetNodeParams,
 }: Props) {
   const selected = new Set(selectedNodeIds);
 
@@ -99,6 +109,9 @@ function NodeLayer({
             wiring={wiring}
             onFocus={() => onSelectNode(id)}
             onPinActivate={(pinId) => onPinActivate(id, pinId)}
+            onSetParams={(patch, options) =>
+              onSetNodeParams(id, patch, options)
+            }
           />
         ))}
     </>

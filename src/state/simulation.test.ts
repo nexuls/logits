@@ -8,6 +8,7 @@ import { lookupNode } from "@/lib/nodes/registry";
 import type { FrameScheduler } from "@/lib/sim/runner";
 import {
   configureSimulation,
+  createSimulation,
   disposeSimulation,
   getEngine,
   getNetlist,
@@ -162,5 +163,31 @@ describe("readPinValue", () => {
     syncDocument(doc);
     expect(readPinValue(switchId, "nope")).toBe("");
     expect(readPinValue("nope", "out")).toBe("");
+  });
+});
+
+describe("createSimulation", () => {
+  it("runs a circuit of its own, apart from the editor's", () => {
+    syncDocument(doc);
+
+    const preview = createSimulation({ runner: { frames } });
+    preview.syncDocument(setNodeParams(doc, switchId, { value: 1 }));
+
+    expect(readPinValue(notId, "out")).toBe("1");
+    expect(preview.readPinValue(notId, "out")).toBe("0");
+
+    preview.dispose();
+    expect(preview.getEngine()).toBeNull();
+    expect(getEngine()).not.toBeNull();
+  });
+
+  it("starts its first runner at the speed it was given", () => {
+    const preview = createSimulation({
+      runner: { frames, speedNsPerSecond: 100_000 },
+    });
+    preview.syncDocument(doc);
+
+    expect(preview.getStatus().speedNsPerSecond).toBe(100_000);
+    preview.dispose();
   });
 });

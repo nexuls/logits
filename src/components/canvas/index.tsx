@@ -18,6 +18,8 @@ import {
   type Viewport,
 } from "@/lib/circuit/coords";
 import type { Rect } from "@/lib/circuit/geometry";
+import type { Point } from "@/lib/circuit/schema";
+import { cn } from "@/lib/utils";
 import CanvasGrid from "./canvas-grid";
 import { type CanvasViewport, createCanvasViewport } from "./canvas-viewport";
 import Header from "./components/header";
@@ -35,11 +37,20 @@ type Props = {
   title?: string;
   showGrid?: boolean;
   showMinimap?: boolean;
+  /** The floating title in the top-left corner. */
+  showHeader?: boolean;
+  /** The header's projects button, which needs a `SidebarProvider` above it. */
+  showSidebarToggle?: boolean;
   /**
    * Scale the view starts at and that "reset view" returns to. The document
    * owns this number; the canvas only renders at it.
    */
   defaultZoom?: number;
+  /**
+   * Where the world origin sits on screen at `defaultZoom`: the other half of
+   * the default framing. Keep its identity stable between renders.
+   */
+  defaultOffset?: Point;
   /**
    * Identifies what is on the canvas. When it changes the view re-frames on
    * `restoredView`, or on `defaultZoom` when there is none — how opening
@@ -84,6 +95,12 @@ type Props = {
   onContentDoubleClick?: (event: MouseEvent<HTMLDivElement>) => void;
   /** Cursor for the viewport while an editing gesture is armed. */
   cursor?: string;
+  /** Wheel, middle-drag, space-drag and touch pan. */
+  pannable?: boolean;
+  /** Ctrl/Cmd + wheel, pinch, and the minimap's zoom buttons. */
+  zoomable?: boolean;
+  /** A plain left-drag pans, for a canvas with no editing gestures on it. */
+  dragToPan?: boolean;
   /**
    * Published whenever the transform moves, so a parent can convert pointer
    * positions with the same numbers the canvas draws with.
@@ -100,7 +117,10 @@ export default function Canvas({
   title = "Untitled circuit",
   showGrid = true,
   showMinimap = true,
+  showHeader = true,
+  showSidebarToggle = true,
   defaultZoom = DEFAULT_SCALE,
+  defaultOffset,
   viewKey,
   restoredView = null,
   contentGroups = EMPTY_GROUPS,
@@ -115,6 +135,9 @@ export default function Canvas({
   onContentPointerLeave,
   onContentDoubleClick,
   cursor,
+  pannable = true,
+  zoomable = true,
+  dragToPan = false,
   onViewportChange,
 }: Props) {
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -139,6 +162,10 @@ export default function Canvas({
     minScale: MIN_SCALE,
     maxScale: MAX_SCALE,
     initialScale: defaultZoom,
+    initialOffset: defaultOffset,
+    pannable,
+    zoomable,
+    dragToPan,
     restoredView,
     viewKey,
   });
@@ -190,7 +217,6 @@ export default function Canvas({
 
   return (
     <div
-      id="logit-canvas"
       className="relative w-full h-full overflow-hidden"
       style={{
         ...canvasVars,
@@ -198,7 +224,11 @@ export default function Canvas({
     >
       <div
         ref={viewportRef}
-        className="absolute inset-x-0 top-0 bottom-0 touch-none overscroll-none"
+        className={cn(
+          "absolute inset-x-0 top-0 bottom-0",
+          // Touch goes to the page when the canvas has nothing to do with it.
+          (pannable || zoomable) && "touch-none overscroll-none",
+        )}
         onPointerDown={(event) => {
           // Every gesture (and every pan) calls `preventDefault` on the press,
           // which also cancels the compatibility mousedown whose default
@@ -252,7 +282,10 @@ export default function Canvas({
             ? "var(--logit-cursor-grabbing)"
             : isSpacePressed
               ? "var(--logit-cursor-grab)"
-              : (cursor ?? "var(--logit-cursor-default)"),
+              : (cursor ??
+                (dragToPan && pannable
+                  ? "var(--logit-cursor-grab)"
+                  : "var(--logit-cursor-default)")),
         }}
         role="application"
         aria-label="Canvas with pan and zoom"
@@ -275,13 +308,16 @@ export default function Canvas({
           viewport would also select or start a wire on whatever lies under it. */}
       {overlay}
 
-      <Header
-        title={title}
-        onTitleChange={onTitleChange}
-        titleEditing={titleEditing}
-        onTitleEditingChange={onTitleEditingChange}
-        menu={headerMenu}
-      />
+      {showHeader && (
+        <Header
+          title={title}
+          onTitleChange={onTitleChange}
+          titleEditing={titleEditing}
+          onTitleEditingChange={onTitleEditingChange}
+          menu={headerMenu}
+          showSidebarToggle={showSidebarToggle}
+        />
+      )}
 
       {showMinimap && (
         <Minimap
@@ -294,8 +330,8 @@ export default function Canvas({
           onZoomOut={zoomOut}
           onResetView={resetView}
           resetZoomPercent={Math.round(defaultZoom * 100)}
-          canZoomIn={scale < MAX_SCALE - 0.0001}
-          canZoomOut={scale > MIN_SCALE + 0.0001}
+          canZoomIn={zoomable && scale < MAX_SCALE - 0.0001}
+          canZoomOut={zoomable && scale > MIN_SCALE + 0.0001}
         />
       )}
     </div>

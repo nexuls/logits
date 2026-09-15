@@ -9,7 +9,7 @@ import {
 import type { WaveformSample } from "@/lib/sim/waveform";
 import { cn } from "@/lib/utils";
 import {
-  readWaveform,
+  useSimulation,
   useSimulationRevision,
   useSimulationStatus,
 } from "@/state/simulation";
@@ -37,6 +37,7 @@ const HIGH_Y = 5;
 const LOW_Y = ROW_HEIGHT - 7;
 
 export default function ScopeView({ node }: NodeViewProps) {
+  const simulation = useSimulation();
   // Subscribes; the value itself is only a change token.
   useSimulationRevision();
   const { time } = useSimulationStatus();
@@ -51,7 +52,7 @@ export default function ScopeView({ node }: NodeViewProps) {
   const traces = Array.from({ length: channels }, (_, index) => ({
     id: `ch${index}`,
     row: index,
-    samples: readWaveform(node.id, `ch${index}`),
+    samples: simulation.readWaveform(node.id, `ch${index}`),
   }));
 
   const start = windowStart(node, traces, time, span);

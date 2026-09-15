@@ -34,6 +34,7 @@ one, that is a design error — pass it in as an argument.
 | `src/app/` | Next.js App Router entry. The editor is one route; keep page files thin. | Built |
 | `src/components/canvas/` | Viewport only: pan, zoom, grid, minimap. Knows nothing about logic. | Built |
 | `src/components/editor/` | Palette, toolbar, inspector (a popover on the canvas, anchored to the selection), node layer, wire layer, gestures, command menu, diagnostics, performance monitor, the palette's per-element info dialog. | Built |
+| `src/components/preview/` | `CircuitPreview`: a circuit that runs and can be operated but not edited, for embedding. Reuses the canvas, both layers, the simulation controls, diagnostics and the performance monitor; owns its own simulation and its own copy of the circuit. Every chrome element and gesture is a prop. | Built |
 | `src/components/nodes/` | React views for nodes that need custom rendering (scope, displays), and the palette icon set. | Built — `node-icons.tsx` plus `node-views.tsx` and the switch/button/lamp/readout views; the instrument views arrive in phase 4 |
 | `src/components/ui/` | shadcn primitives. Generated — see AGENTS.md. | Built |
 | `src/example/` | The circuits shipped with the app: one `.logits.json` per example plus an `index.ts` that validates them through `fromJson`. Pure data — no React, no storage. | Built — see [ADR 0008](decisions/0008-examples-are-ephemeral.md) |
@@ -108,6 +109,14 @@ The engine ticks far faster than React should re-render. Therefore:
 - Components subscribe with `useSyncExternalStore` **per net or per node**, not
   to the whole simulation. A LED subscribes to one net; re-rendering it must not
   re-render the canvas.
+- **One simulation per surface.** [simulation.ts](../src/state/simulation.ts)
+  is a factory, `createSimulation`. The editor runs the default instance through
+  the module's plain functions (`syncDocument`, `play`, …); a `CircuitPreview`
+  creates its own and provides it through `SimulationContext`. Every hook reads
+  the nearest provider, so a view drawn inside a preview reads the preview's
+  circuit. A component under the canvas must therefore reach the simulation
+  through a hook or `useSimulation()`, never the module functions, which are
+  always the editor's.
 - The oscilloscope reads a ring buffer directly in a `useEffect`/rAF draw call
   and paints to its own `<canvas>` — it never turns samples into React state.
 
@@ -125,6 +134,10 @@ draws it in the bottom-right corner, mirroring the minimap.
   (frames, events, simulated ns, engine ms, budget-limited frames), and
   `readSimulationCounters` adds the totals of runners already rebuilt away, so
   sampling twice and dividing by the interval never goes negative after an edit.
+- **One store per simulation.** `usePerformanceSnapshot` samples whichever
+  simulation `SimulationContext` provides, so a preview's monitor counts its own
+  circuit's events. Frame times and latency are the page's and read the same in
+  every store.
 - **The runner never reads the wall clock.** Engine time per frame is measured
   through an injected `clock`, which `simulation.ts` supplies as
   `performance.now`. It feeds the stats only; without one, costs read 0 and the
@@ -162,6 +175,29 @@ While paused, both paths then advance the engine on a short leash
 circuit would read `X` everywhere: nothing downstream of a source has run at
 `t = 0`, and an editor where wiring a gate visibly does nothing until you press
 play is not much of an editor.
+
+## Preview
+
+[circuit-preview.tsx](../src/components/preview/circuit-preview.tsx) is the
+editor with editing taken out: the same canvas, node layer and wire layer, with
+no gesture hook, no selection, no inspector and no document store.
+
+- **Its own circuit.** The document it is given is copied into component state.
+  Operating a node view — a switch, a keypad — applies the same pure command the
+  document store uses (`setLinkedNodeParams`) to that copy, with no history and
+  no autosave: nothing a viewer does to a preview is an edit worth keeping.
+  `onDocumentChange` hands the result to the caller, who can keep it if they do.
+- **Params writes are the caller's.** `NodeLayer` takes `onSetNodeParams`; the
+  editor passes `updateNodeParams`, the preview its own setter. `CircuitNode`
+  no longer imports the document store.
+- **Framed once.** With `fitView` it fits the scene's clusters into the size it
+  was mounted at (`fitViewport` in [coords.ts](../src/lib/circuit/coords.ts)),
+  never zooming past the document's `defaultZoom`, and passes that framing to
+  the canvas as `defaultZoom` / `defaultOffset` so "reset view" returns to it. A
+  later resize does not re-fit.
+- **Keys scoped to itself.** Its shortcuts are bound on the preview element,
+  not `window`, and the editor's window shortcuts ignore events from inside a
+  `[data-circuit-preview]`.
 
 ## Undo / redo
 

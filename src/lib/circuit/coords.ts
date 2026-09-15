@@ -134,3 +134,55 @@ export function panByScreen(view: Viewport, dx: number, dy: number): Viewport {
     offset: { x: view.offset.x + dx, y: view.offset.y + dy },
   };
 }
+
+export type Insets = {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+};
+
+const NO_INSETS: Insets = { top: 0, right: 0, bottom: 0, left: 0 };
+
+/**
+ * The view that shows all of `worldRect`, centred in what is left of a
+ * viewport of `size` once `padding` is taken off each edge — screen pixels,
+ * so chrome floating over the canvas can be kept clear of the circuit.
+ *
+ * A zero-sized rect (one point, or one line) is treated as one world unit
+ * across, so it does not divide by zero into `maxScale`.
+ */
+export function fitViewport(
+  worldRect: Rect,
+  size: ViewportSize,
+  {
+    padding = NO_INSETS,
+    minScale = MIN_SCALE,
+    maxScale = MAX_SCALE,
+  }: { padding?: Insets; minScale?: number; maxScale?: number } = {},
+): Viewport {
+  const innerWidth = Math.max(1, size.width - padding.left - padding.right);
+  const innerHeight = Math.max(1, size.height - padding.top - padding.bottom);
+
+  const scale = clampScale(
+    Math.min(
+      innerWidth / Math.max(worldRect.width, 1),
+      innerHeight / Math.max(worldRect.height, 1),
+    ),
+    minScale,
+    maxScale,
+  );
+
+  const screenCenter = {
+    x: padding.left + innerWidth / 2,
+    y: padding.top + innerHeight / 2,
+  };
+
+  return {
+    scale,
+    offset: {
+      x: screenCenter.x - (worldRect.x + worldRect.width / 2) * scale,
+      y: screenCenter.y - (worldRect.y + worldRect.height / 2) * scale,
+    },
+  };
+}

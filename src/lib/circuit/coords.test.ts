@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   clampScale,
+  fitViewport,
   panByScreen,
   rectToScreen,
   rectToWorld,
@@ -99,5 +100,39 @@ describe("clampScale", () => {
     expect(clampScale(12, 0.05, 8)).toBe(8);
     expect(clampScale(0.001, 0.05, 8)).toBe(0.05);
     expect(clampScale(1.5, 0.05, 8)).toBe(1.5);
+  });
+});
+
+describe("fitViewport", () => {
+  it("centres the rect and scales it to the tighter axis", () => {
+    const fitted = fitViewport(
+      { x: 0, y: 0, width: 200, height: 100 },
+      { width: 400, height: 400 },
+    );
+
+    expect(fitted.scale).toBe(2);
+    expect(toScreen({ x: 100, y: 50 }, fitted)).toEqual({ x: 200, y: 200 });
+  });
+
+  it("keeps the rect clear of the padding", () => {
+    const fitted = fitViewport(
+      { x: 10, y: 10, width: 100, height: 100 },
+      { width: 300, height: 300 },
+      { padding: { top: 50, right: 0, bottom: 50, left: 0 } },
+    );
+
+    expect(fitted.scale).toBe(2);
+    expect(toScreen({ x: 10, y: 10 }, fitted)).toEqual({ x: 50, y: 50 });
+  });
+
+  it("never zooms past maxScale", () => {
+    const fitted = fitViewport(
+      { x: 0, y: 0, width: 10, height: 10 },
+      { width: 1000, height: 1000 },
+      { maxScale: 1.5 },
+    );
+
+    expect(fitted.scale).toBe(1.5);
+    expect(toScreen({ x: 5, y: 5 }, fitted)).toEqual({ x: 500, y: 500 });
   });
 });

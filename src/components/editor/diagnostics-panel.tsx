@@ -9,8 +9,11 @@ import { useDiagnostics } from "@/state/simulation";
 
 type Props = {
   onClose: () => void;
-  /** Selects and reveals the elements a diagnostic names. */
-  onFocusElements: (
+  /**
+   * Selects and reveals the elements a diagnostic names. Absent where there
+   * is no selection to make, which leaves the rows as plain text.
+   */
+  onFocusElements?: (
     nodeIds: readonly string[],
     wireIds: readonly string[],
   ) => void;
@@ -62,11 +65,13 @@ export default function DiagnosticsPanel({ onClose, onFocusElements }: Props) {
               <li key={`${diagnostic.code}-${index}`}>
                 <Row
                   diagnostic={diagnostic}
-                  onFocus={() =>
-                    onFocusElements(
-                      diagnostic.nodeIds ?? [],
-                      diagnostic.wireIds ?? [],
-                    )
+                  onFocus={
+                    onFocusElements &&
+                    (() =>
+                      onFocusElements(
+                        diagnostic.nodeIds ?? [],
+                        diagnostic.wireIds ?? [],
+                      ))
                   }
                 />
               </li>
@@ -83,9 +88,10 @@ function Row({
   onFocus,
 }: {
   diagnostic: Diagnostic;
-  onFocus: () => void;
+  onFocus?: () => void;
 }) {
   const focusable =
+    onFocus !== undefined &&
     (diagnostic.nodeIds?.length ?? 0) + (diagnostic.wireIds?.length ?? 0) > 0;
 
   return (

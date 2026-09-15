@@ -17,7 +17,6 @@ import {
 import type { LabelPosition } from "@/lib/circuit/schema";
 import { PIN_LABEL_GAP } from "@/lib/nodes/label-metrics";
 import { cn } from "@/lib/utils";
-import { updateNodeParams } from "@/state/document";
 import { endInPlaceEdit } from "@/state/in-place-edit";
 import type { ResolvedNode, ResolvedPin } from "@/state/scene";
 import { useNodeValues } from "@/state/simulation";
@@ -50,6 +49,11 @@ type Props = {
    * starts a wire, the second completes it, exactly as a drag does.
    */
   onPinActivate: (pinId: string) => void;
+  /** Edits this node's params — see `NodeViewProps.setParams`. */
+  onSetParams: (
+    patch: Record<string, unknown>,
+    options?: { coalesce?: boolean },
+  ) => void;
 };
 
 /**
@@ -87,6 +91,7 @@ export default function CircuitNode({
   wiring,
   onFocus,
   onPinActivate,
+  onSetParams,
 }: Props) {
   const { node, def, bounds, pins } = resolved;
 
@@ -213,9 +218,7 @@ export default function CircuitNode({
             orientation={orientation}
             showPinLabels={showInlinePinLabels}
             readPin={(pinId) => valueByPin[pinId] ?? ""}
-            setParams={(patch, options) =>
-              updateNodeParams(node.id, patch, options)
-            }
+            setParams={onSetParams}
             interactive={interactive}
             editing={editing}
             onEditEnd={() => endInPlaceEdit(node.id)}
