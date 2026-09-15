@@ -83,6 +83,14 @@ is being renamed, so the name field keeps the browser's own menu. **Import**
 sits beside **New project** at the top of the sidebar, above the search field;
 the footer holds a banner linking to the GitHub repository.
 
+**Selection and the browser's menu.** Text in the app is not selectable, except
+in inputs, textareas, the note editor and an element's docs dialog. The
+browser's own context menu is suppressed everywhere except editable fields,
+which keep it for paste and spell-check
+([native-menu-guard.tsx](../src/components/native-menu-guard.tsx)). The guard
+only prevents the default, so right-click still does what the canvas, the
+palette and the project rows give it.
+
 A menu item that moves focus into a name editor (New, Rename) does not hand
 focus back to the menu trigger as the menu closes — that would blur the editor,
 and a blur commits the rename before anything is typed.

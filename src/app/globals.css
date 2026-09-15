@@ -143,6 +143,19 @@
   html {
     @apply font-sans;
   }
+  /* An editor, not a page: a drag that misses its target should not paint a
+     text selection across the chrome. Text is selectable only where it is
+     meant to be edited or read — fields, the note editor (CodeMirror is a
+     contenteditable) and an element's docs, which opt in with `select-text`. */
+  body {
+    @apply select-none;
+  }
+  input,
+  textarea,
+  [contenteditable]:not([contenteditable="false"]),
+  .cm-editor {
+    @apply select-text;
+  }
   /* The app is a fixed full-viewport editor; every scrolling region is its
      own. Without this, a fast wheel that runs off the end of one chains to
      the document, which flashes the browser's scrollbar. */

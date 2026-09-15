@@ -45,7 +45,9 @@ export default function NodeDocsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[85vh] flex-col gap-0 p-0 sm:max-w-2xl">
+      {/* Reference text, so it opts back in to the selection the app turns
+          off everywhere else — a pin id or a setting is worth copying. */}
+      <DialogContent className="flex h-[85vh] flex-col gap-0 p-0 select-text sm:max-w-2xl">
         <DialogHeader className="shrink-0 flex-row gap-6 border-b border-border p-6 pb-4">
           <DialogTitle className="flex items-center gap-2.5 text-base">
             <Icon aria-hidden className="size-5 text-muted-foreground" />
