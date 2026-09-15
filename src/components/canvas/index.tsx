@@ -200,6 +200,20 @@ export default function Canvas({
         ref={viewportRef}
         className="absolute inset-x-0 top-0 bottom-0 touch-none overscroll-none"
         onPointerDown={(event) => {
+          // Every gesture (and every pan) calls `preventDefault` on the press,
+          // which also cancels the compatibility mousedown whose default
+          // action moves focus. Without this, an input outside the press — the
+          // title being renamed, an inspector field — keeps focus and never
+          // gets the blur that commits it.
+          const focused = document.activeElement;
+          if (
+            focused instanceof HTMLElement &&
+            focused !== document.body &&
+            !focused.contains(event.target as Node)
+          ) {
+            focused.blur();
+          }
+
           // Space-drag and touch belong to the viewport: the editing
           // gestures must not get first refusal on a pan the user asked for.
           if (!isSpacePressed && event.pointerType !== "touch") {
