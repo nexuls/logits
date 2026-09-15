@@ -74,7 +74,9 @@ the page, so a fixed preview does not trap the scroll passing over it.
 
 `/preview#data=<link data>` is a preview on a page of its own, for embedding in
 an `<iframe>`: the whole frame, running on open, with the header, run controls
-and diagnostics and without the performance monitor. The circuit appears once
+and diagnostics and without the performance monitor. It opens as the editor
+does, at the circuit's origin and default zoom (**Set view as origin** and the
+project's default zoom choose it), rather than fitted. The circuit appears once
 the browser has decoded the fragment, and a changed fragment opens the new
 circuit. Older `/preview?data=<base64>` links still open. Missing or unreadable
 data shows a one-line explanation instead of a canvas.

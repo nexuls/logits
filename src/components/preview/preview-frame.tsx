@@ -27,9 +27,13 @@ export default function PreviewFrame({ result }: Props) {
 
   return (
     <main className="relative h-svh">
+      {/* Framed as the editor opens it — the origin at the document's default
+          zoom — rather than fitted: the author sets that view on purpose, and a
+          fit shrinks a large circuit to a smudge. */}
       <CircuitPreview
         document={result.document}
         showPerformanceMonitor={false}
+        fitView={false}
         autoPlay
       />
     </main>
