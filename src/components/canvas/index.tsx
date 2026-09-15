@@ -61,8 +61,11 @@ type Props = {
   /** Passed through to the minimap, which samples theme colours imperatively. */
   themeKey?: string;
   onTitleChange?: (newTitle: string) => void;
-  /** Passed to the header menu, which owns the only entry to the settings. */
-  onOpenSettings?: () => void;
+  /** Controls the header title's edit mode — how a menu's "Rename" opens it. */
+  titleEditing?: boolean;
+  onTitleEditingChange?: (editing: boolean) => void;
+  /** Rendered beside the title. The canvas knows nothing about what it offers. */
+  headerMenu?: ReactNode;
   /**
    * Pointer handlers for the editing gestures. They run *before* the viewport's
    * own, and a handler that calls `preventDefault` stops the pan starting —
@@ -103,7 +106,9 @@ export default function Canvas({
   contentGroups = EMPTY_GROUPS,
   themeKey,
   onTitleChange,
-  onOpenSettings,
+  titleEditing,
+  onTitleEditingChange,
+  headerMenu,
   onContentPointerDown,
   onContentPointerMove,
   onContentPointerUp,
@@ -258,7 +263,9 @@ export default function Canvas({
       <Header
         title={title}
         onTitleChange={onTitleChange}
-        onOpenSettings={onOpenSettings}
+        titleEditing={titleEditing}
+        onTitleEditingChange={onTitleEditingChange}
+        menu={headerMenu}
       />
 
       {showMinimap && (

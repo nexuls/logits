@@ -7,6 +7,11 @@ import {
   type CanvasViewport,
   IDENTITY_VIEWPORT,
 } from "@/components/canvas/canvas-viewport";
+import DeleteProjectDialog from "@/components/projects/delete-project-dialog";
+import {
+  downloadCircuit,
+  importCircuitFile,
+} from "@/components/projects/project-actions";
 import type { Point } from "@/lib/circuit/schema";
 import { subcircuitLookup } from "@/lib/circuit/subcircuit";
 import type { NodeDefinition } from "@/lib/nodes/define";
@@ -20,6 +25,7 @@ import {
   useIsEphemeral,
 } from "@/state/document";
 import { endInPlaceEdit, useEditingNodeId } from "@/state/in-place-edit";
+import { createProject, createProjectFrom } from "@/state/projects-store";
 import { buildScene, sceneClusters } from "@/state/scene";
 import { pruneSelection, selectOnly, useSelection } from "@/state/selection";
 import { getNetlist, syncDocument, useDiagnostics } from "@/state/simulation";
@@ -27,10 +33,12 @@ import CommandMenu from "./command-menu";
 import DiagnosticsPanel from "./diagnostics-panel";
 import GhostLayer from "./ghost-layer";
 import Inspector, { InspectorAnchor, selectionBounds } from "./inspector";
+import KeyboardShortcutsDialog from "./keyboard-shortcuts-dialog";
 import NodeLayer from "./node-layer";
 import PerformanceMonitor from "./performance-monitor";
+import ProjectMenu from "./project-menu";
 import RunControls from "./run-controls";
-import SettingsDialog from "./settings-dialog";
+import SettingsDialog, { type SettingsSection } from "./settings-dialog";
 import { useEditorGestures } from "./use-editor-gestures";
 import { useEditorShortcuts } from "./use-editor-shortcuts";
 import { useViewPersistence } from "./use-view-persistence";
@@ -50,6 +58,8 @@ type Props = {
   /** How many copies the next canvas click drops. */
   armedCount: number;
   onDisarm: () => void;
+  /** Opens another project — what New, Duplicate and Import end on. */
+  onSelectProject: (projectId: string) => void;
 };
 
 /**
@@ -70,6 +80,7 @@ export default function Editor({
   armedType,
   armedCount,
   onDisarm,
+  onSelectProject,
 }: Props) {
   const document = useDocument();
   const ephemeral = useIsEphemeral();
@@ -82,6 +93,14 @@ export default function Editor({
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
   const [performanceOpen, setPerformanceOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsSection, setSettingsSection] =
+    useState<SettingsSection>("preferences");
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [titleEditing, setTitleEditing] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   useEffect(() => {
     if (!projectId) {
@@ -186,6 +205,7 @@ export default function Editor({
   useEditorShortcuts({
     pointerWorld: () => pointerWorld.current,
     onCommandMenu: () => setCommandMenuOpen(true),
+    onShortcutsHelp: () => setShortcutsOpen(true),
     onEscape: () => {
       if (armedType) {
         onDisarm();
@@ -221,6 +241,47 @@ export default function Editor({
     if (nodeId) selectOnly([nodeId]);
   }, []);
 
+  const newProject = () => {
+    const result = createProject();
+    if (!result.ok) {
+      notify(result.error);
+      return;
+    }
+    onSelectProject(result.id);
+    // Straight into a rename, as New in the sidebar does: the name is the
+    // first thing anyone changes.
+    setTitleEditing(true);
+  };
+
+  const duplicateOpen = () => {
+    if (!document) return;
+    // The document in the editor, not the stored copy, so edits still waiting
+    // on the autosave come along — and an example, which is never stored, can
+    // be copied at all.
+    const result = createProjectFrom(document);
+    if (!result.ok) {
+      notify(result.error);
+      return;
+    }
+    onSelectProject(result.id);
+    notify(ephemeral ? "Saved to your projects." : "Duplicated.");
+  };
+
+  const importFile = () =>
+    importCircuitFile((result) => {
+      notify(result.message);
+      if (result.ok) onSelectProject(result.id);
+    });
+
+  const exportOpen = () => {
+    if (document) downloadCircuit(document);
+  };
+
+  const openSettings = (section: SettingsSection) => {
+    setSettingsSection(section);
+    setSettingsOpen(true);
+  };
+
   return (
     <>
       <Canvas
@@ -240,7 +301,25 @@ export default function Editor({
         onTitleChange={
           document ? (name) => renameOpenDocument(name) : undefined
         }
-        onOpenSettings={() => setSettingsOpen(true)}
+        titleEditing={titleEditing}
+        onTitleEditingChange={setTitleEditing}
+        headerMenu={
+          <ProjectMenu
+            hasDocument={document !== null}
+            ephemeral={ephemeral}
+            onNewProject={newProject}
+            onRename={() => setTitleEditing(true)}
+            onDuplicate={duplicateOpen}
+            onImport={importFile}
+            onExport={exportOpen}
+            onOpenSettings={openSettings}
+            onOpenShortcuts={() => setShortcutsOpen(true)}
+            onDelete={() =>
+              document &&
+              setPendingDelete({ id: document.id, name: document.name })
+            }
+          />
+        }
         onContentPointerDown={gestures.onPointerDown}
         onContentPointerMove={(event) => {
           // Tracked on every move, not only during a gesture: paste and the
@@ -261,6 +340,8 @@ export default function Editor({
               onToggleDiagnostics={() => setDiagnosticsOpen((open) => !open)}
               performanceOpen={performanceOpen}
               onTogglePerformance={() => setPerformanceOpen((open) => !open)}
+              onImport={importFile}
+              onExport={exportOpen}
               onNotice={notify}
             />
 
@@ -381,7 +462,27 @@ export default function Editor({
         suppressed={gestures.isInteracting || editingNodeId !== null}
       />
 
-      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <SettingsDialog
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        section={settingsSection}
+        onSectionChange={setSettingsSection}
+      />
+
+      <KeyboardShortcutsDialog
+        open={shortcutsOpen}
+        onOpenChange={setShortcutsOpen}
+      />
+
+      {/* Nothing to select afterwards: the page moves off a project that is
+          no longer in the list. */}
+      <DeleteProjectDialog
+        project={pendingDelete}
+        onClose={() => setPendingDelete(null)}
+        onDeleted={(result) => {
+          if (!result.ok) notify(result.error);
+        }}
+      />
 
       <CommandMenu
         open={commandMenuOpen}

@@ -62,7 +62,9 @@ export function isEditableTarget(target: EventTarget | null): boolean {
 function isInDialog(target: EventTarget | null): boolean {
   return (
     target instanceof Element &&
-    target.closest('[data-slot="dialog-content"]') !== null
+    target.closest(
+      '[data-slot="dialog-content"], [data-slot="alert-dialog-content"]',
+    ) !== null
   );
 }
 
@@ -84,6 +86,8 @@ type Options = {
   /** Where the pointer last was, for pasting at the cursor. */
   pointerWorld: () => Point;
   onCommandMenu: () => void;
+  /** `?`: the keyboard shortcuts dialog. */
+  onShortcutsHelp: () => void;
   /** Esc: cancels a wire in progress before it clears the selection. */
   onEscape: () => boolean;
   onNotice: (message: string) => void;
@@ -92,6 +96,7 @@ type Options = {
 export function useEditorShortcuts({
   pointerWorld,
   onCommandMenu,
+  onShortcutsHelp,
   onEscape,
   onNotice,
 }: Options) {
@@ -101,8 +106,20 @@ export function useEditorShortcuts({
 
   // Refs rather than state: these are read inside a window listener that is
   // installed once, and none of them should cause a render.
-  const handlers = useRef({ pointerWorld, onCommandMenu, onEscape, onNotice });
-  handlers.current = { pointerWorld, onCommandMenu, onEscape, onNotice };
+  const handlers = useRef({
+    pointerWorld,
+    onCommandMenu,
+    onShortcutsHelp,
+    onEscape,
+    onNotice,
+  });
+  handlers.current = {
+    pointerWorld,
+    onCommandMenu,
+    onShortcutsHelp,
+    onEscape,
+    onNotice,
+  };
 
   useEffect(() => {
     const spaceDown = { at: 0, pointerUsed: false };
@@ -235,6 +252,12 @@ export function useEditorShortcuts({
         case ".":
           event.preventDefault();
           stepSimulation();
+          return;
+        case "?":
+          // Matched on the produced character, not the key code: `?` is
+          // Shift+/ on US layouts and somewhere else entirely on others.
+          event.preventDefault();
+          handlers.current.onShortcutsHelp();
           return;
         default:
           return;

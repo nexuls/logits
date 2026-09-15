@@ -1,37 +1,23 @@
 "use client";
 
-import {
-  CopyIcon,
-  DownloadIcon,
-  MoreHorizontalIcon,
-  PanelLeftIcon,
-  PencilIcon,
-  PlusIcon,
-  SlidersHorizontalIcon,
-  Trash2Icon,
-} from "lucide-react";
+import { PanelLeftIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import EditableText from "@/components/ui/editable-text";
 import { useSidebar } from "@/components/ui/sidebar";
 
 type Props = {
   title: string;
   onTitleChange?: (title: string) => void;
-  onNewProject?: () => void;
-  onRenameProject?: () => void;
-  onDuplicateProject?: () => void;
-  onExportProject?: () => void;
-  onDeleteProject?: () => void;
-  /** Opens the settings dialog. Absent leaves the menu item disabled. */
-  onOpenSettings?: () => void;
+  /** Controls the title's edit mode from outside — how a "Rename" item opens it. */
+  titleEditing?: boolean;
+  onTitleEditingChange?: (editing: boolean) => void;
+  /**
+   * The menu beside the title. Supplied by the editor, which owns projects;
+   * the canvas only gives it a place to sit.
+   */
+  menu?: ReactNode;
 };
 
 /**
@@ -43,12 +29,9 @@ type Props = {
 export default function Header({
   title,
   onTitleChange,
-  onNewProject,
-  onRenameProject,
-  onDuplicateProject,
-  onExportProject,
-  onDeleteProject,
-  onOpenSettings,
+  titleEditing,
+  onTitleEditingChange,
+  menu,
 }: Props) {
   const { open, openMobile, isMobile, toggleSidebar } = useSidebar();
   const isSidebarOpen = isMobile ? openMobile : open;
@@ -72,70 +55,14 @@ export default function Header({
           onChange={(next) => onTitleChange?.(next)}
           label="Project name"
           placeholder="Untitled circuit"
+          editing={onTitleChange ? titleEditing : false}
+          onEditingChange={onTitleEditingChange}
           activateOnDoubleClick={onTitleChange !== undefined}
           className="px-2 py-1"
         />
       </h1>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-lg"
-              aria-label="Project menu"
-            >
-              <MoreHorizontalIcon />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="start" className="min-w-52">
-          <DropdownMenuItem onClick={onNewProject} disabled={!onNewProject}>
-            <PlusIcon />
-            New project
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={onRenameProject}
-            disabled={!onRenameProject}
-          >
-            <PencilIcon />
-            Rename
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={onDuplicateProject}
-            disabled={!onDuplicateProject}
-          >
-            <CopyIcon />
-            Duplicate
-          </DropdownMenuItem>
-
-          <DropdownMenuSeparator />
-
-          <DropdownMenuItem
-            onClick={onExportProject}
-            disabled={!onExportProject}
-          >
-            <DownloadIcon />
-            Export as JSON
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={onOpenSettings} disabled={!onOpenSettings}>
-            <SlidersHorizontalIcon />
-            Settings
-          </DropdownMenuItem>
-
-          <DropdownMenuSeparator />
-
-          <DropdownMenuItem
-            variant="destructive"
-            onClick={onDeleteProject}
-            disabled={!onDeleteProject}
-          >
-            <Trash2Icon />
-            Delete project
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {menu}
     </div>
   );
 }

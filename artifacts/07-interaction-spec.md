@@ -55,6 +55,36 @@ The two sidebars are independent — separate providers, separate cookies,
 separate shortcuts. Both are also reachable by pointer: the left one from the
 canvas header, the right one from the panel button in its own header.
 
+## Menus (built)
+
+**Canvas header menu** (the ⋯ beside the title,
+[project-menu.tsx](../src/components/editor/project-menu.tsx)). It acts on the
+open circuit; items that need one are disabled when none is open.
+
+| Item | Action |
+| --- | --- |
+| New project | Creates a project, opens it, and puts the header title into rename |
+| Rename | Puts the header title into rename (double-click on the title does the same) |
+| Duplicate | Copies the open circuit, unsaved edits included, into a new project and opens it. On an example it reads **Save to projects** and does what the sidebar's import does |
+| Import / Export → Import circuit file… | Picks a `.json` file and adds it as a **new project** with a fresh id, then opens it. It never replaces the open circuit: a file exported from this browser carries its source project's id, and loading it under that id would overwrite that project on the next autosave |
+| Import / Export → Export as JSON | Downloads the open circuit as `<name>.logits.json` |
+| Settings → Preferences… / Project settings… | Opens the settings dialog on that tab |
+| Keyboard shortcuts | Opens the shortcuts dialog (also `?`) |
+| Delete project | Asks for confirmation, then deletes. Disabled on an example |
+
+The toolbar's import and export buttons use the same code
+([project-actions.ts](../src/components/projects/project-actions.ts)).
+
+**Project rows in the sidebar.** The ⋯ button and a right-click anywhere on the
+row (a long-press on touch) open the same menu: Rename (`F2`), Duplicate,
+Pin / Unpin, Export as JSON, Delete (`Delete`). Right-click is off while the row
+is being renamed, so the name field keeps the browser's own menu. **Import**
+sits beside **New project** in the sidebar footer.
+
+A menu item that moves focus into a name editor (New, Rename) does not hand
+focus back to the menu trigger as the menu closes — that would blur the editor,
+and a blur commits the rename before anything is typed.
+
 ## Editing
 
 | Gesture | Action |
@@ -99,13 +129,15 @@ canvas header, the right one from the panel button in its own header.
 | `.` | Single step |
 | `Ctrl+S` | Save document (it autosaves anyway; this flushes now) |
 | `Ctrl+K` | Command menu |
+| `?` | Keyboard shortcuts dialog |
 | `Esc` | Cancel the armed node type, then a wire in progress, then the selection |
 
 Never bind a plain letter key while a text input or `contentEditable` has focus.
 `use-canvas-mouse-actions.ts` already has an `isEditableTarget` guard — reuse
 that helper rather than writing a second one.
 
-While a modal dialog (help, settings, the command menu) has focus, none of the
+While a modal dialog (help, settings, keyboard shortcuts, a delete
+confirmation, the command menu) has focus, none of the
 editor shortcuts above fire. The dialog owns the keyboard: `Delete` while
 reading a node's help must not delete the node, and `Esc` closes the dialog
 without also clearing the selection behind it.

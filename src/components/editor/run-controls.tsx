@@ -14,7 +14,7 @@ import {
   UndoIcon,
   UploadIcon,
 } from "lucide-react";
-import { type ChangeEvent, type ReactElement, useRef } from "react";
+import type { ReactElement } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -31,13 +31,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { deserialize, FILE_EXTENSION, serialize } from "@/lib/circuit/io";
 import { formatSimTime } from "@/lib/sim/time";
 import { cn } from "@/lib/utils";
 import {
   flushSave,
   redo,
-  setDocument,
   undo,
   useDocument,
   useHistoryState,
@@ -57,6 +55,9 @@ type Props = {
   onToggleDiagnostics: () => void;
   performanceOpen: boolean;
   onTogglePerformance: () => void;
+  /** Shared with the header menu, so the two cannot import differently. */
+  onImport: () => void;
+  onExport: () => void;
   onNotice: (message: string) => void;
 };
 
@@ -83,57 +84,20 @@ export default function RunControls({
   onToggleDiagnostics,
   performanceOpen,
   onTogglePerformance,
+  onImport,
+  onExport,
   onNotice,
 }: Props) {
   const document = useDocument();
   const status = useSimulationStatus();
   const { canUndo, canRedo } = useHistoryState();
   const save = useSaveState();
-  const fileRef = useRef<HTMLInputElement>(null);
 
   const running = status.mode === "running";
   const problems = status.errorCount + status.warningCount;
   const speedLabel =
     SPEEDS.find((speed) => speed.value === status.speedNsPerSecond)?.label ??
     "Custom";
-
-  const onImport = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    // Reset first: picking the same file twice must fire `change` both times.
-    event.target.value = "";
-    if (!file) return;
-
-    file
-      .text()
-      .then((text) => {
-        const result = deserialize(text);
-        if (!result.ok) {
-          onNotice(result.issues[0]?.message ?? "That file is not a circuit.");
-          return;
-        }
-        setDocument(result.document);
-        onNotice(
-          result.issues.length > 0
-            ? `Imported with ${result.issues.length} issue(s).`
-            : `Imported “${result.document.name}”.`,
-        );
-      })
-      .catch(() => onNotice("That file could not be read."));
-  };
-
-  const onExport = () => {
-    if (!document) return;
-
-    const blob = new Blob([serialize(document)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = window.document.createElement("a");
-    link.href = url;
-    link.download = `${document.name}${FILE_EXTENSION}`;
-    link.click();
-    // Revoked on the next tick rather than immediately: Safari has not started
-    // the download by the time `click()` returns.
-    setTimeout(() => URL.revokeObjectURL(url), 0);
-  };
 
   return (
     <div className="pointer-events-auto absolute top-2 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-lg bg-sidebar px-1.5 py-1 shadow-chrome border border-border">
@@ -293,23 +257,12 @@ export default function RunControls({
           type="button"
           variant="ghost"
           size="icon"
-          onClick={() => fileRef.current?.click()}
+          onClick={onImport}
           aria-label="Import a circuit file"
         >
           <UploadIcon />
         </Button>
       </ToolbarTooltip>
-      <input
-        ref={fileRef}
-        type="file"
-        accept="application/json,.json"
-        onChange={onImport}
-        className="hidden"
-        // Not `aria-hidden`: the button above is the label for it, and hiding
-        // it from the tree would leave that button pointing at nothing.
-        tabIndex={-1}
-      />
-
       <Separator orientation="vertical" className="mx-1 h-6" />
 
       <ToolbarTooltip label="Performance details">

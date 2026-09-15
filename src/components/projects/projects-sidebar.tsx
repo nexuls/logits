@@ -1,18 +1,13 @@
 "use client";
 
-import { CircuitBoardIcon, PlusIcon, SearchIcon } from "lucide-react";
+import {
+  CircuitBoardIcon,
+  PlusIcon,
+  SearchIcon,
+  UploadIcon,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -40,15 +35,22 @@ import { getExample } from "@/example";
 import type { ProjectMeta } from "@/lib/circuit/schema";
 import { getDocument } from "@/state/document";
 import {
+  type CreateResult,
   createProject,
   createProjectFrom,
-  deleteProject,
   pinProject,
   renameProject,
   useHydrated,
   useProjects,
 } from "@/state/projects-store";
+import type { StorageResult } from "@/state/storage";
+import DeleteProjectDialog from "./delete-project-dialog";
 import ExamplesGroup from "./examples-group";
+import {
+  duplicateProject,
+  exportProject,
+  importCircuitFile,
+} from "./project-actions";
 import ProjectItem from "./project-item";
 
 type Props = {
@@ -126,15 +128,29 @@ export default function ProjectsSidebar({
     onSelectProject?.(result.id);
   };
 
-  const confirmDelete = () => {
-    if (!pendingDelete) return;
+  /** Where a create, copy or import lands: the new project, opened. */
+  const openCreated = (result: CreateResult) => {
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
 
-    report(deleteProject(pendingDelete.id));
-    if (pendingDelete.id === activeProjectId) {
-      const next = projects.find((project) => project.id !== pendingDelete.id);
+    setError(null);
+    setQuery("");
+    onSelectProject?.(result.id);
+  };
+
+  const importFile = () =>
+    importCircuitFile((result) =>
+      openCreated(result.ok ? result : { ok: false, error: result.message }),
+    );
+
+  const onDeleted = (result: StorageResult, projectId: string) => {
+    report(result);
+    if (projectId === activeProjectId) {
+      const next = projects.find((project) => project.id !== projectId);
       onSelectProject?.(next?.id ?? "");
     }
-    setPendingDelete(null);
   };
 
   const renderGroup = (label: string, items: ProjectMeta[]) => {
@@ -159,6 +175,12 @@ export default function ProjectsSidebar({
                 onTogglePin={() =>
                   report(pinProject(project.id, !project.pinned))
                 }
+                onDuplicate={() => openCreated(duplicateProject(project.id))}
+                onExport={() => {
+                  if (!exportProject(project.id)) {
+                    setError("That project could not be read.");
+                  }
+                }}
                 onRequestDelete={() => setPendingDelete(project)}
               />
             ))}
@@ -260,41 +282,31 @@ export default function ProjectsSidebar({
             {error}
           </p>
         )}
-        <Button
-          variant="outline"
-          className="w-full justify-start"
-          onClick={create}
-        >
-          <PlusIcon />
-          New project
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="flex-1 justify-start"
+            onClick={create}
+          >
+            <PlusIcon />
+            New project
+          </Button>
+          <Button variant="outline" onClick={importFile}>
+            <UploadIcon />
+            Import
+          </Button>
+        </div>
         <p className="px-1 text-center text-xs text-muted-foreground">
           {projects.length} project{projects.length === 1 ? "" : "s"} ·{" "}
           <Kbd>⌘B</Kbd> to toggle
         </p>
       </SidebarFooter>
 
-      <AlertDialog
-        open={pendingDelete !== null}
-        onOpenChange={(open) => {
-          if (!open) setPendingDelete(null);
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete “{pendingDelete?.name}”?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This removes the circuit from this browser. It cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={confirmDelete}>
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteProjectDialog
+        project={pendingDelete}
+        onClose={() => setPendingDelete(null)}
+        onDeleted={onDeleted}
+      />
     </Sidebar>
   );
 }

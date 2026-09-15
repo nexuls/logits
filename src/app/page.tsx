@@ -58,6 +58,7 @@ export default function Home() {
             armedType={pendingType}
             armedCount={pending.count}
             onDisarm={() => setPending({ type: "", count: 0 })}
+            onSelectProject={setActiveId}
           />
         </div>
 
