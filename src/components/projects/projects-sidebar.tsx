@@ -5,6 +5,7 @@ import {
   MoreHorizontalIcon,
   PlusIcon,
   SearchIcon,
+  SparklesIcon,
   UploadIcon,
 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -39,9 +40,7 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getExample } from "@/example";
 import type { ProjectMeta } from "@/lib/circuit/schema";
-import { getDocument } from "@/state/document";
 import {
   type CreateResult,
   createProject,
@@ -53,7 +52,7 @@ import {
 } from "@/state/projects-store";
 import type { StorageResult } from "@/state/storage";
 import DeleteProjectDialog from "./delete-project-dialog";
-import ExamplesGroup from "./examples-group";
+import ExamplesDialog from "./examples-dialog";
 import GithubStarBanner from "./github-star-banner";
 import {
   duplicateProject,
@@ -77,6 +76,7 @@ export default function ProjectsSidebar({
   const [query, setQuery] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<ProjectMeta | null>(null);
+  const [examplesOpen, setExamplesOpen] = useState(false);
   // Storage can refuse a write — a full quota, or a browser blocking it. The
   // list would then silently not change, so the reason has to be visible.
   const [error, setError] = useState<string | null>(null);
@@ -110,31 +110,6 @@ export default function ProjectsSidebar({
     // Straight into a rename: a new circuit's name is the first thing you want
     // to change, and it saves a trip to the menu.
     setEditingId(result.id);
-  };
-
-  /**
-   * Turns an example into a project the user owns.
-   *
-   * It imports what is *on screen* when that example is the open document, not
-   * the pristine file: an example is editable, so the button would otherwise
-   * silently discard the very edits it is being asked to keep.
-   */
-  const importExample = (exampleId: string) => {
-    const example = getExample(exampleId);
-    if (!example) return;
-
-    const open = getDocument();
-    const result = createProjectFrom(
-      open?.id === exampleId ? open : example.document,
-    );
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
-
-    setError(null);
-    setQuery("");
-    onSelectProject?.(result.id);
   };
 
   /** Where a create, copy or import lands: the new project, opened. */
@@ -240,6 +215,10 @@ export default function ProjectsSidebar({
                 <UploadIcon />
                 Import circuit file…
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setExamplesOpen(true)}>
+                <SparklesIcon />
+                Browse examples…
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -292,9 +271,17 @@ export default function ProjectsSidebar({
               </EmptyMedia>
               <EmptyTitle>No circuits yet</EmptyTitle>
               <EmptyDescription>
-                Create one to start placing gates.
+                Create one to start placing gates, or start from an example.
               </EmptyDescription>
             </EmptyHeader>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setExamplesOpen(true)}
+            >
+              <SparklesIcon />
+              Browse examples
+            </Button>
           </Empty>
         )}
 
@@ -303,15 +290,6 @@ export default function ProjectsSidebar({
             No projects match “{query.trim()}”.
           </p>
         )}
-
-        {/* Not gated on `hydrated`: the examples are compiled in rather than
-            read from storage, so they are the same on the server and the
-            client and can fill the first paint. */}
-        <ExamplesGroup
-          activeId={activeProjectId}
-          onOpen={(exampleId) => onSelectProject?.(exampleId)}
-          onImport={importExample}
-        />
       </SidebarContent>
 
       <SidebarFooter>
@@ -326,6 +304,16 @@ export default function ProjectsSidebar({
         project={pendingDelete}
         onClose={() => setPendingDelete(null)}
         onDeleted={onDeleted}
+      />
+
+      <ExamplesDialog
+        open={examplesOpen}
+        onOpenChange={setExamplesOpen}
+        onImport={(example) => {
+          const result = createProjectFrom(example.document);
+          openCreated(result);
+          return result;
+        }}
       />
     </Sidebar>
   );

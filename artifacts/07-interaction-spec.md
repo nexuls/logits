@@ -98,8 +98,21 @@ row (a long-press on touch) open the same menu: Rename (`F2`), Duplicate,
 Pin / Unpin, Export as JSON, Delete (`Delete`). Right-click is off while the row
 is being renamed, so the name field keeps the browser's own menu. Under a **Logits**
 heading, the top of the sidebar is the search field with a ⋯ button beside it, whose menu holds
-**New project** and **Import circuit file…**; the footer holds a banner linking
-to the GitHub repository.
+**New project**, **Import circuit file…** and **Browse examples…**; the footer
+holds a banner linking to the GitHub repository. An empty project list offers
+**Browse examples** too.
+
+**Examples dialog**
+([examples-dialog.tsx](../src/components/projects/examples-dialog.tsx)). A
+large dialog with every shipped example as a card: a static thumbnail drawn
+from the circuit's scene, the name, a part count and the one-line summary.
+Clicking a card (or Enter / Space on it) opens its preview beside the gallery —
+side by side in a landscape window, stacked in a portrait one — as a
+`CircuitPreview` that starts running and can be operated but not edited.
+**Import** (or double-clicking a card) adds the example, as shipped, as a new
+project, opens it and closes the dialog; a storage failure is shown in the
+dialog and leaves it open. **Close preview** returns the gallery to full width,
+and every opening starts at the gallery.
 
 **Selection and the browser's menu.** Text in the app is not selectable, except
 in inputs, textareas, the note editor and an element's docs dialog. The

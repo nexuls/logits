@@ -70,3 +70,16 @@ can be exported from the editor, hand-tuned and dropped straight back in.
   them fetched instead.
 - Routing, when it lands, has to treat an example id as a valid URL for a
   document that is in no project list.
+
+## Amendment (2026-09-15): browsed in a dialog, tried in a preview
+
+The collapsed sidebar group is gone. Examples are browsed in an examples dialog
+opened from the sidebar's ⋯ menu, and tried in a `CircuitPreview` inside it —
+operable, not editable — so the question "what happens to my edits?" no longer
+arises while browsing. Import therefore copies the example **as shipped**; the
+"import what is on screen" rule above still holds for an ephemeral document
+open in the editor, whose ⋯ menu offers **Save to projects**.
+
+The ephemeral open path in `document.ts` is kept as described — it is small,
+tested, and what routing will need — but no UI opens an example in the editor
+any more.

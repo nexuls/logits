@@ -392,8 +392,8 @@ export default function Editor({
                 tell the user their edits are going nowhere. */}
             {ephemeral && (
               <p className="pointer-events-none absolute top-14 left-4 z-20 rounded-md border border-dashed border-border bg-sidebar px-2 py-1 text-[11px] text-muted-foreground">
-                Example — edits are not saved. Import it from the sidebar to
-                keep them.
+                Example — edits are not saved. Use Save to projects in the ⋯
+                menu to keep them.
               </p>
             )}
 
