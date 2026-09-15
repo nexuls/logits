@@ -46,6 +46,7 @@ import {
 import type { StorageResult } from "@/state/storage";
 import DeleteProjectDialog from "./delete-project-dialog";
 import ExamplesGroup from "./examples-group";
+import GithubStarBanner from "./github-star-banner";
 import {
   duplicateProject,
   exportProject,
@@ -197,6 +198,26 @@ export default function ProjectsSidebar({
           <span className="text-sm font-semibold">Projects</span>
         </div>
 
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="flex-1 justify-start"
+            onClick={create}
+          >
+            <PlusIcon />
+            New project
+          </Button>
+          <Button variant="outline" onClick={importFile}>
+            <UploadIcon />
+            Import
+          </Button>
+        </div>
+        {error && (
+          <p role="alert" className="px-1 text-xs text-destructive">
+            {error}
+          </p>
+        )}
+
         <div className="relative">
           <SearchIcon
             aria-hidden
@@ -277,25 +298,7 @@ export default function ProjectsSidebar({
       </SidebarContent>
 
       <SidebarFooter>
-        {error && (
-          <p role="alert" className="px-1 text-xs text-destructive">
-            {error}
-          </p>
-        )}
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            className="flex-1 justify-start"
-            onClick={create}
-          >
-            <PlusIcon />
-            New project
-          </Button>
-          <Button variant="outline" onClick={importFile}>
-            <UploadIcon />
-            Import
-          </Button>
-        </div>
+        <GithubStarBanner />
         <p className="px-1 text-center text-xs text-muted-foreground">
           {projects.length} project{projects.length === 1 ? "" : "s"} ·{" "}
           <Kbd>⌘B</Kbd> to toggle

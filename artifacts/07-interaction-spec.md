@@ -80,7 +80,8 @@ The toolbar's import and export buttons use the same code
 row (a long-press on touch) open the same menu: Rename (`F2`), Duplicate,
 Pin / Unpin, Export as JSON, Delete (`Delete`). Right-click is off while the row
 is being renamed, so the name field keeps the browser's own menu. **Import**
-sits beside **New project** in the sidebar footer.
+sits beside **New project** at the top of the sidebar, above the search field;
+the footer holds a banner linking to the GitHub repository.
 
 A menu item that moves focus into a name editor (New, Rename) does not hand
 focus back to the menu trigger as the menu closes — that would blur the editor,
