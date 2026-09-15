@@ -79,9 +79,10 @@ The toolbar's import and export buttons use the same code
 **Project rows in the sidebar.** The ⋯ button and a right-click anywhere on the
 row (a long-press on touch) open the same menu: Rename (`F2`), Duplicate,
 Pin / Unpin, Export as JSON, Delete (`Delete`). Right-click is off while the row
-is being renamed, so the name field keeps the browser's own menu. **Import**
-sits beside **New project** at the top of the sidebar, above the search field;
-the footer holds a banner linking to the GitHub repository.
+is being renamed, so the name field keeps the browser's own menu. Under a **Logits**
+heading, the top of the sidebar is the search field with a ⋯ button beside it, whose menu holds
+**New project** and **Import circuit file…**; the footer holds a banner linking
+to the GitHub repository.
 
 **Selection and the browser's menu.** Text in the app is not selectable, except
 in inputs, textareas, the note editor and an element's docs dialog. The

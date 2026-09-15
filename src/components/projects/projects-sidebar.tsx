@@ -2,6 +2,7 @@
 
 import {
   CircuitBoardIcon,
+  MoreHorizontalIcon,
   PlusIcon,
   SearchIcon,
   UploadIcon,
@@ -9,6 +10,13 @@ import {
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Empty,
   EmptyDescription,
@@ -195,42 +203,51 @@ export default function ProjectsSidebar({
     <Sidebar side="left" collapsible="offcanvas">
       <SidebarHeader className="gap-3">
         <div className="flex items-center gap-2 px-1">
-          <span className="text-sm font-semibold">Projects</span>
+          <span className="text-sm font-semibold">Logits</span>
         </div>
 
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            className="flex-1 justify-start"
-            onClick={create}
-          >
-            <PlusIcon />
-            New project
-          </Button>
-          <Button variant="outline" onClick={importFile}>
-            <UploadIcon />
-            Import
-          </Button>
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <SearchIcon
+              aria-hidden
+              className="pointer-events-none absolute top-1/2 left-2 size-4 -translate-y-1/2 text-muted-foreground"
+            />
+            <SidebarInput
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search projects…"
+              aria-label="Search projects"
+              className="pl-8"
+            />
+          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={<Button variant="outline" size="icon" />}
+              aria-label="Project actions"
+            >
+              <MoreHorizontalIcon />
+            </DropdownMenuTrigger>
+            {/* The trigger is an icon square, so the menu sizes itself rather
+                than taking the trigger's width. */}
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={create}>
+                <PlusIcon />
+                New project
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={importFile}>
+                <UploadIcon />
+                Import circuit file…
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         {error && (
           <p role="alert" className="px-1 text-xs text-destructive">
             {error}
           </p>
         )}
-
-        <div className="relative">
-          <SearchIcon
-            aria-hidden
-            className="pointer-events-none absolute top-1/2 left-2 size-4 -translate-y-1/2 text-muted-foreground"
-          />
-          <SidebarInput
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search projects"
-            aria-label="Search projects"
-            className="pl-8"
-          />
-        </div>
       </SidebarHeader>
 
       <SidebarSeparator className="mx-0" />
