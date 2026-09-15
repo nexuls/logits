@@ -248,7 +248,7 @@ without also clearing the selection behind it.
 ## Feedback
 
 - Wire colour encodes the resolved value: `0` dim, `1` bright/accent, `X` red,
-  `Z` grey-dashed. Multi-bit buses draw thicker and show the value on hover.
+  `Z` grey-dashed. Multi-bit buses draw thicker and write their value on the wire; the **Bus values** preference (Settings → Preferences → Canvas) hides it, leaving only an `X` marker.
   Stroke widths are in screen pixels (`vector-effect: non-scaling-stroke`), so a
   wire is the same weight at every zoom. The value label sits at the middle of
   the wire's *longest* segment, which on a diagonal route is the only place it

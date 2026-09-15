@@ -55,6 +55,8 @@ type Props = {
   showBasicPinLabels: boolean;
   /** Pin names on elements whose pins are told apart only by name. */
   showCompoundPinLabels: boolean;
+  /** The value written on multi-bit wires. */
+  showBusValues: boolean;
   themeKey: string;
   /** Node type armed by the palette, or null. */
   armedType: string | null;
@@ -79,6 +81,7 @@ export default function Editor({
   showMinimap,
   showBasicPinLabels,
   showCompoundPinLabels,
+  showBusValues,
   themeKey,
   armedType,
   armedCount,
@@ -444,6 +447,7 @@ export default function Editor({
           pending={gestures.pendingWire}
           waypointGhost={gestures.waypointGhost}
           band={gestures.band}
+          showBusValues={showBusValues}
         />
         {armedDefinition && gestures.ghostCenters && (
           <GhostLayer

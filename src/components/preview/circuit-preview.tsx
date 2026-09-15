@@ -76,6 +76,8 @@ type Props = {
   showBasicPinLabels?: boolean;
   /** Pin names on elements whose pins are told apart only by name. */
   showCompoundPinLabels?: boolean;
+  /** The value written on multi-bit wires. An `X` is marked either way. */
+  showBusValues?: boolean;
 
   /** Switches, buttons, keypads and the like take input. */
   interactive?: boolean;
@@ -169,6 +171,7 @@ function PreviewSurface({
   showPerformanceMonitor = true,
   showBasicPinLabels = false,
   showCompoundPinLabels = true,
+  showBusValues = true,
   interactive = true,
   pannable = true,
   zoomable = true,
@@ -487,6 +490,7 @@ function PreviewSurface({
             pending={null}
             waypointGhost={null}
             band={null}
+            showBusValues={showBusValues}
           />
           <NodeLayer
             layer="circuit"

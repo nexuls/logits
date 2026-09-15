@@ -20,6 +20,7 @@ const settingsSchema = z.object({
   showMinimap: z.boolean(),
   showBasicPinLabels: z.boolean(),
   showCompoundPinLabels: z.boolean(),
+  showBusValues: z.boolean(),
 });
 
 export type EditorSettings = z.infer<typeof settingsSchema>;
@@ -36,6 +37,7 @@ const DEFAULTS: EditorSettings = {
   // ones where only the name tells `D` from `CLK`. See `NodeDefinition.kind`.
   showBasicPinLabels: false,
   showCompoundPinLabels: true,
+  showBusValues: true,
 };
 
 /** `useLayoutEffect` warns when it runs during SSR, where there is no layout. */

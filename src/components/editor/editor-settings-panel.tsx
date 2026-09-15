@@ -17,7 +17,8 @@ type ToggleProps = {
     | "showGrid"
     | "showMinimap"
     | "showBasicPinLabels"
-    | "showCompoundPinLabels";
+    | "showCompoundPinLabels"
+    | "showBusValues";
   label: string;
   description: string;
   checked: boolean;
@@ -97,6 +98,12 @@ export default function EditorSettingsPanel() {
           label="Minimap"
           description="Overview and zoom controls."
           checked={settings.showMinimap}
+        />
+        <SettingSwitch
+          setting="showBusValues"
+          label="Bus values"
+          description="The value a multi-bit wire carries, written on the wire. An X is marked either way."
+          checked={settings.showBusValues}
         />
       </section>
 

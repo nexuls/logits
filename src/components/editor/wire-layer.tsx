@@ -20,6 +20,8 @@ type Props = {
   waypointGhost: WaypointPreview | null;
   /** Rubber-band box in world coordinates, while one is being dragged. */
   band: Rect | null;
+  /** Write a multi-bit wire's value on it. Off still marks an `X`. */
+  showBusValues: boolean;
 };
 
 /**
@@ -42,6 +44,7 @@ function WireLayer({
   pending,
   waypointGhost,
   band,
+  showBusValues,
 }: Props) {
   const selected = new Set(selectedWireIds);
 
@@ -60,6 +63,7 @@ function WireLayer({
           wire={wire}
           selected={selected.has(id)}
           faulted={faultedWireIds.has(id)}
+          showBusValue={showBusValues}
         />
       ))}
 
@@ -159,6 +163,7 @@ type WireProps = {
   wire: ResolvedWire;
   selected: boolean;
   faulted: boolean;
+  showBusValue: boolean;
 };
 
 /**
@@ -168,7 +173,7 @@ type WireProps = {
  * 1 MHz re-renders this `<g>` and nothing else — the whole point of the
  * `useSyncExternalStore` boundary.
  */
-function Wire({ wire, selected, faulted }: WireProps) {
+function Wire({ wire, selected, faulted, showBusValue }: WireProps) {
   // Both ends are on the same net by construction; either is the wire's value.
   const value = useNetValue(wire.from?.netId ?? wire.to?.netId ?? null);
 
@@ -182,8 +187,16 @@ function Wire({ wire, selected, faulted }: WireProps) {
   const middle = midpoint(wire.points);
 
   // A bus shows its value; a single bit only speaks up when colour alone would
-  // not be enough — an X, or a floating net.
-  const label = bits > 1 ? value || `${bits}b` : valueGlyph(value);
+  // not be enough — an X, or a floating net. With bus values hidden a bus
+  // still gets its X marker, since the stroke colour cannot carry it alone.
+  const label =
+    bits === 1
+      ? valueGlyph(value)
+      : showBusValue
+        ? value || `${bits}b`
+        : value.includes("X")
+          ? "X"
+          : null;
   const baseWidth = bits > 1 ? 5 : 3;
 
   return (

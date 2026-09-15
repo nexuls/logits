@@ -54,6 +54,7 @@ export default function Home() {
             showMinimap={settings.showMinimap}
             showBasicPinLabels={settings.showBasicPinLabels}
             showCompoundPinLabels={settings.showCompoundPinLabels}
+            showBusValues={settings.showBusValues}
             themeKey={theme}
             armedType={pendingType}
             armedCount={pending.count}
