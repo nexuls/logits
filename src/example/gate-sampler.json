@@ -7,8 +7,8 @@
       "id": "n_a",
       "type": "io.switch",
       "position": {
-        "x": 80,
-        "y": 300
+        "x": 70,
+        "y": 340
       },
       "params": {
         "width": 1,
@@ -20,8 +20,8 @@
       "id": "n_b",
       "type": "io.switch",
       "position": {
-        "x": 80,
-        "y": 380
+        "x": 70,
+        "y": 420
       },
       "params": {
         "width": 1,
@@ -34,7 +34,7 @@
       "type": "gate.and",
       "position": {
         "x": 340,
-        "y": 120
+        "y": 130
       },
       "params": {
         "inputs": 2,
@@ -46,7 +46,7 @@
       "type": "io.led",
       "position": {
         "x": 480,
-        "y": 120
+        "y": 130
       },
       "params": {
         "color": "green"
@@ -58,7 +58,7 @@
       "type": "gate.or",
       "position": {
         "x": 340,
-        "y": 200
+        "y": 210
       },
       "params": {
         "inputs": 2,
@@ -70,7 +70,7 @@
       "type": "io.led",
       "position": {
         "x": 480,
-        "y": 200
+        "y": 210
       },
       "params": {
         "color": "green"
@@ -82,7 +82,7 @@
       "type": "gate.xor",
       "position": {
         "x": 340,
-        "y": 280
+        "y": 290
       },
       "params": {
         "inputs": 2,
@@ -94,7 +94,7 @@
       "type": "io.led",
       "position": {
         "x": 480,
-        "y": 280
+        "y": 290
       },
       "params": {
         "color": "green"
@@ -106,7 +106,7 @@
       "type": "gate.nand",
       "position": {
         "x": 340,
-        "y": 360
+        "y": 450
       },
       "params": {
         "inputs": 2,
@@ -118,7 +118,7 @@
       "type": "io.led",
       "position": {
         "x": 480,
-        "y": 360
+        "y": 450
       },
       "params": {
         "color": "green"
@@ -130,7 +130,7 @@
       "type": "gate.nor",
       "position": {
         "x": 340,
-        "y": 440
+        "y": 530
       },
       "params": {
         "inputs": 2,
@@ -142,7 +142,7 @@
       "type": "io.led",
       "position": {
         "x": 480,
-        "y": 440
+        "y": 530
       },
       "params": {
         "color": "green"
@@ -154,7 +154,7 @@
       "type": "gate.xnor",
       "position": {
         "x": 340,
-        "y": 520
+        "y": 610
       },
       "params": {
         "inputs": 2,
@@ -166,12 +166,120 @@
       "type": "io.led",
       "position": {
         "x": 480,
-        "y": 520
+        "y": 610
       },
       "params": {
         "color": "green"
       },
       "label": "A XNOR B"
+    },
+    "n_grp_inputs": {
+      "id": "n_grp_inputs",
+      "type": "deco.group",
+      "position": {
+        "x": 50,
+        "y": 290
+      },
+      "params": {
+        "title": "Inputs",
+        "subtitle": "",
+        "color": "blue",
+        "style": "filled",
+        "fontSize": 11,
+        "carry": true,
+        "width": 8,
+        "height": 21
+      }
+    },
+    "n_grp_plain": {
+      "id": "n_grp_plain",
+      "type": "deco.group",
+      "position": {
+        "x": 320,
+        "y": 70
+      },
+      "params": {
+        "title": "Plain gates",
+        "subtitle": "Each answers 1 under its own rule",
+        "color": "green",
+        "style": "filled",
+        "fontSize": 11,
+        "carry": true,
+        "width": 23,
+        "height": 30
+      }
+    },
+    "n_grp_bubbled": {
+      "id": "n_grp_bubbled",
+      "type": "deco.group",
+      "position": {
+        "x": 320,
+        "y": 390
+      },
+      "params": {
+        "title": "Bubbled gates",
+        "subtitle": "The same three with the answer flipped",
+        "color": "amber",
+        "style": "filled",
+        "fontSize": 11,
+        "carry": true,
+        "width": 23,
+        "height": 30
+      }
+    },
+    "n_note_try": {
+      "id": "n_note_try",
+      "type": "deco.text",
+      "position": {
+        "x": 610,
+        "y": 110
+      },
+      "params": {
+        "text": "## Try it\nFlip **A** and **B**. Every gate on the left sees\nexactly the same two inputs, so the six lamps are\ntheir truth tables, read one row at a time.",
+        "format": "markdown",
+        "fontSize": 12,
+        "align": "left",
+        "color": "default",
+        "background": "none",
+        "width": 30,
+        "height": 9
+      }
+    },
+    "n_note_bubbles": {
+      "id": "n_note_bubbles",
+      "type": "deco.text",
+      "position": {
+        "x": 610,
+        "y": 230
+      },
+      "params": {
+        "text": "### About those bubbles\nThe lower three gates are the upper three with a\nbubble on the output, and a bubble means *invert*.\n**NAND**, **NOR** and **XNOR** always answer the\nopposite way to the gate above them.\n\nSet **A** and **B** the same and you can watch it:\nevery lamp on the left goes dark exactly when its\npartner on the right lights up.",
+        "format": "markdown",
+        "fontSize": 12,
+        "align": "left",
+        "color": "default",
+        "background": "none",
+        "width": 30,
+        "height": 15
+      }
+    },
+    "n_grp_all": {
+      "id": "n_grp_all",
+      "type": "deco.group",
+      "position": {
+        "x": 30,
+        "y": 0
+      },
+      "params": {
+        "title": "Gate sampler",
+        "subtitle": "Every basic gate driven by the same two switches",
+        "color": "teal",
+        "style": "filled",
+        "fontSize": 16,
+        "carry": true,
+        "width": 90,
+        "height": 71
+      }
     }
   },
   "wires": {
