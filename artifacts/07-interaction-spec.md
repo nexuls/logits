@@ -66,6 +66,7 @@ open circuit; items that need one are disabled when none is open.
 | New project | Creates a project, opens it, and puts the header title into rename |
 | Rename | Puts the header title into rename (double-click on the title does the same) |
 | Duplicate | Copies the open circuit, unsaved edits included, into a new project and opens it. On an example it reads **Save to projects** and does what the sidebar's import does |
+| Set view as origin | Shifts every node and wire bend by the current pan offset (snapped to the grid) and pans the view back by the same amount, so nothing moves on screen but **Reset view** now returns here. One undo step; undo moves the circuit back but leaves the view where it is |
 | Import / Export → Import circuit file… | Picks a `.json` file and adds it as a **new project** with a fresh id, then opens it. It never replaces the open circuit: a file exported from this browser carries its source project's id, and loading it under that id would overwrite that project on the next autosave |
 | Import / Export → Export as JSON | Downloads the open circuit as `<name>.logits.json` |
 | Settings → Preferences… / Project settings… | Opens the settings dialog on that tab |

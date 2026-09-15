@@ -12,6 +12,7 @@ import {
   downloadCircuit,
   importCircuitFile,
 } from "@/components/projects/project-actions";
+import { snapPointToGrid } from "@/lib/circuit/geometry";
 import type { Point } from "@/lib/circuit/schema";
 import { subcircuitLookup } from "@/lib/circuit/subcircuit";
 import type { NodeDefinition } from "@/lib/nodes/define";
@@ -21,6 +22,7 @@ import {
   openDocument,
   placeNode,
   renameOpenDocument,
+  shiftOpenDocument,
   useDocument,
   useIsEphemeral,
 } from "@/state/document";
@@ -267,6 +269,26 @@ export default function Editor({
     notify(ephemeral ? "Saved to your projects." : "Duplicated.");
   };
 
+  // Moves the circuit by the view's offset and pans the view back by the same
+  // amount, so nothing jumps on screen but "reset view" now lands here. The
+  // shift is snapped so nodes stay on the grid; the view keeps the sub-grid
+  // remainder, which is why it pans by the snapped delta and not to zero.
+  const setViewAsOrigin = () => {
+    if (!document) return;
+    const { scale, offset } = viewport;
+    const worldDelta = snapPointToGrid({
+      x: offset.x / scale,
+      y: offset.y / scale,
+    });
+    if (worldDelta.x === 0 && worldDelta.y === 0) {
+      notify("The view is already at the origin.");
+      return;
+    }
+    shiftOpenDocument(worldDelta);
+    viewport.panBy(-worldDelta.x * scale, -worldDelta.y * scale);
+    notify("This view is now the origin.");
+  };
+
   const importFile = () =>
     importCircuitFile((result) => {
       notify(result.message);
@@ -310,6 +332,7 @@ export default function Editor({
             onNewProject={newProject}
             onRename={() => setTitleEditing(true)}
             onDuplicate={duplicateOpen}
+            onSetViewAsOrigin={setViewAsOrigin}
             onImport={importFile}
             onExport={exportOpen}
             onOpenSettings={openSettings}

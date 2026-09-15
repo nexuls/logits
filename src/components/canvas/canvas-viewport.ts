@@ -22,12 +22,18 @@ import type { Point } from "@/lib/circuit/schema";
 export type CanvasViewport = Viewport & {
   /** Client (page) coordinates to world coordinates. */
   toWorld: (client: Point) => Point;
+  /**
+   * Pans the view by a screen-space delta. The one way for a consumer to move
+   * the transform, so it still has a single owner.
+   */
+  panBy: (screenDx: number, screenDy: number) => void;
 };
 
 export const IDENTITY_VIEWPORT: CanvasViewport = {
   scale: 1,
   offset: { x: 0, y: 0 },
   toWorld: (client) => client,
+  panBy: () => {},
 };
 
 /**
@@ -37,9 +43,11 @@ export const IDENTITY_VIEWPORT: CanvasViewport = {
 export function createCanvasViewport(
   view: Viewport,
   element: { current: HTMLElement | null },
+  panBy: CanvasViewport["panBy"],
 ): CanvasViewport {
   return {
     ...view,
+    panBy,
     toWorld: (client) => {
       // Read through the ref at call time, not captured: the element is null
       // on the first render, and a viewport built then would convert against

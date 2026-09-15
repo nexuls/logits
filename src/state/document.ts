@@ -26,6 +26,7 @@ import {
   setNodeLabel,
   setNodeLabelPosition,
   topLeftForCenter,
+  translateDocument,
   type WireTap,
 } from "@/lib/circuit/commands";
 import { rotateSize, type Size } from "@/lib/circuit/geometry";
@@ -327,6 +328,11 @@ export function moveSelection(
     (document) => moveNodes(document, nodeIds, delta, moveOptions),
     { coalesce },
   );
+}
+
+/** Shifts the whole open circuit — one undo step, like any other move. */
+export function shiftOpenDocument(delta: Point): boolean {
+  return apply("shift", (document) => translateDocument(document, delta));
 }
 
 export function rotateSelection(

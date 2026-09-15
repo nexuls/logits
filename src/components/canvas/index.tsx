@@ -132,6 +132,7 @@ export default function Canvas({
     // onDoubleClick,
     zoomIn,
     zoomOut,
+    panBy,
     resetView,
   } = useCanvasMouseActions({
     viewportRef,
@@ -179,8 +180,8 @@ export default function Canvas({
   // Rebuilt whenever the transform moves, because consumers convert pointer
   // positions with it and a stale closure would place a node in the wrong spot.
   const viewport = useMemo(
-    () => createCanvasViewport({ scale, offset }, viewportRef),
-    [scale, offset],
+    () => createCanvasViewport({ scale, offset }, viewportRef, panBy),
+    [scale, offset, panBy],
   );
 
   useEffect(() => {

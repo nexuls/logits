@@ -250,6 +250,10 @@ export function useCanvasMouseActions({
     zoomByFactor(1 / TOOLBAR_ZOOM_FACTOR);
   }, [zoomByFactor]);
 
+  const panBy = useCallback((screenDx: number, screenDy: number) => {
+    setViewState((prev) => panByScreen(prev, screenDx, screenDy));
+  }, []);
+
   const resetView = useCallback(() => {
     setViewState({
       scale: initialScale,
@@ -467,6 +471,7 @@ export function useCanvasMouseActions({
     onDoubleClick,
     zoomIn,
     zoomOut,
+    panBy,
     resetView,
   };
 }

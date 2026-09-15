@@ -23,6 +23,7 @@ import {
   setNodeParams,
   setWireWaypoints,
   topLeftForCenter,
+  translateDocument,
 } from "./commands";
 import { DEFAULT_SCALE, MAX_SCALE, MIN_SCALE } from "./coords";
 import { createEmptyDocument } from "./io";
@@ -175,6 +176,22 @@ describe("moveNodes", () => {
   it("ignores ids that are not in the document", () => {
     const { document } = addNode(doc, and, { position: { x: 0, y: 0 } });
     expect(moveNodes(document, ["nope"], { x: 10, y: 10 })).toBe(document);
+  });
+
+  it("translateDocument moves every node and every bend", () => {
+    const { document, andId, ledId, wireId } = wiredPair();
+    const bent = setWireWaypoints(document, wireId, [{ x: 50, y: 40 }]);
+
+    const moved = translateDocument(bent, { x: -20, y: 30 });
+
+    expect(moved.nodes[andId].position.x).toBe(
+      bent.nodes[andId].position.x - 20,
+    );
+    expect(moved.nodes[ledId].position.y).toBe(
+      bent.nodes[ledId].position.y + 30,
+    );
+    expect(moved.wires[wireId].waypoints).toEqual([{ x: 30, y: 70 }]);
+    expect(translateDocument(bent, { x: 0, y: 0 })).toBe(bent);
   });
 
   it("carries the bends of a wire whose both ends move", () => {

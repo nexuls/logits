@@ -6,6 +6,7 @@ import {
   CopyIcon,
   DownloadIcon,
   KeyboardIcon,
+  LocateFixedIcon,
   MoreHorizontalIcon,
   PencilIcon,
   PlusIcon,
@@ -38,6 +39,7 @@ type Props = {
   onNewProject: () => void;
   onRename: () => void;
   onDuplicate: () => void;
+  onSetViewAsOrigin: () => void;
   onImport: () => void;
   onExport: () => void;
   onOpenSettings: (section: SettingsSection) => void;
@@ -52,6 +54,7 @@ export default function ProjectMenu({
   onNewProject,
   onRename,
   onDuplicate,
+  onSetViewAsOrigin,
   onImport,
   onExport,
   onOpenSettings,
@@ -101,6 +104,10 @@ export default function ProjectMenu({
         <DropdownMenuItem onClick={onDuplicate} disabled={!hasDocument}>
           <CopyIcon />
           {ephemeral ? "Save to projects" : "Duplicate"}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onSetViewAsOrigin} disabled={!hasDocument}>
+          <LocateFixedIcon />
+          Set view as origin
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />

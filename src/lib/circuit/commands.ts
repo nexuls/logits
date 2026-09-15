@@ -135,6 +135,23 @@ export function moveNodes(
 }
 
 /**
+ * Moves the whole circuit — every node and every bend — by a world-space delta.
+ *
+ * What "set view as origin" is made of: the editor shifts the content by the
+ * view's offset and pans the view back by the same amount, so nothing moves on
+ * screen but the origin now sits where the user was looking. It is `moveNodes`
+ * over everything, which already carries every wire whole because both ends of
+ * every wire are moving.
+ */
+export function translateDocument(
+  document: CircuitDocument,
+  delta: Point,
+  options: { snap?: boolean } = {},
+): CircuitDocument {
+  return moveNodes(document, Object.keys(document.nodes), delta, options);
+}
+
+/**
  * The wires that travel with a move of `nodeIds` rather than stretching: both
  * ends land on moving nodes, or — for a branch — its `from` taps a wire that is
  * itself travelling, since that anchor's position moves with the tapped bend.

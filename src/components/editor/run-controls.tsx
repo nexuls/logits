@@ -149,7 +149,7 @@ export default function RunControls({
             render={
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 aria-label={`Simulation speed: ${speedLabel}`}
                 className="ml-1 font-mono text-xs tabular-nums"
