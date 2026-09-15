@@ -40,6 +40,7 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "@/components/ui/toast";
 import type { ProjectMeta } from "@/lib/circuit/schema";
 import {
   type CreateResult,
@@ -55,6 +56,7 @@ import DeleteProjectDialog from "./delete-project-dialog";
 import ExamplesDialog from "./examples-dialog";
 import GithubStarBanner from "./github-star-banner";
 import {
+  copyProjectLink,
   duplicateProject,
   exportProject,
   importCircuitFile,
@@ -165,6 +167,16 @@ export default function ProjectsSidebar({
                     setError("That project could not be read.");
                   }
                 }}
+                onCopyLink={() =>
+                  // A toast, not the sidebar's error line: success has nowhere
+                  // else to show, and the row may be for a project not open.
+                  copyProjectLink(project.id).then((result) =>
+                    toast.add({
+                      title: result.message,
+                      type: result.ok ? "success" : "error",
+                    }),
+                  )
+                }
                 onRequestDelete={() => setPendingDelete(project)}
               />
             ))}

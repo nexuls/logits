@@ -9,6 +9,7 @@ import {
 } from "@/components/canvas/canvas-viewport";
 import DeleteProjectDialog from "@/components/projects/delete-project-dialog";
 import {
+  copyCircuitLink,
   downloadCircuit,
   importCircuitFile,
 } from "@/components/projects/project-actions";
@@ -42,6 +43,7 @@ import PerformanceMonitor from "./performance-monitor";
 import ProjectMenu from "./project-menu";
 import RunControls from "./run-controls";
 import SettingsDialog, { type SettingsSection } from "./settings-dialog";
+import ShareButton from "./share-button";
 import { useEditorGestures } from "./use-editor-gestures";
 import { useEditorShortcuts } from "./use-editor-shortcuts";
 import { useViewPersistence } from "./use-view-persistence";
@@ -303,6 +305,13 @@ export default function Editor({
     if (document) downloadCircuit(document);
   };
 
+  // The document in the editor, so an example and unsaved edits are shared
+  // as they are on screen.
+  const shareOpen = () => {
+    if (document)
+      copyCircuitLink(document).then(({ message }) => notify(message));
+  };
+
   const openSettings = (section: SettingsSection) => {
     setSettingsSection(section);
     setSettingsOpen(true);
@@ -339,6 +348,7 @@ export default function Editor({
             onSetViewAsOrigin={setViewAsOrigin}
             onImport={importFile}
             onExport={exportOpen}
+            onCopyLink={shareOpen}
             onOpenSettings={openSettings}
             onOpenShortcuts={() => setShortcutsOpen(true)}
             onDelete={() =>
@@ -371,6 +381,8 @@ export default function Editor({
               onExport={exportOpen}
               onNotice={notify}
             />
+
+            <ShareButton disabled={document === null} onShare={shareOpen} />
 
             {/* One column for the bottom-right corner, so the diagnostics
                 panel stacks above the performance monitor instead of both

@@ -33,6 +33,7 @@ type Props = {
   onTogglePin: () => void;
   onDuplicate: () => void;
   onExport: () => void;
+  onCopyLink: () => void;
   onRequestDelete: () => void;
 };
 
@@ -46,6 +47,7 @@ export default function ProjectItem({
   onTogglePin,
   onDuplicate,
   onExport,
+  onCopyLink,
   onRequestDelete,
 }: Props) {
   // Rename puts focus in the name editor. A menu hands focus back to its
@@ -69,6 +71,7 @@ export default function ProjectItem({
       onTogglePin={onTogglePin}
       onDuplicate={onDuplicate}
       onExport={onExport}
+      onCopyLink={onCopyLink}
       onRequestDelete={onRequestDelete}
     />
   );

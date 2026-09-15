@@ -72,6 +72,11 @@ Pressing anywhere in a preview focuses it, so its keys work straight after a
 click. With both `pannable` and `zoomable` off the wheel and touch go back to
 the page, so a fixed preview does not trap the scroll passing over it.
 
+`/preview?data=<base64>` is a preview on a page of its own, for embedding in an
+`<iframe>`: the whole frame, running on open, with the header, run controls and
+diagnostics and without the performance monitor. A missing or unreadable
+`data` shows a one-line explanation instead of a canvas.
+
 ## Menus (built)
 
 **Canvas header menu** (the ⋯ beside the title,
@@ -86,6 +91,7 @@ open circuit; items that need one are disabled when none is open.
 | Set view as origin | Shifts every node and wire bend by the current pan offset (snapped to the grid) and pans the view back by the same amount, so nothing moves on screen but **Reset view** now returns here. One undo step; undo moves the circuit back but leaves the view where it is |
 | Import / Export → Import circuit file… | Picks a `.json` file and adds it as a **new project** with a fresh id, then opens it. It never replaces the open circuit: a file exported from this browser carries its source project's id, and loading it under that id would overwrite that project on the next autosave |
 | Import / Export → Export as JSON | Downloads the open circuit as `<name>.logits.json` |
+| Copy link | Copies the open circuit's embeddable `/preview?data=` link, unsaved edits included. A snapshot: later edits need a new link. Same as the **Share** button |
 | Settings → Preferences… / Project settings… | Opens the settings dialog on that tab |
 | Keyboard shortcuts | Opens the shortcuts dialog (also `?`) |
 | Delete project | Asks for confirmation, then deletes. Disabled on an example |
@@ -93,9 +99,14 @@ open circuit; items that need one are disabled when none is open.
 The toolbar's import and export buttons use the same code
 ([project-actions.ts](../src/components/projects/project-actions.ts)).
 
+**Share** ([share-button.tsx](../src/components/editor/share-button.tsx)) sits
+in the canvas's top-right corner, level with the toolbar, and does what
+**Copy link** does; the result shows in the editor's notice. Below `md` it moves
+left of the elements-sidebar trigger and shows only its icon.
+
 **Project rows in the sidebar.** The ⋯ button and a right-click anywhere on the
 row (a long-press on touch) open the same menu: Rename (`F2`), Duplicate,
-Pin / Unpin, Export as JSON, Delete (`Delete`). Right-click is off while the row
+Pin / Unpin, Export as JSON, Copy link (reported in a toast), Delete (`Delete`). Right-click is off while the row
 is being renamed, so the name field keeps the browser's own menu. Under a **Logits**
 heading, the top of the sidebar is the search field with a ⋯ button beside it, whose menu holds
 **New project**, **Import circuit file…** and **Browse examples…**; the footer

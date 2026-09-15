@@ -1,5 +1,6 @@
 import {
   deserialize,
+  encodeShareParam,
   FILE_EXTENSION,
   FILE_MIME_TYPE,
   serialize,
@@ -44,6 +45,37 @@ export function exportProject(id: string): boolean {
   if (!document) return false;
   downloadCircuit(document);
   return true;
+}
+
+export type CopyLinkResult = { ok: boolean; message: string };
+
+export function copyProjectLink(id: string): Promise<CopyLinkResult> {
+  const document = projectDocument(id);
+  if (!document) {
+    return Promise.resolve({
+      ok: false,
+      message: "That project could not be read.",
+    });
+  }
+  return copyCircuitLink(document);
+}
+
+/**
+ * Puts the circuit's `/preview` link on the clipboard. The link carries the
+ * whole document, so it shows the circuit as it is now and does not follow
+ * later edits.
+ */
+export async function copyCircuitLink(
+  document: CircuitDocument,
+): Promise<CopyLinkResult> {
+  try {
+    const url = `${window.location.origin}/preview?data=${encodeShareParam(document)}`;
+    await navigator.clipboard.writeText(url);
+    return { ok: true, message: "Link copied." };
+  } catch {
+    // No clipboard outside a secure context, or permission refused.
+    return { ok: false, message: "The link could not be copied." };
+  }
 }
 
 export function downloadCircuit(document: CircuitDocument): void {

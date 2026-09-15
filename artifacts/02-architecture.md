@@ -31,7 +31,7 @@ one, that is a design error — pass it in as an argument.
 
 | Path | Contents | Status |
 | --- | --- | --- |
-| `src/app/` | Next.js App Router entry. The editor is one route; keep page files thin. | Built |
+| `src/app/` | Next.js App Router entry. The editor is one route and `/preview` (an embeddable `CircuitPreview`) the other; keep page files thin. | Built |
 | `src/components/canvas/` | Viewport only: pan, zoom, grid, minimap. Knows nothing about logic. | Built |
 | `src/components/editor/` | Palette, toolbar, inspector (a popover on the canvas, anchored to the selection), node layer, wire layer, gestures, command menu, diagnostics, performance monitor, the palette's per-element info dialog. | Built |
 | `src/components/preview/` | `CircuitPreview`: a circuit that runs and can be operated but not edited, for embedding. Reuses the canvas, both layers, the simulation controls, diagnostics and the performance monitor; owns its own simulation and its own copy of the circuit. Every chrome element and gesture is a prop. | Built |

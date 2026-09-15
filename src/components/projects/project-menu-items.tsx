@@ -3,6 +3,7 @@
 import {
   CopyIcon,
   DownloadIcon,
+  LinkIcon,
   PencilIcon,
   PinIcon,
   PinOffIcon,
@@ -44,6 +45,8 @@ type Props = {
   onTogglePin: () => void;
   onDuplicate: () => void;
   onExport: () => void;
+  /** Copies the project's embeddable `/preview` link. */
+  onCopyLink: () => void;
   onRequestDelete: () => void;
 };
 
@@ -55,6 +58,7 @@ export default function ProjectMenuItems({
   onTogglePin,
   onDuplicate,
   onExport,
+  onCopyLink,
   onRequestDelete,
 }: Props) {
   const { Item, Separator, Shortcut } = PARTS[menu];
@@ -78,6 +82,10 @@ export default function ProjectMenuItems({
       <Item onClick={onExport}>
         <DownloadIcon />
         Export as JSON
+      </Item>
+      <Item onClick={onCopyLink}>
+        <LinkIcon />
+        Copy link
       </Item>
       <Separator />
       <Item variant="destructive" onClick={onRequestDelete}>

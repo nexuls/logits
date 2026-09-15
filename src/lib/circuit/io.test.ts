@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   CURRENT_VERSION,
   createEmptyDocument,
+  decodeShareParam,
   deserialize,
+  encodeShareParam,
   fromJson,
   type LoadIssueCode,
   serialize,
@@ -219,5 +221,38 @@ describe("defaultZoom", () => {
     expect(loaded.ok && loaded.document.version).toBe(CURRENT_VERSION);
     expect(loaded.ok && loaded.document.defaultZoom).toBeUndefined();
     expect(loaded.ok && Object.keys(loaded.document.wires)).toEqual(["w_1"]);
+  });
+});
+
+describe("share param", () => {
+  it("round-trips a document, including non-Latin-1 text", () => {
+    const document = { ...documentFixture(), name: "Addierer — ½ ✓" };
+    const encoded = encodeShareParam(document);
+
+    expect(encoded).toMatch(/^[A-Za-z0-9_-]+$/);
+    const loaded = decodeShareParam(encoded);
+    expect(loaded.ok && loaded.document).toEqual(document);
+  });
+
+  it("accepts plain base64, padded or not, with + decoded to a space", () => {
+    const document = { ...documentFixture(), name: "~~~>>>???" };
+    const base64 = btoa(serialize(document));
+    expect(base64).toMatch(/[+/=]/);
+
+    for (const text of [
+      base64,
+      base64.replace(/=+$/, ""),
+      base64.replace(/\+/g, " "),
+    ]) {
+      const loaded = decodeShareParam(text);
+      expect(loaded.ok && loaded.document.name).toBe(document.name);
+    }
+  });
+
+  it("reports bad base64 and bad JSON as issues rather than throwing", () => {
+    expect(codes(decodeShareParam("%%%").issues)).toEqual(["invalid-encoding"]);
+    expect(codes(decodeShareParam(btoa("{not json")).issues)).toEqual([
+      "invalid-json",
+    ]);
   });
 });

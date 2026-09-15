@@ -68,6 +68,7 @@ function migrate_3_to_4(doc: Record<string, unknown>): Record<string, unknown> {
 }
 
 export type LoadIssueCode =
+  | "invalid-encoding"
   | "invalid-json"
   | "not-an-object"
   | "missing-version"
@@ -127,6 +128,48 @@ export function deserialize(text: string): LoadResult {
     };
   }
   return fromJson(raw);
+}
+
+/**
+ * A document as a URL-safe base64 string, for `/preview?data=`. Base64url with
+ * no padding, so it needs no percent-encoding; the JSON goes through UTF-8
+ * first because `btoa` only takes Latin-1 and a name or note can be anything.
+ */
+export function encodeShareParam(document: CircuitDocument): string {
+  const bytes = new TextEncoder().encode(serialize(document));
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+/**
+ * `deserialize` for an `encodeShareParam` string. Accepts plain base64 too,
+ * since a hand-built link will use it — including the `+` a query string has
+ * already decoded to a space — and padding or its absence.
+ */
+export function decodeShareParam(text: string): LoadResult {
+  const normalized = text
+    .trim()
+    .replace(/[-\s]/g, "+")
+    .replace(/_/g, "/")
+    .replace(/=+$/, "");
+  let json: string;
+  try {
+    const binary = atob(
+      normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "="),
+    );
+    const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+    json = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    return {
+      ok: false,
+      issues: [{ code: "invalid-encoding", message: "Not valid base64 data" }],
+    };
+  }
+  return deserialize(json);
 }
 
 /** `deserialize` for a value that has already been through `JSON.parse`. */

@@ -6,6 +6,7 @@ import {
   CopyIcon,
   DownloadIcon,
   KeyboardIcon,
+  LinkIcon,
   LocateFixedIcon,
   MoreHorizontalIcon,
   PencilIcon,
@@ -42,6 +43,8 @@ type Props = {
   onSetViewAsOrigin: () => void;
   onImport: () => void;
   onExport: () => void;
+  /** Copies the embeddable `/preview` link — the same as the Share button. */
+  onCopyLink: () => void;
   onOpenSettings: (section: SettingsSection) => void;
   onOpenShortcuts: () => void;
   onDelete: () => void;
@@ -57,6 +60,7 @@ export default function ProjectMenu({
   onSetViewAsOrigin,
   onImport,
   onExport,
+  onCopyLink,
   onOpenSettings,
   onOpenShortcuts,
   onDelete,
@@ -128,6 +132,11 @@ export default function ProjectMenu({
             </DropdownMenuItem>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
+
+        <DropdownMenuItem onClick={onCopyLink} disabled={!hasDocument}>
+          <LinkIcon />
+          Copy link
+        </DropdownMenuItem>
 
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>
