@@ -66,7 +66,7 @@ two pieces of chrome would genuinely collide, measured, not a device size.
 
 | Canvas width | What changes |
 | --- | --- |
-| `< 64rem` | **The toolbar turns on its side**: it leaves the top row, which the header and the share / elements buttons already hold, and becomes a rail down the right edge, centred in the band between them and the bottom. Its rules turn with it, and the simulated-time readout drops (decorative, already `aria-hidden`, and 5rem wide — in the rail it would set the width of the whole thing). The header is capped at 20rem less the 8rem those buttons take; at `64rem` and up it is capped at 16rem instead, to stay clear of the centred toolbar. The bottom-right column insets to clear the rail |
+| `< 64rem` | **The toolbar turns on its side**: it leaves the top row, which the header and the share / elements buttons already hold, and becomes a rail down the right edge, **one icon wide**, centred in the band between them and the bottom chrome. Everything in it becomes a square icon button: the speed control shows a gauge (its value stays in the tooltip, in `aria-label` and checked in the menu), the diagnostics count drops to its tooltip, the rules turn with the bar, and the simulated-time readout goes (decorative, already `aria-hidden`). The header is capped at 20rem less the 8rem those buttons take; at `64rem` and up it is capped at 16rem instead, to stay clear of the centred toolbar |
 | `< 48rem` | The performance monitor (26rem) and its toolbar toggle hide — it cannot share the bottom edge with the minimap (11rem) and the rail (~7.5rem), and the minimap wins because it carries the zoom controls. The diagnostics panel and the notice toast lift above the minimap band |
 
 The toolbar scrolls along its own axis rather than bursting its box or
@@ -76,7 +76,14 @@ overlapping.
 
 `Separator` takes its `orientation` at render, so the rail's rules are turned
 in CSS by `ToolbarSeparator` — with `!`, which is what beats the primitive's
-own `data-vertical:` sizing.
+own `data-vertical:` sizing. The square-button overrides in the rail use `!`
+for the same reason, against `buttonVariants`.
+
+The rail stops short of the bottom rather than the bottom chrome stepping
+aside for it, so the status bar and the minimap stay **flush in their corners**,
+which is the shape they are drawn for. Only what opens *upward* into the rail's
+band insets to clear it: the diagnostics panel, and the performance monitor
+once expanded.
 
 Touch and small screens remain out of scope ([01-product-spec.md](01-product-spec.md)):
 what is defended here is that the layout holds, not that the app is usable with

@@ -32,7 +32,10 @@ export default function DiagnosticsPanel({ onClose, onFocusElements }: Props) {
   const diagnostics = useDiagnostics();
 
   return (
-    <div className="pointer-events-auto mr-2 flex max-h-64 min-h-0 w-96 max-w-[calc(100%-1rem)] flex-col rounded-lg border border-border bg-sidebar shadow-lg">
+    // It opens upward into the band the toolbar rail occupies, so where the
+    // bar is a rail it steps in to clear it. The status bar below it stays
+    // flush: the rail stops short of the bottom.
+    <div className="pointer-events-auto mr-2 flex max-h-64 min-h-0 w-96 max-w-[calc(100%-1rem)] flex-col rounded-lg border border-border bg-sidebar shadow-lg @max-[64rem]/canvas:mr-16">
       <div className="flex items-center gap-2 border-b border-border px-3 py-2">
         <h2 className="flex-1 text-xs font-semibold">
           Diagnostics

@@ -453,7 +453,7 @@ function PreviewSurface({
 
               {/* The editor's corner column: diagnostics stacked above the
                   monitor, passing presses through where it is empty. */}
-              <div className="pointer-events-none absolute top-14 right-0 bottom-0 z-20 flex flex-col items-end justify-end gap-2 @max-[64rem]/canvas:right-34 @max-[48rem]/canvas:bottom-36">
+              <div className="pointer-events-none absolute top-14 right-0 bottom-0 z-20 flex flex-col items-end justify-end gap-2 @max-[48rem]/canvas:bottom-36">
                 {showDiagnostics && diagnosticsOpen && (
                   <DiagnosticsPanel onClose={() => setDiagnosticsOpen(false)} />
                 )}

@@ -4,6 +4,7 @@ import {
   ActivityIcon,
   AlertTriangleIcon,
   ChevronDownIcon,
+  GaugeIcon,
   PauseIcon,
   PlayIcon,
   RotateCcwIcon,
@@ -138,12 +139,17 @@ export default function SimulationControls({
                   variant="outline"
                   size="sm"
                   aria-label={`Simulation speed: ${speedLabel}`}
-                  // The left margin separates it from the buttons beside it;
-                  // in the rail there is nothing beside it to separate from.
-                  className="ml-1 font-mono text-xs tabular-nums @max-[64rem]/canvas:ml-0"
+                  // One icon wide in the rail, like everything else there: the
+                  // label is the widest thing in the bar and would set the
+                  // width of the whole rail. The value is still in the
+                  // tooltip, in `aria-label`, and checked in the menu itself.
+                  className="ml-1 font-mono text-xs tabular-nums @max-[64rem]/canvas:ml-0 @max-[64rem]/canvas:h-8! @max-[64rem]/canvas:w-8! @max-[64rem]/canvas:justify-center @max-[64rem]/canvas:px-0!"
                 >
-                  {speedLabel}
-                  <ChevronDownIcon className="text-muted-foreground" />
+                  <GaugeIcon className="hidden @max-[64rem]/canvas:block" />
+                  <span className="@max-[64rem]/canvas:hidden">
+                    {speedLabel}
+                  </span>
+                  <ChevronDownIcon className="text-muted-foreground @max-[64rem]/canvas:hidden" />
                 </Button>
               }
             />
@@ -200,11 +206,13 @@ export function Toolbar({
         // a narrow canvas beside the header and the share / elements buttons.
         // Below 64rem it turns on its side and becomes a rail down the right
         // edge, where the canvas has height to spare and nothing else sits.
-        "@max-[64rem]/canvas:top-14 @max-[64rem]/canvas:bottom-4 @max-[64rem]/canvas:left-auto @max-[64rem]/canvas:right-2 @max-[64rem]/canvas:translate-x-0 @max-[64rem]/canvas:flex-col @max-[64rem]/canvas:max-w-none",
-        // Centred in the band between the top row and the bottom edge, and
+        "@max-[64rem]/canvas:top-14 @max-[64rem]/canvas:bottom-14 @max-[64rem]/canvas:left-auto @max-[64rem]/canvas:right-2 @max-[64rem]/canvas:translate-x-0 @max-[64rem]/canvas:flex-col @max-[64rem]/canvas:max-w-none",
+        // Centred in the band between the top row and the bottom chrome, and
         // capped to it: `h-fit` with both insets and `my-auto` centres the
-        // rail, `max-h` keeps a tall one from running past the bottom.
-        "@max-[64rem]/canvas:my-auto @max-[64rem]/canvas:h-fit @max-[64rem]/canvas:max-h-[calc(100%-4.5rem)] @max-[64rem]/canvas:overflow-y-auto",
+        // rail, `max-h` keeps a tall one from running past the band. The
+        // bottom inset is what keeps it off the status bar and the minimap,
+        // so those two can stay flush in their corners.
+        "@max-[64rem]/canvas:my-auto @max-[64rem]/canvas:h-fit @max-[64rem]/canvas:max-h-[calc(100%-7rem)] @max-[64rem]/canvas:overflow-y-auto",
         // Narrower (or shorter) than its contents it scrolls rather than
         // bursting its box or squashing the buttons into slivers.
         "overflow-x-auto *:shrink-0",
@@ -278,10 +286,17 @@ export function DiagnosticsToggle({
         onClick={onToggle}
         aria-pressed={pressed}
         aria-label={`Diagnostics: ${errorCount} errors, ${warningCount} warnings`}
-        className={cn(errorCount > 0 && "text-destructive")}
+        className={cn(
+          errorCount > 0 && "text-destructive",
+          // Icon only in the rail. The count is still in the tooltip and in
+          // `aria-label`, and an error still colours the icon.
+          "@max-[64rem]/canvas:h-8! @max-[64rem]/canvas:w-8! @max-[64rem]/canvas:justify-center @max-[64rem]/canvas:px-0!",
+        )}
       >
         <AlertTriangleIcon />
-        {problems > 0 ? problems : "OK"}
+        <span className="@max-[64rem]/canvas:hidden">
+          {problems > 0 ? problems : "OK"}
+        </span>
       </Button>
     </ToolbarTooltip>
   );

@@ -388,10 +388,13 @@ export default function Editor({
                 panel stacks above the performance monitor instead of both
                 claiming the corner. It passes presses through where it is
                 empty; its children opt back in. */}
-            {/* Inset from the right below 64rem, where the toolbar rail holds
-                that edge, and lifted off the bottom below 48rem, where the
-                minimap holds that corner. */}
-            <div className="pointer-events-none absolute top-14 right-0 bottom-0 z-20 flex flex-col items-end justify-end gap-2 @max-[64rem]/canvas:right-34 @max-[48rem]/canvas:bottom-36">
+            {/* Flush in the corner at every width — the status bar is drawn to
+                sit there. The toolbar rail stops short of the bottom rather
+                than this stepping aside for it; only the panels that open
+                upward into the rail's band inset, and they do it themselves.
+                Lifted off the bottom below 48rem, where the minimap has the
+                corner to itself. */}
+            <div className="pointer-events-none absolute top-14 right-0 bottom-0 z-20 flex flex-col items-end justify-end gap-2 @max-[48rem]/canvas:bottom-36">
               {diagnosticsOpen && (
                 <DiagnosticsPanel
                   onClose={() => setDiagnosticsOpen(false)}

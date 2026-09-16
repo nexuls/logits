@@ -54,7 +54,13 @@ export default function PerformanceMonitor({ expanded, onToggle }: Props) {
         // query, so nothing is orphaned.
         "@max-[48rem]/canvas:hidden",
         "transition-[width,border-radius] duration-300 ease-out motion-reduce:transition-none",
-        expanded ? "w-120 rounded-tl-xl" : "w-104 rounded-tl-lg",
+        // Flush in the corner while it is just the status line — that is the
+        // shape it is drawn for, and the rail stops short of the bottom to
+        // leave it there. Expanded it grows up into the rail's band, so at
+        // those widths it steps in to clear it.
+        expanded
+          ? "w-120 rounded-tl-xl @max-[64rem]/canvas:mr-16"
+          : "w-104 rounded-tl-lg",
       )}
     >
       <div
