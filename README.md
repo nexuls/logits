@@ -162,7 +162,7 @@ Built with Next.js 16, React 19, TypeScript strict, Tailwind v4 and Bun.
 ## License
 
 Logits is **source-available, not open source**. It is licensed under the
-[PolyForm Noncommercial License 1.0.0](LICENSE).
+[PolyForm Noncommercial License 1.0.0](LICENSE.md).
 
 In plain terms: use it, study it, fork it, change it and share your changes
 freely for any **noncommercial** purpose — personal projects, hobby work,

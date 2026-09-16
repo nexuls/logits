@@ -5,7 +5,7 @@ are welcome — bug reports, feature requests, new nodes, example circuits, docs
 and code.
 
 A note on the licence first, because it is not the usual one. Logits is
-[source-available, not open source](LICENSE): the PolyForm Noncommercial
+[source-available, not open source](LICENSE.md): the PolyForm Noncommercial
 License 1.0.0 lets you use, fork and modify it freely for any noncommercial
 purpose, but not commercially. By opening a pull request you agree your
 contribution is licensed to the project under those same terms.
