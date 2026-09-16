@@ -178,3 +178,8 @@ feature request, or send a pull request. [CONTRIBUTING.md](CONTRIBUTING.md) has
 how to get set up, the rules that are load-bearing, and how to add a node. By
 contributing you agree your contribution is licensed to the project under the
 licence above.
+
+## Security
+
+Found a vulnerability? Please report it privately — see
+[SECURITY.md](SECURITY.md).
