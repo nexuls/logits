@@ -21,6 +21,12 @@ const settingsSchema = z.object({
   showBasicPinLabels: z.boolean(),
   showCompoundPinLabels: z.boolean(),
   showBusValues: z.boolean(),
+  /**
+   * Whether the "this editor wants a mouse and a keyboard" warning has been
+   * dismissed on this device. Not in the settings panel: it is a one-time
+   * acknowledgement, not a preference anyone would go looking for.
+   */
+  deviceWarningDismissed: z.boolean(),
 });
 
 export type EditorSettings = z.infer<typeof settingsSchema>;
@@ -38,6 +44,7 @@ const DEFAULTS: EditorSettings = {
   showBasicPinLabels: false,
   showCompoundPinLabels: true,
   showBusValues: true,
+  deviceWarningDismissed: false,
 };
 
 /** `useLayoutEffect` warns when it runs during SSR, where there is no layout. */

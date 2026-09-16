@@ -34,6 +34,7 @@ import { buildScene, sceneClusters } from "@/state/scene";
 import { pruneSelection, selectOnly, useSelection } from "@/state/selection";
 import { getNetlist, syncDocument, useDiagnostics } from "@/state/simulation";
 import CommandMenu from "./command-menu";
+import DeviceWarningDialog from "./device-warning-dialog";
 import DiagnosticsPanel from "./diagnostics-panel";
 import GhostLayer from "./ghost-layer";
 import Inspector, { InspectorAnchor, selectionBounds } from "./inspector";
@@ -539,6 +540,10 @@ export default function Editor({
           if (!result.ok) notify(result.error);
         }}
       />
+
+      {/* Decides for itself whether this device needs telling; rendering it
+          unconditionally keeps the queries in one file. */}
+      <DeviceWarningDialog />
 
       <CommandMenu
         open={commandMenuOpen}

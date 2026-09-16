@@ -95,7 +95,14 @@ once expanded.
 
 Touch and small screens remain out of scope ([01-product-spec.md](01-product-spec.md)):
 what is defended here is that the layout holds, not that the app is usable with
-a finger.
+a finger. So the editor says so on arrival —
+[device-warning-dialog.tsx](../src/components/editor/device-warning-dialog.tsx)
+opens once when the viewport is under 768px wide or the device is touch-only
+(`(pointer: coarse) and (hover: none)`, which spares a touchscreen laptop),
+naming what does work (pan, zoom, run, tap a switch) and what does not
+(placing, wiring, moving, shortcuts). Dismissing it is the acknowledgement,
+stored per device as `deviceWarningDismissed` in editor settings, and the
+dialog is deliberately not a wall: **Continue anyway** is the only button.
 
 ## Preview (built)
 
