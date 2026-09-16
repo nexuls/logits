@@ -174,5 +174,7 @@ commercial purpose — selling it, hosting it as a paid service, or shipping it
 inside a product you charge for. That needs written permission; ask.
 
 Contributions are welcome under the same terms: open an issue for a bug or a
-feature request, or send a pull request. By contributing you agree your
-contribution is licensed to the project under the licence above.
+feature request, or send a pull request. [CONTRIBUTING.md](CONTRIBUTING.md) has
+how to get set up, the rules that are load-bearing, and how to add a node. By
+contributing you agree your contribution is licensed to the project under the
+licence above.
