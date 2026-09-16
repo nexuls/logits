@@ -53,7 +53,7 @@ export default function PerformanceMonitor({ expanded, onToggle }: Props) {
         // controls, this is telemetry. The toolbar's toggle hides on the same
         // query, so nothing is orphaned.
         "@max-[48rem]/canvas:hidden",
-        "transition-[width,border-radius] duration-300 ease-out motion-reduce:transition-none",
+        "transition-[width,border-radius,margin-right] duration-300 ease-out motion-reduce:transition-none",
         // Flush in the corner while it is just the status line — that is the
         // shape it is drawn for, and the rail stops short of the bottom to
         // leave it there. Expanded it grows up into the rail's band, so at
