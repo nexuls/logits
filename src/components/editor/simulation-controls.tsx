@@ -10,7 +10,15 @@ import {
   RotateCcwIcon,
   SkipForwardIcon,
 } from "lucide-react";
-import type { ReactElement, ReactNode } from "react";
+import {
+  createContext,
+  type ReactElement,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -190,6 +198,16 @@ export default function SimulationControls({
   );
 }
 
+/**
+ * Which way the surrounding bar is laid out, for the things inside it that
+ * cannot be told in CSS — the tooltips, whose `side` is a render-time prop.
+ * `horizontal` is the default, so a `ToolbarTooltip` used on its own (the
+ * share button) still points the way it always did.
+ */
+const ToolbarOrientation = createContext<"horizontal" | "vertical">(
+  "horizontal",
+);
+
 /** The floating bar itself, centred at the top of the canvas. */
 export function Toolbar({
   children,
@@ -198,29 +216,58 @@ export function Toolbar({
   children: ReactNode;
   className?: string;
 }) {
+  const barRef = useRef<HTMLDivElement>(null);
+  const [orientation, setOrientation] = useState<"horizontal" | "vertical">(
+    "horizontal",
+  );
+
+  // Read back off the element rather than matched against 64rem again here:
+  // the container query below owns when the bar turns, and a second copy of
+  // that number in JS is one that can drift from it. The observer fires on
+  // the turn because the bar's own size changes with it.
+  useEffect(() => {
+    const bar = barRef.current;
+    if (!bar) return;
+
+    const read = () =>
+      setOrientation(
+        getComputedStyle(bar).flexDirection === "column"
+          ? "vertical"
+          : "horizontal",
+      );
+
+    read();
+    const observer = new ResizeObserver(read);
+    observer.observe(bar);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div
-      className={cn(
-        "pointer-events-auto absolute top-2 left-1/2 z-20 flex max-w-[calc(100%-1rem)] -translate-x-1/2 items-center gap-1 rounded-lg bg-sidebar px-1.5 py-1 shadow-chrome border border-border",
-        // The bar is ~26rem of buttons, which no longer fits across the top of
-        // a narrow canvas beside the header and the share / elements buttons.
-        // Below 64rem it turns on its side and becomes a rail down the right
-        // edge, where the canvas has height to spare and nothing else sits.
-        "@max-[64rem]/canvas:top-14 @max-[64rem]/canvas:bottom-14 @max-[64rem]/canvas:left-auto @max-[64rem]/canvas:right-2 @max-[64rem]/canvas:translate-x-0 @max-[64rem]/canvas:flex-col @max-[64rem]/canvas:max-w-none",
-        // Centred in the band between the top row and the bottom chrome, and
-        // capped to it: `h-fit` with both insets and `my-auto` centres the
-        // rail, `max-h` keeps a tall one from running past the band. The
-        // bottom inset is what keeps it off the status bar and the minimap,
-        // so those two can stay flush in their corners.
-        "@max-[64rem]/canvas:my-auto @max-[64rem]/canvas:h-fit @max-[64rem]/canvas:max-h-[calc(100%-7rem)] @max-[64rem]/canvas:overflow-y-auto",
-        // Narrower (or shorter) than its contents it scrolls rather than
-        // bursting its box or squashing the buttons into slivers.
-        "overflow-x-auto *:shrink-0",
-        className,
-      )}
-    >
-      {children}
-    </div>
+    <ToolbarOrientation value={orientation}>
+      <div
+        ref={barRef}
+        className={cn(
+          "pointer-events-auto absolute top-2 left-1/2 z-20 flex max-w-[calc(100%-1rem)] -translate-x-1/2 items-center gap-1 rounded-lg bg-sidebar px-1.5 py-1 shadow-chrome border border-border",
+          // The bar is ~26rem of buttons, which no longer fits across the top of
+          // a narrow canvas beside the header and the share / elements buttons.
+          // Below 64rem it turns on its side and becomes a rail down the right
+          // edge, where the canvas has height to spare and nothing else sits.
+          "@max-[64rem]/canvas:top-14 @max-[64rem]/canvas:bottom-14 @max-[64rem]/canvas:left-auto @max-[64rem]/canvas:right-2 @max-[64rem]/canvas:translate-x-0 @max-[64rem]/canvas:flex-col @max-[64rem]/canvas:max-w-none",
+          // Centred in the band between the top row and the bottom chrome, and
+          // capped to it: `h-fit` with both insets and `my-auto` centres the
+          // rail, `max-h` keeps a tall one from running past the band. The
+          // bottom inset is what keeps it off the status bar and the minimap,
+          // so those two can stay flush in their corners.
+          "@max-[64rem]/canvas:my-auto @max-[64rem]/canvas:h-fit @max-[64rem]/canvas:max-h-[calc(100%-7rem)] @max-[64rem]/canvas:overflow-y-auto",
+          // Narrower (or shorter) than its contents it scrolls rather than
+          // bursting its box or squashing the buttons into slivers.
+          "overflow-x-auto *:shrink-0",
+          className,
+        )}
+      >
+        {children}
+      </div>
+    </ToolbarOrientation>
   );
 }
 
@@ -303,8 +350,10 @@ export function DiagnosticsToggle({
 }
 
 /**
- * Below the bar rather than the default above it: the bar sits at the top of
- * the canvas, so a tooltip on top would be clipped by the viewport edge.
+ * Always pointed into the canvas, away from the edge the bar is against:
+ * below it across the top, where a tooltip above would be clipped by the
+ * viewport edge, and to its left once the bar is the right-edge rail, where
+ * one below would sit over the next button down.
  */
 export function ToolbarTooltip({
   label,
@@ -315,10 +364,12 @@ export function ToolbarTooltip({
   shortcut?: string;
   children: ReactElement;
 }) {
+  const orientation = useContext(ToolbarOrientation);
+
   return (
     <Tooltip>
       <TooltipTrigger render={children} />
-      <TooltipContent side="bottom">
+      <TooltipContent side={orientation === "vertical" ? "left" : "bottom"}>
         {label}
         {shortcut && <Kbd>{shortcut}</Kbd>}
       </TooltipContent>

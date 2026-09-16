@@ -79,6 +79,14 @@ in CSS by `ToolbarSeparator` — with `!`, which is what beats the primitive's
 own `data-vertical:` sizing. The square-button overrides in the rail use `!`
 for the same reason, against `buttonVariants`.
 
+Tooltips point into the canvas, away from whichever edge the bar is against:
+below the buttons across the top, to their **left** in the rail, where one
+below would cover the next button down. `side` is a render-time prop, so
+`Toolbar` reads its own computed `flex-direction` back through a
+`ResizeObserver` and publishes it on a context the tooltips consume — the
+container query stays the only place the 64rem threshold is written down. A
+`ToolbarTooltip` outside a `Toolbar` (the share button) defaults to `bottom`.
+
 The rail stops short of the bottom rather than the bottom chrome stepping
 aside for it, so the status bar and the minimap stay **flush in their corners**,
 which is the shape they are drawn for. Only what opens *upward* into the rail's
