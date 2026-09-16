@@ -158,3 +158,21 @@ Design docs live in [`artifacts/`](artifacts/) and are the source of truth for
 carries the current phase and an honest list of known issues.
 
 Built with Next.js 16, React 19, TypeScript strict, Tailwind v4 and Bun.
+
+## License
+
+Logits is **source-available, not open source**. It is licensed under the
+[PolyForm Noncommercial License 1.0.0](LICENSE).
+
+In plain terms: use it, study it, fork it, change it and share your changes
+freely for any **noncommercial** purpose — personal projects, hobby work,
+teaching, coursework, research. Build whatever you like on top of it for
+yourself.
+
+What you may not do is use Logits, or the parts that make it Logits, for a
+commercial purpose — selling it, hosting it as a paid service, or shipping it
+inside a product you charge for. That needs written permission; ask.
+
+Contributions are welcome under the same terms: open an issue for a bug or a
+feature request, or send a pull request. By contributing you agree your
+contribution is licensed to the project under the licence above.
