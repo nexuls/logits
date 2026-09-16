@@ -47,6 +47,12 @@ export default function PerformanceMonitor({ expanded, onToggle }: Props) {
       aria-label="Performance monitor"
       className={cn(
         "pointer-events-auto flex max-w-full shrink-0 flex-col overflow-hidden bg-sidebar border-t border-l border-border shadow-chrome",
+        // The status line is 26rem, the minimap 11rem and the toolbar rail
+        // ~7.5rem, all on the bottom edge or beside it. Under 48rem of canvas
+        // they cannot all be there, and the minimap wins — it carries the zoom
+        // controls, this is telemetry. The toolbar's toggle hides on the same
+        // query, so nothing is orphaned.
+        "@max-[48rem]/canvas:hidden",
         "transition-[width,border-radius] duration-300 ease-out motion-reduce:transition-none",
         expanded ? "w-120 rounded-tl-xl" : "w-104 rounded-tl-lg",
       )}

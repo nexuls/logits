@@ -83,6 +83,7 @@ boxes is an incomplete phase.
 
 | Issue | Where |
 | --- | --- |
+| Touch and small screens are out of scope ([01-product-spec.md](01-product-spec.md)) and only the *layout* is defended: the chrome no longer overlaps at any canvas width, but a narrow canvas loses the performance monitor and the simulated-time readout, and the editing gestures still assume a mouse and a keyboard | [canvas/index.tsx](../src/components/canvas/index.tsx) |
 | A Markdown bullet in a `deco.text` whose text wraps onto a second line renders as an empty bullet with its text dropped to the line below; one-line bullets are fine. Reproduced in the preview with plain, bold and dashed text alike, so it is the list rendering, not the inline marks | [nodes/markdown/note-html.ts](../src/components/nodes/markdown/note-html.ts) |
 | `check.ts` in the circuit skill flags diagonal wires in three shipped examples — `half-adder` (2), `mux-2to1` (2) and `calculator` (73) — so they are not safe routing references for an agent, and the half adder's two diagonals cross each other. Re-route them with waypoints | [src/example/](../src/example/) |
 | Projects sidebar has no routing — the open project lives in React state, so it is lost on reload and has no URL | [app/page.tsx](../src/app/page.tsx) |

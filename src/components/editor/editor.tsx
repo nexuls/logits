@@ -388,7 +388,10 @@ export default function Editor({
                 panel stacks above the performance monitor instead of both
                 claiming the corner. It passes presses through where it is
                 empty; its children opt back in. */}
-            <div className="pointer-events-none absolute top-14 right-0 bottom-0 z-20 flex flex-col items-end justify-end gap-2">
+            {/* Inset from the right below 64rem, where the toolbar rail holds
+                that edge, and lifted off the bottom below 48rem, where the
+                minimap holds that corner. */}
+            <div className="pointer-events-none absolute top-14 right-0 bottom-0 z-20 flex flex-col items-end justify-end gap-2 @max-[64rem]/canvas:right-34 @max-[48rem]/canvas:bottom-36">
               {diagnosticsOpen && (
                 <DiagnosticsPanel
                   onClose={() => setDiagnosticsOpen(false)}
@@ -403,14 +406,28 @@ export default function Editor({
               />
             </div>
 
-            {/* An example is fully editable, so nothing else on screen would
-                tell the user their edits are going nowhere. */}
-            {ephemeral && (
-              <p className="pointer-events-none absolute top-14 left-4 z-20 rounded-md border border-dashed border-border bg-sidebar px-2 py-1 text-[11px] text-muted-foreground">
-                Example — edits are not saved. Use Save to projects in the ⋯
-                menu to keep them.
-              </p>
-            )}
+            {/* Both banners in one column rather than each claiming its own
+                corner: they can be on screen together, and side by side they
+                overlapped as soon as the canvas was narrow enough for the
+                centred one to reach the left edge. */}
+            <div className="pointer-events-none absolute top-14 left-1/2 z-20 flex max-w-[calc(100%-2rem)] -translate-x-1/2 flex-col items-center gap-1 @max-[64rem]/canvas:max-w-[calc(100%-8rem)]">
+              {/* An example is fully editable, so nothing else on screen would
+                  tell the user their edits are going nowhere. */}
+              {ephemeral && (
+                <p className="rounded-md border border-dashed border-border bg-sidebar px-2 py-1 text-center text-[11px] text-muted-foreground">
+                  Example — edits are not saved. Use Save to projects in the ⋯
+                  menu to keep them.
+                </p>
+              )}
+
+              {armedDefinition && (
+                <p className="rounded-md bg-sidebar px-2 py-1 text-center text-[11px] text-muted-foreground">
+                  Click the canvas to place {armedCount} {armedDefinition.title}
+                  {armedCount > 1 ? "s" : ""} · right-click the palette entry
+                  for fewer · Esc to cancel
+                </p>
+              )}
+            </div>
 
             {notice && (
               <p
@@ -418,17 +435,11 @@ export default function Editor({
                 // announcement, without claiming a landmark on a floating
                 // toast that comes and goes.
                 aria-live="polite"
-                className="pointer-events-none absolute bottom-4 left-1/2 z-30 -translate-x-1/2 rounded-md bg-sidebar px-3 py-1.5 text-xs shadow-md"
+                // Lifted clear of the minimap on a narrow canvas, where a
+                // centred toast reaches the bottom-left corner.
+                className="pointer-events-none absolute bottom-4 left-1/2 z-30 max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-md bg-sidebar px-3 py-1.5 text-center text-xs shadow-md @max-[48rem]/canvas:bottom-40"
               >
                 {notice}
-              </p>
-            )}
-
-            {armedDefinition && (
-              <p className="pointer-events-none absolute top-14 left-1/2 z-20 -translate-x-1/2 rounded-md bg-sidebar px-2 py-1 text-[11px] text-muted-foreground">
-                Click the canvas to place {armedCount} {armedDefinition.title}
-                {armedCount > 1 ? "s" : ""} · right-click the palette entry for
-                fewer · Esc to cancel
               </p>
             )}
           </>

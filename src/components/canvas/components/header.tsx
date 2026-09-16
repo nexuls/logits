@@ -41,7 +41,12 @@ export default function Header({
   showSidebarToggle = true,
 }: Props) {
   return (
-    <div className="absolute left-0 top-0 z-20 flex max-w-[min(20rem,calc(100%-1rem))] items-center gap-4 rounded-br-lg bg-sidebar px-2 py-1.5 border-b border-r border-border shadow-chrome">
+    // Two caps, because the top row holds different things at each size. On a
+    // narrow canvas the toolbar has dropped to its own row and the header
+    // shares this one with the share and elements buttons, so it reserves the
+    // 8rem they occupy. Once the toolbar is back up here it is centred and
+    // 26rem wide, so the header has to stop well short of the middle.
+    <div className="absolute left-0 top-0 z-20 flex max-w-[min(20rem,calc(100%-8rem))] items-center gap-4 rounded-br-lg bg-sidebar px-2 py-1.5 border-b border-r border-border shadow-chrome @min-[64rem]/canvas:max-w-64">
       {showSidebarToggle && <SidebarToggle />}
 
       <h1 className="min-w-0 flex-1 text-sm font-medium">

@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import {
   flushSave,
@@ -23,6 +22,7 @@ import SimulationControls, {
   DiagnosticsToggle,
   PerformanceToggle,
   Toolbar,
+  ToolbarSeparator,
   ToolbarTooltip,
 } from "./simulation-controls";
 
@@ -62,7 +62,7 @@ export default function RunControls({
     <Toolbar>
       <SimulationControls />
 
-      <Separator orientation="vertical" className="mx-1 h-6" />
+      <ToolbarSeparator />
 
       <ToolbarTooltip label="Undo" shortcut="⌘Z">
         <Button
@@ -91,7 +91,7 @@ export default function RunControls({
         </Button>
       </ToolbarTooltip>
 
-      <Separator orientation="vertical" className="mx-1 h-6" />
+      <ToolbarSeparator />
 
       <ToolbarTooltip
         label={save.error ?? (save.pending ? "Save (unsaved changes)" : "Save")}
@@ -138,7 +138,7 @@ export default function RunControls({
           <UploadIcon />
         </Button>
       </ToolbarTooltip>
-      <Separator orientation="vertical" className="mx-1 h-6" />
+      <ToolbarSeparator />
 
       <PerformanceToggle
         pressed={performanceOpen}

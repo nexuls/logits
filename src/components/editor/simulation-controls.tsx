@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Kbd } from "@/components/ui/kbd";
+import { Separator } from "@/components/ui/separator";
 import {
   Tooltip,
   TooltipContent,
@@ -137,7 +138,9 @@ export default function SimulationControls({
                   variant="outline"
                   size="sm"
                   aria-label={`Simulation speed: ${speedLabel}`}
-                  className="ml-1 font-mono text-xs tabular-nums"
+                  // The left margin separates it from the buttons beside it;
+                  // in the rail there is nothing beside it to separate from.
+                  className="ml-1 font-mono text-xs tabular-nums @max-[64rem]/canvas:ml-0"
                 >
                   {speedLabel}
                   <ChevronDownIcon className="text-muted-foreground" />
@@ -166,7 +169,10 @@ export default function SimulationControls({
 
       {showTime && (
         <span
-          className="ml-1 w-20 shrink-0 text-right font-mono text-[11px] tabular-nums text-muted-foreground"
+          // Only while the bar is horizontal. It is decorative (already
+          // `aria-hidden`) and 5rem wide, which in the rail would set the
+          // width of the whole thing for a readout nothing depends on.
+          className="ml-1 hidden w-20 shrink-0 text-right font-mono text-[11px] tabular-nums text-muted-foreground @min-[64rem]/canvas:inline"
           // Simulated time changes every frame while running; announcing it
           // would make a screen reader unusable.
           aria-hidden
@@ -190,11 +196,39 @@ export function Toolbar({
     <div
       className={cn(
         "pointer-events-auto absolute top-2 left-1/2 z-20 flex max-w-[calc(100%-1rem)] -translate-x-1/2 items-center gap-1 rounded-lg bg-sidebar px-1.5 py-1 shadow-chrome border border-border",
+        // The bar is ~26rem of buttons, which no longer fits across the top of
+        // a narrow canvas beside the header and the share / elements buttons.
+        // Below 64rem it turns on its side and becomes a rail down the right
+        // edge, where the canvas has height to spare and nothing else sits.
+        "@max-[64rem]/canvas:top-14 @max-[64rem]/canvas:bottom-4 @max-[64rem]/canvas:left-auto @max-[64rem]/canvas:right-2 @max-[64rem]/canvas:translate-x-0 @max-[64rem]/canvas:flex-col @max-[64rem]/canvas:max-w-none",
+        // Centred in the band between the top row and the bottom edge, and
+        // capped to it: `h-fit` with both insets and `my-auto` centres the
+        // rail, `max-h` keeps a tall one from running past the bottom.
+        "@max-[64rem]/canvas:my-auto @max-[64rem]/canvas:h-fit @max-[64rem]/canvas:max-h-[calc(100%-4.5rem)] @max-[64rem]/canvas:overflow-y-auto",
+        // Narrower (or shorter) than its contents it scrolls rather than
+        // bursting its box or squashing the buttons into slivers.
+        "overflow-x-auto *:shrink-0",
         className,
       )}
     >
       {children}
     </div>
+  );
+}
+
+/**
+ * The rule between groups of buttons. It follows the bar's own direction — a
+ * vertical rule across the top, a horizontal one once the bar has turned into
+ * the right-edge rail. `orientation` is fixed at render, so the turn is done
+ * in CSS, and these need `!` to beat the primitive's own `data-vertical:`
+ * sizing, which is a variant and would otherwise win.
+ */
+export function ToolbarSeparator() {
+  return (
+    <Separator
+      orientation="vertical"
+      className="mx-1 h-6 @max-[64rem]/canvas:mx-auto @max-[64rem]/canvas:my-1 @max-[64rem]/canvas:h-px! @max-[64rem]/canvas:w-6! @max-[64rem]/canvas:self-center"
+    />
   );
 }
 
@@ -215,6 +249,8 @@ export function PerformanceToggle({
         onClick={onToggle}
         aria-pressed={pressed}
         aria-label="Performance details"
+        // Follows the monitor itself, which has no room below 48rem of canvas.
+        className="@max-[48rem]/canvas:hidden"
       >
         <ActivityIcon />
       </Button>

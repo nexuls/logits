@@ -41,7 +41,7 @@ editor adds `--logit-cursor-cross` while placing or wiring and
 | `Ctrl/Cmd + B` | Toggle the projects sidebar (left) |
 | `Ctrl/Cmd + J` | Toggle the elements sidebar (right), between full width and its icon rail |
 
-The **performance monitor** is always on screen as a one-line status bar in
+The **performance monitor** is on screen as a one-line status bar in
 the bottom-right corner — FPS, TPS (simulation events per second), input
 latency, and simulation speed as a share of the requested speed. A value past
 its threshold turns red *and* gains a warning icon. The activity button in the
@@ -54,6 +54,33 @@ panel stacks above it in the same corner.
 The two sidebars are independent — separate providers, separate cookies,
 separate shortcuts. Both are also reachable by pointer: the left one from the
 canvas header, the right one from the panel button in its own header.
+
+## Narrow canvases (built)
+
+The floating chrome sizes itself against the **canvas**, not the viewport: both
+sidebars change how much canvas there is without the viewport changing at all,
+so a viewport breakpoint gets this wrong with a sidebar open. `src/components/canvas/`
+is a named container (`@container/canvas`) and everything on it uses
+`@min-[…]/canvas` / `@max-[…]/canvas`. Each threshold is the width below which
+two pieces of chrome would genuinely collide, measured, not a device size.
+
+| Canvas width | What changes |
+| --- | --- |
+| `< 64rem` | **The toolbar turns on its side**: it leaves the top row, which the header and the share / elements buttons already hold, and becomes a rail down the right edge, centred in the band between them and the bottom. Its rules turn with it, and the simulated-time readout drops (decorative, already `aria-hidden`, and 5rem wide — in the rail it would set the width of the whole thing). The header is capped at 20rem less the 8rem those buttons take; at `64rem` and up it is capped at 16rem instead, to stay clear of the centred toolbar. The bottom-right column insets to clear the rail |
+| `< 48rem` | The performance monitor (26rem) and its toolbar toggle hide — it cannot share the bottom edge with the minimap (11rem) and the rail (~7.5rem), and the minimap wins because it carries the zoom controls. The diagnostics panel and the notice toast lift above the minimap band |
+
+The toolbar scrolls along its own axis rather than bursting its box or
+squashing its buttons. The "Example" banner and the placement hint share one
+centred column, so two banners that are on screen together stack instead of
+overlapping.
+
+`Separator` takes its `orientation` at render, so the rail's rules are turned
+in CSS by `ToolbarSeparator` — with `!`, which is what beats the primitive's
+own `data-vertical:` sizing.
+
+Touch and small screens remain out of scope ([01-product-spec.md](01-product-spec.md)):
+what is defended here is that the layout holds, not that the app is usable with
+a finger.
 
 ## Preview (built)
 

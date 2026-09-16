@@ -22,13 +22,13 @@ import SimulationControls, {
   DiagnosticsToggle,
   PerformanceToggle,
   Toolbar,
+  ToolbarSeparator,
 } from "@/components/editor/simulation-controls";
 import {
   isEditableTarget,
   SPACE_TAP_MS,
 } from "@/components/editor/use-editor-shortcuts";
 import WireLayer from "@/components/editor/wire-layer";
-import { Separator } from "@/components/ui/separator";
 import { setLinkedNodeParams } from "@/lib/circuit/commands";
 import {
   DEFAULT_SCALE,
@@ -434,7 +434,7 @@ function PreviewSurface({
                   )}
                   {showRunControls &&
                     (showDiagnostics || showPerformanceMonitor) && (
-                      <Separator orientation="vertical" className="mx-1 h-6" />
+                      <ToolbarSeparator />
                     )}
                   {showPerformanceMonitor && (
                     <PerformanceToggle
@@ -453,7 +453,7 @@ function PreviewSurface({
 
               {/* The editor's corner column: diagnostics stacked above the
                   monitor, passing presses through where it is empty. */}
-              <div className="pointer-events-none absolute top-14 right-0 bottom-0 z-20 flex flex-col items-end justify-end gap-2">
+              <div className="pointer-events-none absolute top-14 right-0 bottom-0 z-20 flex flex-col items-end justify-end gap-2 @max-[64rem]/canvas:right-34 @max-[48rem]/canvas:bottom-36">
                 {showDiagnostics && diagnosticsOpen && (
                   <DiagnosticsPanel onClose={() => setDiagnosticsOpen(false)} />
                 )}

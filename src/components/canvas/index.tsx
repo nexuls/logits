@@ -216,8 +216,12 @@ export default function Canvas({
   }, [onViewportChange, viewport]);
 
   return (
+    // A named container, not viewport breakpoints: the chrome floating on the
+    // canvas has to fit the *canvas*, and the two sidebars change how wide that
+    // is without the viewport changing at all. Everything inside sizes itself
+    // with `@min-[…]/canvas` / `@max-[…]/canvas`.
     <div
-      className="relative w-full h-full overflow-hidden"
+      className="@container/canvas relative w-full h-full overflow-hidden"
       style={{
         ...canvasVars,
       }}
