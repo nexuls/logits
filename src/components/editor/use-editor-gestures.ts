@@ -39,6 +39,7 @@ import {
   dragWireWaypoint,
   dropWireWaypoint,
   moveSelection,
+  openSubcircuit,
   placeNodes,
   resizeNode,
 } from "@/state/document";
@@ -624,16 +625,28 @@ export function useEditorGestures({
   );
 
   /**
-   * Double-click on a node that edits in place opens its editor — the pointer
-   * path; Enter and the inspector's Edit button are the others. Both presses
-   * have already selected the node by the time this fires.
+   * Double-click on a node opens it: a note becomes an editor where it sits,
+   * and a subcircuit instance opens the chip it is an instance of. Enter and
+   * the inspector's button are the other two paths to each.
+   *
+   * Which of the two it is comes from the definition — `subcircuit` and
+   * `editInPlace` — so this file never names a node type. Both presses have
+   * already selected the node by the time this fires.
    */
   const onDoubleClick = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
       if (event.button !== 0 || armedDefinition || wiring) return;
 
       const node = nodeAt(sceneRef.current, toWorld(event));
-      if (!node?.def.editInPlace) return;
+      if (!node) return;
+
+      const key = node.def.subcircuit?.(node.node.params);
+      if (key !== undefined) {
+        openSubcircuit(key);
+        return;
+      }
+
+      if (!node.def.editInPlace) return;
 
       selectOnly([node.node.id]);
       beginInPlaceEdit(node.node.id);

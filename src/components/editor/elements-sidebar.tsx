@@ -1,6 +1,13 @@
 "use client";
 
-import { ChevronRightIcon, PanelRightIcon, SearchIcon } from "lucide-react";
+import {
+  ChevronRightIcon,
+  PanelRightIcon,
+  PencilIcon,
+  SearchIcon,
+  SquarePenIcon,
+  Trash2Icon,
+} from "lucide-react";
 import { type CSSProperties, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -24,9 +31,28 @@ import {
   SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { subcircuitDefinitions } from "@/lib/circuit/subcircuit";
+import { canInstantiate } from "@/lib/circuit/subcircuit-commands";
 import type { NodeDefinition } from "@/lib/nodes/define";
-import { nodeCategories, nodeDefinitions } from "@/lib/nodes/registry";
-import NodePaletteItem from "./node-palette-item";
+import {
+  lookupNode,
+  nodeCategories,
+  nodeDefinitions,
+} from "@/lib/nodes/registry";
+import {
+  deleteSubcircuitByKey,
+  openSubcircuit,
+  renameSubcircuitByKey,
+  subcircuitInstances,
+  useRootDocument,
+  useSubcircuitPath,
+} from "@/state/document";
+import NodePaletteItem, { type PaletteAction } from "./node-palette-item";
+import {
+  DeleteSubcircuitDialog,
+  type PendingSubcircuit,
+  SubcircuitNameDialog,
+} from "./subcircuit-dialogs";
 
 type Props = {
   /** Registry `type` of the node armed for placement, if any. */
@@ -58,9 +84,43 @@ function Body({ selectedType, selectedCount = 0, onAdjustCount }: Props) {
   const isOpen = isMobile ? openMobile : open;
   const [query, setQuery] = useState("");
 
+  // The project's own chips are node types (ADR 0010), so they are listed the
+  // same way every other element is — same rows, same search, same category.
+  const project = useRootDocument();
+  const path = useSubcircuitPath();
+  const chips = useMemo(
+    () => (project ? subcircuitDefinitions(project, lookupNode) : []),
+    [project],
+  );
+
+  /**
+   * Chips that cannot be placed where the user currently is, because doing so
+   * would make one contain itself.
+   *
+   * Derived from the path rather than asked of the store, so the set is a
+   * function of what this component already subscribes to: stepping into a
+   * chip is exactly what makes its own row unplaceable.
+   */
+  const blocked = useMemo(() => {
+    const host = path.length > 0 ? path[path.length - 1] : null;
+    const keys = new Set<string>();
+    if (!project || host === null) return keys;
+
+    for (const definition of chips) {
+      const key = definition.subcircuit?.(definition.defaultParams);
+      if (key !== undefined && !canInstantiate(project, host, key)) {
+        keys.add(key);
+      }
+    }
+    return keys;
+  }, [chips, path, project]);
+
+  const [renaming, setRenaming] = useState<PendingSubcircuit | null>(null);
+  const [deleting, setDeleting] = useState<PendingSubcircuit | null>(null);
+
   const groups = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    const found = nodeDefinitions.filter((definition) =>
+    const found = [...nodeDefinitions, ...chips].filter((definition) =>
       matches(definition, needle),
     );
 
@@ -79,7 +139,36 @@ function Body({ selectedType, selectedCount = 0, onAdjustCount }: Props) {
         ),
       }))
       .filter((category) => category.items.length > 0);
-  }, [query]);
+  }, [query, chips]);
+
+  /**
+   * The chip a row stands for, if it stands for one. Asked of the definition
+   * rather than matched on the `type` string, which is the contract that keeps
+   * this file free of node types (Non-negotiable #4).
+   */
+  const chipKey = (definition: NodeDefinition) =>
+    definition.subcircuit?.(definition.defaultParams);
+
+  const chipActions = (key: string, title: string): PaletteAction[] => [
+    {
+      label: "Edit contents",
+      icon: SquarePenIcon,
+      onSelect: () => openSubcircuit(key),
+    },
+    {
+      label: "Rename…",
+      icon: PencilIcon,
+      onSelect: () =>
+        setRenaming({ key, name: title, instances: subcircuitInstances(key) }),
+    },
+    {
+      label: "Delete",
+      icon: Trash2Icon,
+      destructive: true,
+      onSelect: () =>
+        setDeleting({ key, name: title, instances: subcircuitInstances(key) }),
+    },
+  ];
 
   const empty = groups.length === 0;
   const searching = query.trim().length > 0;
@@ -177,18 +266,33 @@ function Body({ selectedType, selectedCount = 0, onAdjustCount }: Props) {
                 <CollapsibleContent>
                   <SidebarGroupContent className="px-2">
                     <SidebarMenu>
-                      {category.items.map((definition) => (
-                        <NodePaletteItem
-                          key={definition.type}
-                          definition={definition}
-                          count={
-                            definition.type === selectedType ? selectedCount : 0
-                          }
-                          onAdjust={(delta) =>
-                            onAdjustCount?.(definition.type, delta)
-                          }
-                        />
-                      ))}
+                      {category.items.map((definition) => {
+                        const key = chipKey(definition);
+                        return (
+                          <NodePaletteItem
+                            key={definition.type}
+                            definition={definition}
+                            count={
+                              definition.type === selectedType
+                                ? selectedCount
+                                : 0
+                            }
+                            onAdjust={(delta) =>
+                              onAdjustCount?.(definition.type, delta)
+                            }
+                            actions={
+                              key === undefined
+                                ? undefined
+                                : chipActions(key, definition.title)
+                            }
+                            unavailable={
+                              key !== undefined && blocked.has(key)
+                                ? "A subcircuit cannot be placed inside itself."
+                                : undefined
+                            }
+                          />
+                        );
+                      })}
                     </SidebarMenu>
                   </SidebarGroupContent>
                 </CollapsibleContent>
@@ -223,6 +327,28 @@ function Body({ selectedType, selectedCount = 0, onAdjustCount }: Props) {
       >
         <PanelRightIcon />
       </Button>
+
+      {/* Mounted only while open, so each one starts from the name it is
+          given rather than the last one it was left on. */}
+      {renaming && (
+        <SubcircuitNameDialog
+          open
+          onOpenChange={(next) => {
+            if (!next) setRenaming(null);
+          }}
+          title={`Rename “${renaming.name}”`}
+          description="Only the name changes. Every instance of it keeps its wiring."
+          initialName={renaming.name}
+          submitLabel="Rename"
+          onSubmit={(name) => renameSubcircuitByKey(renaming.key, name)}
+        />
+      )}
+
+      <DeleteSubcircuitDialog
+        chip={deleting}
+        onClose={() => setDeleting(null)}
+        onConfirm={deleteSubcircuitByKey}
+      />
     </>
   );
 }

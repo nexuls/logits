@@ -2,16 +2,20 @@
 
 import {
   CopyIcon,
+  CornerLeftUpIcon,
+  PackagePlusIcon,
   PauseIcon,
   PlayIcon,
   RotateCcwIcon,
   RotateCwIcon,
   SaveIcon,
   SkipForwardIcon,
+  SquarePenIcon,
   Trash2Icon,
   UndoIcon,
 } from "lucide-react";
 import type { ComponentType } from "react";
+import { useMemo } from "react";
 
 import { nodeIcon } from "@/components/nodes/node-icons";
 import {
@@ -25,15 +29,25 @@ import {
   CommandShortcut,
 } from "@/components/ui/command";
 import { GRID_SIZE } from "@/lib/circuit/geometry";
+import { subcircuitDefinitions } from "@/lib/circuit/subcircuit";
+import { canInstantiate } from "@/lib/circuit/subcircuit-commands";
 import type { NodeDefinition } from "@/lib/nodes/define";
-import { nodeCategories, nodeDefinitions } from "@/lib/nodes/registry";
 import {
+  lookupNode,
+  nodeCategories,
+  nodeDefinitions,
+} from "@/lib/nodes/registry";
+import {
+  closeSubcircuit,
   deleteSelection,
   duplicateSelection,
   flushSave,
+  openSubcircuit,
   redo,
   rotateSelection,
   undo,
+  useRootDocument,
+  useSubcircuitPath,
 } from "@/state/document";
 import { clearSelection, useSelection } from "@/state/selection";
 import {
@@ -48,6 +62,8 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   /** Places a node type at the viewport centre — the keyboard path to placing. */
   onPlace: (definition: NodeDefinition) => void;
+  /** Opens the editor's prompt for making the selection a subcircuit. */
+  onMakeSubcircuit: () => void;
 };
 
 /**
@@ -57,11 +73,42 @@ type Props = {
  * free — the same rule the palette follows. Nothing in this file names a node
  * type or a category label; both come off the definitions.
  */
-export default function CommandMenu({ open, onOpenChange, onPlace }: Props) {
+export default function CommandMenu({
+  open,
+  onOpenChange,
+  onPlace,
+  onMakeSubcircuit,
+}: Props) {
   const selection = useSelection();
   const status = useSimulationStatus();
+  const project = useRootDocument();
+  const path = useSubcircuitPath();
 
   const hasSelection = selection.nodeIds.length + selection.wireIds.length > 0;
+
+  // The project's chips, listed for placing alongside the registry's elements
+  // and, separately, for opening — the only route to a chip's contents that
+  // needs neither an instance of it on screen nor the palette open.
+  const chips = useMemo(
+    () => (project ? subcircuitDefinitions(project, lookupNode) : []),
+    [project],
+  );
+
+  /**
+   * The ones that can be placed where the user is. A chip may not be placed
+   * inside itself, and the palette leaves those rows disabled rather than
+   * offering a placement that could only ever be a mistake; this list has to
+   * agree with it.
+   */
+  const placeableChips = useMemo(() => {
+    const host = path.length > 0 ? path[path.length - 1] : null;
+    if (!project || host === null) return chips;
+
+    return chips.filter((definition) => {
+      const key = definition.subcircuit?.(definition.defaultParams);
+      return key === undefined || canInstantiate(project, host, key);
+    });
+  }, [chips, path, project]);
 
   const run = (action: () => void) => () => {
     onOpenChange(false);
@@ -147,6 +194,14 @@ export default function CommandMenu({ open, onOpenChange, onPlace }: Props) {
               />
             </>
           )}
+          {hasSelection && (
+            <Action
+              icon={PackagePlusIcon}
+              label="Make subcircuit from selection"
+              shortcut="⌘G"
+              onSelect={run(onMakeSubcircuit)}
+            />
+          )}
           <Action
             icon={SaveIcon}
             label="Save"
@@ -155,11 +210,42 @@ export default function CommandMenu({ open, onOpenChange, onPlace }: Props) {
           />
         </CommandGroup>
 
+        {chips.length > 0 && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Subcircuits">
+              {path.length > 0 && (
+                <Action
+                  icon={CornerLeftUpIcon}
+                  label="Leave this subcircuit"
+                  onSelect={run(closeSubcircuit)}
+                />
+              )}
+              {chips.map((definition) => {
+                const key = definition.subcircuit?.(definition.defaultParams);
+                if (key === undefined) return null;
+
+                return (
+                  <CommandItem
+                    key={definition.type}
+                    value={`Edit ${definition.title} contents`}
+                    onSelect={run(() => openSubcircuit(key))}
+                  >
+                    <SquarePenIcon />
+                    <span>Edit “{definition.title}” contents</span>
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </>
+        )}
+
         {categories.map((category) => {
-          const items = nodeDefinitions.filter((definition) =>
-            category.id === "other"
-              ? !known.has(definition.category)
-              : definition.category === category.id,
+          const items = [...nodeDefinitions, ...placeableChips].filter(
+            (definition) =>
+              category.id === "other"
+                ? !known.has(definition.category)
+                : definition.category === category.id,
           );
           if (items.length === 0) return null;
 

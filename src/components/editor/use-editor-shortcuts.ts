@@ -4,13 +4,14 @@ import { useEffect, useRef } from "react";
 import type { Fragment } from "@/lib/circuit/commands";
 import { GRID_SIZE } from "@/lib/circuit/geometry";
 import type { Point } from "@/lib/circuit/schema";
-import { lookupNode } from "@/lib/nodes/registry";
 import {
   copySelection,
   deleteSelection,
+  documentLookup,
   duplicateSelection,
   flushSave,
   getDocument,
+  openSubcircuit,
   pasteFragment,
   redo,
   rotateSelection,
@@ -99,6 +100,8 @@ type Options = {
   onCommandMenu: () => void;
   /** `?`: the keyboard shortcuts dialog. */
   onShortcutsHelp: () => void;
+  /** `Ctrl+G`: prompts for a name and makes the selection a subcircuit. */
+  onMakeSubcircuit: () => void;
   /** Esc: cancels a wire in progress before it clears the selection. */
   onEscape: () => boolean;
   onNotice: (message: string) => void;
@@ -108,6 +111,7 @@ export function useEditorShortcuts({
   pointerWorld,
   onCommandMenu,
   onShortcutsHelp,
+  onMakeSubcircuit,
   onEscape,
   onNotice,
 }: Options) {
@@ -121,6 +125,7 @@ export function useEditorShortcuts({
     pointerWorld,
     onCommandMenu,
     onShortcutsHelp,
+    onMakeSubcircuit,
     onEscape,
     onNotice,
   });
@@ -128,6 +133,7 @@ export function useEditorShortcuts({
     pointerWorld,
     onCommandMenu,
     onShortcutsHelp,
+    onMakeSubcircuit,
     onEscape,
     onNotice,
   };
@@ -218,6 +224,13 @@ export function useEditorShortcuts({
             if (pasted) selectOnly(pasted.nodeIds, pasted.wireIds);
             return;
           }
+          case "g":
+            // The selection into a subcircuit. It opens a prompt rather than
+            // acting straight away, because a chip needs a name and the user
+            // should be told how much of the circuit is about to move.
+            event.preventDefault();
+            handlers.current.onMakeSubcircuit();
+            return;
           case "a":
             // Nothing to intercept here yet: select-all lives on the canvas in
             // phase 5, and stealing the key now would break text selection.
@@ -255,7 +268,19 @@ export function useEditorShortcuts({
             selection.nodeIds.length === 1 && selection.wireIds.length === 0
               ? circuit?.nodes[selection.nodeIds[0]]
               : undefined;
-          if (!node || !lookupNode(node.type)?.editInPlace) return;
+          if (!node) return;
+
+          // Both paths a double-click offers, from the keyboard. Asked of the
+          // definition either way, so nothing here names a node type.
+          const definition = documentLookup()(node.type);
+          const key = definition?.subcircuit?.(node.params);
+          if (key !== undefined) {
+            event.preventDefault();
+            openSubcircuit(key);
+            return;
+          }
+
+          if (!definition?.editInPlace) return;
           event.preventDefault();
           beginInPlaceEdit(node.id);
           return;

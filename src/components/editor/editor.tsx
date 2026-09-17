@@ -13,25 +13,37 @@ import {
   downloadCircuit,
   importCircuitFile,
 } from "@/components/projects/project-actions";
+import type { Selection } from "@/lib/circuit/commands";
 import { snapPointToGrid } from "@/lib/circuit/geometry";
 import type { Point } from "@/lib/circuit/schema";
-import { subcircuitLookup } from "@/lib/circuit/subcircuit";
+import { outerElementId } from "@/lib/circuit/subcircuit";
+import { subcircuitPreview } from "@/lib/circuit/subcircuit-commands";
 import type { NodeDefinition } from "@/lib/nodes/define";
-import { lookupNode } from "@/lib/nodes/registry";
 import {
   closeDocument,
+  createSubcircuitFromSelection,
   openDocument,
   placeNode,
   renameOpenDocument,
   shiftOpenDocument,
+  subcircuitInstances,
   updateNodeParams,
   useDocument,
+  useDocumentLookup,
   useIsEphemeral,
+  useRootDocument,
+  useSubcircuitPath,
 } from "@/state/document";
+import { withEnclosedNodes } from "@/state/hit-test";
 import { endInPlaceEdit, useEditingNodeId } from "@/state/in-place-edit";
 import { createProject, createProjectFrom } from "@/state/projects-store";
 import { buildScene, sceneClusters } from "@/state/scene";
-import { pruneSelection, selectOnly, useSelection } from "@/state/selection";
+import {
+  getSelection,
+  pruneSelection,
+  selectOnly,
+  useSelection,
+} from "@/state/selection";
 import { getNetlist, syncDocument, useDiagnostics } from "@/state/simulation";
 import CommandMenu from "./command-menu";
 import DeviceWarningDialog from "./device-warning-dialog";
@@ -45,6 +57,8 @@ import ProjectMenu from "./project-menu";
 import RunControls from "./run-controls";
 import SettingsDialog, { type SettingsSection } from "./settings-dialog";
 import ShareButton from "./share-button";
+import SubcircuitBreadcrumb from "./subcircuit-breadcrumb";
+import { SubcircuitNameDialog } from "./subcircuit-dialogs";
 import { useEditorGestures } from "./use-editor-gestures";
 import { useEditorShortcuts } from "./use-editor-shortcuts";
 import { useViewPersistence } from "./use-view-persistence";
@@ -92,6 +106,11 @@ export default function Editor({
   onSelectProject,
 }: Props) {
   const document = useDocument();
+  // The project, and the trail of chips into it. `document` is the chip while
+  // one is open, so anything that is the *project's* — its id, its chips, the
+  // zoom it opens at — has to read this one instead.
+  const project = useRootDocument();
+  const subcircuitPath = useSubcircuitPath();
   const ephemeral = useIsEphemeral();
   const selection = useSelection();
   const diagnostics = useDiagnostics();
@@ -106,6 +125,11 @@ export default function Editor({
     useState<SettingsSection>("preferences");
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [titleEditing, setTitleEditing] = useState(false);
+  /** Set while the create-a-chip prompt is open, holding what it will say. */
+  const [creating, setCreating] = useState<{
+    nodes: number;
+    ports: number;
+  } | null>(null);
   const [pendingDelete, setPendingDelete] = useState<{
     id: string;
     name: string;
@@ -144,12 +168,9 @@ export default function Editor({
   }, [document, editingNodeId]);
 
   const netlist = getNetlist();
-  // The document's own chips are node types as far as the scene is concerned,
+  // The project's own chips are node types as far as the scene is concerned,
   // so the canvas resolves them through the same lookup the engine does.
-  const documentLookup = useMemo(
-    () => (document ? subcircuitLookup(document, lookupNode) : lookupNode),
-    [document],
-  );
+  const documentLookup = useDocumentLookup();
   const scene = useMemo(
     () =>
       document
@@ -170,7 +191,11 @@ export default function Editor({
     return () => clearTimeout(handle);
   }, [notice]);
 
-  const armedDefinition = armedType ? (lookupNode(armedType) ?? null) : null;
+  // Through the document's lookup, not the registry: a chip is a type this
+  // project defines, and arming one has to resolve it like any other.
+  const armedDefinition = armedType
+    ? (documentLookup(armedType) ?? null)
+    : null;
 
   // The canvas owns the transform and publishes it here; the gestures convert
   // pointer positions with exactly the numbers the canvas drew with.
@@ -200,6 +225,53 @@ export default function Editor({
     onNotice: notify,
   });
 
+  /**
+   * What goes into the chip: the selection, plus the contents of any group in
+   * it that carries them.
+   *
+   * A group selected on its own is the whole stage it frames as far as the
+   * user is concerned — that is already what dragging one does — so making a
+   * chip of it must take the circuit inside and not just the empty frame.
+   */
+  const selectionForSubcircuit = useCallback((): Selection => {
+    const selection = getSelection();
+    return { nodeIds: withEnclosedNodes(scene, selection.nodeIds) };
+  }, [scene]);
+
+  // Asks for a name first, and says what the selection will become: how many
+  // parts move into the chip, and how many pins its boundary produces. Both
+  // come from the same function that will do the work, so the prompt cannot
+  // promise an interface the chip does not get.
+  const promptForSubcircuit = useCallback(() => {
+    if (!document) return;
+
+    const selection = selectionForSubcircuit();
+    const preview = subcircuitPreview(document, documentLookup, selection);
+    if (preview.nodes === 0) {
+      notify("Select the parts to turn into a subcircuit first.");
+      return;
+    }
+    setCreating(preview);
+  }, [document, documentLookup, notify, selectionForSubcircuit]);
+
+  const makeSubcircuit = (name: string) => {
+    const result = createSubcircuitFromSelection(
+      selectionForSubcircuit(),
+      name,
+    );
+    if (!result) {
+      notify("That selection could not be made into a subcircuit.");
+      return;
+    }
+
+    // The instance, so the next thing the user does acts on what they made.
+    selectOnly([result.instanceId]);
+    const pins = result.ports.length;
+    notify(
+      `“${name}” created with ${pins} ${pins === 1 ? "pin" : "pins"}. Edit its contents from the Subcircuits palette.`,
+    );
+  };
+
   // Where the pointer last was, in world coordinates — paste lands here.
   const pointerWorld = useRef<Point>({ x: 0, y: 0 });
 
@@ -215,6 +287,7 @@ export default function Editor({
     pointerWorld: () => pointerWorld.current,
     onCommandMenu: () => setCommandMenuOpen(true),
     onShortcutsHelp: () => setShortcutsOpen(true),
+    onMakeSubcircuit: promptForSubcircuit,
     onEscape: () => {
       if (armedType) {
         onDisarm();
@@ -229,12 +302,16 @@ export default function Editor({
     onNotice: notify,
   });
 
+  // Diagnostics name elements by their *netlist* id, and a fault inside a chip
+  // names `instance/gate`, which this document does not contain. Trimming to
+  // the outermost segment marks the instance the fault is in, which is the
+  // nearest thing the canvas can actually draw.
   const faulted = useMemo(() => {
     const nodes = new Set<string>();
     const wires = new Set<string>();
     for (const diagnostic of diagnostics) {
-      for (const id of diagnostic.nodeIds ?? []) nodes.add(id);
-      for (const id of diagnostic.wireIds ?? []) wires.add(id);
+      for (const id of diagnostic.nodeIds ?? []) nodes.add(outerElementId(id));
+      for (const id of diagnostic.wireIds ?? []) wires.add(outerElementId(id));
     }
     return { nodes, wires };
   }, [diagnostics]);
@@ -324,7 +401,9 @@ export default function Editor({
         title={document?.name ?? "No circuit open"}
         showGrid={showGrid}
         showMinimap={showMinimap}
-        defaultZoom={document?.defaultZoom}
+        // The project's, not the open chip's: "reset view" means the same
+        // thing wherever in the circuit the user is.
+        defaultZoom={project?.defaultZoom}
         // The loaded document's id, not `projectId`: the two differ for the
         // render between asking for a project and the store having it, and
         // re-framing then would use the outgoing circuit's zoom.
@@ -400,7 +479,12 @@ export default function Editor({
                 <DiagnosticsPanel
                   onClose={() => setDiagnosticsOpen(false)}
                   onFocusElements={(nodeIds, wireIds) =>
-                    selectOnly(nodeIds, wireIds)
+                    // Outermost segment, for the same reason `faulted` uses
+                    // it: a fault inside a chip can only select the instance.
+                    selectOnly(
+                      nodeIds.map(outerElementId),
+                      wireIds.map(outerElementId),
+                    )
                   }
                 />
               )}
@@ -415,6 +499,31 @@ export default function Editor({
                 overlapped as soon as the canvas was narrow enough for the
                 centred one to reach the left edge. */}
             <div className="pointer-events-none absolute top-14 left-1/2 z-20 flex max-w-[calc(100%-2rem)] -translate-x-1/2 flex-col items-center gap-1 @max-[64rem]/canvas:max-w-[calc(100%-8rem)]">
+              {/* First in the column: it says which document the canvas is
+                  showing, which the two below it qualify rather than
+                  replace. It takes pointer events (the rest of the column
+                  does not) because it is the way back out. */}
+              {project && subcircuitPath.length > 0 && (
+                <SubcircuitBreadcrumb
+                  project={project}
+                  path={subcircuitPath}
+                  instances={subcircuitInstances(
+                    subcircuitPath[subcircuitPath.length - 1],
+                  )}
+                />
+              )}
+
+              {/* A chip runs on its own while it is open — there is no parent
+                  circuit driving its input ports — so every output reads `Z`
+                  until something inside drives it. Without saying so, the
+                  honest behaviour reads as a broken circuit. */}
+              {subcircuitPath.length > 0 && (
+                <p className="rounded-md border border-dashed border-border bg-sidebar px-2 py-1 text-center text-[11px] text-muted-foreground">
+                  Editing the definition. Its input ports are not driven here,
+                  so they read Z until this circuit is placed in another one.
+                </p>
+              )}
+
               {/* An example is fully editable, so nothing else on screen would
                   tell the user their edits are going nowhere. */}
               {ephemeral && (
@@ -514,10 +623,27 @@ export default function Editor({
       <Inspector
         bounds={inspectorBounds}
         anchorRef={inspectorAnchorRef}
+        onMakeSubcircuit={promptForSubcircuit}
         // Out of the way while a note is edited in place: the edit is on the
         // canvas, and the popover would sit over the text being typed.
         suppressed={gestures.isInteracting || editingNodeId !== null}
       />
+
+      {/* Mounted only while open, so the field starts from the suggested name
+          each time rather than from the last chip the user made. */}
+      {creating && (
+        <SubcircuitNameDialog
+          open
+          onOpenChange={(next) => {
+            if (!next) setCreating(null);
+          }}
+          title="New subcircuit"
+          description={`${creating.nodes} ${creating.nodes === 1 ? "part" : "parts"} move into it, and its boundary becomes ${creating.ports} ${creating.ports === 1 ? "pin" : "pins"}.`}
+          initialName="Chip"
+          submitLabel="Create"
+          onSubmit={makeSubcircuit}
+        />
+      )}
 
       <SettingsDialog
         open={settingsOpen}
@@ -549,6 +675,7 @@ export default function Editor({
         open={commandMenuOpen}
         onOpenChange={setCommandMenuOpen}
         onPlace={placeFromMenu}
+        onMakeSubcircuit={promptForSubcircuit}
       />
     </>
   );

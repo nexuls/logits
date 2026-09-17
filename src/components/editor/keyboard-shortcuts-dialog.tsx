@@ -56,7 +56,11 @@ const GROUPS: { title: string; shortcuts: Shortcut[] }[] = [
       { action: "Rotate 90°", keys: ["R"] },
       { action: "Rotate back", keys: ["Shift+R"] },
       { action: "Delete selection", keys: ["Delete", "Backspace"] },
-      { action: "Edit selected note", keys: ["Enter"] },
+      { action: "Make selection a subcircuit", keys: ["Mod+G"] },
+      {
+        action: "Edit selected note, or open selected subcircuit",
+        keys: ["Enter"],
+      },
       { action: "Cancel placing, wiring, selection", keys: ["Esc"] },
     ],
   },

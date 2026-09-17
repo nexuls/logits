@@ -9,9 +9,11 @@ import {
   InfoIcon,
   type LucideIcon,
   MinusIcon,
+  PackagePlusIcon,
   PencilIcon,
   PlusIcon,
   RotateCwIcon,
+  SquarePenIcon,
   Trash2Icon,
   TriangleAlertIcon,
 } from "lucide-react";
@@ -61,14 +63,15 @@ import type {
   LabelPosition,
 } from "@/lib/circuit/schema";
 import type { NodeDefinition, NodeParams, ParamSpec } from "@/lib/nodes/define";
-import { lookupNode } from "@/lib/nodes/registry";
 import {
   deleteSelection,
+  openSubcircuit,
   rotateSelection,
   updateNodeLabel,
   updateNodeLabelPosition,
   updateNodeParams,
   useDocument,
+  useDocumentLookup,
 } from "@/state/document";
 import { beginInPlaceEdit } from "@/state/in-place-edit";
 import type { Scene } from "@/state/scene";
@@ -95,6 +98,12 @@ type InspectorProps = Props & {
    * (artifacts/07-interaction-spec.md).
    */
   suppressed?: boolean;
+  /**
+   * Opens the editor's prompt for turning this selection into one of the
+   * project's chips. A callback rather than a command call, because the prompt
+   * has to say what the selection will become and the editor owns that dialog.
+   */
+  onMakeSubcircuit?: () => void;
 };
 
 /**
@@ -121,6 +130,7 @@ export default function Inspector({
   bounds,
   anchorRef,
   suppressed = false,
+  onMakeSubcircuit,
 }: InspectorProps) {
   const selection = useSelection();
 
@@ -133,7 +143,12 @@ export default function Inspector({
   // an effect chasing the store.
   const key = [...selection.nodeIds, ...selection.wireIds].join(" ");
   return (
-    <SelectionPopover key={key} anchorRef={anchorRef} selection={selection} />
+    <SelectionPopover
+      key={key}
+      anchorRef={anchorRef}
+      selection={selection}
+      onMakeSubcircuit={onMakeSubcircuit}
+    />
   );
 }
 
@@ -166,19 +181,30 @@ export function InspectorAnchor({ bounds, anchorRef }: Props) {
 function SelectionPopover({
   anchorRef,
   selection,
+  onMakeSubcircuit,
 }: {
   anchorRef: RefObject<HTMLDivElement | null>;
   selection: SelectionState;
+  onMakeSubcircuit?: () => void;
 }) {
   const document = useDocument();
+  // The project's own chips are node types, so an instance's definition is
+  // only resolvable through this — the bare registry would report it as a type
+  // this build does not have.
+  const lookup = useDocumentLookup();
 
   const node =
     document && selection.nodeIds.length === 1
       ? document.nodes[selection.nodeIds[0]]
       : undefined;
-  const definition = node ? lookupNode(node.type) : undefined;
+  const definition = node ? lookup(node.type) : undefined;
   const total = selection.nodeIds.length + selection.wireIds.length;
   const [docsOpen, setDocsOpen] = useState(false);
+
+  // Which chip this node is an instance of, if it is one. Asked of the
+  // definition rather than read off the `type`, so this file stays free of
+  // node types (Non-negotiable #4).
+  const instanceOf = node && definition?.subcircuit?.(node.params);
 
   return (
     <Popover
@@ -292,6 +318,38 @@ function SelectionPopover({
                 This build has no definition for “{node.type}”, so it cannot be
                 configured or simulated. Its wiring is preserved.
               </p>
+            )}
+          </div>
+        )}
+
+        {/* Its own row above the ordinary actions: it is a *navigation* on an
+            instance and a restructuring of the circuit on anything else, and
+            neither belongs beside Rotate and Delete. */}
+        {(instanceOf !== undefined || onMakeSubcircuit) && (
+          <div className="flex border-t border-border/60 px-3.5 py-2.5">
+            {instanceOf !== undefined ? (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="flex-1"
+                onClick={() => openSubcircuit(instanceOf)}
+              >
+                <SquarePenIcon />
+                Edit contents
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="flex-1"
+                disabled={selection.nodeIds.length === 0}
+                onClick={onMakeSubcircuit}
+              >
+                <PackagePlusIcon />
+                Make subcircuit
+              </Button>
             )}
           </div>
         )}
@@ -612,9 +670,10 @@ function GroupField({
   const raw = node.params[spec.key];
   const current = typeof raw === "string" ? raw.trim() : "";
 
+  const lookup = useDocumentLookup();
   const groups = useMemo(
-    () => listGroups(document, node.type, lookupNode),
-    [document, node.type],
+    () => listGroups(document, node.type, lookup),
+    [document, node.type, lookup],
   );
   const byName = useMemo(
     () => new Map(groups.map((group) => [group.name, group])),

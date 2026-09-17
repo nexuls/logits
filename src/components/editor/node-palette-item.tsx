@@ -1,9 +1,16 @@
 "use client";
 
-import { InfoIcon } from "lucide-react";
+import { InfoIcon, type LucideIcon, MoreHorizontalIcon } from "lucide-react";
 import { useState } from "react";
 
 import { nodeIcon } from "@/components/nodes/node-icons";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarMenuAction,
   SidebarMenuButton,
@@ -13,12 +20,31 @@ import { MAX_PLACEMENT_COUNT } from "@/lib/circuit/geometry";
 import type { NodeDefinition } from "@/lib/nodes/define";
 import NodeDocsDialog from "./node-docs-dialog";
 
+/** One extra entry in a palette row's menu — what a chip's row offers. */
+export type PaletteAction = {
+  label: string;
+  icon: LucideIcon;
+  onSelect: () => void;
+  destructive?: boolean;
+};
+
 type Props = {
   definition: NodeDefinition;
   /** Copies of this element armed for the next canvas click; 0 when not armed. */
   count: number;
   /** +1 to arm one more, -1 to arm one fewer. Zero disarms. */
   onAdjust: (delta: number) => void;
+  /**
+   * Things that can be done to this element as well as placed — editing or
+   * deleting a chip the document defines. With any of these the row's trailing
+   * button becomes a menu, with the help it always offered at the top of it.
+   */
+  actions?: readonly PaletteAction[];
+  /**
+   * Why this element cannot be placed right now, if it cannot. A chip may not
+   * be placed inside itself, and the row says so rather than going missing.
+   */
+  unavailable?: string;
 };
 
 /**
@@ -44,17 +70,21 @@ export default function NodePaletteItem({
   definition,
   count,
   onAdjust,
+  actions,
+  unavailable,
 }: Props) {
   const Icon = nodeIcon(definition.icon);
   const armed = count > 0;
   const atLimit = count >= MAX_PLACEMENT_COUNT;
   const [docsOpen, setDocsOpen] = useState(false);
+  const placeable = unavailable === undefined;
 
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
         type="button"
         isActive={armed}
+        disabled={!placeable}
         onClick={() => onAdjust(1)}
         onContextMenu={(event) => {
           // The browser menu has nothing to offer over a palette entry, and
@@ -72,17 +102,20 @@ export default function NodePaletteItem({
           }
         }}
         tooltip={
-          armed
+          unavailable ??
+          (armed
             ? `${definition.title} ×${count}${atLimit ? " (max)" : ""}`
-            : definition.title
+            : definition.title)
         }
         // Palette entries choose the next node to place rather than navigate,
         // so they carry pressed state, not selected state.
         aria-pressed={armed}
         aria-label={
-          armed
-            ? `${definition.title}, ${count} armed of ${MAX_PLACEMENT_COUNT}. Click to add one, right-click or minus to remove one.`
-            : `${definition.title}. Click to arm for placement.`
+          unavailable
+            ? `${definition.title}. ${unavailable}`
+            : armed
+              ? `${definition.title}, ${count} armed of ${MAX_PLACEMENT_COUNT}. Click to add one, right-click or minus to remove one.`
+              : `${definition.title}. Click to arm for placement.`
         }
         // Room on the right for the info action, which overlays the button.
         className="h-11 gap-3 pr-8 [&_svg]:size-6 group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:p-1.5! group-data-[collapsible=icon]:pr-1.5! group-has-data-[sidebar=menu-action]/menu-item:pr-9"
@@ -104,17 +137,52 @@ export default function NodePaletteItem({
 
       {/* Shown on hover and whenever anything in the row has focus, so the
           palette stays quiet at rest but the action is still tabbable. It
-          hides itself on the collapsed rail, where there is no room for it. */}
-      <SidebarMenuAction
-        showOnHover
-        type="button"
-        onClick={() => setDocsOpen(true)}
-        aria-label={`About ${definition.title}`}
-        aria-haspopup="dialog"
-        className="size-8 text-sidebar-foreground/60"
-      >
-        <InfoIcon />
-      </SidebarMenuAction>
+          hides itself on the collapsed rail, where there is no room for it.
+
+          One slot either way: an element the document defines has more than
+          help to offer, so the same button becomes its menu rather than the
+          row growing a second control the other forty rows would leave
+          empty. */}
+      {actions && actions.length > 0 ? (
+        <DropdownMenu>
+          <SidebarMenuAction
+            render={<DropdownMenuTrigger />}
+            showOnHover
+            aria-label={`${definition.title} options`}
+            className="size-8 text-sidebar-foreground/60"
+          >
+            <MoreHorizontalIcon />
+          </SidebarMenuAction>
+          <DropdownMenuContent side="left" align="start" className="w-44">
+            <DropdownMenuItem onClick={() => setDocsOpen(true)}>
+              <InfoIcon />
+              About
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {actions.map((action) => (
+              <DropdownMenuItem
+                key={action.label}
+                variant={action.destructive ? "destructive" : undefined}
+                onClick={action.onSelect}
+              >
+                <action.icon />
+                {action.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : (
+        <SidebarMenuAction
+          showOnHover
+          type="button"
+          onClick={() => setDocsOpen(true)}
+          aria-label={`About ${definition.title}`}
+          aria-haspopup="dialog"
+          className="size-8 text-sidebar-foreground/60"
+        >
+          <InfoIcon />
+        </SidebarMenuAction>
+      )}
 
       {/* Mounted only once opened: the palette renders forty of these, and
           forty dialogs' worth of derived pin tables is work for nothing. */}
