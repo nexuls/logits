@@ -199,6 +199,23 @@ their own. `outerElementId` trims an inlined id (`instance/gate`) back to
 something this document contains, which is how a diagnostic raised inside a
 chip marks the instance it is inside.
 
+**Editing the library** is
+[subcircuit-commands.ts](../src/lib/circuit/subcircuit-commands.ts): pure
+commands for making a chip out of a selection, renaming one, deleting one with
+its instances, following a port's rename through to the wires landed on its
+pin, and asking whether a chip may be placed somewhere without containing
+itself. They are separate from `commands.ts` because nothing here is reachable
+from `buildNetlist`.
+
+`createSubcircuit` is the interesting one. The selected nodes and the wires
+*between* them move into a new chip, keeping their ids so a branch's anchor
+(`wireId` plus waypoint index) still means what it meant. Every wire that
+crossed the selection's boundary stays in the parent, re-pointed at a pin on the
+instance, with a `sub.port` inside standing for the end that went in — so the
+circuit runs exactly as it did, since a port is a join. The boundary is grouped
+**by net**, not by pin: two wires from one switch into two gates are one signal
+and so one pin, and the port then fans out to both gates inside.
+
 ## Validation
 
 Diagnostics are data, not exceptions. A circuit with errors still loads and
