@@ -6,7 +6,7 @@ import {
   serialize,
 } from "@/lib/circuit/io";
 import type { CircuitDocument } from "@/lib/circuit/schema";
-import { getDocument } from "@/state/document";
+import { getRootDocument } from "@/state/document";
 import {
   type CreateResult,
   createProjectFrom,
@@ -30,7 +30,9 @@ export type ImportResult =
  * on the autosave, and a copy or an export has to include them.
  */
 function projectDocument(id: string): CircuitDocument | null {
-  const open = getDocument();
+  // The *root* document, chips and all: a chip being open does not make the
+  // project a different thing to export, duplicate or share.
+  const open = getRootDocument();
   return open?.id === id ? open : openProject(id);
 }
 

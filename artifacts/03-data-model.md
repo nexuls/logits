@@ -199,6 +199,13 @@ their own. `outerElementId` trims an inlined id (`instance/gate`) back to
 something this document contains, which is how a diagnostic raised inside a
 chip marks the instance it is inside.
 
+Because the name is the pin's id, **renaming a port is a wire edit too**:
+`renameSubcircuitPort` re-points every wire landed on that pin and
+`dropSubcircuitPort` removes them when the port goes or its name is cleared.
+Both run inside the same `apply` as the param edit that triggered them, so a
+rename and the wires it moves are one undo step — two steps would leave the
+document in a state the user never saw.
+
 **Editing the library** is
 [subcircuit-commands.ts](../src/lib/circuit/subcircuit-commands.ts): pure
 commands for making a chip out of a selection, renaming one, deleting one with
@@ -215,6 +222,10 @@ instance, with a `sub.port` inside standing for the end that went in — so the
 circuit runs exactly as it did, since a port is a join. The boundary is grouped
 **by net**, not by pin: two wires from one switch into two gates are one signal
 and so one pin, and the port then fans out to both gates inside.
+
+Which document is open for editing — the project or one of its chips — is
+`src/state/document.ts`'s business, not the model's. See
+[ADR 0012](decisions/0012-editing-a-chip-is-a-path-into-the-project.md).
 
 ## Validation
 

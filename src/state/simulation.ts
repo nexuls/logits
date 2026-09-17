@@ -145,8 +145,10 @@ export function createSimulation(options: SimulationOptions = {}): Simulation {
   let revision = 0;
 
   let lookup: NodeLookup = options.lookup ?? lookupNode;
-  /** `lookup` plus the open document's subcircuits. Rebuilt on every sync. */
+  /** `lookup` plus the open document's subcircuits. Rebuilt when they change. */
   let documentLookup: NodeLookup = lookup;
+  /** Which library `documentLookup` was built from — the rebuild test. */
+  let lookupLibrary: CircuitDocument["subcircuits"] | null | undefined = null;
   let runnerOptions: RunnerOptions = options.runner ?? {};
 
   /**
@@ -217,10 +219,17 @@ export function createSimulation(options: SimulationOptions = {}): Simulation {
       return;
     }
 
-    // The document's own chips are node types too, so the lookup the engine
-    // is built from is derived per document rather than being the bare
-    // registry.
-    documentLookup = subcircuitLookup(document, lookup);
+    // The document's own chips are node types too, so the lookup the engine is
+    // built from is derived per document rather than being the bare registry.
+    // Rebuilt only when the chip library changes: the definitions it hands out
+    // are compared by identity downstream, and this runs on every frame of a
+    // drag.
+    if (lookupLibrary !== document.subcircuits) {
+      lookupLibrary = document.subcircuits;
+      documentLookup = document.subcircuits
+        ? subcircuitLookup({ subcircuits: document.subcircuits }, lookup)
+        : lookup;
+    }
 
     const compiled = buildNetlist(document, documentLookup);
     const nextSignature = topologySignature(compiled, documentLookup);

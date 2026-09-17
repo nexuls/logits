@@ -111,20 +111,30 @@ type NodeLayout = { size: Size; offsets: PinOffset[] };
  * identical AND gates share one. Bounded by the number of distinct
  * (type, params, rotation) combinations in play, which stays small.
  */
-const layoutCache = new Map<string, NodeLayout>();
+let layoutCache = new WeakMap<NodeDefinition, Map<string, NodeLayout>>();
 
 /**
  * Commands replace the node object on every edit, so object identity is an
  * exact "has this node changed?" test — and entries evict themselves when the
  * node is deleted, with no dirty flags to keep in sync.
  *
- * The entry remembers which `pinToNet` it was resolved against, because net
- * ids are the one part of a `ResolvedNode` that can change without the node
- * changing: recompiling the netlist renumbers nets under an untouched gate.
+ * Two things can change a `ResolvedNode` without the node changing, and the
+ * entry remembers both:
+ *
+ * - **`pinToNet`**, because recompiling the netlist renumbers the nets under
+ *   an untouched gate.
+ * - **the definition**, because a user-defined chip's is derived from the
+ *   document (ADR 0010): renaming a port inside a chip changes the pins of
+ *   every instance of it while leaving every instance *node* untouched. A
+ *   registry definition is a module singleton, so this costs those nothing.
  */
 const resolvedCache = new WeakMap<
   CircuitNode,
-  { pinToNet: PinToNet | undefined; resolved: ResolvedNode }
+  {
+    pinToNet: PinToNet | undefined;
+    definition: NodeDefinition;
+    resolved: ResolvedNode;
+  }
 >();
 
 /** `pinKey(nodeId, pinId)` → net id, as `buildNetlist` produces it. */
@@ -194,7 +204,9 @@ export function resolveNode(
   // layout is not a function of the node alone and must not be identity-cached.
   if (definition) {
     const hit = resolvedCache.get(node);
-    if (hit && hit.pinToNet === pinToNet) return hit.resolved;
+    if (hit && hit.pinToNet === pinToNet && hit.definition === definition) {
+      return hit.resolved;
+    }
   }
 
   const def = definition ?? placeholderDefinition(node.type);
@@ -205,14 +217,24 @@ export function resolveNode(
     ? `${node.type}|${rotation}|${stableStringify(node.params)}`
     : `?${node.type}|${rotation}|${(referencedPins ?? []).join(",")}`;
 
-  let layout = layoutCache.get(key);
+  // Per definition, for the same reason the entry above records one: a chip's
+  // pins come from its contents, so `(type, params, rotation)` does not
+  // identify its layout. Scoping the map to the definition object keeps that
+  // key exact without putting the pin list into it.
+  let byKey = layoutCache.get(def);
+  if (!byKey) {
+    byKey = new Map<string, NodeLayout>();
+    layoutCache.set(def, byKey);
+  }
+
+  let layout = byKey.get(key);
   if (!layout) {
     const size = def.size(node.params);
     layout = {
       size: rotateSize(size, rotation),
       offsets: pinOffsets(specs, size, rotation),
     };
-    layoutCache.set(key, layout);
+    byKey.set(key, layout);
   }
 
   const pins: ResolvedPin[] = layout.offsets.map((offset) => ({
@@ -235,7 +257,7 @@ export function resolveNode(
     pinsById,
   };
 
-  if (definition) resolvedCache.set(node, { pinToNet, resolved });
+  if (definition) resolvedCache.set(node, { pinToNet, definition, resolved });
   return resolved;
 }
 
@@ -291,9 +313,14 @@ export function paintOrder(scene: Scene): string[] {
   return [...enclosures, ...rest];
 }
 
-/** Test seam — the caches are process-global and otherwise never cleared. */
+/**
+ * Test seam — the caches are process-global and otherwise never cleared.
+ *
+ * Replaced rather than emptied: the layout cache is keyed on the definition,
+ * so it is a `WeakMap` and evicts itself with the definitions it describes.
+ */
 export function clearSceneCaches(): void {
-  layoutCache.clear();
+  layoutCache = new WeakMap();
 }
 
 /**

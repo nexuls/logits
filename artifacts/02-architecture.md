@@ -39,7 +39,7 @@ one, that is a design error — pass it in as an argument.
 | `src/components/ui/` | shadcn primitives. Generated — see AGENTS.md. | Built |
 | `src/example/` | The circuits shipped with the app: one `.logits.json` per example plus an `index.ts` that validates them through `fromJson`. Pure data — no React, no storage. | Built — see [ADR 0008](decisions/0008-examples-are-ephemeral.md) |
 | `src/hooks/` | Generic React hooks (`use-mobile`, `use-debounced-callback`). | Built |
-| `src/lib/circuit/` | Document model, ids, geometry, wire routing, netlist derivation, serialize/migrate. | Built |
+| `src/lib/circuit/` | Document model, ids, geometry, wire routing, netlist derivation, serialize/migrate. Editor commands are `commands.ts`; the chip library's own commands are `subcircuit-commands.ts`, kept separate because nothing in them is reachable from `buildNetlist`. | Built |
 | `src/lib/perf/` | Allocation-free measurement primitives (`RollingWindow`: mean, nearest-rank percentile, history). Pure — no clock of its own; callers push samples. | Built |
 | `src/lib/sim/` | Event queue, engine, four-valued logic, runner, waveform buffer. | Partial — `logic.ts`, `queue.ts`, `engine.ts` and `runner.ts` built; the waveform ring buffer arrives with the instruments in phase 4 |
 | `src/lib/nodes/` | Node definitions + registry, one file per node type. | Built — `defineNode`, the registry, `paramsSchema`, `view`, and the `gate.*` / `io.*` definitions; the rest of the catalog is phase 4 |
@@ -154,6 +154,16 @@ The document store (topology, positions, params) and the simulation state
 netlist; it must not reset the document. Rebuilds should be incremental where
 cheap, but a full rebuild under ~10 ms for a typical circuit is acceptable — do
 the simple thing first, measure before optimising.
+
+`document.ts` also owns *which* document is open. A project's chips are
+documents too, and editing one is a path into the project rather than a second
+editor: `getDocument()` returns the open chip, `getRootDocument()` the project,
+and `apply` writes an edit back into the project's library — so every command,
+the scene, the netlist and the simulation work inside a chip unchanged, and
+history, autosave and the project id stay the project's. Anything that means
+"the project" — export, duplicate, share, delete, `defaultZoom` — must say so
+with `getRootDocument`. See
+[ADR 0012](decisions/0012-editing-a-chip-is-a-path-into-the-project.md).
 
 [simulation.ts](../src/state/simulation.ts) owns that boundary. Every document
 change is pushed in through `syncDocument`, which recompiles the netlist and

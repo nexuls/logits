@@ -11,7 +11,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import type { ProjectMeta } from "@/lib/circuit/schema";
-import { flushSave, getDocument } from "@/state/document";
+import { flushSave, getRootDocument } from "@/state/document";
 import { deleteProject } from "@/state/projects-store";
 import type { StorageResult } from "@/state/storage";
 
@@ -37,7 +37,7 @@ export default function DeleteProjectDialog({
     // An edit still waiting on the autosave would be written when the editor
     // lets go of this document — straight back into storage, resurrecting the
     // project that was just deleted. Writing it first leaves nothing pending.
-    if (getDocument()?.id === project.id) flushSave();
+    if (getRootDocument()?.id === project.id) flushSave();
 
     onDeleted(deleteProject(project.id), project.id);
     onClose();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { getExample } from "@/example";
 import {
   type AddNodeOptions,
@@ -32,6 +32,7 @@ import {
 import { rotateSize, type Size } from "@/lib/circuit/geometry";
 import type {
   CircuitDocument,
+  CircuitNode,
   LabelPosition,
   PinRef,
   Point,
@@ -39,7 +40,19 @@ import type {
   WireAnchor,
   WireEnd,
 } from "@/lib/circuit/schema";
-import type { NodeDefinition } from "@/lib/nodes/define";
+import { subcircuitLookup } from "@/lib/circuit/subcircuit";
+import {
+  type CreateSubcircuitResult,
+  canInstantiate,
+  createSubcircuit,
+  dropSubcircuitPort,
+  putSubcircuit,
+  removeSubcircuit,
+  renameSubcircuit,
+  renameSubcircuitPort,
+  subcircuitUsage,
+} from "@/lib/circuit/subcircuit-commands";
+import type { NodeDefinition, NodeLookup } from "@/lib/nodes/define";
 import { lookupNode } from "@/lib/nodes/registry";
 import {
   commit,
@@ -51,6 +64,7 @@ import {
   undo as historyUndo,
 } from "./history";
 import { refreshProjects } from "./projects-store";
+import { clearSelection } from "./selection";
 import { readDocument, writeDocument } from "./storage";
 
 /**
@@ -63,6 +77,14 @@ import { readDocument, writeDocument } from "./storage";
  *
  * The transforms are pure and live in `src/lib/circuit/commands.ts` — what
  * this module adds is the open document, the history stack, and persistence.
+ *
+ * It also owns *which* document is open. A project's own chips are documents
+ * too (ADR 0010), and editing one is a path into the project rather than a
+ * second editor: `getDocument` hands back the chip while it is open, every
+ * command below edits that, and the write-back puts it into the root's
+ * library. History, autosave and the project id all stay the root's, which is
+ * what keeps `Ctrl+Z` working across the boundary and stops a chip from being
+ * a thing that can be saved, or lost, on its own. See ADR 0012.
  */
 
 const AUTOSAVE_DELAY_MS = 800;
@@ -79,6 +101,13 @@ const listeners = new Set<() => void>();
  * a caller.
  */
 let ephemeral = false;
+
+/**
+ * The chips being edited, outermost first; empty while the root circuit is
+ * open. Only the last entry says which document is open — the library is flat,
+ * so the rest is the trail back out, which is what the breadcrumb walks.
+ */
+let editPath: readonly string[] = [];
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 let unsaved: CircuitDocument | null = null;
@@ -162,21 +191,137 @@ export function flushSave(): void {
  * Everything below funnels through here, so "what does undo cover" and "what
  * gets saved" have exactly one answer each.
  */
+type ApplyOptions = {
+  coalesce?: boolean;
+  /**
+   * Runs on the finished root, after `change` and after the open chip has been
+   * written back into it.
+   *
+   * It exists because an edit *inside* a chip can have consequences outside
+   * it: a port's name is the pin id every instance's wires are stored against,
+   * so renaming one has to reach those wires. Part of the same `apply`, so it
+   * is part of the same undo step — the rename and the wires it moves are one
+   * edit, not two.
+   */
+  root?: (root: CircuitDocument) => CircuitDocument;
+};
+
 function apply(
   label: string,
   change: (document: CircuitDocument) => CircuitDocument,
-  options: { coalesce?: boolean } = {},
+  options: ApplyOptions = {},
 ): boolean {
   if (!history) return false;
 
-  const next = change(history.present);
-  const committed = commit(history, next, { label, ...options });
+  const key = openSubcircuitKey();
+  const present = history.present;
+
+  let next: CircuitDocument;
+  if (key === null) {
+    next = change(present);
+  } else {
+    const open = getDocument();
+    if (!open) return false;
+
+    const edited = change(open);
+    // Commands return the document they were given when they change nothing,
+    // and the write-back below would otherwise make that a fresh object and so
+    // a history entry that undoes nothing visible.
+    if (edited === open) return false;
+
+    // The open chip carries the root's library so that a chip built from other
+    // chips resolves them while it is open. That library is the *root's*, so a
+    // command that changed it — creating a chip from a selection inside this
+    // one — writes its version back to the root and never into the chip.
+    next = putSubcircuit(
+      { ...present, subcircuits: edited.subcircuits ?? {} },
+      key,
+      withoutLibrary(edited),
+    );
+  }
+
+  const { root, ...commitOptions } = options;
+  const committed = commit(history, root ? root(next) : next, {
+    label,
+    ...commitOptions,
+  });
   if (committed === history) return false;
 
   history = committed;
+  normalizeEditPath();
   scheduleSave(history.present);
   emit();
   return true;
+}
+
+/**
+ * Applies a command to the *root* document, whichever chip is open.
+ *
+ * The chip library belongs to the root, so renaming or deleting a chip is not
+ * an edit to whatever happens to be on screen — including when what is on
+ * screen is the chip being renamed.
+ */
+function applyToRoot(
+  label: string,
+  change: (document: CircuitDocument) => CircuitDocument,
+): boolean {
+  if (!history) return false;
+
+  const committed = commit(history, change(history.present), { label });
+  if (committed === history) return false;
+
+  history = committed;
+  normalizeEditPath();
+  scheduleSave(history.present);
+  emit();
+  return true;
+}
+
+/** A chip as it is stored: never carrying a copy of the library it lives in. */
+function withoutLibrary(document: CircuitDocument): CircuitDocument {
+  if (!document.subcircuits) return document;
+
+  const { subcircuits: _library, ...rest } = document;
+  return rest;
+}
+
+/**
+ * Drops any trailing chip that is no longer there — undone away, or deleted
+ * while it was open. The editor then shows the document one level out rather
+ * than an empty canvas whose title names something that does not exist.
+ */
+function normalizeEditPath(): void {
+  const root = history?.present;
+  if (!root) {
+    setEditPath([]);
+    return;
+  }
+
+  const kept: string[] = [];
+  for (const key of editPath) {
+    if (!root.subcircuits?.[key]) break;
+    kept.push(key);
+  }
+  if (kept.length !== editPath.length) setEditPath(kept);
+}
+
+function setEditPath(next: readonly string[]): void {
+  editPath = next;
+  openFor = null;
+}
+
+/**
+ * Finishes a step between documents.
+ *
+ * The selection goes with it: the ids in it name nodes in the document being
+ * left, and carrying them across would anchor the inspector over a node the
+ * canvas is no longer drawing. Done here rather than in an effect in the
+ * editor, so the selection and the document can never be out of step even for
+ * a render.
+ */
+function leaveDocument(): void {
+  clearSelection();
+  emit();
 }
 
 /**
@@ -217,6 +362,7 @@ export function closeDocument(): void {
   flushSave();
   history = null;
   ephemeral = false;
+  setEditPath([]);
   emit();
 }
 
@@ -227,6 +373,8 @@ function adopt(document: CircuitDocument, isEphemeral: boolean): void {
 
   history = createHistory(document);
   ephemeral = isEphemeral;
+  // A new project opens at its root, never inside a chip the last one had open.
+  setEditPath([]);
   saveError = null;
   setSaveState({ pending: false, error: null });
   emit();
@@ -241,14 +389,96 @@ export function useIsEphemeral(): boolean {
   return useSyncExternalStore(subscribe, isEphemeral, () => false);
 }
 
+/**
+ * The document being edited: the project, or the chip inside it that is open.
+ *
+ * Every command, the scene, the netlist and the simulation read this one, which
+ * is what makes editing a chip the ordinary editor rather than a second one.
+ */
 export function getDocument(): CircuitDocument | null {
+  const root = history?.present ?? null;
+  if (!root) return null;
+
+  const key = openSubcircuitKey();
+  if (key === null) return root;
+
+  const chip = root.subcircuits?.[key];
+  if (!chip) return root;
+
+  // Cached because `useSyncExternalStore` compares snapshots by identity: the
+  // open chip has to be the same object until the root or the path changes.
+  if (openFor?.root === root && openFor.key === key) return openChip;
+
+  // The root's library, grafted on: a chip may instantiate other chips, and
+  // they are all defined at the root (ADR 0010), so without this a chip's own
+  // instances would be unresolvable for exactly as long as it was open.
+  openChip = { ...chip, subcircuits: root.subcircuits };
+  openFor = { root, key };
+  return openChip;
+}
+
+/** The root project, chips and all — what history, autosave and the id belong to. */
+export function getRootDocument(): CircuitDocument | null {
   return history?.present ?? null;
+}
+
+/** Key of the chip being edited, or null for the project itself. */
+export function openSubcircuitKey(): string | null {
+  return editPath.length > 0 ? editPath[editPath.length - 1] : null;
+}
+
+export function getSubcircuitPath(): readonly string[] {
+  return editPath;
+}
+
+let openFor: { root: CircuitDocument; key: string } | null = null;
+let openChip: CircuitDocument | null = null;
+
+/**
+ * Opens one of the project's chips for editing.
+ *
+ * Pushes onto the path rather than replacing it, so stepping into a chip from
+ * inside another chip leaves a way back to where the user came from. False for
+ * a key the project does not define.
+ */
+export function openSubcircuit(key: string): boolean {
+  const root = history?.present;
+  if (!root?.subcircuits?.[key]) return false;
+  if (openSubcircuitKey() === key) return true;
+
+  // Re-entering a chip already on the trail truncates back to it instead of
+  // growing a path that visits it twice.
+  const at = editPath.indexOf(key);
+  setEditPath(at === -1 ? [...editPath, key] : editPath.slice(0, at + 1));
+  leaveDocument();
+  return true;
+}
+
+/** Steps back out one level. False at the root, where there is nowhere to go. */
+export function closeSubcircuit(): boolean {
+  if (editPath.length === 0) return false;
+
+  setEditPath(editPath.slice(0, -1));
+  leaveDocument();
+  return true;
+}
+
+/** Back to the project itself, however deep in. */
+export function closeAllSubcircuits(): boolean {
+  if (editPath.length === 0) return false;
+
+  setEditPath([]);
+  leaveDocument();
+  return true;
 }
 
 export function undo(): boolean {
   if (!history || !historyCanUndo(history)) return false;
 
   history = historyUndo(history);
+  // The step may have taken away the chip that was open — undoing the edit
+  // that created it, say — so the path is re-checked before anything reads it.
+  normalizeEditPath();
   scheduleSave(history.present);
   emit();
   return true;
@@ -258,6 +488,9 @@ export function redo(): boolean {
   if (!history || !historyCanRedo(history)) return false;
 
   history = historyRedo(history);
+  // The step may have taken away the chip that was open — undoing the edit
+  // that created it, say — so the path is re-checked before anything reads it.
+  normalizeEditPath();
   scheduleSave(history.present);
   emit();
   return true;
@@ -349,11 +582,56 @@ export function updateNodeParams(
   patch: Record<string, unknown>,
   options: { coalesce?: boolean } = {},
 ): boolean {
+  const key = openSubcircuitKey();
+
+  /**
+   * Set when this edit changed a boundary port's name — `to` being null when
+   * it was cleared, which takes the pin away rather than moving it.
+   */
+  let renamed: { from: string; to: string | null } | null = null;
+
   return apply(
     "params",
-    (document) => setLinkedNodeParams(document, lookupNode, nodeId, patch),
-    options,
+    (document) => {
+      const next = setLinkedNodeParams(
+        document,
+        documentLookup(),
+        nodeId,
+        patch,
+      );
+      if (next === document || key === null) return next;
+
+      // Asked of the definition before and after, so this is the port's own
+      // declaration of what its pin is called and nothing here learns a node
+      // type (Non-negotiable #4). Only the chip being edited has instances
+      // whose wires could be on that pin.
+      const from = boundaryPortName(document.nodes[nodeId]);
+      const to = boundaryPortName(next.nodes[nodeId]);
+      // A blank name defines no pin at all, so clearing one is a *removal*:
+      // there is nowhere for the wires on that pin to go.
+      if (from && from !== to) renamed = { from, to };
+
+      return next;
+    },
+    {
+      ...options,
+      root: (root) => {
+        if (!renamed || key === null) return root;
+
+        return renamed.to === null
+          ? dropSubcircuitPort(root, key, renamed.from)
+          : renameSubcircuitPort(root, key, renamed.from, renamed.to);
+      },
+    },
   );
+}
+
+/** What this node calls its boundary pin, or null if it is not a port. */
+function boundaryPortName(node: CircuitNode | undefined): string | null {
+  if (!node) return null;
+
+  const name = documentLookup()(node.type)?.boundaryPort?.(node.params)?.name;
+  return name && name.length > 0 ? name : null;
 }
 
 /**
@@ -373,7 +651,7 @@ export function resizeNode(
     "resize",
     (document) => {
       const node = document.nodes[nodeId];
-      const resize = node && lookupNode(node.type)?.resize;
+      const resize = node && documentLookup()(node.type)?.resize;
       if (!node || !resize) return document;
 
       const size = rotateSize(box.size, node.rotation ?? 0);
@@ -418,7 +696,10 @@ export function renameOpenDocument(name: string): boolean {
  * transform and nothing that outlives the session.
  */
 export function setOpenDocumentDefaultZoom(zoom: number): boolean {
-  return apply("zoom", (document) => setDefaultZoom(document, zoom));
+  // The project's, not the open chip's: it is what "reset view" returns to
+  // everywhere in the circuit, and a per-chip zoom nothing in the UI offers to
+  // set would be a setting the user could only reach by accident.
+  return applyToRoot("zoom", (document) => setDefaultZoom(document, zoom));
 }
 
 export function connectPins(
@@ -426,9 +707,12 @@ export function connectPins(
   to: PinRef,
   waypoints: readonly Point[] = [],
 ): ConnectResult {
-  if (!history) return { ok: false, reason: "missing-pin" };
+  const open = getDocument();
+  if (!open) return { ok: false, reason: "missing-pin" };
 
-  const result = connect(history.present, lookupNode, from, to, waypoints);
+  // The open document's lookup, not the bare registry: a wire landing on a
+  // chip instance's pin has to find that pin, and only this resolves `sub.*`.
+  const result = connect(open, documentLookup(), from, to, waypoints);
   if (result.ok) apply("connect", () => result.document);
 
   return result;
@@ -446,15 +730,10 @@ export function connectPinToWire(
   tap: WireTap,
   waypoints: readonly Point[] = [],
 ): ConnectResult {
-  if (!history) return { ok: false, reason: "missing-pin" };
+  const open = getDocument();
+  if (!open) return { ok: false, reason: "missing-pin" };
 
-  const result = connectToWire(
-    history.present,
-    lookupNode,
-    from,
-    tap,
-    waypoints,
-  );
+  const result = connectToWire(open, documentLookup(), from, tap, waypoints);
   if (result.ok) apply("connect", () => result.document);
 
   return result;
@@ -478,9 +757,10 @@ export function branchWire(
   slot: number,
   point: Point,
 ): WireBranch | null {
-  if (!history) return null;
+  const open = getDocument();
+  if (!open) return null;
 
-  const result = branchWireAt(history.present, wireId, slot, point);
+  const result = branchWireAt(open, wireId, slot, point);
   if (!result) return null;
 
   apply("branch", () => result.document);
@@ -526,14 +806,35 @@ export function dropWireWaypoint(wireId: string, index: number): boolean {
 }
 
 export function deleteSelection(selection: Selection): boolean {
-  return apply("delete", (document) => deleteElements(document, selection));
+  const key = openSubcircuitKey();
+
+  // Ports going with this delete take a pin off every instance of the chip,
+  // and the wires on those pins have nowhere to go. Read before the delete,
+  // since afterwards there is no node left to ask.
+  const ports =
+    key === null
+      ? []
+      : (selection.nodeIds ?? [])
+          .map((nodeId) => boundaryPortName(getDocument()?.nodes[nodeId]))
+          .filter((name): name is string => name !== null);
+
+  return apply("delete", (document) => deleteElements(document, selection), {
+    root: (root) =>
+      key === null
+        ? root
+        : ports.reduce(
+            (next, name) => dropSubcircuitPort(next, key, name),
+            root,
+          ),
+  });
 }
 
 /** The selection as standalone data, for the clipboard. Null with nothing open. */
 export function copySelection(selection: Selection): Fragment | null {
-  if (!history) return null;
+  const open = getDocument();
+  if (!open) return null;
 
-  const fragment = extractFragment(history.present, selection);
+  const fragment = extractFragment(open, selection);
   return fragment.nodes.length > 0 ? fragment : null;
 }
 
@@ -566,9 +867,130 @@ export function duplicateSelection(
   return fragment ? pasteFragment(fragment, offset) : null;
 }
 
+/**
+ * Turns the selection into one of the project's chips, in its place.
+ *
+ * One `apply`, so the whole thing — the chip, the instance, and every wire
+ * re-pointed at it — is a single undo step. The chip is added to the *root's*
+ * library even when the selection was inside another chip, because that is
+ * where chips live (ADR 0010).
+ */
+export function createSubcircuitFromSelection(
+  selection: Selection,
+  name: string,
+): CreateSubcircuitResult | null {
+  if (!history) return null;
+
+  let created: CreateSubcircuitResult | null = null;
+  apply("subcircuit", (document) => {
+    const result = createSubcircuit(document, documentLookup(), selection, {
+      name,
+    });
+    if (!result) return document;
+
+    created = result;
+    return result.document;
+  });
+
+  return created;
+}
+
+/** Renames a chip. Its key, and so every instance of it, is untouched. */
+export function renameSubcircuitByKey(key: string, name: string): boolean {
+  return applyToRoot("rename chip", (document) =>
+    renameSubcircuit(document, key, name),
+  );
+}
+
+/**
+ * Deletes a chip and every instance of it, anywhere in the project.
+ *
+ * Leaves the chip if it is the one open, stepping out of it first: an editor
+ * showing a document that is no longer in the project is not a state worth
+ * having, and the path normalisation would drop it a moment later anyway.
+ */
+export function deleteSubcircuitByKey(key: string): boolean {
+  if (!history?.present.subcircuits?.[key]) return false;
+
+  if (editPath.includes(key)) {
+    setEditPath(editPath.slice(0, editPath.indexOf(key)));
+  }
+  return applyToRoot("delete chip", (document) =>
+    removeSubcircuit(document, key),
+  );
+}
+
+/** Every instance of a chip, for a delete prompt that says what it will take. */
+export function subcircuitInstances(key: string): number {
+  const root = history?.present;
+  return root ? subcircuitUsage(root, key).length : 0;
+}
+
+/**
+ * May a chip be placed in the document that is open? False only when it would
+ * make a chip contain itself.
+ */
+export function canPlaceSubcircuit(key: string): boolean {
+  const root = history?.present;
+  return root ? canInstantiate(root, openSubcircuitKey(), key) : false;
+}
+
+/**
+ * The registry, plus the project's own chips as node types.
+ *
+ * Every surface that resolves a `type` reads it from here — the scene, the
+ * inspector, the palette, the simulation — so the pins the canvas draws on an
+ * instance and the pins the netlist ties up can never come from two different
+ * places. It is derived from the *root*, since that is where the library is,
+ * and cached on it so the memo does not churn on every pan.
+ */
+export function documentLookup(): NodeLookup {
+  const library = history?.present.subcircuits;
+  if (!library) return lookupNode;
+
+  // Keyed on the *library*, not the document: a chip's definition is derived
+  // from its contents, and the scene caches its layout against the definition
+  // object, so handing out a new one on every keystroke would throw away the
+  // layout of every instance on the canvas. The library only changes when a
+  // chip does, which is exactly when those definitions are stale.
+  if (lookupFor !== library) {
+    lookupFor = library;
+    cachedLookup = subcircuitLookup({ subcircuits: library }, lookupNode);
+  }
+  return cachedLookup;
+}
+
+let lookupFor: CircuitDocument["subcircuits"] | null = null;
+let cachedLookup: NodeLookup = lookupNode;
+
 /** Null until a document is opened, and on the server. */
 export function useDocument(): CircuitDocument | null {
   return useSyncExternalStore(subscribe, getDocument, () => null);
+}
+
+/** The project the open document belongs to — the chip library's owner. */
+export function useRootDocument(): CircuitDocument | null {
+  return useSyncExternalStore(subscribe, getRootDocument, () => null);
+}
+
+export function useSubcircuitPath(): readonly string[] {
+  return useSyncExternalStore(subscribe, getSubcircuitPath, () => EMPTY_PATH);
+}
+
+const EMPTY_PATH: readonly string[] = [];
+
+/**
+ * `documentLookup`, for a component. Memoised on the project's chip library
+ * for the reason spelled out there: stable definitions are what let the scene
+ * keep the layout it has already computed for every instance on the canvas.
+ */
+export function useDocumentLookup(): NodeLookup {
+  const library = useRootDocument()?.subcircuits;
+  return useMemo(
+    () =>
+      library ? subcircuitLookup({ subcircuits: library }, lookupNode) : lookupNode,
+    [library],
+  );
 }
 
 const EMPTY_HISTORY_STATE = { canUndo: false, canRedo: false };
@@ -623,6 +1045,7 @@ export function resetDocumentStore(): void {
   }
   history = null;
   ephemeral = false;
+  setEditPath([]);
   unsaved = null;
   saveError = null;
   saveState = IDLE_SAVE_STATE;

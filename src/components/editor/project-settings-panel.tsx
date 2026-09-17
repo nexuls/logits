@@ -5,7 +5,7 @@ import { useId } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DEFAULT_SCALE, MAX_SCALE, MIN_SCALE } from "@/lib/circuit/coords";
-import { setOpenDocumentDefaultZoom, useDocument } from "@/state/document";
+import { setOpenDocumentDefaultZoom, useRootDocument } from "@/state/document";
 
 /**
  * Settings that belong to the open circuit rather than to the workspace.
@@ -19,7 +19,7 @@ const MIN_PERCENT = Math.round(MIN_SCALE * 100);
 const MAX_PERCENT = Math.round(MAX_SCALE * 100);
 
 export default function ProjectSettingsPanel() {
-  const document = useDocument();
+  const document = useRootDocument();
   const id = useId();
 
   if (!document) return null;

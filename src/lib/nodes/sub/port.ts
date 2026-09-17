@@ -56,7 +56,10 @@ Building a reusable chip:
 4. Place an instance of the chip in a parent circuit — the ports are its pins,
    in the order and with the names you gave them.
 
-Renaming a port changes the pin on every instance of the chip.
+Renaming a port renames the pin on every instance, and the wires already
+landed on it come along — renaming a pin is not a request to disconnect
+anything. **Deleting** a port, or clearing its name, does take the pin away,
+and the wires on it go with it rather than being left dangling.
 
 ## On the canvas
 
