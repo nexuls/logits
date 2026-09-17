@@ -10,7 +10,7 @@ import {
   type PinSpec,
   type WireEnd,
 } from "./schema";
-import { flattenDocument } from "./subcircuit";
+import { elementOwner, flattenDocument } from "./subcircuit";
 
 /**
  * Netlist compilation: the document flattened into the form the engine runs.
@@ -67,7 +67,8 @@ export type DiagnosticCode =
   | "unknown-node-type"
   | "unknown-pin"
   | "oscillation"
-  | "subcircuit-recursion";
+  | "subcircuit-recursion"
+  | "duplicate-port";
 
 export type Diagnostic = {
   code: DiagnosticCode;
@@ -132,10 +133,11 @@ export function buildNetlist(
 ): Netlist {
   // User-defined chips are inlined first, so everything below compiles one
   // flat circuit and the engine never learns that subcircuits exist.
-  const { document, diagnostics: flattenDiagnostics } = flattenDocument(
-    source,
-    lookup,
-  );
+  const {
+    document,
+    pinAliases,
+    diagnostics: flattenDiagnostics,
+  } = flattenDocument(source, lookup);
   const diagnostics: Diagnostic[] = [...flattenDiagnostics];
   const referencedPins = referencedPinsByNode(document);
 
@@ -269,6 +271,45 @@ export function buildNetlist(
     }
   }
 
+  // Two boundary ports of one circuit claiming the same name. The name is the
+  // pin's id on every instance of that circuit, so the second one defines no
+  // pin at all (`subcircuitPorts`) — which the user has to be told, because
+  // the pin they wired up would otherwise just be missing.
+  //
+  // Grouped by owner: after flattening, two different chips that each have a
+  // port called `IN` are both nodes of this one netlist, and that is not a
+  // clash. Driven off `boundaryPort`, so nothing here learns a node type.
+  const portNames = new Map<string, Map<string, string[]>>();
+
+  for (const nodeId of nodeIds) {
+    const node = document.nodes[nodeId];
+    const boundary = lookup(node.type)?.boundaryPort?.(node.params);
+    if (!boundary || boundary.name.length === 0) continue;
+
+    const owner = elementOwner(nodeId);
+    const byName = portNames.get(owner) ?? new Map<string, string[]>();
+    byName.set(boundary.name, [...(byName.get(boundary.name) ?? []), nodeId]);
+    portNames.set(owner, byName);
+  }
+
+  // Sorted so the diagnostics come out in the same order every compile.
+  for (const [, byName] of [...portNames.entries()].sort(([a], [b]) =>
+    a.localeCompare(b),
+  )) {
+    for (const [name, claimants] of [...byName.entries()].sort(([a], [b]) =>
+      a.localeCompare(b),
+    )) {
+      if (claimants.length < 2) continue;
+
+      diagnostics.push({
+        code: "duplicate-port",
+        severity: "error",
+        message: `${claimants.length} ports are named "${name}". A port's name is its pin on every instance of the subcircuit, so only the first one is a pin — give each port a name of its own.`,
+        nodeIds: claimants,
+      });
+    }
+  }
+
   // Roots are numbered in sorted-key order, so net ids are stable. Every pin
   // gets a net, wired or not: an unconnected input still has to read Z.
   const netIdByRoot = new Map<string, NetId>();
@@ -295,6 +336,17 @@ export function buildNetlist(
   for (const node of nodes) {
     for (const spec of node.pins) {
       node.pinNets[spec.id] = pinToNet[pinKey(node.id, spec.id)];
+    }
+  }
+
+  // A subcircuit instance's own pins were replaced by the port pins inside it,
+  // so nothing above gave them a net. Copying the port's across is what lets
+  // the canvas draw a value on an instance pin, the same as on any other node;
+  // it adds no net and no pin, only a second name for one that exists.
+  for (const alias of pinAliases) {
+    const netId = pinToNet[pinKey(alias.port.nodeId, alias.port.pinId)];
+    if (netId !== undefined) {
+      pinToNet[pinKey(alias.instance.nodeId, alias.instance.pinId)] = netId;
     }
   }
 

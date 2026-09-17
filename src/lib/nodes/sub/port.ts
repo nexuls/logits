@@ -25,6 +25,12 @@ on every instance of that chip.
 **Port name** is the pin's name on the instance, so keep it short — \`CLK\`,
 \`D\`, \`Q\`. A blank name defines no pin at all.
 
+It is also the pin's *identity* — what a wire on every instance is stored
+against — so **two ports of one chip may not share a name**. Every port starts
+out called \`IN\`, which makes renaming each one the first thing to do after
+placing it: leave two the same and only the first is a pin, and the circuit
+reports a \`duplicate-port\` error naming the ports that clash.
+
 **Direction** is written from the *chip's* point of view, not the port's:
 
 - **Input to the chip** — the parent circuit drives it. Inside the definition
@@ -50,8 +56,7 @@ Building a reusable chip:
 4. Place an instance of the chip in a parent circuit — the ports are its pins,
    in the order and with the names you gave them.
 
-Renaming a port changes the instance's pin, so wires already landed on the old
-name will need re-attaching.
+Renaming a port changes the pin on every instance of the chip.
 
 ## On the canvas
 

@@ -6,6 +6,7 @@ import { circuit } from "@/test/circuit";
 import { buildNetlist } from "./netlist";
 import type { CircuitDocument } from "./schema";
 import {
+  duplicatePortNames,
   flattenDocument,
   MAX_SUBCIRCUIT_DEPTH,
   subcircuitLookup,
@@ -221,5 +222,114 @@ describe("flattenDocument", () => {
 
     expect(diagnostics[0]?.code).toBe("subcircuit-recursion");
     expect(diagnostics[0]?.message).toContain(String(MAX_SUBCIRCUIT_DEPTH));
+  });
+});
+
+/**
+ * Every port starts out called `IN`, so a chip with two ports nobody renamed
+ * is the easiest broken interface to arrive at — and the one that used to take
+ * the canvas down with a duplicate React key.
+ */
+describe("ports with the same name", () => {
+  /** Two input ports, both left at the default name. */
+  function clashingChip(): CircuitDocument {
+    return {
+      ...circuit(
+        {
+          pa: { type: "sub.port", params: { name: "IN", direction: "in" } },
+          pb: { type: "sub.port", params: { name: "IN", direction: "in" } },
+          gate: { type: "gate.and" },
+          py: { type: "sub.port", params: { name: "IN", direction: "out" } },
+        },
+        [
+          ["pa", "io", "gate", "in0"],
+          ["pb", "io", "gate", "in1"],
+          ["gate", "out", "py", "io"],
+        ],
+      ),
+      id: "chip_clash",
+      name: "Clashing chip",
+    };
+  }
+
+  it("is one pin, not several claiming the same id", () => {
+    const chip = clashingChip();
+    const definition = subcircuitLookup(
+      withInstance({ and2: chip }),
+      lookupNode,
+    )(subcircuitType("and2"));
+
+    const ids = definition?.pins({}).map((pin) => pin.id) ?? [];
+    expect(ids).toEqual(["IN"]);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("keeps the first port in the interface order", () => {
+    const ports = subcircuitPorts(clashingChip(), lookupNode);
+
+    // Inputs sort before outputs, so the input wins the name and the output
+    // port is the one left without a pin.
+    expect(ports).toHaveLength(1);
+    expect(ports[0].direction).toBe("in");
+  });
+
+  it("names the clash so the user can find it", () => {
+    expect(duplicatePortNames(clashingChip(), lookupNode)).toEqual(["IN"]);
+    expect(duplicatePortNames(andChip(), lookupNode)).toEqual([]);
+  });
+
+  it("reports it as an error against the ports themselves", () => {
+    const chip = clashingChip();
+    const netlist = buildNetlist(chip, subcircuitLookup(chip, lookupNode));
+    const reported = netlist.diagnostics.filter(
+      (diagnostic) => diagnostic.code === "duplicate-port",
+    );
+
+    expect(reported).toHaveLength(1);
+    expect(reported[0].nodeIds).toEqual(["pa", "pb", "py"]);
+  });
+
+  it("reports it once per instance when the chip is placed", () => {
+    const document = withInstance({ and2: clashingChip() });
+    const netlist = buildNetlist(
+      document,
+      subcircuitLookup(document, lookupNode),
+    );
+    const reported = netlist.diagnostics.filter(
+      (diagnostic) => diagnostic.code === "duplicate-port",
+    );
+
+    expect(reported).toHaveLength(1);
+    // Inlined ids, so the editor can trim them back to the instance.
+    expect(reported[0].nodeIds).toEqual(["chip/pa", "chip/pb", "chip/py"]);
+  });
+
+  it("does not call two different chips' ports a clash", () => {
+    const document = withInstance({ and2: andChip() });
+    const netlist = buildNetlist(
+      document,
+      subcircuitLookup(document, lookupNode),
+    );
+
+    // `andChip` has A, B and Y, and so would a second chip beside it; a name
+    // is only claimed within the circuit that declares it.
+    expect(
+      netlist.diagnostics.filter(
+        (diagnostic) => diagnostic.code === "duplicate-port",
+      ),
+    ).toHaveLength(0);
+  });
+
+  it("says nothing about a blank port, which defines no pin at all", () => {
+    const chip = clashingChip();
+    chip.nodes.pa = { ...chip.nodes.pa, params: { name: "", direction: "in" } };
+    chip.nodes.pb = { ...chip.nodes.pb, params: { name: "", direction: "in" } };
+
+    expect(duplicatePortNames(chip, lookupNode)).toEqual([]);
+    expect(
+      buildNetlist(chip, subcircuitLookup(chip, lookupNode)).diagnostics.filter(
+        (diagnostic) => diagnostic.code === "duplicate-port",
+      ),
+    ).toHaveLength(0);
   });
 });

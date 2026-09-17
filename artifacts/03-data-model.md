@@ -182,6 +182,23 @@ root `subcircuits`. Nesting is bounded by `MAX_SUBCIRCUIT_DEPTH` and exceeding
 it is a `subcircuit-recursion` diagnostic. See
 [ADR 0010](decisions/0010-subcircuits-are-derived-node-types.md).
 
+A port's **name is the pin's id** on every instance, so one name is one pin:
+`subcircuitPorts` keeps the first port of each name and the rest define no pin,
+because two pins with one id is a shape nothing downstream survives — the
+canvas cannot key them apart, a wire cannot say which it lands on, and the save
+format has no way to tell them apart. It is easy to arrive at, since every port
+starts out called `IN`, so `buildNetlist` reports a `duplicate-port` error
+naming the ports that clash (grouped per circuit, since two *different* chips
+may each have an `IN`). Repairing it is the user's call, not a guess.
+
+Flattening also returns `pinAliases`: the instance pins it removed, each paired
+with the port pin that replaced it. `buildNetlist` copies each alias's net
+across into `pinToNet`, which is what lets the canvas draw a value on an
+instance's pins — they are a second name for a net that exists, not a net of
+their own. `outerElementId` trims an inlined id (`instance/gate`) back to
+something this document contains, which is how a diagnostic raised inside a
+chip marks the instance it is inside.
+
 ## Validation
 
 Diagnostics are data, not exceptions. A circuit with errors still loads and
