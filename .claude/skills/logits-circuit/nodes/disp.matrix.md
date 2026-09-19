@@ -7,7 +7,7 @@
 | Category | Instruments (`instruments`) |
 | Canvas name | Matrix display |
 | Pin names drawn | no (basic) |
-| Footprint (default params) | 18 × 18 cells = 180 × 180 world units |
+| Footprint (default params) | 16 × 16 cells = 160 × 160 world units |
 
 ## Node JSON
 
@@ -39,14 +39,14 @@
 
 | Pin id | Name | Dir | Width | Side | dx, dy |
 | --- | --- | --- | --- | --- | --- |
-| `row0` | R0 | in | 8 | left | 0, 20 |
-| `row1` | R1 | in | 8 | left | 0, 40 |
-| `row2` | R2 | in | 8 | left | 0, 60 |
-| `row3` | R3 | in | 8 | left | 0, 80 |
-| `row4` | R4 | in | 8 | left | 0, 100 |
-| `row5` | R5 | in | 8 | left | 0, 120 |
-| `row6` | R6 | in | 8 | left | 0, 140 |
-| `row7` | R7 | in | 8 | left | 0, 160 |
+| `row0` | R0 | in | 8 | left | 0, 10 |
+| `row1` | R1 | in | 8 | left | 0, 30 |
+| `row2` | R2 | in | 8 | left | 0, 50 |
+| `row3` | R3 | in | 8 | left | 0, 70 |
+| `row4` | R4 | in | 8 | left | 0, 90 |
+| `row5` | R5 | in | 8 | left | 0, 110 |
+| `row6` | R6 | in | 8 | left | 0, 130 |
+| `row7` | R7 | in | 8 | left | 0, 150 |
 
 Pins, widths and footprint change with params and rotation. For anything but the defaults run:
 
