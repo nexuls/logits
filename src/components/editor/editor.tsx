@@ -288,6 +288,13 @@ export default function Editor({
     onCommandMenu: () => setCommandMenuOpen(true),
     onShortcutsHelp: () => setShortcutsOpen(true),
     onMakeSubcircuit: promptForSubcircuit,
+    // Everything in the open document, decorations included: a group and a
+    // note are elements you can move and delete, so leaving them out would
+    // make Ctrl+A followed by a drag quietly rearrange the circuit inside its
+    // own frame. Taken from the scene rather than the document so it is what
+    // is on screen — inside a chip, the chip's contents.
+    onSelectAll: () =>
+      selectOnly(Object.keys(scene.nodes), Object.keys(scene.wires)),
     onEscape: () => {
       if (armedType) {
         onDisarm();

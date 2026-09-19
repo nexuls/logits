@@ -102,6 +102,8 @@ type Options = {
   onShortcutsHelp: () => void;
   /** `Ctrl+G`: prompts for a name and makes the selection a subcircuit. */
   onMakeSubcircuit: () => void;
+  /** `Ctrl+A`: everything on the canvas, decorations included. */
+  onSelectAll: () => void;
   /** Esc: cancels a wire in progress before it clears the selection. */
   onEscape: () => boolean;
   onNotice: (message: string) => void;
@@ -112,6 +114,7 @@ export function useEditorShortcuts({
   onCommandMenu,
   onShortcutsHelp,
   onMakeSubcircuit,
+  onSelectAll,
   onEscape,
   onNotice,
 }: Options) {
@@ -126,6 +129,7 @@ export function useEditorShortcuts({
     onCommandMenu,
     onShortcutsHelp,
     onMakeSubcircuit,
+    onSelectAll,
     onEscape,
     onNotice,
   });
@@ -134,6 +138,7 @@ export function useEditorShortcuts({
     onCommandMenu,
     onShortcutsHelp,
     onMakeSubcircuit,
+    onSelectAll,
     onEscape,
     onNotice,
   };
@@ -232,8 +237,13 @@ export function useEditorShortcuts({
             handlers.current.onMakeSubcircuit();
             return;
           case "a":
-            // Nothing to intercept here yet: select-all lives on the canvas in
-            // phase 5, and stealing the key now would break text selection.
+            // Only with the canvas focused. `isEditableTarget` above already
+            // lets a text field through, but a caret is not the only place
+            // Ctrl+A means something — the node docs dialog is selectable
+            // prose, and taking the key there would stop it being copyable.
+            if (!isCanvasOrBody(event.target)) return;
+            event.preventDefault();
+            handlers.current.onSelectAll();
             return;
           default:
             return;

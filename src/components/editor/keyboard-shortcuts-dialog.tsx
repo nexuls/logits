@@ -47,6 +47,7 @@ const GROUPS: { title: string; shortcuts: Shortcut[] }[] = [
   {
     title: "Editing",
     shortcuts: [
+      { action: "Select everything", keys: ["Mod+A"] },
       { action: "Undo", keys: ["Mod+Z"] },
       { action: "Redo", keys: ["Mod+Shift+Z", "Mod+Y"] },
       { action: "Copy", keys: ["Mod+C"] },
