@@ -6,7 +6,10 @@
     "n_pad": {
       "id": "n_pad",
       "type": "io.drawpad",
-      "position": { "x": 200, "y": 300 },
+      "position": {
+        "x": 200,
+        "y": 300
+      },
       "label": "Digit pad",
       "labelPosition": "top",
       "params": {
@@ -48,34 +51,61 @@
     "t_cxq_pad": {
       "id": "t_cxq_pad",
       "type": "bus.tunnel",
-      "position": { "x": 110, "y": 560 },
+      "position": {
+        "x": 110,
+        "y": 560
+      },
       "rotation": 180,
-      "params": { "name": "CX", "width": 5 }
+      "params": {
+        "name": "CX",
+        "width": 5
+      }
     },
     "t_cyq_pad": {
       "id": "t_cyq_pad",
       "type": "bus.tunnel",
-      "position": { "x": 110, "y": 620 },
+      "position": {
+        "x": 110,
+        "y": 620
+      },
       "rotation": 180,
-      "params": { "name": "CY", "width": 5 }
+      "params": {
+        "name": "CY",
+        "width": 5
+      }
     },
     "t_px_pad": {
       "id": "t_px_pad",
       "type": "bus.tunnel",
-      "position": { "x": 800, "y": 580 },
-      "params": { "name": "PX", "width": 1 }
+      "position": {
+        "x": 800,
+        "y": 580
+      },
+      "params": {
+        "name": "PX",
+        "width": 1
+      }
     },
     "t_dig_disp": {
       "id": "t_dig_disp",
       "type": "bus.tunnel",
-      "position": { "x": 140, "y": 970 },
+      "position": {
+        "x": 140,
+        "y": 970
+      },
       "rotation": 180,
-      "params": { "name": "DIG", "width": 4 }
+      "params": {
+        "name": "DIG",
+        "width": 4
+      }
     },
     "n_segdrv": {
       "id": "n_segdrv",
       "type": "comb.segdriver",
-      "position": { "x": 240, "y": 910 },
+      "position": {
+        "x": 240,
+        "y": 910
+      },
       "label": "Digit decode",
       "params": {
         "width": 4,
@@ -88,36 +118,63 @@
     "n_sevenseg": {
       "id": "n_sevenseg",
       "type": "disp.sevenseg",
-      "position": { "x": 370, "y": 910 },
+      "position": {
+        "x": 370,
+        "y": 910
+      },
       "label": "Prediction",
       "labelPosition": "top",
-      "params": { "mode": "raw", "commonAnode": false, "color": "red" }
+      "params": {
+        "mode": "raw",
+        "commonAnode": false,
+        "color": "red"
+      }
     },
     "n_matrix": {
       "id": "n_matrix",
       "type": "disp.matrix",
-      "position": { "x": 1420, "y": 300 },
+      "position": {
+        "x": 1420,
+        "y": 300
+      },
       "label": "Confidence",
       "labelPosition": "top",
-      "params": { "size": 10, "color": "amber" }
+      "params": {
+        "size": 10,
+        "color": "amber"
+      }
     },
     "t_sc_bar_0": {
       "id": "t_sc_bar_0",
       "type": "bus.tunnel",
-      "position": { "x": 960, "y": 300 },
+      "position": {
+        "x": 960,
+        "y": 300
+      },
       "rotation": 180,
-      "params": { "name": "SC0", "width": 24 }
+      "params": {
+        "name": "SC0",
+        "width": 24
+      }
     },
     "n_barsplit_0": {
       "id": "n_barsplit_0",
       "type": "bus.split",
-      "position": { "x": 1050, "y": 290 },
-      "params": { "groups": "16,8" }
+      "position": {
+        "x": 1050,
+        "y": 290
+      },
+      "params": {
+        "groups": "16,8"
+      }
     },
     "n_bar_0": {
       "id": "n_bar_0",
       "type": "mem.rom",
-      "position": { "x": 1160, "y": 300 },
+      "position": {
+        "x": 1160,
+        "y": 300
+      },
       "label": "Bar 0",
       "params": {
         "addressBits": 8,
@@ -128,20 +185,34 @@
     "t_sc_bar_1": {
       "id": "t_sc_bar_1",
       "type": "bus.tunnel",
-      "position": { "x": 960, "y": 370 },
+      "position": {
+        "x": 960,
+        "y": 370
+      },
       "rotation": 180,
-      "params": { "name": "SC1", "width": 24 }
+      "params": {
+        "name": "SC1",
+        "width": 24
+      }
     },
     "n_barsplit_1": {
       "id": "n_barsplit_1",
       "type": "bus.split",
-      "position": { "x": 1050, "y": 360 },
-      "params": { "groups": "16,8" }
+      "position": {
+        "x": 1050,
+        "y": 360
+      },
+      "params": {
+        "groups": "16,8"
+      }
     },
     "n_bar_1": {
       "id": "n_bar_1",
       "type": "mem.rom",
-      "position": { "x": 1160, "y": 370 },
+      "position": {
+        "x": 1160,
+        "y": 370
+      },
       "label": "Bar 1",
       "params": {
         "addressBits": 8,
@@ -152,20 +223,34 @@
     "t_sc_bar_2": {
       "id": "t_sc_bar_2",
       "type": "bus.tunnel",
-      "position": { "x": 960, "y": 440 },
+      "position": {
+        "x": 960,
+        "y": 440
+      },
       "rotation": 180,
-      "params": { "name": "SC2", "width": 24 }
+      "params": {
+        "name": "SC2",
+        "width": 24
+      }
     },
     "n_barsplit_2": {
       "id": "n_barsplit_2",
       "type": "bus.split",
-      "position": { "x": 1050, "y": 430 },
-      "params": { "groups": "16,8" }
+      "position": {
+        "x": 1050,
+        "y": 430
+      },
+      "params": {
+        "groups": "16,8"
+      }
     },
     "n_bar_2": {
       "id": "n_bar_2",
       "type": "mem.rom",
-      "position": { "x": 1160, "y": 440 },
+      "position": {
+        "x": 1160,
+        "y": 440
+      },
       "label": "Bar 2",
       "params": {
         "addressBits": 8,
@@ -176,20 +261,34 @@
     "t_sc_bar_3": {
       "id": "t_sc_bar_3",
       "type": "bus.tunnel",
-      "position": { "x": 960, "y": 510 },
+      "position": {
+        "x": 960,
+        "y": 510
+      },
       "rotation": 180,
-      "params": { "name": "SC3", "width": 24 }
+      "params": {
+        "name": "SC3",
+        "width": 24
+      }
     },
     "n_barsplit_3": {
       "id": "n_barsplit_3",
       "type": "bus.split",
-      "position": { "x": 1050, "y": 500 },
-      "params": { "groups": "16,8" }
+      "position": {
+        "x": 1050,
+        "y": 500
+      },
+      "params": {
+        "groups": "16,8"
+      }
     },
     "n_bar_3": {
       "id": "n_bar_3",
       "type": "mem.rom",
-      "position": { "x": 1160, "y": 510 },
+      "position": {
+        "x": 1160,
+        "y": 510
+      },
       "label": "Bar 3",
       "params": {
         "addressBits": 8,
@@ -200,20 +299,34 @@
     "t_sc_bar_4": {
       "id": "t_sc_bar_4",
       "type": "bus.tunnel",
-      "position": { "x": 960, "y": 580 },
+      "position": {
+        "x": 960,
+        "y": 580
+      },
       "rotation": 180,
-      "params": { "name": "SC4", "width": 24 }
+      "params": {
+        "name": "SC4",
+        "width": 24
+      }
     },
     "n_barsplit_4": {
       "id": "n_barsplit_4",
       "type": "bus.split",
-      "position": { "x": 1050, "y": 570 },
-      "params": { "groups": "16,8" }
+      "position": {
+        "x": 1050,
+        "y": 570
+      },
+      "params": {
+        "groups": "16,8"
+      }
     },
     "n_bar_4": {
       "id": "n_bar_4",
       "type": "mem.rom",
-      "position": { "x": 1160, "y": 580 },
+      "position": {
+        "x": 1160,
+        "y": 580
+      },
       "label": "Bar 4",
       "params": {
         "addressBits": 8,
@@ -224,20 +337,34 @@
     "t_sc_bar_5": {
       "id": "t_sc_bar_5",
       "type": "bus.tunnel",
-      "position": { "x": 960, "y": 650 },
+      "position": {
+        "x": 960,
+        "y": 650
+      },
       "rotation": 180,
-      "params": { "name": "SC5", "width": 24 }
+      "params": {
+        "name": "SC5",
+        "width": 24
+      }
     },
     "n_barsplit_5": {
       "id": "n_barsplit_5",
       "type": "bus.split",
-      "position": { "x": 1050, "y": 640 },
-      "params": { "groups": "16,8" }
+      "position": {
+        "x": 1050,
+        "y": 640
+      },
+      "params": {
+        "groups": "16,8"
+      }
     },
     "n_bar_5": {
       "id": "n_bar_5",
       "type": "mem.rom",
-      "position": { "x": 1160, "y": 650 },
+      "position": {
+        "x": 1160,
+        "y": 650
+      },
       "label": "Bar 5",
       "params": {
         "addressBits": 8,
@@ -248,20 +375,34 @@
     "t_sc_bar_6": {
       "id": "t_sc_bar_6",
       "type": "bus.tunnel",
-      "position": { "x": 960, "y": 720 },
+      "position": {
+        "x": 960,
+        "y": 720
+      },
       "rotation": 180,
-      "params": { "name": "SC6", "width": 24 }
+      "params": {
+        "name": "SC6",
+        "width": 24
+      }
     },
     "n_barsplit_6": {
       "id": "n_barsplit_6",
       "type": "bus.split",
-      "position": { "x": 1050, "y": 710 },
-      "params": { "groups": "16,8" }
+      "position": {
+        "x": 1050,
+        "y": 710
+      },
+      "params": {
+        "groups": "16,8"
+      }
     },
     "n_bar_6": {
       "id": "n_bar_6",
       "type": "mem.rom",
-      "position": { "x": 1160, "y": 720 },
+      "position": {
+        "x": 1160,
+        "y": 720
+      },
       "label": "Bar 6",
       "params": {
         "addressBits": 8,
@@ -272,20 +413,34 @@
     "t_sc_bar_7": {
       "id": "t_sc_bar_7",
       "type": "bus.tunnel",
-      "position": { "x": 960, "y": 790 },
+      "position": {
+        "x": 960,
+        "y": 790
+      },
       "rotation": 180,
-      "params": { "name": "SC7", "width": 24 }
+      "params": {
+        "name": "SC7",
+        "width": 24
+      }
     },
     "n_barsplit_7": {
       "id": "n_barsplit_7",
       "type": "bus.split",
-      "position": { "x": 1050, "y": 780 },
-      "params": { "groups": "16,8" }
+      "position": {
+        "x": 1050,
+        "y": 780
+      },
+      "params": {
+        "groups": "16,8"
+      }
     },
     "n_bar_7": {
       "id": "n_bar_7",
       "type": "mem.rom",
-      "position": { "x": 1160, "y": 790 },
+      "position": {
+        "x": 1160,
+        "y": 790
+      },
       "label": "Bar 7",
       "params": {
         "addressBits": 8,
@@ -296,20 +451,34 @@
     "t_sc_bar_8": {
       "id": "t_sc_bar_8",
       "type": "bus.tunnel",
-      "position": { "x": 960, "y": 860 },
+      "position": {
+        "x": 960,
+        "y": 860
+      },
       "rotation": 180,
-      "params": { "name": "SC8", "width": 24 }
+      "params": {
+        "name": "SC8",
+        "width": 24
+      }
     },
     "n_barsplit_8": {
       "id": "n_barsplit_8",
       "type": "bus.split",
-      "position": { "x": 1050, "y": 850 },
-      "params": { "groups": "16,8" }
+      "position": {
+        "x": 1050,
+        "y": 850
+      },
+      "params": {
+        "groups": "16,8"
+      }
     },
     "n_bar_8": {
       "id": "n_bar_8",
       "type": "mem.rom",
-      "position": { "x": 1160, "y": 860 },
+      "position": {
+        "x": 1160,
+        "y": 860
+      },
       "label": "Bar 8",
       "params": {
         "addressBits": 8,
@@ -320,20 +489,34 @@
     "t_sc_bar_9": {
       "id": "t_sc_bar_9",
       "type": "bus.tunnel",
-      "position": { "x": 960, "y": 930 },
+      "position": {
+        "x": 960,
+        "y": 930
+      },
       "rotation": 180,
-      "params": { "name": "SC9", "width": 24 }
+      "params": {
+        "name": "SC9",
+        "width": 24
+      }
     },
     "n_barsplit_9": {
       "id": "n_barsplit_9",
       "type": "bus.split",
-      "position": { "x": 1050, "y": 920 },
-      "params": { "groups": "16,8" }
+      "position": {
+        "x": 1050,
+        "y": 920
+      },
+      "params": {
+        "groups": "16,8"
+      }
     },
     "n_bar_9": {
       "id": "n_bar_9",
       "type": "mem.rom",
-      "position": { "x": 1160, "y": 930 },
+      "position": {
+        "x": 1160,
+        "y": 930
+      },
       "label": "Bar 9",
       "params": {
         "addressBits": 8,
@@ -344,193 +527,366 @@
     "n_clock": {
       "id": "n_clock",
       "type": "time.clock",
-      "position": { "x": 280, "y": 1240 },
+      "position": {
+        "x": 280,
+        "y": 1240
+      },
       "label": "Scan clock",
-      "params": { "periodNs": 10, "dutyCycle": 50, "startHigh": false }
+      "params": {
+        "periodNs": 10,
+        "dutyCycle": 50,
+        "startHigh": false
+      }
     },
     "n_kick": {
       "id": "n_kick",
       "type": "io.kickstart",
-      "position": { "x": 510, "y": 990 },
+      "position": {
+        "x": 510,
+        "y": 990
+      },
       "label": "Power-on",
       "labelPosition": "top",
-      "params": { "widthNs": 60, "startDelayNs": 0, "active": "high" }
+      "params": {
+        "widthNs": 60,
+        "startDelayNs": 0,
+        "active": "high"
+      }
     },
     "n_rst_or": {
       "id": "n_rst_or",
       "type": "gate.or",
-      "position": { "x": 620, "y": 980 },
-      "params": { "inputs": 2, "width": 1 }
+      "position": {
+        "x": 620,
+        "y": 980
+      },
+      "params": {
+        "inputs": 2,
+        "width": 1
+      }
     },
     "t_rst_src": {
       "id": "t_rst_src",
       "type": "bus.tunnel",
-      "position": { "x": 720, "y": 980 },
-      "params": { "name": "RST", "width": 1 }
+      "position": {
+        "x": 720,
+        "y": 980
+      },
+      "params": {
+        "name": "RST",
+        "width": 1
+      }
     },
     "t_rst_cx": {
       "id": "t_rst_cx",
       "type": "bus.tunnel",
-      "position": { "x": 280, "y": 1470 },
+      "position": {
+        "x": 280,
+        "y": 1470
+      },
       "rotation": 180,
-      "params": { "name": "RST", "width": 1 }
+      "params": {
+        "name": "RST",
+        "width": 1
+      }
     },
     "n_col_x": {
       "id": "n_col_x",
       "type": "seq.counter",
-      "position": { "x": 380, "y": 1500 },
+      "position": {
+        "x": 380,
+        "y": 1500
+      },
       "label": "Col X",
       "labelPosition": "top",
-      "params": { "width": 5, "direction": "up", "modulus": 29 }
+      "params": {
+        "width": 5,
+        "direction": "up",
+        "modulus": 29
+      }
     },
     "t_clk_cx": {
       "id": "t_clk_cx",
       "type": "bus.tunnel",
-      "position": { "x": 280, "y": 1570 },
+      "position": {
+        "x": 280,
+        "y": 1570
+      },
       "rotation": 180,
-      "params": { "name": "CLK", "width": 1 }
+      "params": {
+        "name": "CLK",
+        "width": 1
+      }
     },
     "t_rst_cy": {
       "id": "t_rst_cy",
       "type": "bus.tunnel",
-      "position": { "x": 280, "y": 1630 },
+      "position": {
+        "x": 280,
+        "y": 1630
+      },
       "rotation": 180,
-      "params": { "name": "RST", "width": 1 }
+      "params": {
+        "name": "RST",
+        "width": 1
+      }
     },
     "n_row_y": {
       "id": "n_row_y",
       "type": "seq.counter",
-      "position": { "x": 380, "y": 1660 },
+      "position": {
+        "x": 380,
+        "y": 1660
+      },
       "label": "Row Y",
       "labelPosition": "bottom",
-      "params": { "width": 5, "direction": "up", "modulus": 29 }
+      "params": {
+        "width": 5,
+        "direction": "up",
+        "modulus": 29
+      }
     },
     "t_clk_cy": {
       "id": "t_clk_cy",
       "type": "bus.tunnel",
-      "position": { "x": 280, "y": 1730 },
+      "position": {
+        "x": 280,
+        "y": 1730
+      },
       "rotation": 180,
-      "params": { "name": "CLK", "width": 1 }
+      "params": {
+        "name": "CLK",
+        "width": 1
+      }
     },
     "n_addr_merge": {
       "id": "n_addr_merge",
       "type": "bus.merge",
-      "position": { "x": 540, "y": 1560 },
-      "params": { "groups": "5,5" }
+      "position": {
+        "x": 540,
+        "y": 1560
+      },
+      "params": {
+        "groups": "5,5"
+      }
     },
     "t_cx_src": {
       "id": "t_cx_src",
       "type": "bus.tunnel",
-      "position": { "x": 660, "y": 1460 },
-      "params": { "name": "CX", "width": 5 }
+      "position": {
+        "x": 660,
+        "y": 1460
+      },
+      "params": {
+        "name": "CX",
+        "width": 5
+      }
     },
     "t_cy_src": {
       "id": "t_cy_src",
       "type": "bus.tunnel",
-      "position": { "x": 740, "y": 1760 },
-      "params": { "name": "CY", "width": 5 }
+      "position": {
+        "x": 740,
+        "y": 1760
+      },
+      "params": {
+        "name": "CY",
+        "width": 5
+      }
     },
     "n_bias_and": {
       "id": "n_bias_and",
       "type": "gate.and",
-      "position": { "x": 540, "y": 1680 },
-      "params": { "inputs": 2, "width": 1 }
+      "position": {
+        "x": 540,
+        "y": 1680
+      },
+      "params": {
+        "inputs": 2,
+        "width": 1
+      }
     },
     "t_px_ctrl": {
       "id": "t_px_ctrl",
       "type": "bus.tunnel",
-      "position": { "x": 280, "y": 1680 },
+      "position": {
+        "x": 280,
+        "y": 1680
+      },
       "rotation": 180,
-      "params": { "name": "PX", "width": 1 }
+      "params": {
+        "name": "PX",
+        "width": 1
+      }
     },
     "n_pix_or": {
       "id": "n_pix_or",
       "type": "gate.or",
-      "position": { "x": 680, "y": 1680 },
-      "params": { "inputs": 2, "width": 1 }
+      "position": {
+        "x": 680,
+        "y": 1680
+      },
+      "params": {
+        "inputs": 2,
+        "width": 1
+      }
     },
     "n_zero_addr": {
       "id": "n_zero_addr",
       "type": "io.constant",
-      "position": { "x": 800, "y": 1480 },
+      "position": {
+        "x": 800,
+        "y": 1480
+      },
       "label": "Zero cell",
       "labelPosition": "top",
-      "params": { "width": 10, "value": 1023 }
+      "params": {
+        "width": 10,
+        "value": 1023
+      }
     },
     "n_addr_mux": {
       "id": "n_addr_mux",
       "type": "comb.mux",
-      "position": { "x": 700, "y": 1560 },
-      "params": { "selectBits": 1, "width": 10 }
+      "position": {
+        "x": 700,
+        "y": 1560
+      },
+      "params": {
+        "selectBits": 1,
+        "width": 10
+      }
     },
     "t_addr_src": {
       "id": "t_addr_src",
       "type": "bus.tunnel",
-      "position": { "x": 900, "y": 1560 },
-      "params": { "name": "ADDR", "width": 10 }
+      "position": {
+        "x": 900,
+        "y": 1560
+      },
+      "params": {
+        "name": "ADDR",
+        "width": 10
+      }
     },
     "n_done_or": {
       "id": "n_done_or",
       "type": "gate.or",
-      "position": { "x": 900, "y": 1680 },
-      "params": { "inputs": 2, "width": 1 }
+      "position": {
+        "x": 900,
+        "y": 1680
+      },
+      "params": {
+        "inputs": 2,
+        "width": 1
+      }
     },
     "n_done_ff": {
       "id": "n_done_ff",
       "type": "seq.dff",
-      "position": { "x": 1020, "y": 1680 },
-      "params": { "width": 1, "edge": "rising", "asyncReset": true }
+      "position": {
+        "x": 1020,
+        "y": 1680
+      },
+      "params": {
+        "width": 1,
+        "edge": "rising",
+        "asyncReset": true
+      }
     },
     "t_rst_ff": {
       "id": "t_rst_ff",
       "type": "bus.tunnel",
-      "position": { "x": 920, "y": 1620 },
+      "position": {
+        "x": 920,
+        "y": 1620
+      },
       "rotation": 180,
-      "params": { "name": "RST", "width": 1 }
+      "params": {
+        "name": "RST",
+        "width": 1
+      }
     },
     "t_clk_ff": {
       "id": "t_clk_ff",
       "type": "bus.tunnel",
-      "position": { "x": 920, "y": 1800 },
+      "position": {
+        "x": 920,
+        "y": 1800
+      },
       "rotation": 180,
-      "params": { "name": "CLK", "width": 1 }
+      "params": {
+        "name": "CLK",
+        "width": 1
+      }
     },
     "n_done_not": {
       "id": "n_done_not",
       "type": "gate.not",
-      "position": { "x": 1160, "y": 1680 },
-      "params": { "width": 1 }
+      "position": {
+        "x": 1160,
+        "y": 1680
+      },
+      "params": {
+        "width": 1
+      }
     },
     "n_done_led": {
       "id": "n_done_led",
       "type": "io.led",
-      "position": { "x": 1160, "y": 1870 },
+      "position": {
+        "x": 1160,
+        "y": 1870
+      },
       "label": "Done",
-      "params": { "color": "green" }
+      "params": {
+        "color": "green"
+      }
     },
     "n_clk_and": {
       "id": "n_clk_and",
       "type": "gate.and",
-      "position": { "x": 1160, "y": 1600 },
-      "params": { "inputs": 2, "width": 1 }
+      "position": {
+        "x": 1160,
+        "y": 1600
+      },
+      "params": {
+        "inputs": 2,
+        "width": 1
+      }
     },
     "t_clk_src": {
       "id": "t_clk_src",
       "type": "bus.tunnel",
-      "position": { "x": 1250, "y": 1200 },
-      "params": { "name": "CLK", "width": 1 }
+      "position": {
+        "x": 1250,
+        "y": 1200
+      },
+      "params": {
+        "name": "CLK",
+        "width": 1
+      }
     },
     "t_addr_0": {
       "id": "t_addr_0",
       "type": "bus.tunnel",
-      "position": { "x": 1780, "y": 280 },
+      "position": {
+        "x": 1780,
+        "y": 280
+      },
       "rotation": 180,
-      "params": { "name": "ADDR", "width": 10 }
+      "params": {
+        "name": "ADDR",
+        "width": 10
+      }
     },
     "n_rom_0": {
       "id": "n_rom_0",
       "type": "mem.rom",
-      "position": { "x": 1870, "y": 270 },
+      "position": {
+        "x": 1870,
+        "y": 270
+      },
       "label": "W0",
       "params": {
         "addressBits": 10,
@@ -541,60 +897,110 @@
     "n_add_0": {
       "id": "n_add_0",
       "type": "comb.adder",
-      "position": { "x": 1980, "y": 280 },
-      "params": { "width": 24 }
+      "position": {
+        "x": 1980,
+        "y": 280
+      },
+      "params": {
+        "width": 24
+      }
     },
     "n_acc_0": {
       "id": "n_acc_0",
       "type": "seq.register",
-      "position": { "x": 2090, "y": 280 },
+      "position": {
+        "x": 2090,
+        "y": 280
+      },
       "label": "Acc 0",
       "labelPosition": "top",
-      "params": { "width": 24, "edge": "rising", "asyncReset": true }
+      "params": {
+        "width": 24,
+        "edge": "rising",
+        "asyncReset": true
+      }
     },
     "t_rst_acc_0": {
       "id": "t_rst_acc_0",
       "type": "bus.tunnel",
-      "position": { "x": 1960, "y": 240 },
+      "position": {
+        "x": 1960,
+        "y": 240
+      },
       "rotation": 180,
-      "params": { "name": "RST", "width": 1 }
+      "params": {
+        "name": "RST",
+        "width": 1
+      }
     },
     "n_idx_0": {
       "id": "n_idx_0",
       "type": "io.constant",
-      "position": { "x": 2220, "y": 260 },
-      "params": { "width": 4, "value": 15 }
+      "position": {
+        "x": 2220,
+        "y": 260
+      },
+      "params": {
+        "width": 4,
+        "value": 15
+      }
     },
     "n_word_0": {
       "id": "n_word_0",
       "type": "bus.merge",
-      "position": { "x": 2290, "y": 280 },
-      "params": { "groups": "4,24" }
+      "position": {
+        "x": 2290,
+        "y": 280
+      },
+      "params": {
+        "groups": "4,24"
+      }
     },
     "t_sc_0": {
       "id": "t_sc_0",
       "type": "bus.tunnel",
-      "position": { "x": 2320, "y": 360 },
-      "params": { "name": "SC0", "width": 24 }
+      "position": {
+        "x": 2320,
+        "y": 360
+      },
+      "params": {
+        "name": "SC0",
+        "width": 24
+      }
     },
     "t_clk_acc_0": {
       "id": "t_clk_acc_0",
       "type": "bus.tunnel",
-      "position": { "x": 1780, "y": 370 },
+      "position": {
+        "x": 1780,
+        "y": 370
+      },
       "rotation": 180,
-      "params": { "name": "CLK", "width": 1 }
+      "params": {
+        "name": "CLK",
+        "width": 1
+      }
     },
     "t_addr_1": {
       "id": "t_addr_1",
       "type": "bus.tunnel",
-      "position": { "x": 1780, "y": 490 },
+      "position": {
+        "x": 1780,
+        "y": 490
+      },
       "rotation": 180,
-      "params": { "name": "ADDR", "width": 10 }
+      "params": {
+        "name": "ADDR",
+        "width": 10
+      }
     },
     "n_rom_1": {
       "id": "n_rom_1",
       "type": "mem.rom",
-      "position": { "x": 1870, "y": 480 },
+      "position": {
+        "x": 1870,
+        "y": 480
+      },
       "label": "W1",
       "params": {
         "addressBits": 10,
@@ -605,60 +1011,110 @@
     "n_add_1": {
       "id": "n_add_1",
       "type": "comb.adder",
-      "position": { "x": 1980, "y": 490 },
-      "params": { "width": 24 }
+      "position": {
+        "x": 1980,
+        "y": 490
+      },
+      "params": {
+        "width": 24
+      }
     },
     "n_acc_1": {
       "id": "n_acc_1",
       "type": "seq.register",
-      "position": { "x": 2090, "y": 490 },
+      "position": {
+        "x": 2090,
+        "y": 490
+      },
       "label": "Acc 1",
       "labelPosition": "top",
-      "params": { "width": 24, "edge": "rising", "asyncReset": true }
+      "params": {
+        "width": 24,
+        "edge": "rising",
+        "asyncReset": true
+      }
     },
     "t_rst_acc_1": {
       "id": "t_rst_acc_1",
       "type": "bus.tunnel",
-      "position": { "x": 1960, "y": 450 },
+      "position": {
+        "x": 1960,
+        "y": 450
+      },
       "rotation": 180,
-      "params": { "name": "RST", "width": 1 }
+      "params": {
+        "name": "RST",
+        "width": 1
+      }
     },
     "n_idx_1": {
       "id": "n_idx_1",
       "type": "io.constant",
-      "position": { "x": 2220, "y": 470 },
-      "params": { "width": 4, "value": 14 }
+      "position": {
+        "x": 2220,
+        "y": 470
+      },
+      "params": {
+        "width": 4,
+        "value": 14
+      }
     },
     "n_word_1": {
       "id": "n_word_1",
       "type": "bus.merge",
-      "position": { "x": 2290, "y": 490 },
-      "params": { "groups": "4,24" }
+      "position": {
+        "x": 2290,
+        "y": 490
+      },
+      "params": {
+        "groups": "4,24"
+      }
     },
     "t_sc_1": {
       "id": "t_sc_1",
       "type": "bus.tunnel",
-      "position": { "x": 2320, "y": 570 },
-      "params": { "name": "SC1", "width": 24 }
+      "position": {
+        "x": 2320,
+        "y": 570
+      },
+      "params": {
+        "name": "SC1",
+        "width": 24
+      }
     },
     "t_clk_acc_1": {
       "id": "t_clk_acc_1",
       "type": "bus.tunnel",
-      "position": { "x": 1780, "y": 580 },
+      "position": {
+        "x": 1780,
+        "y": 580
+      },
       "rotation": 180,
-      "params": { "name": "CLK", "width": 1 }
+      "params": {
+        "name": "CLK",
+        "width": 1
+      }
     },
     "t_addr_2": {
       "id": "t_addr_2",
       "type": "bus.tunnel",
-      "position": { "x": 1780, "y": 700 },
+      "position": {
+        "x": 1780,
+        "y": 700
+      },
       "rotation": 180,
-      "params": { "name": "ADDR", "width": 10 }
+      "params": {
+        "name": "ADDR",
+        "width": 10
+      }
     },
     "n_rom_2": {
       "id": "n_rom_2",
       "type": "mem.rom",
-      "position": { "x": 1870, "y": 690 },
+      "position": {
+        "x": 1870,
+        "y": 690
+      },
       "label": "W2",
       "params": {
         "addressBits": 10,
@@ -669,60 +1125,110 @@
     "n_add_2": {
       "id": "n_add_2",
       "type": "comb.adder",
-      "position": { "x": 1980, "y": 700 },
-      "params": { "width": 24 }
+      "position": {
+        "x": 1980,
+        "y": 700
+      },
+      "params": {
+        "width": 24
+      }
     },
     "n_acc_2": {
       "id": "n_acc_2",
       "type": "seq.register",
-      "position": { "x": 2090, "y": 700 },
+      "position": {
+        "x": 2090,
+        "y": 700
+      },
       "label": "Acc 2",
       "labelPosition": "top",
-      "params": { "width": 24, "edge": "rising", "asyncReset": true }
+      "params": {
+        "width": 24,
+        "edge": "rising",
+        "asyncReset": true
+      }
     },
     "t_rst_acc_2": {
       "id": "t_rst_acc_2",
       "type": "bus.tunnel",
-      "position": { "x": 1960, "y": 660 },
+      "position": {
+        "x": 1960,
+        "y": 660
+      },
       "rotation": 180,
-      "params": { "name": "RST", "width": 1 }
+      "params": {
+        "name": "RST",
+        "width": 1
+      }
     },
     "n_idx_2": {
       "id": "n_idx_2",
       "type": "io.constant",
-      "position": { "x": 2220, "y": 680 },
-      "params": { "width": 4, "value": 13 }
+      "position": {
+        "x": 2220,
+        "y": 680
+      },
+      "params": {
+        "width": 4,
+        "value": 13
+      }
     },
     "n_word_2": {
       "id": "n_word_2",
       "type": "bus.merge",
-      "position": { "x": 2290, "y": 700 },
-      "params": { "groups": "4,24" }
+      "position": {
+        "x": 2290,
+        "y": 700
+      },
+      "params": {
+        "groups": "4,24"
+      }
     },
     "t_sc_2": {
       "id": "t_sc_2",
       "type": "bus.tunnel",
-      "position": { "x": 2320, "y": 780 },
-      "params": { "name": "SC2", "width": 24 }
+      "position": {
+        "x": 2320,
+        "y": 780
+      },
+      "params": {
+        "name": "SC2",
+        "width": 24
+      }
     },
     "t_clk_acc_2": {
       "id": "t_clk_acc_2",
       "type": "bus.tunnel",
-      "position": { "x": 1780, "y": 790 },
+      "position": {
+        "x": 1780,
+        "y": 790
+      },
       "rotation": 180,
-      "params": { "name": "CLK", "width": 1 }
+      "params": {
+        "name": "CLK",
+        "width": 1
+      }
     },
     "t_addr_3": {
       "id": "t_addr_3",
       "type": "bus.tunnel",
-      "position": { "x": 1780, "y": 910 },
+      "position": {
+        "x": 1780,
+        "y": 910
+      },
       "rotation": 180,
-      "params": { "name": "ADDR", "width": 10 }
+      "params": {
+        "name": "ADDR",
+        "width": 10
+      }
     },
     "n_rom_3": {
       "id": "n_rom_3",
       "type": "mem.rom",
-      "position": { "x": 1870, "y": 900 },
+      "position": {
+        "x": 1870,
+        "y": 900
+      },
       "label": "W3",
       "params": {
         "addressBits": 10,
@@ -733,60 +1239,110 @@
     "n_add_3": {
       "id": "n_add_3",
       "type": "comb.adder",
-      "position": { "x": 1980, "y": 910 },
-      "params": { "width": 24 }
+      "position": {
+        "x": 1980,
+        "y": 910
+      },
+      "params": {
+        "width": 24
+      }
     },
     "n_acc_3": {
       "id": "n_acc_3",
       "type": "seq.register",
-      "position": { "x": 2090, "y": 910 },
+      "position": {
+        "x": 2090,
+        "y": 910
+      },
       "label": "Acc 3",
       "labelPosition": "top",
-      "params": { "width": 24, "edge": "rising", "asyncReset": true }
+      "params": {
+        "width": 24,
+        "edge": "rising",
+        "asyncReset": true
+      }
     },
     "t_rst_acc_3": {
       "id": "t_rst_acc_3",
       "type": "bus.tunnel",
-      "position": { "x": 1960, "y": 870 },
+      "position": {
+        "x": 1960,
+        "y": 870
+      },
       "rotation": 180,
-      "params": { "name": "RST", "width": 1 }
+      "params": {
+        "name": "RST",
+        "width": 1
+      }
     },
     "n_idx_3": {
       "id": "n_idx_3",
       "type": "io.constant",
-      "position": { "x": 2220, "y": 890 },
-      "params": { "width": 4, "value": 12 }
+      "position": {
+        "x": 2220,
+        "y": 890
+      },
+      "params": {
+        "width": 4,
+        "value": 12
+      }
     },
     "n_word_3": {
       "id": "n_word_3",
       "type": "bus.merge",
-      "position": { "x": 2290, "y": 910 },
-      "params": { "groups": "4,24" }
+      "position": {
+        "x": 2290,
+        "y": 910
+      },
+      "params": {
+        "groups": "4,24"
+      }
     },
     "t_sc_3": {
       "id": "t_sc_3",
       "type": "bus.tunnel",
-      "position": { "x": 2320, "y": 990 },
-      "params": { "name": "SC3", "width": 24 }
+      "position": {
+        "x": 2320,
+        "y": 990
+      },
+      "params": {
+        "name": "SC3",
+        "width": 24
+      }
     },
     "t_clk_acc_3": {
       "id": "t_clk_acc_3",
       "type": "bus.tunnel",
-      "position": { "x": 1780, "y": 1000 },
+      "position": {
+        "x": 1780,
+        "y": 1000
+      },
       "rotation": 180,
-      "params": { "name": "CLK", "width": 1 }
+      "params": {
+        "name": "CLK",
+        "width": 1
+      }
     },
     "t_addr_4": {
       "id": "t_addr_4",
       "type": "bus.tunnel",
-      "position": { "x": 1780, "y": 1120 },
+      "position": {
+        "x": 1780,
+        "y": 1120
+      },
       "rotation": 180,
-      "params": { "name": "ADDR", "width": 10 }
+      "params": {
+        "name": "ADDR",
+        "width": 10
+      }
     },
     "n_rom_4": {
       "id": "n_rom_4",
       "type": "mem.rom",
-      "position": { "x": 1870, "y": 1110 },
+      "position": {
+        "x": 1870,
+        "y": 1110
+      },
       "label": "W4",
       "params": {
         "addressBits": 10,
@@ -797,60 +1353,110 @@
     "n_add_4": {
       "id": "n_add_4",
       "type": "comb.adder",
-      "position": { "x": 1980, "y": 1120 },
-      "params": { "width": 24 }
+      "position": {
+        "x": 1980,
+        "y": 1120
+      },
+      "params": {
+        "width": 24
+      }
     },
     "n_acc_4": {
       "id": "n_acc_4",
       "type": "seq.register",
-      "position": { "x": 2090, "y": 1120 },
+      "position": {
+        "x": 2090,
+        "y": 1120
+      },
       "label": "Acc 4",
       "labelPosition": "top",
-      "params": { "width": 24, "edge": "rising", "asyncReset": true }
+      "params": {
+        "width": 24,
+        "edge": "rising",
+        "asyncReset": true
+      }
     },
     "t_rst_acc_4": {
       "id": "t_rst_acc_4",
       "type": "bus.tunnel",
-      "position": { "x": 1960, "y": 1080 },
+      "position": {
+        "x": 1960,
+        "y": 1080
+      },
       "rotation": 180,
-      "params": { "name": "RST", "width": 1 }
+      "params": {
+        "name": "RST",
+        "width": 1
+      }
     },
     "n_idx_4": {
       "id": "n_idx_4",
       "type": "io.constant",
-      "position": { "x": 2220, "y": 1100 },
-      "params": { "width": 4, "value": 11 }
+      "position": {
+        "x": 2220,
+        "y": 1100
+      },
+      "params": {
+        "width": 4,
+        "value": 11
+      }
     },
     "n_word_4": {
       "id": "n_word_4",
       "type": "bus.merge",
-      "position": { "x": 2290, "y": 1120 },
-      "params": { "groups": "4,24" }
+      "position": {
+        "x": 2290,
+        "y": 1120
+      },
+      "params": {
+        "groups": "4,24"
+      }
     },
     "t_sc_4": {
       "id": "t_sc_4",
       "type": "bus.tunnel",
-      "position": { "x": 2320, "y": 1200 },
-      "params": { "name": "SC4", "width": 24 }
+      "position": {
+        "x": 2320,
+        "y": 1200
+      },
+      "params": {
+        "name": "SC4",
+        "width": 24
+      }
     },
     "t_clk_acc_4": {
       "id": "t_clk_acc_4",
       "type": "bus.tunnel",
-      "position": { "x": 1780, "y": 1210 },
+      "position": {
+        "x": 1780,
+        "y": 1210
+      },
       "rotation": 180,
-      "params": { "name": "CLK", "width": 1 }
+      "params": {
+        "name": "CLK",
+        "width": 1
+      }
     },
     "t_addr_5": {
       "id": "t_addr_5",
       "type": "bus.tunnel",
-      "position": { "x": 1780, "y": 1330 },
+      "position": {
+        "x": 1780,
+        "y": 1330
+      },
       "rotation": 180,
-      "params": { "name": "ADDR", "width": 10 }
+      "params": {
+        "name": "ADDR",
+        "width": 10
+      }
     },
     "n_rom_5": {
       "id": "n_rom_5",
       "type": "mem.rom",
-      "position": { "x": 1870, "y": 1320 },
+      "position": {
+        "x": 1870,
+        "y": 1320
+      },
       "label": "W5",
       "params": {
         "addressBits": 10,
@@ -861,60 +1467,110 @@
     "n_add_5": {
       "id": "n_add_5",
       "type": "comb.adder",
-      "position": { "x": 1980, "y": 1330 },
-      "params": { "width": 24 }
+      "position": {
+        "x": 1980,
+        "y": 1330
+      },
+      "params": {
+        "width": 24
+      }
     },
     "n_acc_5": {
       "id": "n_acc_5",
       "type": "seq.register",
-      "position": { "x": 2090, "y": 1330 },
+      "position": {
+        "x": 2090,
+        "y": 1330
+      },
       "label": "Acc 5",
       "labelPosition": "top",
-      "params": { "width": 24, "edge": "rising", "asyncReset": true }
+      "params": {
+        "width": 24,
+        "edge": "rising",
+        "asyncReset": true
+      }
     },
     "t_rst_acc_5": {
       "id": "t_rst_acc_5",
       "type": "bus.tunnel",
-      "position": { "x": 1960, "y": 1290 },
+      "position": {
+        "x": 1960,
+        "y": 1290
+      },
       "rotation": 180,
-      "params": { "name": "RST", "width": 1 }
+      "params": {
+        "name": "RST",
+        "width": 1
+      }
     },
     "n_idx_5": {
       "id": "n_idx_5",
       "type": "io.constant",
-      "position": { "x": 2220, "y": 1310 },
-      "params": { "width": 4, "value": 10 }
+      "position": {
+        "x": 2220,
+        "y": 1310
+      },
+      "params": {
+        "width": 4,
+        "value": 10
+      }
     },
     "n_word_5": {
       "id": "n_word_5",
       "type": "bus.merge",
-      "position": { "x": 2290, "y": 1330 },
-      "params": { "groups": "4,24" }
+      "position": {
+        "x": 2290,
+        "y": 1330
+      },
+      "params": {
+        "groups": "4,24"
+      }
     },
     "t_sc_5": {
       "id": "t_sc_5",
       "type": "bus.tunnel",
-      "position": { "x": 2320, "y": 1410 },
-      "params": { "name": "SC5", "width": 24 }
+      "position": {
+        "x": 2320,
+        "y": 1410
+      },
+      "params": {
+        "name": "SC5",
+        "width": 24
+      }
     },
     "t_clk_acc_5": {
       "id": "t_clk_acc_5",
       "type": "bus.tunnel",
-      "position": { "x": 1780, "y": 1420 },
+      "position": {
+        "x": 1780,
+        "y": 1420
+      },
       "rotation": 180,
-      "params": { "name": "CLK", "width": 1 }
+      "params": {
+        "name": "CLK",
+        "width": 1
+      }
     },
     "t_addr_6": {
       "id": "t_addr_6",
       "type": "bus.tunnel",
-      "position": { "x": 1780, "y": 1540 },
+      "position": {
+        "x": 1780,
+        "y": 1540
+      },
       "rotation": 180,
-      "params": { "name": "ADDR", "width": 10 }
+      "params": {
+        "name": "ADDR",
+        "width": 10
+      }
     },
     "n_rom_6": {
       "id": "n_rom_6",
       "type": "mem.rom",
-      "position": { "x": 1870, "y": 1530 },
+      "position": {
+        "x": 1870,
+        "y": 1530
+      },
       "label": "W6",
       "params": {
         "addressBits": 10,
@@ -925,60 +1581,110 @@
     "n_add_6": {
       "id": "n_add_6",
       "type": "comb.adder",
-      "position": { "x": 1980, "y": 1540 },
-      "params": { "width": 24 }
+      "position": {
+        "x": 1980,
+        "y": 1540
+      },
+      "params": {
+        "width": 24
+      }
     },
     "n_acc_6": {
       "id": "n_acc_6",
       "type": "seq.register",
-      "position": { "x": 2090, "y": 1540 },
+      "position": {
+        "x": 2090,
+        "y": 1540
+      },
       "label": "Acc 6",
       "labelPosition": "top",
-      "params": { "width": 24, "edge": "rising", "asyncReset": true }
+      "params": {
+        "width": 24,
+        "edge": "rising",
+        "asyncReset": true
+      }
     },
     "t_rst_acc_6": {
       "id": "t_rst_acc_6",
       "type": "bus.tunnel",
-      "position": { "x": 1960, "y": 1500 },
+      "position": {
+        "x": 1960,
+        "y": 1500
+      },
       "rotation": 180,
-      "params": { "name": "RST", "width": 1 }
+      "params": {
+        "name": "RST",
+        "width": 1
+      }
     },
     "n_idx_6": {
       "id": "n_idx_6",
       "type": "io.constant",
-      "position": { "x": 2220, "y": 1520 },
-      "params": { "width": 4, "value": 9 }
+      "position": {
+        "x": 2220,
+        "y": 1520
+      },
+      "params": {
+        "width": 4,
+        "value": 9
+      }
     },
     "n_word_6": {
       "id": "n_word_6",
       "type": "bus.merge",
-      "position": { "x": 2290, "y": 1540 },
-      "params": { "groups": "4,24" }
+      "position": {
+        "x": 2290,
+        "y": 1540
+      },
+      "params": {
+        "groups": "4,24"
+      }
     },
     "t_sc_6": {
       "id": "t_sc_6",
       "type": "bus.tunnel",
-      "position": { "x": 2320, "y": 1620 },
-      "params": { "name": "SC6", "width": 24 }
+      "position": {
+        "x": 2320,
+        "y": 1620
+      },
+      "params": {
+        "name": "SC6",
+        "width": 24
+      }
     },
     "t_clk_acc_6": {
       "id": "t_clk_acc_6",
       "type": "bus.tunnel",
-      "position": { "x": 1780, "y": 1630 },
+      "position": {
+        "x": 1780,
+        "y": 1630
+      },
       "rotation": 180,
-      "params": { "name": "CLK", "width": 1 }
+      "params": {
+        "name": "CLK",
+        "width": 1
+      }
     },
     "t_addr_7": {
       "id": "t_addr_7",
       "type": "bus.tunnel",
-      "position": { "x": 1780, "y": 1750 },
+      "position": {
+        "x": 1780,
+        "y": 1750
+      },
       "rotation": 180,
-      "params": { "name": "ADDR", "width": 10 }
+      "params": {
+        "name": "ADDR",
+        "width": 10
+      }
     },
     "n_rom_7": {
       "id": "n_rom_7",
       "type": "mem.rom",
-      "position": { "x": 1870, "y": 1740 },
+      "position": {
+        "x": 1870,
+        "y": 1740
+      },
       "label": "W7",
       "params": {
         "addressBits": 10,
@@ -989,60 +1695,110 @@
     "n_add_7": {
       "id": "n_add_7",
       "type": "comb.adder",
-      "position": { "x": 1980, "y": 1750 },
-      "params": { "width": 24 }
+      "position": {
+        "x": 1980,
+        "y": 1750
+      },
+      "params": {
+        "width": 24
+      }
     },
     "n_acc_7": {
       "id": "n_acc_7",
       "type": "seq.register",
-      "position": { "x": 2090, "y": 1750 },
+      "position": {
+        "x": 2090,
+        "y": 1750
+      },
       "label": "Acc 7",
       "labelPosition": "top",
-      "params": { "width": 24, "edge": "rising", "asyncReset": true }
+      "params": {
+        "width": 24,
+        "edge": "rising",
+        "asyncReset": true
+      }
     },
     "t_rst_acc_7": {
       "id": "t_rst_acc_7",
       "type": "bus.tunnel",
-      "position": { "x": 1960, "y": 1710 },
+      "position": {
+        "x": 1960,
+        "y": 1710
+      },
       "rotation": 180,
-      "params": { "name": "RST", "width": 1 }
+      "params": {
+        "name": "RST",
+        "width": 1
+      }
     },
     "n_idx_7": {
       "id": "n_idx_7",
       "type": "io.constant",
-      "position": { "x": 2220, "y": 1730 },
-      "params": { "width": 4, "value": 8 }
+      "position": {
+        "x": 2220,
+        "y": 1730
+      },
+      "params": {
+        "width": 4,
+        "value": 8
+      }
     },
     "n_word_7": {
       "id": "n_word_7",
       "type": "bus.merge",
-      "position": { "x": 2290, "y": 1750 },
-      "params": { "groups": "4,24" }
+      "position": {
+        "x": 2290,
+        "y": 1750
+      },
+      "params": {
+        "groups": "4,24"
+      }
     },
     "t_sc_7": {
       "id": "t_sc_7",
       "type": "bus.tunnel",
-      "position": { "x": 2320, "y": 1830 },
-      "params": { "name": "SC7", "width": 24 }
+      "position": {
+        "x": 2320,
+        "y": 1830
+      },
+      "params": {
+        "name": "SC7",
+        "width": 24
+      }
     },
     "t_clk_acc_7": {
       "id": "t_clk_acc_7",
       "type": "bus.tunnel",
-      "position": { "x": 1780, "y": 1840 },
+      "position": {
+        "x": 1780,
+        "y": 1840
+      },
       "rotation": 180,
-      "params": { "name": "CLK", "width": 1 }
+      "params": {
+        "name": "CLK",
+        "width": 1
+      }
     },
     "t_addr_8": {
       "id": "t_addr_8",
       "type": "bus.tunnel",
-      "position": { "x": 1780, "y": 1960 },
+      "position": {
+        "x": 1780,
+        "y": 1960
+      },
       "rotation": 180,
-      "params": { "name": "ADDR", "width": 10 }
+      "params": {
+        "name": "ADDR",
+        "width": 10
+      }
     },
     "n_rom_8": {
       "id": "n_rom_8",
       "type": "mem.rom",
-      "position": { "x": 1870, "y": 1950 },
+      "position": {
+        "x": 1870,
+        "y": 1950
+      },
       "label": "W8",
       "params": {
         "addressBits": 10,
@@ -1053,60 +1809,110 @@
     "n_add_8": {
       "id": "n_add_8",
       "type": "comb.adder",
-      "position": { "x": 1980, "y": 1960 },
-      "params": { "width": 24 }
+      "position": {
+        "x": 1980,
+        "y": 1960
+      },
+      "params": {
+        "width": 24
+      }
     },
     "n_acc_8": {
       "id": "n_acc_8",
       "type": "seq.register",
-      "position": { "x": 2090, "y": 1960 },
+      "position": {
+        "x": 2090,
+        "y": 1960
+      },
       "label": "Acc 8",
       "labelPosition": "top",
-      "params": { "width": 24, "edge": "rising", "asyncReset": true }
+      "params": {
+        "width": 24,
+        "edge": "rising",
+        "asyncReset": true
+      }
     },
     "t_rst_acc_8": {
       "id": "t_rst_acc_8",
       "type": "bus.tunnel",
-      "position": { "x": 1960, "y": 1920 },
+      "position": {
+        "x": 1960,
+        "y": 1920
+      },
       "rotation": 180,
-      "params": { "name": "RST", "width": 1 }
+      "params": {
+        "name": "RST",
+        "width": 1
+      }
     },
     "n_idx_8": {
       "id": "n_idx_8",
       "type": "io.constant",
-      "position": { "x": 2220, "y": 1940 },
-      "params": { "width": 4, "value": 7 }
+      "position": {
+        "x": 2220,
+        "y": 1940
+      },
+      "params": {
+        "width": 4,
+        "value": 7
+      }
     },
     "n_word_8": {
       "id": "n_word_8",
       "type": "bus.merge",
-      "position": { "x": 2290, "y": 1960 },
-      "params": { "groups": "4,24" }
+      "position": {
+        "x": 2290,
+        "y": 1960
+      },
+      "params": {
+        "groups": "4,24"
+      }
     },
     "t_sc_8": {
       "id": "t_sc_8",
       "type": "bus.tunnel",
-      "position": { "x": 2320, "y": 2040 },
-      "params": { "name": "SC8", "width": 24 }
+      "position": {
+        "x": 2320,
+        "y": 2040
+      },
+      "params": {
+        "name": "SC8",
+        "width": 24
+      }
     },
     "t_clk_acc_8": {
       "id": "t_clk_acc_8",
       "type": "bus.tunnel",
-      "position": { "x": 1780, "y": 2050 },
+      "position": {
+        "x": 1780,
+        "y": 2050
+      },
       "rotation": 180,
-      "params": { "name": "CLK", "width": 1 }
+      "params": {
+        "name": "CLK",
+        "width": 1
+      }
     },
     "t_addr_9": {
       "id": "t_addr_9",
       "type": "bus.tunnel",
-      "position": { "x": 1780, "y": 2170 },
+      "position": {
+        "x": 1780,
+        "y": 2170
+      },
       "rotation": 180,
-      "params": { "name": "ADDR", "width": 10 }
+      "params": {
+        "name": "ADDR",
+        "width": 10
+      }
     },
     "n_rom_9": {
       "id": "n_rom_9",
       "type": "mem.rom",
-      "position": { "x": 1870, "y": 2160 },
+      "position": {
+        "x": 1870,
+        "y": 2160
+      },
       "label": "W9",
       "params": {
         "addressBits": 10,
@@ -1117,186 +1923,360 @@
     "n_add_9": {
       "id": "n_add_9",
       "type": "comb.adder",
-      "position": { "x": 1980, "y": 2170 },
-      "params": { "width": 24 }
+      "position": {
+        "x": 1980,
+        "y": 2170
+      },
+      "params": {
+        "width": 24
+      }
     },
     "n_acc_9": {
       "id": "n_acc_9",
       "type": "seq.register",
-      "position": { "x": 2090, "y": 2170 },
+      "position": {
+        "x": 2090,
+        "y": 2170
+      },
       "label": "Acc 9",
       "labelPosition": "top",
-      "params": { "width": 24, "edge": "rising", "asyncReset": true }
+      "params": {
+        "width": 24,
+        "edge": "rising",
+        "asyncReset": true
+      }
     },
     "t_rst_acc_9": {
       "id": "t_rst_acc_9",
       "type": "bus.tunnel",
-      "position": { "x": 1960, "y": 2130 },
+      "position": {
+        "x": 1960,
+        "y": 2130
+      },
       "rotation": 180,
-      "params": { "name": "RST", "width": 1 }
+      "params": {
+        "name": "RST",
+        "width": 1
+      }
     },
     "n_idx_9": {
       "id": "n_idx_9",
       "type": "io.constant",
-      "position": { "x": 2220, "y": 2150 },
-      "params": { "width": 4, "value": 6 }
+      "position": {
+        "x": 2220,
+        "y": 2150
+      },
+      "params": {
+        "width": 4,
+        "value": 6
+      }
     },
     "n_word_9": {
       "id": "n_word_9",
       "type": "bus.merge",
-      "position": { "x": 2290, "y": 2170 },
-      "params": { "groups": "4,24" }
+      "position": {
+        "x": 2290,
+        "y": 2170
+      },
+      "params": {
+        "groups": "4,24"
+      }
     },
     "t_sc_9": {
       "id": "t_sc_9",
       "type": "bus.tunnel",
-      "position": { "x": 2320, "y": 2250 },
-      "params": { "name": "SC9", "width": 24 }
+      "position": {
+        "x": 2320,
+        "y": 2250
+      },
+      "params": {
+        "name": "SC9",
+        "width": 24
+      }
     },
     "t_clk_acc_9": {
       "id": "t_clk_acc_9",
       "type": "bus.tunnel",
-      "position": { "x": 1780, "y": 2260 },
+      "position": {
+        "x": 1780,
+        "y": 2260
+      },
       "rotation": 180,
-      "params": { "name": "CLK", "width": 1 }
+      "params": {
+        "name": "CLK",
+        "width": 1
+      }
     },
     "n_cmp_0": {
       "id": "n_cmp_0",
       "type": "comb.comparator",
-      "position": { "x": 2520, "y": 480 },
-      "params": { "width": 28, "signed": false }
+      "position": {
+        "x": 2520,
+        "y": 480
+      },
+      "params": {
+        "width": 28,
+        "signed": false
+      }
     },
     "n_pick_0": {
       "id": "n_pick_0",
       "type": "comb.mux",
-      "position": { "x": 2520, "y": 580 },
-      "params": { "selectBits": 1, "width": 28 }
+      "position": {
+        "x": 2520,
+        "y": 580
+      },
+      "params": {
+        "selectBits": 1,
+        "width": 28
+      }
     },
     "n_cmp_1": {
       "id": "n_cmp_1",
       "type": "comb.comparator",
-      "position": { "x": 2520, "y": 690 },
-      "params": { "width": 28, "signed": false }
+      "position": {
+        "x": 2520,
+        "y": 690
+      },
+      "params": {
+        "width": 28,
+        "signed": false
+      }
     },
     "n_pick_1": {
       "id": "n_pick_1",
       "type": "comb.mux",
-      "position": { "x": 2520, "y": 790 },
-      "params": { "selectBits": 1, "width": 28 }
+      "position": {
+        "x": 2520,
+        "y": 790
+      },
+      "params": {
+        "selectBits": 1,
+        "width": 28
+      }
     },
     "n_cmp_2": {
       "id": "n_cmp_2",
       "type": "comb.comparator",
-      "position": { "x": 2520, "y": 900 },
-      "params": { "width": 28, "signed": false }
+      "position": {
+        "x": 2520,
+        "y": 900
+      },
+      "params": {
+        "width": 28,
+        "signed": false
+      }
     },
     "n_pick_2": {
       "id": "n_pick_2",
       "type": "comb.mux",
-      "position": { "x": 2520, "y": 1000 },
-      "params": { "selectBits": 1, "width": 28 }
+      "position": {
+        "x": 2520,
+        "y": 1000
+      },
+      "params": {
+        "selectBits": 1,
+        "width": 28
+      }
     },
     "n_cmp_3": {
       "id": "n_cmp_3",
       "type": "comb.comparator",
-      "position": { "x": 2520, "y": 1110 },
-      "params": { "width": 28, "signed": false }
+      "position": {
+        "x": 2520,
+        "y": 1110
+      },
+      "params": {
+        "width": 28,
+        "signed": false
+      }
     },
     "n_pick_3": {
       "id": "n_pick_3",
       "type": "comb.mux",
-      "position": { "x": 2520, "y": 1210 },
-      "params": { "selectBits": 1, "width": 28 }
+      "position": {
+        "x": 2520,
+        "y": 1210
+      },
+      "params": {
+        "selectBits": 1,
+        "width": 28
+      }
     },
     "n_cmp_4": {
       "id": "n_cmp_4",
       "type": "comb.comparator",
-      "position": { "x": 2520, "y": 1320 },
-      "params": { "width": 28, "signed": false }
+      "position": {
+        "x": 2520,
+        "y": 1320
+      },
+      "params": {
+        "width": 28,
+        "signed": false
+      }
     },
     "n_pick_4": {
       "id": "n_pick_4",
       "type": "comb.mux",
-      "position": { "x": 2520, "y": 1420 },
-      "params": { "selectBits": 1, "width": 28 }
+      "position": {
+        "x": 2520,
+        "y": 1420
+      },
+      "params": {
+        "selectBits": 1,
+        "width": 28
+      }
     },
     "n_cmp_5": {
       "id": "n_cmp_5",
       "type": "comb.comparator",
-      "position": { "x": 2520, "y": 1530 },
-      "params": { "width": 28, "signed": false }
+      "position": {
+        "x": 2520,
+        "y": 1530
+      },
+      "params": {
+        "width": 28,
+        "signed": false
+      }
     },
     "n_pick_5": {
       "id": "n_pick_5",
       "type": "comb.mux",
-      "position": { "x": 2520, "y": 1630 },
-      "params": { "selectBits": 1, "width": 28 }
+      "position": {
+        "x": 2520,
+        "y": 1630
+      },
+      "params": {
+        "selectBits": 1,
+        "width": 28
+      }
     },
     "n_cmp_6": {
       "id": "n_cmp_6",
       "type": "comb.comparator",
-      "position": { "x": 2520, "y": 1740 },
-      "params": { "width": 28, "signed": false }
+      "position": {
+        "x": 2520,
+        "y": 1740
+      },
+      "params": {
+        "width": 28,
+        "signed": false
+      }
     },
     "n_pick_6": {
       "id": "n_pick_6",
       "type": "comb.mux",
-      "position": { "x": 2520, "y": 1840 },
-      "params": { "selectBits": 1, "width": 28 }
+      "position": {
+        "x": 2520,
+        "y": 1840
+      },
+      "params": {
+        "selectBits": 1,
+        "width": 28
+      }
     },
     "n_cmp_7": {
       "id": "n_cmp_7",
       "type": "comb.comparator",
-      "position": { "x": 2520, "y": 1950 },
-      "params": { "width": 28, "signed": false }
+      "position": {
+        "x": 2520,
+        "y": 1950
+      },
+      "params": {
+        "width": 28,
+        "signed": false
+      }
     },
     "n_pick_7": {
       "id": "n_pick_7",
       "type": "comb.mux",
-      "position": { "x": 2520, "y": 2050 },
-      "params": { "selectBits": 1, "width": 28 }
+      "position": {
+        "x": 2520,
+        "y": 2050
+      },
+      "params": {
+        "selectBits": 1,
+        "width": 28
+      }
     },
     "n_cmp_8": {
       "id": "n_cmp_8",
       "type": "comb.comparator",
-      "position": { "x": 2520, "y": 2160 },
-      "params": { "width": 28, "signed": false }
+      "position": {
+        "x": 2520,
+        "y": 2160
+      },
+      "params": {
+        "width": 28,
+        "signed": false
+      }
     },
     "n_pick_8": {
       "id": "n_pick_8",
       "type": "comb.mux",
-      "position": { "x": 2520, "y": 2260 },
-      "params": { "selectBits": 1, "width": 28 }
+      "position": {
+        "x": 2520,
+        "y": 2260
+      },
+      "params": {
+        "selectBits": 1,
+        "width": 28
+      }
     },
     "n_winner": {
       "id": "n_winner",
       "type": "bus.split",
-      "position": { "x": 2720, "y": 2260 },
-      "params": { "groups": "4,24" }
+      "position": {
+        "x": 2720,
+        "y": 2260
+      },
+      "params": {
+        "groups": "4,24"
+      }
     },
     "n_idx_not": {
       "id": "n_idx_not",
       "type": "gate.not",
-      "position": { "x": 2840, "y": 2260 },
-      "params": { "width": 4 }
+      "position": {
+        "x": 2840,
+        "y": 2260
+      },
+      "params": {
+        "width": 4
+      }
     },
     "t_dig_src": {
       "id": "t_dig_src",
       "type": "bus.tunnel",
-      "position": { "x": 2940, "y": 2260 },
-      "params": { "name": "DIG", "width": 4 }
+      "position": {
+        "x": 2940,
+        "y": 2260
+      },
+      "params": {
+        "name": "DIG",
+        "width": 4
+      }
     },
     "n_top_score": {
       "id": "n_top_score",
       "type": "io.probe",
-      "position": { "x": 2840, "y": 2340 },
+      "position": {
+        "x": 2840,
+        "y": 2340
+      },
       "label": "Top score",
-      "params": { "width": 24, "radix": "decimal" }
+      "params": {
+        "width": 24,
+        "radix": "decimal"
+      }
     },
     "g_outer": {
       "id": "g_outer",
       "type": "deco.group",
-      "position": { "x": 80, "y": 140 },
+      "position": {
+        "x": 80,
+        "y": 140
+      },
       "params": {
         "title": "MNIST digit recogniser",
         "subtitle": "A 784 to 10 linear classifier evaluated one pixel at a time, with the weights in ROM",
@@ -1311,7 +2291,10 @@
     "g_console": {
       "id": "g_console",
       "type": "deco.group",
-      "position": { "x": 100, "y": 220 },
+      "position": {
+        "x": 100,
+        "y": 220
+      },
       "params": {
         "title": "Draw & read",
         "subtitle": "Draw a digit here; the prediction appears below it",
@@ -1326,7 +2309,10 @@
     "g_conf": {
       "id": "g_conf",
       "type": "deco.group",
-      "position": { "x": 920, "y": 220 },
+      "position": {
+        "x": 920,
+        "y": 220
+      },
       "params": {
         "title": "Confidence",
         "subtitle": "One bar per digit, from the top byte of that digit's score",
@@ -1341,7 +2327,10 @@
     "g_ctrl": {
       "id": "g_ctrl",
       "type": "deco.group",
-      "position": { "x": 140, "y": 1140 },
+      "position": {
+        "x": 140,
+        "y": 1140
+      },
       "params": {
         "title": "Scan & control",
         "subtitle": "Walks all 784 pixels, adds the bias, then stops the clock",
@@ -1356,7 +2345,10 @@
     "g_lanes": {
       "id": "g_lanes",
       "type": "deco.group",
-      "position": { "x": 1740, "y": 200 },
+      "position": {
+        "x": 1740,
+        "y": 200
+      },
       "params": {
         "title": "Weighted sums",
         "subtitle": "Ten identical lanes: weight ROM, adder, accumulator",
@@ -1371,7 +2363,10 @@
     "g_arg": {
       "id": "g_arg",
       "type": "deco.group",
-      "position": { "x": 2430, "y": 240 },
+      "position": {
+        "x": 2430,
+        "y": 240
+      },
       "params": {
         "title": "Argmax",
         "subtitle": "A running maximum over score-and-index words picks the winner",
@@ -1386,7 +2381,10 @@
     "note_try": {
       "id": "note_try",
       "type": "deco.text",
-      "position": { "x": 160, "y": 2020 },
+      "position": {
+        "x": 160,
+        "y": 2020
+      },
       "params": {
         "text": "## Try it\n\n- Draw a digit on the pad with the mouse.\n- Flip Reset up, then down again.\n- Wait for the Done lamp to light.\n- The 7-segment shows the prediction.",
         "format": "markdown",
@@ -1401,7 +2399,10 @@
     "note_how": {
       "id": "note_how",
       "type": "deco.text",
-      "position": { "x": 500, "y": 2020 },
+      "position": {
+        "x": 500,
+        "y": 2020
+      },
       "params": {
         "text": "### One pixel per clock\n\nTwo counters walk x and y from 0 to 28. Each lane adds that pixel's weight to its own total. A dark pixel reads a cell that holds zero, so nothing is added.",
         "format": "markdown",
@@ -1416,7 +2417,10 @@
     "note_bias": {
       "id": "note_bias",
       "type": "deco.text",
-      "position": { "x": 860, "y": 2020 },
+      "position": {
+        "x": 860,
+        "y": 2020
+      },
       "params": {
         "text": "### The bias rides along\n\nOn the last cycle both counters read 28, the pixel is forced high, and every lane adds the word at that address: its bias, plus the offset that keeps scores positive.",
         "format": "markdown",
@@ -1431,7 +2435,10 @@
     "note_weights": {
       "id": "note_weights",
       "type": "deco.text",
-      "position": { "x": 1220, "y": 2020 },
+      "position": {
+        "x": 1220,
+        "y": 2020
+      },
       "params": {
         "text": "### Loading your own weights\n\nEach lane's ROM holds one row of the weight matrix at address y*32+x. Run train_mnist.py to train the same model on MNIST and write the ROM images back into this file.",
         "format": "markdown",
@@ -1446,1322 +2453,3498 @@
     "n_3DlqAoxs1aAF": {
       "id": "n_3DlqAoxs1aAF",
       "type": "io.button",
-      "position": { "x": 520, "y": 900 },
+      "position": {
+        "x": 520,
+        "y": 900
+      },
       "label": "Reset",
-      "params": { "pressed": false }
+      "params": {
+        "pressed": false
+      }
     },
     "n_XkDOfndlUEHJ": {
       "id": "n_XkDOfndlUEHJ",
       "type": "io.switch",
-      "position": { "x": 240, "y": 1210 },
-      "params": { "width": 1, "value": 1 }
+      "position": {
+        "x": 240,
+        "y": 1210
+      },
+      "params": {
+        "width": 1,
+        "value": 1
+      }
     },
     "n_swy3UKUUUel-": {
       "id": "n_swy3UKUUUel-",
       "type": "bus.tunnel",
-      "position": { "x": 1160, "y": 1810 },
-      "params": { "name": "DONE", "width": 1 }
+      "position": {
+        "x": 1160,
+        "y": 1810
+      },
+      "params": {
+        "name": "DONE",
+        "width": 1
+      }
     },
     "n_xnprgfcmZDcK": {
       "id": "n_xnprgfcmZDcK",
       "type": "bus.tunnel",
-      "position": { "x": 620, "y": 900 },
+      "position": {
+        "x": 620,
+        "y": 900
+      },
       "rotation": 180,
-      "params": { "name": "DONE", "width": 1 }
+      "params": {
+        "name": "DONE",
+        "width": 1
+      }
     },
     "n_wYQ0VrAFwh8F": {
       "id": "n_wYQ0VrAFwh8F",
       "type": "io.led",
-      "position": { "x": 720, "y": 900 },
+      "position": {
+        "x": 720,
+        "y": 900
+      },
       "label": "Done",
-      "params": { "color": "green" }
+      "params": {
+        "color": "green"
+      }
     }
   },
   "wires": {
     "w_pad_x": {
       "id": "w_pad_x",
-      "from": { "nodeId": "t_cxq_pad", "pinId": "io" },
-      "to": { "nodeId": "n_pad", "pinId": "x" }
+      "from": {
+        "nodeId": "t_cxq_pad",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_pad",
+        "pinId": "x"
+      }
     },
     "w_pad_y": {
       "id": "w_pad_y",
-      "from": { "nodeId": "t_cyq_pad", "pinId": "io" },
-      "to": { "nodeId": "n_pad", "pinId": "y" },
-      "waypoints": [{ "x": 180, "y": 600 }]
+      "from": {
+        "nodeId": "t_cyq_pad",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_pad",
+        "pinId": "y"
+      },
+      "waypoints": [
+        {
+          "x": 180,
+          "y": 600
+        }
+      ]
     },
     "w_pad_px": {
       "id": "w_pad_px",
-      "from": { "nodeId": "n_pad", "pinId": "px" },
-      "to": { "nodeId": "t_px_pad", "pinId": "io" }
+      "from": {
+        "nodeId": "n_pad",
+        "pinId": "px"
+      },
+      "to": {
+        "nodeId": "t_px_pad",
+        "pinId": "io"
+      }
     },
     "w_dig_seg": {
       "id": "w_dig_seg",
-      "from": { "nodeId": "t_dig_disp", "pinId": "io" },
-      "to": { "nodeId": "n_segdrv", "pinId": "value" }
+      "from": {
+        "nodeId": "t_dig_disp",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_segdrv",
+        "pinId": "value"
+      }
     },
     "w_seg_a": {
       "id": "w_seg_a",
-      "from": { "nodeId": "n_segdrv", "pinId": "d0a" },
-      "to": { "nodeId": "n_sevenseg", "pinId": "a" }
+      "from": {
+        "nodeId": "n_segdrv",
+        "pinId": "d0a"
+      },
+      "to": {
+        "nodeId": "n_sevenseg",
+        "pinId": "a"
+      }
     },
     "w_seg_b": {
       "id": "w_seg_b",
-      "from": { "nodeId": "n_segdrv", "pinId": "d0b" },
-      "to": { "nodeId": "n_sevenseg", "pinId": "b" }
+      "from": {
+        "nodeId": "n_segdrv",
+        "pinId": "d0b"
+      },
+      "to": {
+        "nodeId": "n_sevenseg",
+        "pinId": "b"
+      }
     },
     "w_seg_c": {
       "id": "w_seg_c",
-      "from": { "nodeId": "n_segdrv", "pinId": "d0c" },
-      "to": { "nodeId": "n_sevenseg", "pinId": "c" }
+      "from": {
+        "nodeId": "n_segdrv",
+        "pinId": "d0c"
+      },
+      "to": {
+        "nodeId": "n_sevenseg",
+        "pinId": "c"
+      }
     },
     "w_seg_d": {
       "id": "w_seg_d",
-      "from": { "nodeId": "n_segdrv", "pinId": "d0d" },
-      "to": { "nodeId": "n_sevenseg", "pinId": "d" }
+      "from": {
+        "nodeId": "n_segdrv",
+        "pinId": "d0d"
+      },
+      "to": {
+        "nodeId": "n_sevenseg",
+        "pinId": "d"
+      }
     },
     "w_seg_e": {
       "id": "w_seg_e",
-      "from": { "nodeId": "n_segdrv", "pinId": "d0e" },
-      "to": { "nodeId": "n_sevenseg", "pinId": "e" }
+      "from": {
+        "nodeId": "n_segdrv",
+        "pinId": "d0e"
+      },
+      "to": {
+        "nodeId": "n_sevenseg",
+        "pinId": "e"
+      }
     },
     "w_seg_f": {
       "id": "w_seg_f",
-      "from": { "nodeId": "n_segdrv", "pinId": "d0f" },
-      "to": { "nodeId": "n_sevenseg", "pinId": "f" }
+      "from": {
+        "nodeId": "n_segdrv",
+        "pinId": "d0f"
+      },
+      "to": {
+        "nodeId": "n_sevenseg",
+        "pinId": "f"
+      }
     },
     "w_seg_g": {
       "id": "w_seg_g",
-      "from": { "nodeId": "n_segdrv", "pinId": "d0g" },
-      "to": { "nodeId": "n_sevenseg", "pinId": "g" }
+      "from": {
+        "nodeId": "n_segdrv",
+        "pinId": "d0g"
+      },
+      "to": {
+        "nodeId": "n_sevenseg",
+        "pinId": "g"
+      }
     },
     "w_bar_t0": {
       "id": "w_bar_t0",
-      "from": { "nodeId": "t_sc_bar_0", "pinId": "io" },
-      "to": { "nodeId": "n_barsplit_0", "pinId": "in" }
+      "from": {
+        "nodeId": "t_sc_bar_0",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_barsplit_0",
+        "pinId": "in"
+      }
     },
     "w_bar_s0": {
       "id": "w_bar_s0",
-      "from": { "nodeId": "n_barsplit_0", "pinId": "out1" },
-      "to": { "nodeId": "n_bar_0", "pinId": "addr" }
+      "from": {
+        "nodeId": "n_barsplit_0",
+        "pinId": "out1"
+      },
+      "to": {
+        "nodeId": "n_bar_0",
+        "pinId": "addr"
+      }
     },
     "w_bar_r0": {
       "id": "w_bar_r0",
-      "from": { "nodeId": "n_bar_0", "pinId": "data" },
-      "to": { "nodeId": "n_matrix", "pinId": "row0" },
-      "waypoints": [{ "x": 1270, "y": 330 }, { "x": 1270, "y": 310 }]
+      "from": {
+        "nodeId": "n_bar_0",
+        "pinId": "data"
+      },
+      "to": {
+        "nodeId": "n_matrix",
+        "pinId": "row0"
+      },
+      "waypoints": [
+        {
+          "x": 1270,
+          "y": 330
+        },
+        {
+          "x": 1270,
+          "y": 310
+        }
+      ]
     },
     "w_bar_t1": {
       "id": "w_bar_t1",
-      "from": { "nodeId": "t_sc_bar_1", "pinId": "io" },
-      "to": { "nodeId": "n_barsplit_1", "pinId": "in" }
+      "from": {
+        "nodeId": "t_sc_bar_1",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_barsplit_1",
+        "pinId": "in"
+      }
     },
     "w_bar_s1": {
       "id": "w_bar_s1",
-      "from": { "nodeId": "n_barsplit_1", "pinId": "out1" },
-      "to": { "nodeId": "n_bar_1", "pinId": "addr" }
+      "from": {
+        "nodeId": "n_barsplit_1",
+        "pinId": "out1"
+      },
+      "to": {
+        "nodeId": "n_bar_1",
+        "pinId": "addr"
+      }
     },
     "w_bar_r1": {
       "id": "w_bar_r1",
-      "from": { "nodeId": "n_bar_1", "pinId": "data" },
-      "to": { "nodeId": "n_matrix", "pinId": "row1" },
-      "waypoints": [{ "x": 1280, "y": 400 }, { "x": 1280, "y": 330 }]
+      "from": {
+        "nodeId": "n_bar_1",
+        "pinId": "data"
+      },
+      "to": {
+        "nodeId": "n_matrix",
+        "pinId": "row1"
+      },
+      "waypoints": [
+        {
+          "x": 1280,
+          "y": 400
+        },
+        {
+          "x": 1280,
+          "y": 330
+        }
+      ]
     },
     "w_bar_t2": {
       "id": "w_bar_t2",
-      "from": { "nodeId": "t_sc_bar_2", "pinId": "io" },
-      "to": { "nodeId": "n_barsplit_2", "pinId": "in" }
+      "from": {
+        "nodeId": "t_sc_bar_2",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_barsplit_2",
+        "pinId": "in"
+      }
     },
     "w_bar_s2": {
       "id": "w_bar_s2",
-      "from": { "nodeId": "n_barsplit_2", "pinId": "out1" },
-      "to": { "nodeId": "n_bar_2", "pinId": "addr" }
+      "from": {
+        "nodeId": "n_barsplit_2",
+        "pinId": "out1"
+      },
+      "to": {
+        "nodeId": "n_bar_2",
+        "pinId": "addr"
+      }
     },
     "w_bar_r2": {
       "id": "w_bar_r2",
-      "from": { "nodeId": "n_bar_2", "pinId": "data" },
-      "to": { "nodeId": "n_matrix", "pinId": "row2" },
-      "waypoints": [{ "x": 1290, "y": 470 }, { "x": 1290, "y": 350 }]
+      "from": {
+        "nodeId": "n_bar_2",
+        "pinId": "data"
+      },
+      "to": {
+        "nodeId": "n_matrix",
+        "pinId": "row2"
+      },
+      "waypoints": [
+        {
+          "x": 1290,
+          "y": 470
+        },
+        {
+          "x": 1290,
+          "y": 350
+        }
+      ]
     },
     "w_bar_t3": {
       "id": "w_bar_t3",
-      "from": { "nodeId": "t_sc_bar_3", "pinId": "io" },
-      "to": { "nodeId": "n_barsplit_3", "pinId": "in" }
+      "from": {
+        "nodeId": "t_sc_bar_3",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_barsplit_3",
+        "pinId": "in"
+      }
     },
     "w_bar_s3": {
       "id": "w_bar_s3",
-      "from": { "nodeId": "n_barsplit_3", "pinId": "out1" },
-      "to": { "nodeId": "n_bar_3", "pinId": "addr" }
+      "from": {
+        "nodeId": "n_barsplit_3",
+        "pinId": "out1"
+      },
+      "to": {
+        "nodeId": "n_bar_3",
+        "pinId": "addr"
+      }
     },
     "w_bar_r3": {
       "id": "w_bar_r3",
-      "from": { "nodeId": "n_bar_3", "pinId": "data" },
-      "to": { "nodeId": "n_matrix", "pinId": "row3" },
-      "waypoints": [{ "x": 1300, "y": 540 }, { "x": 1300, "y": 370 }]
+      "from": {
+        "nodeId": "n_bar_3",
+        "pinId": "data"
+      },
+      "to": {
+        "nodeId": "n_matrix",
+        "pinId": "row3"
+      },
+      "waypoints": [
+        {
+          "x": 1300,
+          "y": 540
+        },
+        {
+          "x": 1300,
+          "y": 370
+        }
+      ]
     },
     "w_bar_t4": {
       "id": "w_bar_t4",
-      "from": { "nodeId": "t_sc_bar_4", "pinId": "io" },
-      "to": { "nodeId": "n_barsplit_4", "pinId": "in" }
+      "from": {
+        "nodeId": "t_sc_bar_4",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_barsplit_4",
+        "pinId": "in"
+      }
     },
     "w_bar_s4": {
       "id": "w_bar_s4",
-      "from": { "nodeId": "n_barsplit_4", "pinId": "out1" },
-      "to": { "nodeId": "n_bar_4", "pinId": "addr" }
+      "from": {
+        "nodeId": "n_barsplit_4",
+        "pinId": "out1"
+      },
+      "to": {
+        "nodeId": "n_bar_4",
+        "pinId": "addr"
+      }
     },
     "w_bar_r4": {
       "id": "w_bar_r4",
-      "from": { "nodeId": "n_bar_4", "pinId": "data" },
-      "to": { "nodeId": "n_matrix", "pinId": "row4" },
-      "waypoints": [{ "x": 1310, "y": 610 }, { "x": 1310, "y": 390 }]
+      "from": {
+        "nodeId": "n_bar_4",
+        "pinId": "data"
+      },
+      "to": {
+        "nodeId": "n_matrix",
+        "pinId": "row4"
+      },
+      "waypoints": [
+        {
+          "x": 1310,
+          "y": 610
+        },
+        {
+          "x": 1310,
+          "y": 390
+        }
+      ]
     },
     "w_bar_t5": {
       "id": "w_bar_t5",
-      "from": { "nodeId": "t_sc_bar_5", "pinId": "io" },
-      "to": { "nodeId": "n_barsplit_5", "pinId": "in" }
+      "from": {
+        "nodeId": "t_sc_bar_5",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_barsplit_5",
+        "pinId": "in"
+      }
     },
     "w_bar_s5": {
       "id": "w_bar_s5",
-      "from": { "nodeId": "n_barsplit_5", "pinId": "out1" },
-      "to": { "nodeId": "n_bar_5", "pinId": "addr" }
+      "from": {
+        "nodeId": "n_barsplit_5",
+        "pinId": "out1"
+      },
+      "to": {
+        "nodeId": "n_bar_5",
+        "pinId": "addr"
+      }
     },
     "w_bar_r5": {
       "id": "w_bar_r5",
-      "from": { "nodeId": "n_bar_5", "pinId": "data" },
-      "to": { "nodeId": "n_matrix", "pinId": "row5" },
-      "waypoints": [{ "x": 1320, "y": 680 }, { "x": 1320, "y": 410 }]
+      "from": {
+        "nodeId": "n_bar_5",
+        "pinId": "data"
+      },
+      "to": {
+        "nodeId": "n_matrix",
+        "pinId": "row5"
+      },
+      "waypoints": [
+        {
+          "x": 1320,
+          "y": 680
+        },
+        {
+          "x": 1320,
+          "y": 410
+        }
+      ]
     },
     "w_bar_t6": {
       "id": "w_bar_t6",
-      "from": { "nodeId": "t_sc_bar_6", "pinId": "io" },
-      "to": { "nodeId": "n_barsplit_6", "pinId": "in" }
+      "from": {
+        "nodeId": "t_sc_bar_6",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_barsplit_6",
+        "pinId": "in"
+      }
     },
     "w_bar_s6": {
       "id": "w_bar_s6",
-      "from": { "nodeId": "n_barsplit_6", "pinId": "out1" },
-      "to": { "nodeId": "n_bar_6", "pinId": "addr" }
+      "from": {
+        "nodeId": "n_barsplit_6",
+        "pinId": "out1"
+      },
+      "to": {
+        "nodeId": "n_bar_6",
+        "pinId": "addr"
+      }
     },
     "w_bar_r6": {
       "id": "w_bar_r6",
-      "from": { "nodeId": "n_bar_6", "pinId": "data" },
-      "to": { "nodeId": "n_matrix", "pinId": "row6" },
-      "waypoints": [{ "x": 1330, "y": 750 }, { "x": 1330, "y": 430 }]
+      "from": {
+        "nodeId": "n_bar_6",
+        "pinId": "data"
+      },
+      "to": {
+        "nodeId": "n_matrix",
+        "pinId": "row6"
+      },
+      "waypoints": [
+        {
+          "x": 1330,
+          "y": 750
+        },
+        {
+          "x": 1330,
+          "y": 430
+        }
+      ]
     },
     "w_bar_t7": {
       "id": "w_bar_t7",
-      "from": { "nodeId": "t_sc_bar_7", "pinId": "io" },
-      "to": { "nodeId": "n_barsplit_7", "pinId": "in" }
+      "from": {
+        "nodeId": "t_sc_bar_7",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_barsplit_7",
+        "pinId": "in"
+      }
     },
     "w_bar_s7": {
       "id": "w_bar_s7",
-      "from": { "nodeId": "n_barsplit_7", "pinId": "out1" },
-      "to": { "nodeId": "n_bar_7", "pinId": "addr" }
+      "from": {
+        "nodeId": "n_barsplit_7",
+        "pinId": "out1"
+      },
+      "to": {
+        "nodeId": "n_bar_7",
+        "pinId": "addr"
+      }
     },
     "w_bar_r7": {
       "id": "w_bar_r7",
-      "from": { "nodeId": "n_bar_7", "pinId": "data" },
-      "to": { "nodeId": "n_matrix", "pinId": "row7" },
-      "waypoints": [{ "x": 1340, "y": 820 }, { "x": 1340, "y": 450 }]
+      "from": {
+        "nodeId": "n_bar_7",
+        "pinId": "data"
+      },
+      "to": {
+        "nodeId": "n_matrix",
+        "pinId": "row7"
+      },
+      "waypoints": [
+        {
+          "x": 1340,
+          "y": 820
+        },
+        {
+          "x": 1340,
+          "y": 450
+        }
+      ]
     },
     "w_bar_t8": {
       "id": "w_bar_t8",
-      "from": { "nodeId": "t_sc_bar_8", "pinId": "io" },
-      "to": { "nodeId": "n_barsplit_8", "pinId": "in" }
+      "from": {
+        "nodeId": "t_sc_bar_8",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_barsplit_8",
+        "pinId": "in"
+      }
     },
     "w_bar_s8": {
       "id": "w_bar_s8",
-      "from": { "nodeId": "n_barsplit_8", "pinId": "out1" },
-      "to": { "nodeId": "n_bar_8", "pinId": "addr" }
+      "from": {
+        "nodeId": "n_barsplit_8",
+        "pinId": "out1"
+      },
+      "to": {
+        "nodeId": "n_bar_8",
+        "pinId": "addr"
+      }
     },
     "w_bar_r8": {
       "id": "w_bar_r8",
-      "from": { "nodeId": "n_bar_8", "pinId": "data" },
-      "to": { "nodeId": "n_matrix", "pinId": "row8" },
-      "waypoints": [{ "x": 1350, "y": 890 }, { "x": 1350, "y": 470 }]
+      "from": {
+        "nodeId": "n_bar_8",
+        "pinId": "data"
+      },
+      "to": {
+        "nodeId": "n_matrix",
+        "pinId": "row8"
+      },
+      "waypoints": [
+        {
+          "x": 1350,
+          "y": 890
+        },
+        {
+          "x": 1350,
+          "y": 470
+        }
+      ]
     },
     "w_bar_t9": {
       "id": "w_bar_t9",
-      "from": { "nodeId": "t_sc_bar_9", "pinId": "io" },
-      "to": { "nodeId": "n_barsplit_9", "pinId": "in" }
+      "from": {
+        "nodeId": "t_sc_bar_9",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_barsplit_9",
+        "pinId": "in"
+      }
     },
     "w_bar_s9": {
       "id": "w_bar_s9",
-      "from": { "nodeId": "n_barsplit_9", "pinId": "out1" },
-      "to": { "nodeId": "n_bar_9", "pinId": "addr" }
+      "from": {
+        "nodeId": "n_barsplit_9",
+        "pinId": "out1"
+      },
+      "to": {
+        "nodeId": "n_bar_9",
+        "pinId": "addr"
+      }
     },
     "w_bar_r9": {
       "id": "w_bar_r9",
-      "from": { "nodeId": "n_bar_9", "pinId": "data" },
-      "to": { "nodeId": "n_matrix", "pinId": "row9" },
-      "waypoints": [{ "x": 1360, "y": 960 }, { "x": 1360, "y": 490 }]
+      "from": {
+        "nodeId": "n_bar_9",
+        "pinId": "data"
+      },
+      "to": {
+        "nodeId": "n_matrix",
+        "pinId": "row9"
+      },
+      "waypoints": [
+        {
+          "x": 1360,
+          "y": 960
+        },
+        {
+          "x": 1360,
+          "y": 490
+        }
+      ]
     },
     "w_rst_net": {
       "id": "w_rst_net",
-      "from": { "nodeId": "n_rst_or", "pinId": "out" },
-      "to": { "nodeId": "t_rst_src", "pinId": "io" }
+      "from": {
+        "nodeId": "n_rst_or",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "t_rst_src",
+        "pinId": "io"
+      }
     },
     "w_rst_cx": {
       "id": "w_rst_cx",
-      "from": { "nodeId": "t_rst_cx", "pinId": "io" },
-      "to": { "nodeId": "n_col_x", "pinId": "rst" }
+      "from": {
+        "nodeId": "t_rst_cx",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_col_x",
+        "pinId": "rst"
+      }
     },
     "w_clk_cx": {
       "id": "w_clk_cx",
-      "from": { "nodeId": "t_clk_cx", "pinId": "io" },
-      "to": { "nodeId": "n_col_x", "pinId": "clk" }
+      "from": {
+        "nodeId": "t_clk_cx",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_col_x",
+        "pinId": "clk"
+      }
     },
     "w_rst_cy": {
       "id": "w_rst_cy",
-      "from": { "nodeId": "t_rst_cy", "pinId": "io" },
-      "to": { "nodeId": "n_row_y", "pinId": "rst" }
+      "from": {
+        "nodeId": "t_rst_cy",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_row_y",
+        "pinId": "rst"
+      }
     },
     "w_clk_cy": {
       "id": "w_clk_cy",
-      "from": { "nodeId": "t_clk_cy", "pinId": "io" },
-      "to": { "nodeId": "n_row_y", "pinId": "clk" }
+      "from": {
+        "nodeId": "t_clk_cy",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_row_y",
+        "pinId": "clk"
+      }
     },
     "w_cx_q": {
       "id": "w_cx_q",
-      "from": { "nodeId": "n_col_x", "pinId": "q" },
-      "to": { "nodeId": "n_addr_merge", "pinId": "in0" },
-      "waypoints": [{ "x": 470, "y": 1540 }, { "x": 470, "y": 1580 }]
+      "from": {
+        "nodeId": "n_col_x",
+        "pinId": "q"
+      },
+      "to": {
+        "nodeId": "n_addr_merge",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 470,
+          "y": 1540
+        },
+        {
+          "x": 470,
+          "y": 1580
+        }
+      ]
     },
     "w_cy_q": {
       "id": "w_cy_q",
-      "from": { "nodeId": "n_row_y", "pinId": "q" },
-      "to": { "nodeId": "n_addr_merge", "pinId": "in1" },
-      "waypoints": [{ "x": 490, "y": 1690 }, { "x": 490, "y": 1600 }]
+      "from": {
+        "nodeId": "n_row_y",
+        "pinId": "q"
+      },
+      "to": {
+        "nodeId": "n_addr_merge",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 490,
+          "y": 1690
+        },
+        {
+          "x": 490,
+          "y": 1600
+        }
+      ]
     },
     "w_cx_net": {
       "id": "w_cx_net",
-      "from": { "wireId": "w_cx_q", "waypoint": 0 },
-      "to": { "nodeId": "t_cx_src", "pinId": "io" },
-      "waypoints": [{ "x": 650, "y": 1540 }]
+      "from": {
+        "wireId": "w_cx_q",
+        "waypoint": 0
+      },
+      "to": {
+        "nodeId": "t_cx_src",
+        "pinId": "io"
+      },
+      "waypoints": [
+        {
+          "x": 650,
+          "y": 1540
+        }
+      ]
     },
     "w_cy_net": {
       "id": "w_cy_net",
-      "from": { "wireId": "w_cy_q", "waypoint": 0 },
-      "to": { "nodeId": "t_cy_src", "pinId": "io" },
-      "waypoints": [{ "x": 490, "y": 1780 }]
+      "from": {
+        "wireId": "w_cy_q",
+        "waypoint": 0
+      },
+      "to": {
+        "nodeId": "t_cy_src",
+        "pinId": "io"
+      },
+      "waypoints": [
+        {
+          "x": 490,
+          "y": 1780
+        }
+      ]
     },
     "w_cx_co": {
       "id": "w_cx_co",
-      "from": { "nodeId": "n_col_x", "pinId": "carry" },
-      "to": { "nodeId": "n_row_y", "pinId": "en" },
+      "from": {
+        "nodeId": "n_col_x",
+        "pinId": "carry"
+      },
+      "to": {
+        "nodeId": "n_row_y",
+        "pinId": "en"
+      },
       "waypoints": [
-        { "x": 500, "y": 1550 },
-        { "x": 500, "y": 1630 },
-        { "x": 420, "y": 1630 }
+        {
+          "x": 500,
+          "y": 1550
+        },
+        {
+          "x": 500,
+          "y": 1630
+        },
+        {
+          "x": 420,
+          "y": 1630
+        }
       ]
     },
     "w_bias_a": {
       "id": "w_bias_a",
-      "from": { "wireId": "w_cx_co", "waypoint": 1 },
-      "to": { "nodeId": "n_bias_and", "pinId": "in0" },
-      "waypoints": [{ "x": 500, "y": 1690 }]
+      "from": {
+        "wireId": "w_cx_co",
+        "waypoint": 1
+      },
+      "to": {
+        "nodeId": "n_bias_and",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 500,
+          "y": 1690
+        }
+      ]
     },
     "w_bias_b": {
       "id": "w_bias_b",
-      "from": { "nodeId": "n_row_y", "pinId": "carry" },
-      "to": { "nodeId": "n_bias_and", "pinId": "in1" }
+      "from": {
+        "nodeId": "n_row_y",
+        "pinId": "carry"
+      },
+      "to": {
+        "nodeId": "n_bias_and",
+        "pinId": "in1"
+      }
     },
     "w_px_or": {
       "id": "w_px_or",
-      "from": { "nodeId": "t_px_ctrl", "pinId": "io" },
-      "to": { "nodeId": "n_pix_or", "pinId": "in0" },
-      "waypoints": [{ "x": 350, "y": 1820 }, { "x": 670, "y": 1820 }]
+      "from": {
+        "nodeId": "t_px_ctrl",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_pix_or",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 350,
+          "y": 1820
+        },
+        {
+          "x": 670,
+          "y": 1820
+        }
+      ]
     },
     "w_bias_or": {
       "id": "w_bias_or",
-      "from": { "nodeId": "n_bias_and", "pinId": "out" },
-      "to": { "nodeId": "n_pix_or", "pinId": "in1" },
-      "waypoints": [{ "x": 640, "y": 1700 }, { "x": 640, "y": 1710 }]
+      "from": {
+        "nodeId": "n_bias_and",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_pix_or",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 640,
+          "y": 1700
+        },
+        {
+          "x": 640,
+          "y": 1710
+        }
+      ]
     },
     "w_zero_addr": {
       "id": "w_zero_addr",
-      "from": { "nodeId": "n_zero_addr", "pinId": "out" },
-      "to": { "nodeId": "n_addr_mux", "pinId": "in0" },
+      "from": {
+        "nodeId": "n_zero_addr",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_addr_mux",
+        "pinId": "in0"
+      },
       "waypoints": [
-        { "x": 870, "y": 1500 },
-        { "x": 870, "y": 1540 },
-        { "x": 690, "y": 1540 }
+        {
+          "x": 870,
+          "y": 1500
+        },
+        {
+          "x": 870,
+          "y": 1540
+        },
+        {
+          "x": 690,
+          "y": 1540
+        }
       ]
     },
     "w_addr_in": {
       "id": "w_addr_in",
-      "from": { "nodeId": "n_addr_merge", "pinId": "out" },
-      "to": { "nodeId": "n_addr_mux", "pinId": "in1" },
-      "waypoints": [{ "x": 660, "y": 1590 }, { "x": 660, "y": 1600 }]
+      "from": {
+        "nodeId": "n_addr_merge",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_addr_mux",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 660,
+          "y": 1590
+        },
+        {
+          "x": 660,
+          "y": 1600
+        }
+      ]
     },
     "w_addr_sel": {
       "id": "w_addr_sel",
-      "from": { "nodeId": "n_pix_or", "pinId": "out" },
-      "to": { "nodeId": "n_addr_mux", "pinId": "sel" },
-      "waypoints": [{ "x": 780, "y": 1700 }, { "x": 780, "y": 1630 }]
+      "from": {
+        "nodeId": "n_pix_or",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_addr_mux",
+        "pinId": "sel"
+      },
+      "waypoints": [
+        {
+          "x": 780,
+          "y": 1700
+        },
+        {
+          "x": 780,
+          "y": 1630
+        }
+      ]
     },
     "w_addr_net": {
       "id": "w_addr_net",
-      "from": { "nodeId": "n_addr_mux", "pinId": "out" },
-      "to": { "nodeId": "t_addr_src", "pinId": "io" },
-      "waypoints": [{ "x": 820, "y": 1590 }, { "x": 820, "y": 1580 }]
+      "from": {
+        "nodeId": "n_addr_mux",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "t_addr_src",
+        "pinId": "io"
+      },
+      "waypoints": [
+        {
+          "x": 820,
+          "y": 1590
+        },
+        {
+          "x": 820,
+          "y": 1580
+        }
+      ]
     },
     "w_done_d": {
       "id": "w_done_d",
-      "from": { "nodeId": "n_done_or", "pinId": "out" },
-      "to": { "nodeId": "n_done_ff", "pinId": "d" },
-      "waypoints": [{ "x": 990, "y": 1700 }, { "x": 990, "y": 1710 }]
+      "from": {
+        "nodeId": "n_done_or",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_done_ff",
+        "pinId": "d"
+      },
+      "waypoints": [
+        {
+          "x": 990,
+          "y": 1700
+        },
+        {
+          "x": 990,
+          "y": 1710
+        }
+      ]
     },
     "w_done_set": {
       "id": "w_done_set",
-      "from": { "wireId": "w_bias_or", "waypoint": 0 },
-      "to": { "nodeId": "n_done_or", "pinId": "in0" },
-      "waypoints": [{ "x": 640, "y": 1650 }, { "x": 890, "y": 1650 }]
+      "from": {
+        "wireId": "w_bias_or",
+        "waypoint": 0
+      },
+      "to": {
+        "nodeId": "n_done_or",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 640,
+          "y": 1650
+        },
+        {
+          "x": 890,
+          "y": 1650
+        }
+      ]
     },
     "w_rst_ff": {
       "id": "w_rst_ff",
-      "from": { "nodeId": "t_rst_ff", "pinId": "io" },
-      "to": { "nodeId": "n_done_ff", "pinId": "rst" },
-      "waypoints": [{ "x": 1040, "y": 1640 }]
+      "from": {
+        "nodeId": "t_rst_ff",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_done_ff",
+        "pinId": "rst"
+      },
+      "waypoints": [
+        {
+          "x": 1040,
+          "y": 1640
+        }
+      ]
     },
     "w_clk_ff": {
       "id": "w_clk_ff",
-      "from": { "nodeId": "t_clk_ff", "pinId": "io" },
-      "to": { "nodeId": "n_done_ff", "pinId": "clk" },
-      "waypoints": [{ "x": 1060, "y": 1820 }]
+      "from": {
+        "nodeId": "t_clk_ff",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_done_ff",
+        "pinId": "clk"
+      },
+      "waypoints": [
+        {
+          "x": 1060,
+          "y": 1820
+        }
+      ]
     },
     "w_done_q": {
       "id": "w_done_q",
-      "from": { "nodeId": "n_done_ff", "pinId": "q" },
-      "to": { "nodeId": "n_done_not", "pinId": "in" },
-      "waypoints": [{ "x": 1130, "y": 1700 }]
+      "from": {
+        "nodeId": "n_done_ff",
+        "pinId": "q"
+      },
+      "to": {
+        "nodeId": "n_done_not",
+        "pinId": "in"
+      },
+      "waypoints": [
+        {
+          "x": 1130,
+          "y": 1700
+        }
+      ]
     },
     "w_done_hold": {
       "id": "w_done_hold",
-      "from": { "wireId": "w_done_q", "waypoint": 0 },
-      "to": { "nodeId": "n_done_or", "pinId": "in1" },
+      "from": {
+        "wireId": "w_done_q",
+        "waypoint": 0
+      },
+      "to": {
+        "nodeId": "n_done_or",
+        "pinId": "in1"
+      },
       "waypoints": [
-        { "x": 1130, "y": 1830 },
-        { "x": 1130, "y": 1890 },
-        { "x": 880, "y": 1890 },
-        { "x": 880, "y": 1710 }
+        {
+          "x": 1130,
+          "y": 1830
+        },
+        {
+          "x": 1130,
+          "y": 1890
+        },
+        {
+          "x": 880,
+          "y": 1890
+        },
+        {
+          "x": 880,
+          "y": 1710
+        }
       ]
     },
     "w_done_led": {
       "id": "w_done_led",
-      "from": { "wireId": "w_done_hold", "waypoint": 1 },
-      "to": { "nodeId": "n_done_led", "pinId": "in" }
+      "from": {
+        "wireId": "w_done_hold",
+        "waypoint": 1
+      },
+      "to": {
+        "nodeId": "n_done_led",
+        "pinId": "in"
+      }
     },
     "w_clk_src": {
       "id": "w_clk_src",
-      "from": { "nodeId": "n_clock", "pinId": "out" },
-      "to": { "nodeId": "n_clk_and", "pinId": "in0" },
+      "from": {
+        "nodeId": "n_clock",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_clk_and",
+        "pinId": "in0"
+      },
       "waypoints": [
-        { "x": 350, "y": 1280 },
-        { "x": 1280, "y": 1280 },
-        { "x": 1280, "y": 1540 },
-        { "x": 1130, "y": 1540 },
-        { "x": 1130, "y": 1610 }
+        {
+          "x": 350,
+          "y": 1280
+        },
+        {
+          "x": 1280,
+          "y": 1280
+        },
+        {
+          "x": 1280,
+          "y": 1540
+        },
+        {
+          "x": 1130,
+          "y": 1540
+        },
+        {
+          "x": 1130,
+          "y": 1610
+        }
       ]
     },
     "w_clk_gate": {
       "id": "w_clk_gate",
-      "from": { "nodeId": "n_done_not", "pinId": "out" },
-      "to": { "nodeId": "n_clk_and", "pinId": "in1" },
+      "from": {
+        "nodeId": "n_done_not",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_clk_and",
+        "pinId": "in1"
+      },
       "waypoints": [
-        { "x": 1250, "y": 1700 },
-        { "x": 1250, "y": 1560 },
-        { "x": 1150, "y": 1560 }
+        {
+          "x": 1250,
+          "y": 1700
+        },
+        {
+          "x": 1250,
+          "y": 1560
+        },
+        {
+          "x": 1150,
+          "y": 1560
+        }
       ]
     },
     "w_clk_net": {
       "id": "w_clk_net",
-      "from": { "nodeId": "n_clk_and", "pinId": "out" },
-      "to": { "nodeId": "t_clk_src", "pinId": "io" },
-      "waypoints": [{ "x": 1230, "y": 1220 }]
+      "from": {
+        "nodeId": "n_clk_and",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "t_clk_src",
+        "pinId": "io"
+      },
+      "waypoints": [
+        {
+          "x": 1230,
+          "y": 1220
+        }
+      ]
     },
     "w_addr_0": {
       "id": "w_addr_0",
-      "from": { "nodeId": "t_addr_0", "pinId": "io" },
-      "to": { "nodeId": "n_rom_0", "pinId": "addr" }
+      "from": {
+        "nodeId": "t_addr_0",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_rom_0",
+        "pinId": "addr"
+      }
     },
     "w_w_0": {
       "id": "w_w_0",
-      "from": { "nodeId": "n_rom_0", "pinId": "data" },
-      "to": { "nodeId": "n_add_0", "pinId": "a" }
+      "from": {
+        "nodeId": "n_rom_0",
+        "pinId": "data"
+      },
+      "to": {
+        "nodeId": "n_add_0",
+        "pinId": "a"
+      }
     },
     "w_sum_0": {
       "id": "w_sum_0",
-      "from": { "nodeId": "n_add_0", "pinId": "sum" },
-      "to": { "nodeId": "n_acc_0", "pinId": "d" }
+      "from": {
+        "nodeId": "n_add_0",
+        "pinId": "sum"
+      },
+      "to": {
+        "nodeId": "n_acc_0",
+        "pinId": "d"
+      }
     },
     "w_accrst_0": {
       "id": "w_accrst_0",
-      "from": { "nodeId": "t_rst_acc_0", "pinId": "io" },
-      "to": { "nodeId": "n_acc_0", "pinId": "rst" },
-      "waypoints": [{ "x": 2030, "y": 270 }]
+      "from": {
+        "nodeId": "t_rst_acc_0",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_acc_0",
+        "pinId": "rst"
+      },
+      "waypoints": [
+        {
+          "x": 2030,
+          "y": 270
+        }
+      ]
     },
     "w_accclk_0": {
       "id": "w_accclk_0",
-      "from": { "nodeId": "t_clk_acc_0", "pinId": "io" },
-      "to": { "nodeId": "n_acc_0", "pinId": "clk" },
-      "waypoints": [{ "x": 2130, "y": 390 }]
+      "from": {
+        "nodeId": "t_clk_acc_0",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_acc_0",
+        "pinId": "clk"
+      },
+      "waypoints": [
+        {
+          "x": 2130,
+          "y": 390
+        }
+      ]
     },
     "w_q_0": {
       "id": "w_q_0",
-      "from": { "nodeId": "n_acc_0", "pinId": "q" },
-      "to": { "nodeId": "n_word_0", "pinId": "in1" },
-      "waypoints": [{ "x": 2180, "y": 380 }, { "x": 2280, "y": 380 }]
+      "from": {
+        "nodeId": "n_acc_0",
+        "pinId": "q"
+      },
+      "to": {
+        "nodeId": "n_word_0",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 2180,
+          "y": 380
+        },
+        {
+          "x": 2280,
+          "y": 380
+        }
+      ]
     },
     "w_fb_0": {
       "id": "w_fb_0",
-      "from": { "wireId": "w_q_0", "waypoint": 0 },
-      "to": { "nodeId": "n_add_0", "pinId": "b" },
-      "waypoints": [{ "x": 1970, "y": 380 }]
+      "from": {
+        "wireId": "w_q_0",
+        "waypoint": 0
+      },
+      "to": {
+        "nodeId": "n_add_0",
+        "pinId": "b"
+      },
+      "waypoints": [
+        {
+          "x": 1970,
+          "y": 380
+        }
+      ]
     },
     "w_scnet_0": {
       "id": "w_scnet_0",
-      "from": { "wireId": "w_q_0", "waypoint": 1 },
-      "to": { "nodeId": "t_sc_0", "pinId": "io" }
+      "from": {
+        "wireId": "w_q_0",
+        "waypoint": 1
+      },
+      "to": {
+        "nodeId": "t_sc_0",
+        "pinId": "io"
+      }
     },
     "w_idx_0": {
       "id": "w_idx_0",
-      "from": { "nodeId": "n_idx_0", "pinId": "out" },
-      "to": { "nodeId": "n_word_0", "pinId": "in0" },
-      "waypoints": [{ "x": 2270, "y": 300 }]
+      "from": {
+        "nodeId": "n_idx_0",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_word_0",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 2270,
+          "y": 300
+        }
+      ]
     },
     "w_addr_1": {
       "id": "w_addr_1",
-      "from": { "nodeId": "t_addr_1", "pinId": "io" },
-      "to": { "nodeId": "n_rom_1", "pinId": "addr" }
+      "from": {
+        "nodeId": "t_addr_1",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_rom_1",
+        "pinId": "addr"
+      }
     },
     "w_w_1": {
       "id": "w_w_1",
-      "from": { "nodeId": "n_rom_1", "pinId": "data" },
-      "to": { "nodeId": "n_add_1", "pinId": "a" }
+      "from": {
+        "nodeId": "n_rom_1",
+        "pinId": "data"
+      },
+      "to": {
+        "nodeId": "n_add_1",
+        "pinId": "a"
+      }
     },
     "w_sum_1": {
       "id": "w_sum_1",
-      "from": { "nodeId": "n_add_1", "pinId": "sum" },
-      "to": { "nodeId": "n_acc_1", "pinId": "d" }
+      "from": {
+        "nodeId": "n_add_1",
+        "pinId": "sum"
+      },
+      "to": {
+        "nodeId": "n_acc_1",
+        "pinId": "d"
+      }
     },
     "w_accrst_1": {
       "id": "w_accrst_1",
-      "from": { "nodeId": "t_rst_acc_1", "pinId": "io" },
-      "to": { "nodeId": "n_acc_1", "pinId": "rst" },
-      "waypoints": [{ "x": 2030, "y": 480 }]
+      "from": {
+        "nodeId": "t_rst_acc_1",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_acc_1",
+        "pinId": "rst"
+      },
+      "waypoints": [
+        {
+          "x": 2030,
+          "y": 480
+        }
+      ]
     },
     "w_accclk_1": {
       "id": "w_accclk_1",
-      "from": { "nodeId": "t_clk_acc_1", "pinId": "io" },
-      "to": { "nodeId": "n_acc_1", "pinId": "clk" },
-      "waypoints": [{ "x": 2130, "y": 600 }]
+      "from": {
+        "nodeId": "t_clk_acc_1",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_acc_1",
+        "pinId": "clk"
+      },
+      "waypoints": [
+        {
+          "x": 2130,
+          "y": 600
+        }
+      ]
     },
     "w_q_1": {
       "id": "w_q_1",
-      "from": { "nodeId": "n_acc_1", "pinId": "q" },
-      "to": { "nodeId": "n_word_1", "pinId": "in1" },
-      "waypoints": [{ "x": 2180, "y": 590 }, { "x": 2280, "y": 590 }]
+      "from": {
+        "nodeId": "n_acc_1",
+        "pinId": "q"
+      },
+      "to": {
+        "nodeId": "n_word_1",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 2180,
+          "y": 590
+        },
+        {
+          "x": 2280,
+          "y": 590
+        }
+      ]
     },
     "w_fb_1": {
       "id": "w_fb_1",
-      "from": { "wireId": "w_q_1", "waypoint": 0 },
-      "to": { "nodeId": "n_add_1", "pinId": "b" },
-      "waypoints": [{ "x": 1970, "y": 590 }]
+      "from": {
+        "wireId": "w_q_1",
+        "waypoint": 0
+      },
+      "to": {
+        "nodeId": "n_add_1",
+        "pinId": "b"
+      },
+      "waypoints": [
+        {
+          "x": 1970,
+          "y": 590
+        }
+      ]
     },
     "w_scnet_1": {
       "id": "w_scnet_1",
-      "from": { "wireId": "w_q_1", "waypoint": 1 },
-      "to": { "nodeId": "t_sc_1", "pinId": "io" }
+      "from": {
+        "wireId": "w_q_1",
+        "waypoint": 1
+      },
+      "to": {
+        "nodeId": "t_sc_1",
+        "pinId": "io"
+      }
     },
     "w_idx_1": {
       "id": "w_idx_1",
-      "from": { "nodeId": "n_idx_1", "pinId": "out" },
-      "to": { "nodeId": "n_word_1", "pinId": "in0" },
-      "waypoints": [{ "x": 2270, "y": 510 }]
+      "from": {
+        "nodeId": "n_idx_1",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_word_1",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 2270,
+          "y": 510
+        }
+      ]
     },
     "w_addr_2": {
       "id": "w_addr_2",
-      "from": { "nodeId": "t_addr_2", "pinId": "io" },
-      "to": { "nodeId": "n_rom_2", "pinId": "addr" }
+      "from": {
+        "nodeId": "t_addr_2",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_rom_2",
+        "pinId": "addr"
+      }
     },
     "w_w_2": {
       "id": "w_w_2",
-      "from": { "nodeId": "n_rom_2", "pinId": "data" },
-      "to": { "nodeId": "n_add_2", "pinId": "a" }
+      "from": {
+        "nodeId": "n_rom_2",
+        "pinId": "data"
+      },
+      "to": {
+        "nodeId": "n_add_2",
+        "pinId": "a"
+      }
     },
     "w_sum_2": {
       "id": "w_sum_2",
-      "from": { "nodeId": "n_add_2", "pinId": "sum" },
-      "to": { "nodeId": "n_acc_2", "pinId": "d" }
+      "from": {
+        "nodeId": "n_add_2",
+        "pinId": "sum"
+      },
+      "to": {
+        "nodeId": "n_acc_2",
+        "pinId": "d"
+      }
     },
     "w_accrst_2": {
       "id": "w_accrst_2",
-      "from": { "nodeId": "t_rst_acc_2", "pinId": "io" },
-      "to": { "nodeId": "n_acc_2", "pinId": "rst" },
-      "waypoints": [{ "x": 2030, "y": 690 }]
+      "from": {
+        "nodeId": "t_rst_acc_2",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_acc_2",
+        "pinId": "rst"
+      },
+      "waypoints": [
+        {
+          "x": 2030,
+          "y": 690
+        }
+      ]
     },
     "w_accclk_2": {
       "id": "w_accclk_2",
-      "from": { "nodeId": "t_clk_acc_2", "pinId": "io" },
-      "to": { "nodeId": "n_acc_2", "pinId": "clk" },
-      "waypoints": [{ "x": 2130, "y": 810 }]
+      "from": {
+        "nodeId": "t_clk_acc_2",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_acc_2",
+        "pinId": "clk"
+      },
+      "waypoints": [
+        {
+          "x": 2130,
+          "y": 810
+        }
+      ]
     },
     "w_q_2": {
       "id": "w_q_2",
-      "from": { "nodeId": "n_acc_2", "pinId": "q" },
-      "to": { "nodeId": "n_word_2", "pinId": "in1" },
-      "waypoints": [{ "x": 2180, "y": 800 }, { "x": 2280, "y": 800 }]
+      "from": {
+        "nodeId": "n_acc_2",
+        "pinId": "q"
+      },
+      "to": {
+        "nodeId": "n_word_2",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 2180,
+          "y": 800
+        },
+        {
+          "x": 2280,
+          "y": 800
+        }
+      ]
     },
     "w_fb_2": {
       "id": "w_fb_2",
-      "from": { "wireId": "w_q_2", "waypoint": 0 },
-      "to": { "nodeId": "n_add_2", "pinId": "b" },
-      "waypoints": [{ "x": 1970, "y": 800 }]
+      "from": {
+        "wireId": "w_q_2",
+        "waypoint": 0
+      },
+      "to": {
+        "nodeId": "n_add_2",
+        "pinId": "b"
+      },
+      "waypoints": [
+        {
+          "x": 1970,
+          "y": 800
+        }
+      ]
     },
     "w_scnet_2": {
       "id": "w_scnet_2",
-      "from": { "wireId": "w_q_2", "waypoint": 1 },
-      "to": { "nodeId": "t_sc_2", "pinId": "io" }
+      "from": {
+        "wireId": "w_q_2",
+        "waypoint": 1
+      },
+      "to": {
+        "nodeId": "t_sc_2",
+        "pinId": "io"
+      }
     },
     "w_idx_2": {
       "id": "w_idx_2",
-      "from": { "nodeId": "n_idx_2", "pinId": "out" },
-      "to": { "nodeId": "n_word_2", "pinId": "in0" },
-      "waypoints": [{ "x": 2270, "y": 720 }]
+      "from": {
+        "nodeId": "n_idx_2",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_word_2",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 2270,
+          "y": 720
+        }
+      ]
     },
     "w_addr_3": {
       "id": "w_addr_3",
-      "from": { "nodeId": "t_addr_3", "pinId": "io" },
-      "to": { "nodeId": "n_rom_3", "pinId": "addr" }
+      "from": {
+        "nodeId": "t_addr_3",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_rom_3",
+        "pinId": "addr"
+      }
     },
     "w_w_3": {
       "id": "w_w_3",
-      "from": { "nodeId": "n_rom_3", "pinId": "data" },
-      "to": { "nodeId": "n_add_3", "pinId": "a" }
+      "from": {
+        "nodeId": "n_rom_3",
+        "pinId": "data"
+      },
+      "to": {
+        "nodeId": "n_add_3",
+        "pinId": "a"
+      }
     },
     "w_sum_3": {
       "id": "w_sum_3",
-      "from": { "nodeId": "n_add_3", "pinId": "sum" },
-      "to": { "nodeId": "n_acc_3", "pinId": "d" }
+      "from": {
+        "nodeId": "n_add_3",
+        "pinId": "sum"
+      },
+      "to": {
+        "nodeId": "n_acc_3",
+        "pinId": "d"
+      }
     },
     "w_accrst_3": {
       "id": "w_accrst_3",
-      "from": { "nodeId": "t_rst_acc_3", "pinId": "io" },
-      "to": { "nodeId": "n_acc_3", "pinId": "rst" },
-      "waypoints": [{ "x": 2030, "y": 900 }]
+      "from": {
+        "nodeId": "t_rst_acc_3",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_acc_3",
+        "pinId": "rst"
+      },
+      "waypoints": [
+        {
+          "x": 2030,
+          "y": 900
+        }
+      ]
     },
     "w_accclk_3": {
       "id": "w_accclk_3",
-      "from": { "nodeId": "t_clk_acc_3", "pinId": "io" },
-      "to": { "nodeId": "n_acc_3", "pinId": "clk" },
-      "waypoints": [{ "x": 2130, "y": 1020 }]
+      "from": {
+        "nodeId": "t_clk_acc_3",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_acc_3",
+        "pinId": "clk"
+      },
+      "waypoints": [
+        {
+          "x": 2130,
+          "y": 1020
+        }
+      ]
     },
     "w_q_3": {
       "id": "w_q_3",
-      "from": { "nodeId": "n_acc_3", "pinId": "q" },
-      "to": { "nodeId": "n_word_3", "pinId": "in1" },
-      "waypoints": [{ "x": 2180, "y": 1010 }, { "x": 2280, "y": 1010 }]
+      "from": {
+        "nodeId": "n_acc_3",
+        "pinId": "q"
+      },
+      "to": {
+        "nodeId": "n_word_3",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 2180,
+          "y": 1010
+        },
+        {
+          "x": 2280,
+          "y": 1010
+        }
+      ]
     },
     "w_fb_3": {
       "id": "w_fb_3",
-      "from": { "wireId": "w_q_3", "waypoint": 0 },
-      "to": { "nodeId": "n_add_3", "pinId": "b" },
-      "waypoints": [{ "x": 1970, "y": 1010 }]
+      "from": {
+        "wireId": "w_q_3",
+        "waypoint": 0
+      },
+      "to": {
+        "nodeId": "n_add_3",
+        "pinId": "b"
+      },
+      "waypoints": [
+        {
+          "x": 1970,
+          "y": 1010
+        }
+      ]
     },
     "w_scnet_3": {
       "id": "w_scnet_3",
-      "from": { "wireId": "w_q_3", "waypoint": 1 },
-      "to": { "nodeId": "t_sc_3", "pinId": "io" }
+      "from": {
+        "wireId": "w_q_3",
+        "waypoint": 1
+      },
+      "to": {
+        "nodeId": "t_sc_3",
+        "pinId": "io"
+      }
     },
     "w_idx_3": {
       "id": "w_idx_3",
-      "from": { "nodeId": "n_idx_3", "pinId": "out" },
-      "to": { "nodeId": "n_word_3", "pinId": "in0" },
-      "waypoints": [{ "x": 2270, "y": 930 }]
+      "from": {
+        "nodeId": "n_idx_3",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_word_3",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 2270,
+          "y": 930
+        }
+      ]
     },
     "w_addr_4": {
       "id": "w_addr_4",
-      "from": { "nodeId": "t_addr_4", "pinId": "io" },
-      "to": { "nodeId": "n_rom_4", "pinId": "addr" }
+      "from": {
+        "nodeId": "t_addr_4",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_rom_4",
+        "pinId": "addr"
+      }
     },
     "w_w_4": {
       "id": "w_w_4",
-      "from": { "nodeId": "n_rom_4", "pinId": "data" },
-      "to": { "nodeId": "n_add_4", "pinId": "a" }
+      "from": {
+        "nodeId": "n_rom_4",
+        "pinId": "data"
+      },
+      "to": {
+        "nodeId": "n_add_4",
+        "pinId": "a"
+      }
     },
     "w_sum_4": {
       "id": "w_sum_4",
-      "from": { "nodeId": "n_add_4", "pinId": "sum" },
-      "to": { "nodeId": "n_acc_4", "pinId": "d" }
+      "from": {
+        "nodeId": "n_add_4",
+        "pinId": "sum"
+      },
+      "to": {
+        "nodeId": "n_acc_4",
+        "pinId": "d"
+      }
     },
     "w_accrst_4": {
       "id": "w_accrst_4",
-      "from": { "nodeId": "t_rst_acc_4", "pinId": "io" },
-      "to": { "nodeId": "n_acc_4", "pinId": "rst" },
-      "waypoints": [{ "x": 2030, "y": 1110 }]
+      "from": {
+        "nodeId": "t_rst_acc_4",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_acc_4",
+        "pinId": "rst"
+      },
+      "waypoints": [
+        {
+          "x": 2030,
+          "y": 1110
+        }
+      ]
     },
     "w_accclk_4": {
       "id": "w_accclk_4",
-      "from": { "nodeId": "t_clk_acc_4", "pinId": "io" },
-      "to": { "nodeId": "n_acc_4", "pinId": "clk" },
-      "waypoints": [{ "x": 2130, "y": 1230 }]
+      "from": {
+        "nodeId": "t_clk_acc_4",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_acc_4",
+        "pinId": "clk"
+      },
+      "waypoints": [
+        {
+          "x": 2130,
+          "y": 1230
+        }
+      ]
     },
     "w_q_4": {
       "id": "w_q_4",
-      "from": { "nodeId": "n_acc_4", "pinId": "q" },
-      "to": { "nodeId": "n_word_4", "pinId": "in1" },
-      "waypoints": [{ "x": 2180, "y": 1220 }, { "x": 2280, "y": 1220 }]
+      "from": {
+        "nodeId": "n_acc_4",
+        "pinId": "q"
+      },
+      "to": {
+        "nodeId": "n_word_4",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 2180,
+          "y": 1220
+        },
+        {
+          "x": 2280,
+          "y": 1220
+        }
+      ]
     },
     "w_fb_4": {
       "id": "w_fb_4",
-      "from": { "wireId": "w_q_4", "waypoint": 0 },
-      "to": { "nodeId": "n_add_4", "pinId": "b" },
-      "waypoints": [{ "x": 1970, "y": 1220 }]
+      "from": {
+        "wireId": "w_q_4",
+        "waypoint": 0
+      },
+      "to": {
+        "nodeId": "n_add_4",
+        "pinId": "b"
+      },
+      "waypoints": [
+        {
+          "x": 1970,
+          "y": 1220
+        }
+      ]
     },
     "w_scnet_4": {
       "id": "w_scnet_4",
-      "from": { "wireId": "w_q_4", "waypoint": 1 },
-      "to": { "nodeId": "t_sc_4", "pinId": "io" }
+      "from": {
+        "wireId": "w_q_4",
+        "waypoint": 1
+      },
+      "to": {
+        "nodeId": "t_sc_4",
+        "pinId": "io"
+      }
     },
     "w_idx_4": {
       "id": "w_idx_4",
-      "from": { "nodeId": "n_idx_4", "pinId": "out" },
-      "to": { "nodeId": "n_word_4", "pinId": "in0" },
-      "waypoints": [{ "x": 2270, "y": 1140 }]
+      "from": {
+        "nodeId": "n_idx_4",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_word_4",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 2270,
+          "y": 1140
+        }
+      ]
     },
     "w_addr_5": {
       "id": "w_addr_5",
-      "from": { "nodeId": "t_addr_5", "pinId": "io" },
-      "to": { "nodeId": "n_rom_5", "pinId": "addr" }
+      "from": {
+        "nodeId": "t_addr_5",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_rom_5",
+        "pinId": "addr"
+      }
     },
     "w_w_5": {
       "id": "w_w_5",
-      "from": { "nodeId": "n_rom_5", "pinId": "data" },
-      "to": { "nodeId": "n_add_5", "pinId": "a" }
+      "from": {
+        "nodeId": "n_rom_5",
+        "pinId": "data"
+      },
+      "to": {
+        "nodeId": "n_add_5",
+        "pinId": "a"
+      }
     },
     "w_sum_5": {
       "id": "w_sum_5",
-      "from": { "nodeId": "n_add_5", "pinId": "sum" },
-      "to": { "nodeId": "n_acc_5", "pinId": "d" }
+      "from": {
+        "nodeId": "n_add_5",
+        "pinId": "sum"
+      },
+      "to": {
+        "nodeId": "n_acc_5",
+        "pinId": "d"
+      }
     },
     "w_accrst_5": {
       "id": "w_accrst_5",
-      "from": { "nodeId": "t_rst_acc_5", "pinId": "io" },
-      "to": { "nodeId": "n_acc_5", "pinId": "rst" },
-      "waypoints": [{ "x": 2030, "y": 1320 }]
+      "from": {
+        "nodeId": "t_rst_acc_5",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_acc_5",
+        "pinId": "rst"
+      },
+      "waypoints": [
+        {
+          "x": 2030,
+          "y": 1320
+        }
+      ]
     },
     "w_accclk_5": {
       "id": "w_accclk_5",
-      "from": { "nodeId": "t_clk_acc_5", "pinId": "io" },
-      "to": { "nodeId": "n_acc_5", "pinId": "clk" },
-      "waypoints": [{ "x": 2130, "y": 1440 }]
+      "from": {
+        "nodeId": "t_clk_acc_5",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_acc_5",
+        "pinId": "clk"
+      },
+      "waypoints": [
+        {
+          "x": 2130,
+          "y": 1440
+        }
+      ]
     },
     "w_q_5": {
       "id": "w_q_5",
-      "from": { "nodeId": "n_acc_5", "pinId": "q" },
-      "to": { "nodeId": "n_word_5", "pinId": "in1" },
-      "waypoints": [{ "x": 2180, "y": 1430 }, { "x": 2280, "y": 1430 }]
+      "from": {
+        "nodeId": "n_acc_5",
+        "pinId": "q"
+      },
+      "to": {
+        "nodeId": "n_word_5",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 2180,
+          "y": 1430
+        },
+        {
+          "x": 2280,
+          "y": 1430
+        }
+      ]
     },
     "w_fb_5": {
       "id": "w_fb_5",
-      "from": { "wireId": "w_q_5", "waypoint": 0 },
-      "to": { "nodeId": "n_add_5", "pinId": "b" },
-      "waypoints": [{ "x": 1970, "y": 1430 }]
+      "from": {
+        "wireId": "w_q_5",
+        "waypoint": 0
+      },
+      "to": {
+        "nodeId": "n_add_5",
+        "pinId": "b"
+      },
+      "waypoints": [
+        {
+          "x": 1970,
+          "y": 1430
+        }
+      ]
     },
     "w_scnet_5": {
       "id": "w_scnet_5",
-      "from": { "wireId": "w_q_5", "waypoint": 1 },
-      "to": { "nodeId": "t_sc_5", "pinId": "io" }
+      "from": {
+        "wireId": "w_q_5",
+        "waypoint": 1
+      },
+      "to": {
+        "nodeId": "t_sc_5",
+        "pinId": "io"
+      }
     },
     "w_idx_5": {
       "id": "w_idx_5",
-      "from": { "nodeId": "n_idx_5", "pinId": "out" },
-      "to": { "nodeId": "n_word_5", "pinId": "in0" },
-      "waypoints": [{ "x": 2270, "y": 1350 }]
+      "from": {
+        "nodeId": "n_idx_5",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_word_5",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 2270,
+          "y": 1350
+        }
+      ]
     },
     "w_addr_6": {
       "id": "w_addr_6",
-      "from": { "nodeId": "t_addr_6", "pinId": "io" },
-      "to": { "nodeId": "n_rom_6", "pinId": "addr" }
+      "from": {
+        "nodeId": "t_addr_6",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_rom_6",
+        "pinId": "addr"
+      }
     },
     "w_w_6": {
       "id": "w_w_6",
-      "from": { "nodeId": "n_rom_6", "pinId": "data" },
-      "to": { "nodeId": "n_add_6", "pinId": "a" }
+      "from": {
+        "nodeId": "n_rom_6",
+        "pinId": "data"
+      },
+      "to": {
+        "nodeId": "n_add_6",
+        "pinId": "a"
+      }
     },
     "w_sum_6": {
       "id": "w_sum_6",
-      "from": { "nodeId": "n_add_6", "pinId": "sum" },
-      "to": { "nodeId": "n_acc_6", "pinId": "d" }
+      "from": {
+        "nodeId": "n_add_6",
+        "pinId": "sum"
+      },
+      "to": {
+        "nodeId": "n_acc_6",
+        "pinId": "d"
+      }
     },
     "w_accrst_6": {
       "id": "w_accrst_6",
-      "from": { "nodeId": "t_rst_acc_6", "pinId": "io" },
-      "to": { "nodeId": "n_acc_6", "pinId": "rst" },
-      "waypoints": [{ "x": 2030, "y": 1530 }]
+      "from": {
+        "nodeId": "t_rst_acc_6",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_acc_6",
+        "pinId": "rst"
+      },
+      "waypoints": [
+        {
+          "x": 2030,
+          "y": 1530
+        }
+      ]
     },
     "w_accclk_6": {
       "id": "w_accclk_6",
-      "from": { "nodeId": "t_clk_acc_6", "pinId": "io" },
-      "to": { "nodeId": "n_acc_6", "pinId": "clk" },
-      "waypoints": [{ "x": 2130, "y": 1650 }]
+      "from": {
+        "nodeId": "t_clk_acc_6",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_acc_6",
+        "pinId": "clk"
+      },
+      "waypoints": [
+        {
+          "x": 2130,
+          "y": 1650
+        }
+      ]
     },
     "w_q_6": {
       "id": "w_q_6",
-      "from": { "nodeId": "n_acc_6", "pinId": "q" },
-      "to": { "nodeId": "n_word_6", "pinId": "in1" },
-      "waypoints": [{ "x": 2180, "y": 1640 }, { "x": 2280, "y": 1640 }]
+      "from": {
+        "nodeId": "n_acc_6",
+        "pinId": "q"
+      },
+      "to": {
+        "nodeId": "n_word_6",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 2180,
+          "y": 1640
+        },
+        {
+          "x": 2280,
+          "y": 1640
+        }
+      ]
     },
     "w_fb_6": {
       "id": "w_fb_6",
-      "from": { "wireId": "w_q_6", "waypoint": 0 },
-      "to": { "nodeId": "n_add_6", "pinId": "b" },
-      "waypoints": [{ "x": 1970, "y": 1640 }]
+      "from": {
+        "wireId": "w_q_6",
+        "waypoint": 0
+      },
+      "to": {
+        "nodeId": "n_add_6",
+        "pinId": "b"
+      },
+      "waypoints": [
+        {
+          "x": 1970,
+          "y": 1640
+        }
+      ]
     },
     "w_scnet_6": {
       "id": "w_scnet_6",
-      "from": { "wireId": "w_q_6", "waypoint": 1 },
-      "to": { "nodeId": "t_sc_6", "pinId": "io" }
+      "from": {
+        "wireId": "w_q_6",
+        "waypoint": 1
+      },
+      "to": {
+        "nodeId": "t_sc_6",
+        "pinId": "io"
+      }
     },
     "w_idx_6": {
       "id": "w_idx_6",
-      "from": { "nodeId": "n_idx_6", "pinId": "out" },
-      "to": { "nodeId": "n_word_6", "pinId": "in0" },
-      "waypoints": [{ "x": 2270, "y": 1560 }]
+      "from": {
+        "nodeId": "n_idx_6",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_word_6",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 2270,
+          "y": 1560
+        }
+      ]
     },
     "w_addr_7": {
       "id": "w_addr_7",
-      "from": { "nodeId": "t_addr_7", "pinId": "io" },
-      "to": { "nodeId": "n_rom_7", "pinId": "addr" }
+      "from": {
+        "nodeId": "t_addr_7",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_rom_7",
+        "pinId": "addr"
+      }
     },
     "w_w_7": {
       "id": "w_w_7",
-      "from": { "nodeId": "n_rom_7", "pinId": "data" },
-      "to": { "nodeId": "n_add_7", "pinId": "a" }
+      "from": {
+        "nodeId": "n_rom_7",
+        "pinId": "data"
+      },
+      "to": {
+        "nodeId": "n_add_7",
+        "pinId": "a"
+      }
     },
     "w_sum_7": {
       "id": "w_sum_7",
-      "from": { "nodeId": "n_add_7", "pinId": "sum" },
-      "to": { "nodeId": "n_acc_7", "pinId": "d" }
+      "from": {
+        "nodeId": "n_add_7",
+        "pinId": "sum"
+      },
+      "to": {
+        "nodeId": "n_acc_7",
+        "pinId": "d"
+      }
     },
     "w_accrst_7": {
       "id": "w_accrst_7",
-      "from": { "nodeId": "t_rst_acc_7", "pinId": "io" },
-      "to": { "nodeId": "n_acc_7", "pinId": "rst" },
-      "waypoints": [{ "x": 2030, "y": 1740 }]
+      "from": {
+        "nodeId": "t_rst_acc_7",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_acc_7",
+        "pinId": "rst"
+      },
+      "waypoints": [
+        {
+          "x": 2030,
+          "y": 1740
+        }
+      ]
     },
     "w_accclk_7": {
       "id": "w_accclk_7",
-      "from": { "nodeId": "t_clk_acc_7", "pinId": "io" },
-      "to": { "nodeId": "n_acc_7", "pinId": "clk" },
-      "waypoints": [{ "x": 2130, "y": 1860 }]
+      "from": {
+        "nodeId": "t_clk_acc_7",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_acc_7",
+        "pinId": "clk"
+      },
+      "waypoints": [
+        {
+          "x": 2130,
+          "y": 1860
+        }
+      ]
     },
     "w_q_7": {
       "id": "w_q_7",
-      "from": { "nodeId": "n_acc_7", "pinId": "q" },
-      "to": { "nodeId": "n_word_7", "pinId": "in1" },
-      "waypoints": [{ "x": 2180, "y": 1850 }, { "x": 2280, "y": 1850 }]
+      "from": {
+        "nodeId": "n_acc_7",
+        "pinId": "q"
+      },
+      "to": {
+        "nodeId": "n_word_7",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 2180,
+          "y": 1850
+        },
+        {
+          "x": 2280,
+          "y": 1850
+        }
+      ]
     },
     "w_fb_7": {
       "id": "w_fb_7",
-      "from": { "wireId": "w_q_7", "waypoint": 0 },
-      "to": { "nodeId": "n_add_7", "pinId": "b" },
-      "waypoints": [{ "x": 1970, "y": 1850 }]
+      "from": {
+        "wireId": "w_q_7",
+        "waypoint": 0
+      },
+      "to": {
+        "nodeId": "n_add_7",
+        "pinId": "b"
+      },
+      "waypoints": [
+        {
+          "x": 1970,
+          "y": 1850
+        }
+      ]
     },
     "w_scnet_7": {
       "id": "w_scnet_7",
-      "from": { "wireId": "w_q_7", "waypoint": 1 },
-      "to": { "nodeId": "t_sc_7", "pinId": "io" }
+      "from": {
+        "wireId": "w_q_7",
+        "waypoint": 1
+      },
+      "to": {
+        "nodeId": "t_sc_7",
+        "pinId": "io"
+      }
     },
     "w_idx_7": {
       "id": "w_idx_7",
-      "from": { "nodeId": "n_idx_7", "pinId": "out" },
-      "to": { "nodeId": "n_word_7", "pinId": "in0" },
-      "waypoints": [{ "x": 2270, "y": 1770 }]
+      "from": {
+        "nodeId": "n_idx_7",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_word_7",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 2270,
+          "y": 1770
+        }
+      ]
     },
     "w_addr_8": {
       "id": "w_addr_8",
-      "from": { "nodeId": "t_addr_8", "pinId": "io" },
-      "to": { "nodeId": "n_rom_8", "pinId": "addr" }
+      "from": {
+        "nodeId": "t_addr_8",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_rom_8",
+        "pinId": "addr"
+      }
     },
     "w_w_8": {
       "id": "w_w_8",
-      "from": { "nodeId": "n_rom_8", "pinId": "data" },
-      "to": { "nodeId": "n_add_8", "pinId": "a" }
+      "from": {
+        "nodeId": "n_rom_8",
+        "pinId": "data"
+      },
+      "to": {
+        "nodeId": "n_add_8",
+        "pinId": "a"
+      }
     },
     "w_sum_8": {
       "id": "w_sum_8",
-      "from": { "nodeId": "n_add_8", "pinId": "sum" },
-      "to": { "nodeId": "n_acc_8", "pinId": "d" }
+      "from": {
+        "nodeId": "n_add_8",
+        "pinId": "sum"
+      },
+      "to": {
+        "nodeId": "n_acc_8",
+        "pinId": "d"
+      }
     },
     "w_accrst_8": {
       "id": "w_accrst_8",
-      "from": { "nodeId": "t_rst_acc_8", "pinId": "io" },
-      "to": { "nodeId": "n_acc_8", "pinId": "rst" },
-      "waypoints": [{ "x": 2030, "y": 1950 }]
+      "from": {
+        "nodeId": "t_rst_acc_8",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_acc_8",
+        "pinId": "rst"
+      },
+      "waypoints": [
+        {
+          "x": 2030,
+          "y": 1950
+        }
+      ]
     },
     "w_accclk_8": {
       "id": "w_accclk_8",
-      "from": { "nodeId": "t_clk_acc_8", "pinId": "io" },
-      "to": { "nodeId": "n_acc_8", "pinId": "clk" },
-      "waypoints": [{ "x": 2130, "y": 2070 }]
+      "from": {
+        "nodeId": "t_clk_acc_8",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_acc_8",
+        "pinId": "clk"
+      },
+      "waypoints": [
+        {
+          "x": 2130,
+          "y": 2070
+        }
+      ]
     },
     "w_q_8": {
       "id": "w_q_8",
-      "from": { "nodeId": "n_acc_8", "pinId": "q" },
-      "to": { "nodeId": "n_word_8", "pinId": "in1" },
-      "waypoints": [{ "x": 2180, "y": 2060 }, { "x": 2280, "y": 2060 }]
+      "from": {
+        "nodeId": "n_acc_8",
+        "pinId": "q"
+      },
+      "to": {
+        "nodeId": "n_word_8",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 2180,
+          "y": 2060
+        },
+        {
+          "x": 2280,
+          "y": 2060
+        }
+      ]
     },
     "w_fb_8": {
       "id": "w_fb_8",
-      "from": { "wireId": "w_q_8", "waypoint": 0 },
-      "to": { "nodeId": "n_add_8", "pinId": "b" },
-      "waypoints": [{ "x": 1970, "y": 2060 }]
+      "from": {
+        "wireId": "w_q_8",
+        "waypoint": 0
+      },
+      "to": {
+        "nodeId": "n_add_8",
+        "pinId": "b"
+      },
+      "waypoints": [
+        {
+          "x": 1970,
+          "y": 2060
+        }
+      ]
     },
     "w_scnet_8": {
       "id": "w_scnet_8",
-      "from": { "wireId": "w_q_8", "waypoint": 1 },
-      "to": { "nodeId": "t_sc_8", "pinId": "io" }
+      "from": {
+        "wireId": "w_q_8",
+        "waypoint": 1
+      },
+      "to": {
+        "nodeId": "t_sc_8",
+        "pinId": "io"
+      }
     },
     "w_idx_8": {
       "id": "w_idx_8",
-      "from": { "nodeId": "n_idx_8", "pinId": "out" },
-      "to": { "nodeId": "n_word_8", "pinId": "in0" },
-      "waypoints": [{ "x": 2270, "y": 1980 }]
+      "from": {
+        "nodeId": "n_idx_8",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_word_8",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 2270,
+          "y": 1980
+        }
+      ]
     },
     "w_addr_9": {
       "id": "w_addr_9",
-      "from": { "nodeId": "t_addr_9", "pinId": "io" },
-      "to": { "nodeId": "n_rom_9", "pinId": "addr" }
+      "from": {
+        "nodeId": "t_addr_9",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_rom_9",
+        "pinId": "addr"
+      }
     },
     "w_w_9": {
       "id": "w_w_9",
-      "from": { "nodeId": "n_rom_9", "pinId": "data" },
-      "to": { "nodeId": "n_add_9", "pinId": "a" }
+      "from": {
+        "nodeId": "n_rom_9",
+        "pinId": "data"
+      },
+      "to": {
+        "nodeId": "n_add_9",
+        "pinId": "a"
+      }
     },
     "w_sum_9": {
       "id": "w_sum_9",
-      "from": { "nodeId": "n_add_9", "pinId": "sum" },
-      "to": { "nodeId": "n_acc_9", "pinId": "d" }
+      "from": {
+        "nodeId": "n_add_9",
+        "pinId": "sum"
+      },
+      "to": {
+        "nodeId": "n_acc_9",
+        "pinId": "d"
+      }
     },
     "w_accrst_9": {
       "id": "w_accrst_9",
-      "from": { "nodeId": "t_rst_acc_9", "pinId": "io" },
-      "to": { "nodeId": "n_acc_9", "pinId": "rst" },
-      "waypoints": [{ "x": 2030, "y": 2160 }]
+      "from": {
+        "nodeId": "t_rst_acc_9",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_acc_9",
+        "pinId": "rst"
+      },
+      "waypoints": [
+        {
+          "x": 2030,
+          "y": 2160
+        }
+      ]
     },
     "w_accclk_9": {
       "id": "w_accclk_9",
-      "from": { "nodeId": "t_clk_acc_9", "pinId": "io" },
-      "to": { "nodeId": "n_acc_9", "pinId": "clk" },
-      "waypoints": [{ "x": 2130, "y": 2280 }]
+      "from": {
+        "nodeId": "t_clk_acc_9",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_acc_9",
+        "pinId": "clk"
+      },
+      "waypoints": [
+        {
+          "x": 2130,
+          "y": 2280
+        }
+      ]
     },
     "w_q_9": {
       "id": "w_q_9",
-      "from": { "nodeId": "n_acc_9", "pinId": "q" },
-      "to": { "nodeId": "n_word_9", "pinId": "in1" },
-      "waypoints": [{ "x": 2180, "y": 2270 }, { "x": 2280, "y": 2270 }]
+      "from": {
+        "nodeId": "n_acc_9",
+        "pinId": "q"
+      },
+      "to": {
+        "nodeId": "n_word_9",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 2180,
+          "y": 2270
+        },
+        {
+          "x": 2280,
+          "y": 2270
+        }
+      ]
     },
     "w_fb_9": {
       "id": "w_fb_9",
-      "from": { "wireId": "w_q_9", "waypoint": 0 },
-      "to": { "nodeId": "n_add_9", "pinId": "b" },
-      "waypoints": [{ "x": 1970, "y": 2270 }]
+      "from": {
+        "wireId": "w_q_9",
+        "waypoint": 0
+      },
+      "to": {
+        "nodeId": "n_add_9",
+        "pinId": "b"
+      },
+      "waypoints": [
+        {
+          "x": 1970,
+          "y": 2270
+        }
+      ]
     },
     "w_scnet_9": {
       "id": "w_scnet_9",
-      "from": { "wireId": "w_q_9", "waypoint": 1 },
-      "to": { "nodeId": "t_sc_9", "pinId": "io" }
+      "from": {
+        "wireId": "w_q_9",
+        "waypoint": 1
+      },
+      "to": {
+        "nodeId": "t_sc_9",
+        "pinId": "io"
+      }
     },
     "w_idx_9": {
       "id": "w_idx_9",
-      "from": { "nodeId": "n_idx_9", "pinId": "out" },
-      "to": { "nodeId": "n_word_9", "pinId": "in0" },
-      "waypoints": [{ "x": 2270, "y": 2190 }]
+      "from": {
+        "nodeId": "n_idx_9",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_word_9",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 2270,
+          "y": 2190
+        }
+      ]
     },
     "w_arg_b0": {
       "id": "w_arg_b0",
-      "from": { "nodeId": "n_word_1", "pinId": "out" },
-      "to": { "nodeId": "n_cmp_0", "pinId": "b" },
-      "waypoints": [{ "x": 2460, "y": 520 }]
+      "from": {
+        "nodeId": "n_word_1",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_cmp_0",
+        "pinId": "b"
+      },
+      "waypoints": [
+        {
+          "x": 2460,
+          "y": 520
+        }
+      ]
     },
     "w_arg_b10": {
       "id": "w_arg_b10",
-      "from": { "wireId": "w_arg_b0", "waypoint": 0 },
-      "to": { "nodeId": "n_pick_0", "pinId": "in1" },
-      "waypoints": [{ "x": 2460, "y": 620 }]
+      "from": {
+        "wireId": "w_arg_b0",
+        "waypoint": 0
+      },
+      "to": {
+        "nodeId": "n_pick_0",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 2460,
+          "y": 620
+        }
+      ]
     },
     "w_arg_a0": {
       "id": "w_arg_a0",
-      "from": { "nodeId": "n_word_0", "pinId": "out" },
-      "to": { "nodeId": "n_cmp_0", "pinId": "a" },
-      "waypoints": [{ "x": 2440, "y": 310 }, { "x": 2440, "y": 500 }]
+      "from": {
+        "nodeId": "n_word_0",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_cmp_0",
+        "pinId": "a"
+      },
+      "waypoints": [
+        {
+          "x": 2440,
+          "y": 310
+        },
+        {
+          "x": 2440,
+          "y": 500
+        }
+      ]
     },
     "w_arg_a00": {
       "id": "w_arg_a00",
-      "from": { "wireId": "w_arg_a0", "waypoint": 1 },
-      "to": { "nodeId": "n_pick_0", "pinId": "in0" },
-      "waypoints": [{ "x": 2440, "y": 600 }]
+      "from": {
+        "wireId": "w_arg_a0",
+        "waypoint": 1
+      },
+      "to": {
+        "nodeId": "n_pick_0",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 2440,
+          "y": 600
+        }
+      ]
     },
     "w_arg_s0": {
       "id": "w_arg_s0",
-      "from": { "nodeId": "n_cmp_0", "pinId": "lt" },
-      "to": { "nodeId": "n_pick_0", "pinId": "sel" },
+      "from": {
+        "nodeId": "n_cmp_0",
+        "pinId": "lt"
+      },
+      "to": {
+        "nodeId": "n_pick_0",
+        "pinId": "sel"
+      },
       "waypoints": [
-        { "x": 2620, "y": 500 },
-        { "x": 2620, "y": 660 },
-        { "x": 2550, "y": 660 }
+        {
+          "x": 2620,
+          "y": 500
+        },
+        {
+          "x": 2620,
+          "y": 660
+        },
+        {
+          "x": 2550,
+          "y": 660
+        }
       ]
     },
     "w_arg_b1": {
       "id": "w_arg_b1",
-      "from": { "nodeId": "n_word_2", "pinId": "out" },
-      "to": { "nodeId": "n_cmp_1", "pinId": "b" },
-      "waypoints": [{ "x": 2460, "y": 730 }]
+      "from": {
+        "nodeId": "n_word_2",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_cmp_1",
+        "pinId": "b"
+      },
+      "waypoints": [
+        {
+          "x": 2460,
+          "y": 730
+        }
+      ]
     },
     "w_arg_b11": {
       "id": "w_arg_b11",
-      "from": { "wireId": "w_arg_b1", "waypoint": 0 },
-      "to": { "nodeId": "n_pick_1", "pinId": "in1" },
-      "waypoints": [{ "x": 2460, "y": 830 }]
+      "from": {
+        "wireId": "w_arg_b1",
+        "waypoint": 0
+      },
+      "to": {
+        "nodeId": "n_pick_1",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 2460,
+          "y": 830
+        }
+      ]
     },
     "w_arg_a1": {
       "id": "w_arg_a1",
-      "from": { "nodeId": "n_pick_0", "pinId": "out" },
-      "to": { "nodeId": "n_cmp_1", "pinId": "a" },
+      "from": {
+        "nodeId": "n_pick_0",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_cmp_1",
+        "pinId": "a"
+      },
       "waypoints": [
-        { "x": 2590, "y": 680 },
-        { "x": 2440, "y": 680 },
-        { "x": 2440, "y": 710 }
+        {
+          "x": 2590,
+          "y": 680
+        },
+        {
+          "x": 2440,
+          "y": 680
+        },
+        {
+          "x": 2440,
+          "y": 710
+        }
       ]
     },
     "w_arg_a01": {
       "id": "w_arg_a01",
-      "from": { "wireId": "w_arg_a1", "waypoint": 2 },
-      "to": { "nodeId": "n_pick_1", "pinId": "in0" },
-      "waypoints": [{ "x": 2440, "y": 810 }]
+      "from": {
+        "wireId": "w_arg_a1",
+        "waypoint": 2
+      },
+      "to": {
+        "nodeId": "n_pick_1",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 2440,
+          "y": 810
+        }
+      ]
     },
     "w_arg_s1": {
       "id": "w_arg_s1",
-      "from": { "nodeId": "n_cmp_1", "pinId": "lt" },
-      "to": { "nodeId": "n_pick_1", "pinId": "sel" },
+      "from": {
+        "nodeId": "n_cmp_1",
+        "pinId": "lt"
+      },
+      "to": {
+        "nodeId": "n_pick_1",
+        "pinId": "sel"
+      },
       "waypoints": [
-        { "x": 2620, "y": 710 },
-        { "x": 2620, "y": 870 },
-        { "x": 2550, "y": 870 }
+        {
+          "x": 2620,
+          "y": 710
+        },
+        {
+          "x": 2620,
+          "y": 870
+        },
+        {
+          "x": 2550,
+          "y": 870
+        }
       ]
     },
     "w_arg_b2": {
       "id": "w_arg_b2",
-      "from": { "nodeId": "n_word_3", "pinId": "out" },
-      "to": { "nodeId": "n_cmp_2", "pinId": "b" },
-      "waypoints": [{ "x": 2460, "y": 940 }]
+      "from": {
+        "nodeId": "n_word_3",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_cmp_2",
+        "pinId": "b"
+      },
+      "waypoints": [
+        {
+          "x": 2460,
+          "y": 940
+        }
+      ]
     },
     "w_arg_b12": {
       "id": "w_arg_b12",
-      "from": { "wireId": "w_arg_b2", "waypoint": 0 },
-      "to": { "nodeId": "n_pick_2", "pinId": "in1" },
-      "waypoints": [{ "x": 2460, "y": 1040 }]
+      "from": {
+        "wireId": "w_arg_b2",
+        "waypoint": 0
+      },
+      "to": {
+        "nodeId": "n_pick_2",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 2460,
+          "y": 1040
+        }
+      ]
     },
     "w_arg_a2": {
       "id": "w_arg_a2",
-      "from": { "nodeId": "n_pick_1", "pinId": "out" },
-      "to": { "nodeId": "n_cmp_2", "pinId": "a" },
+      "from": {
+        "nodeId": "n_pick_1",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_cmp_2",
+        "pinId": "a"
+      },
       "waypoints": [
-        { "x": 2590, "y": 890 },
-        { "x": 2440, "y": 890 },
-        { "x": 2440, "y": 920 }
+        {
+          "x": 2590,
+          "y": 890
+        },
+        {
+          "x": 2440,
+          "y": 890
+        },
+        {
+          "x": 2440,
+          "y": 920
+        }
       ]
     },
     "w_arg_a02": {
       "id": "w_arg_a02",
-      "from": { "wireId": "w_arg_a2", "waypoint": 2 },
-      "to": { "nodeId": "n_pick_2", "pinId": "in0" },
-      "waypoints": [{ "x": 2440, "y": 1020 }]
+      "from": {
+        "wireId": "w_arg_a2",
+        "waypoint": 2
+      },
+      "to": {
+        "nodeId": "n_pick_2",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 2440,
+          "y": 1020
+        }
+      ]
     },
     "w_arg_s2": {
       "id": "w_arg_s2",
-      "from": { "nodeId": "n_cmp_2", "pinId": "lt" },
-      "to": { "nodeId": "n_pick_2", "pinId": "sel" },
+      "from": {
+        "nodeId": "n_cmp_2",
+        "pinId": "lt"
+      },
+      "to": {
+        "nodeId": "n_pick_2",
+        "pinId": "sel"
+      },
       "waypoints": [
-        { "x": 2620, "y": 920 },
-        { "x": 2620, "y": 1080 },
-        { "x": 2550, "y": 1080 }
+        {
+          "x": 2620,
+          "y": 920
+        },
+        {
+          "x": 2620,
+          "y": 1080
+        },
+        {
+          "x": 2550,
+          "y": 1080
+        }
       ]
     },
     "w_arg_b3": {
       "id": "w_arg_b3",
-      "from": { "nodeId": "n_word_4", "pinId": "out" },
-      "to": { "nodeId": "n_cmp_3", "pinId": "b" },
-      "waypoints": [{ "x": 2460, "y": 1150 }]
+      "from": {
+        "nodeId": "n_word_4",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_cmp_3",
+        "pinId": "b"
+      },
+      "waypoints": [
+        {
+          "x": 2460,
+          "y": 1150
+        }
+      ]
     },
     "w_arg_b13": {
       "id": "w_arg_b13",
-      "from": { "wireId": "w_arg_b3", "waypoint": 0 },
-      "to": { "nodeId": "n_pick_3", "pinId": "in1" },
-      "waypoints": [{ "x": 2460, "y": 1250 }]
+      "from": {
+        "wireId": "w_arg_b3",
+        "waypoint": 0
+      },
+      "to": {
+        "nodeId": "n_pick_3",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 2460,
+          "y": 1250
+        }
+      ]
     },
     "w_arg_a3": {
       "id": "w_arg_a3",
-      "from": { "nodeId": "n_pick_2", "pinId": "out" },
-      "to": { "nodeId": "n_cmp_3", "pinId": "a" },
+      "from": {
+        "nodeId": "n_pick_2",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_cmp_3",
+        "pinId": "a"
+      },
       "waypoints": [
-        { "x": 2590, "y": 1100 },
-        { "x": 2440, "y": 1100 },
-        { "x": 2440, "y": 1130 }
+        {
+          "x": 2590,
+          "y": 1100
+        },
+        {
+          "x": 2440,
+          "y": 1100
+        },
+        {
+          "x": 2440,
+          "y": 1130
+        }
       ]
     },
     "w_arg_a03": {
       "id": "w_arg_a03",
-      "from": { "wireId": "w_arg_a3", "waypoint": 2 },
-      "to": { "nodeId": "n_pick_3", "pinId": "in0" },
-      "waypoints": [{ "x": 2440, "y": 1230 }]
+      "from": {
+        "wireId": "w_arg_a3",
+        "waypoint": 2
+      },
+      "to": {
+        "nodeId": "n_pick_3",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 2440,
+          "y": 1230
+        }
+      ]
     },
     "w_arg_s3": {
       "id": "w_arg_s3",
-      "from": { "nodeId": "n_cmp_3", "pinId": "lt" },
-      "to": { "nodeId": "n_pick_3", "pinId": "sel" },
+      "from": {
+        "nodeId": "n_cmp_3",
+        "pinId": "lt"
+      },
+      "to": {
+        "nodeId": "n_pick_3",
+        "pinId": "sel"
+      },
       "waypoints": [
-        { "x": 2620, "y": 1130 },
-        { "x": 2620, "y": 1290 },
-        { "x": 2550, "y": 1290 }
+        {
+          "x": 2620,
+          "y": 1130
+        },
+        {
+          "x": 2620,
+          "y": 1290
+        },
+        {
+          "x": 2550,
+          "y": 1290
+        }
       ]
     },
     "w_arg_b4": {
       "id": "w_arg_b4",
-      "from": { "nodeId": "n_word_5", "pinId": "out" },
-      "to": { "nodeId": "n_cmp_4", "pinId": "b" },
-      "waypoints": [{ "x": 2460, "y": 1360 }]
+      "from": {
+        "nodeId": "n_word_5",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_cmp_4",
+        "pinId": "b"
+      },
+      "waypoints": [
+        {
+          "x": 2460,
+          "y": 1360
+        }
+      ]
     },
     "w_arg_b14": {
       "id": "w_arg_b14",
-      "from": { "wireId": "w_arg_b4", "waypoint": 0 },
-      "to": { "nodeId": "n_pick_4", "pinId": "in1" },
-      "waypoints": [{ "x": 2460, "y": 1460 }]
+      "from": {
+        "wireId": "w_arg_b4",
+        "waypoint": 0
+      },
+      "to": {
+        "nodeId": "n_pick_4",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 2460,
+          "y": 1460
+        }
+      ]
     },
     "w_arg_a4": {
       "id": "w_arg_a4",
-      "from": { "nodeId": "n_pick_3", "pinId": "out" },
-      "to": { "nodeId": "n_cmp_4", "pinId": "a" },
+      "from": {
+        "nodeId": "n_pick_3",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_cmp_4",
+        "pinId": "a"
+      },
       "waypoints": [
-        { "x": 2590, "y": 1310 },
-        { "x": 2440, "y": 1310 },
-        { "x": 2440, "y": 1340 }
+        {
+          "x": 2590,
+          "y": 1310
+        },
+        {
+          "x": 2440,
+          "y": 1310
+        },
+        {
+          "x": 2440,
+          "y": 1340
+        }
       ]
     },
     "w_arg_a04": {
       "id": "w_arg_a04",
-      "from": { "wireId": "w_arg_a4", "waypoint": 2 },
-      "to": { "nodeId": "n_pick_4", "pinId": "in0" },
-      "waypoints": [{ "x": 2440, "y": 1440 }]
+      "from": {
+        "wireId": "w_arg_a4",
+        "waypoint": 2
+      },
+      "to": {
+        "nodeId": "n_pick_4",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 2440,
+          "y": 1440
+        }
+      ]
     },
     "w_arg_s4": {
       "id": "w_arg_s4",
-      "from": { "nodeId": "n_cmp_4", "pinId": "lt" },
-      "to": { "nodeId": "n_pick_4", "pinId": "sel" },
+      "from": {
+        "nodeId": "n_cmp_4",
+        "pinId": "lt"
+      },
+      "to": {
+        "nodeId": "n_pick_4",
+        "pinId": "sel"
+      },
       "waypoints": [
-        { "x": 2620, "y": 1340 },
-        { "x": 2620, "y": 1500 },
-        { "x": 2550, "y": 1500 }
+        {
+          "x": 2620,
+          "y": 1340
+        },
+        {
+          "x": 2620,
+          "y": 1500
+        },
+        {
+          "x": 2550,
+          "y": 1500
+        }
       ]
     },
     "w_arg_b5": {
       "id": "w_arg_b5",
-      "from": { "nodeId": "n_word_6", "pinId": "out" },
-      "to": { "nodeId": "n_cmp_5", "pinId": "b" },
-      "waypoints": [{ "x": 2460, "y": 1570 }]
+      "from": {
+        "nodeId": "n_word_6",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_cmp_5",
+        "pinId": "b"
+      },
+      "waypoints": [
+        {
+          "x": 2460,
+          "y": 1570
+        }
+      ]
     },
     "w_arg_b15": {
       "id": "w_arg_b15",
-      "from": { "wireId": "w_arg_b5", "waypoint": 0 },
-      "to": { "nodeId": "n_pick_5", "pinId": "in1" },
-      "waypoints": [{ "x": 2460, "y": 1670 }]
+      "from": {
+        "wireId": "w_arg_b5",
+        "waypoint": 0
+      },
+      "to": {
+        "nodeId": "n_pick_5",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 2460,
+          "y": 1670
+        }
+      ]
     },
     "w_arg_a5": {
       "id": "w_arg_a5",
-      "from": { "nodeId": "n_pick_4", "pinId": "out" },
-      "to": { "nodeId": "n_cmp_5", "pinId": "a" },
+      "from": {
+        "nodeId": "n_pick_4",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_cmp_5",
+        "pinId": "a"
+      },
       "waypoints": [
-        { "x": 2590, "y": 1520 },
-        { "x": 2440, "y": 1520 },
-        { "x": 2440, "y": 1550 }
+        {
+          "x": 2590,
+          "y": 1520
+        },
+        {
+          "x": 2440,
+          "y": 1520
+        },
+        {
+          "x": 2440,
+          "y": 1550
+        }
       ]
     },
     "w_arg_a05": {
       "id": "w_arg_a05",
-      "from": { "wireId": "w_arg_a5", "waypoint": 2 },
-      "to": { "nodeId": "n_pick_5", "pinId": "in0" },
-      "waypoints": [{ "x": 2440, "y": 1650 }]
+      "from": {
+        "wireId": "w_arg_a5",
+        "waypoint": 2
+      },
+      "to": {
+        "nodeId": "n_pick_5",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 2440,
+          "y": 1650
+        }
+      ]
     },
     "w_arg_s5": {
       "id": "w_arg_s5",
-      "from": { "nodeId": "n_cmp_5", "pinId": "lt" },
-      "to": { "nodeId": "n_pick_5", "pinId": "sel" },
+      "from": {
+        "nodeId": "n_cmp_5",
+        "pinId": "lt"
+      },
+      "to": {
+        "nodeId": "n_pick_5",
+        "pinId": "sel"
+      },
       "waypoints": [
-        { "x": 2620, "y": 1550 },
-        { "x": 2620, "y": 1710 },
-        { "x": 2550, "y": 1710 }
+        {
+          "x": 2620,
+          "y": 1550
+        },
+        {
+          "x": 2620,
+          "y": 1710
+        },
+        {
+          "x": 2550,
+          "y": 1710
+        }
       ]
     },
     "w_arg_b6": {
       "id": "w_arg_b6",
-      "from": { "nodeId": "n_word_7", "pinId": "out" },
-      "to": { "nodeId": "n_cmp_6", "pinId": "b" },
-      "waypoints": [{ "x": 2460, "y": 1780 }]
+      "from": {
+        "nodeId": "n_word_7",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_cmp_6",
+        "pinId": "b"
+      },
+      "waypoints": [
+        {
+          "x": 2460,
+          "y": 1780
+        }
+      ]
     },
     "w_arg_b16": {
       "id": "w_arg_b16",
-      "from": { "wireId": "w_arg_b6", "waypoint": 0 },
-      "to": { "nodeId": "n_pick_6", "pinId": "in1" },
-      "waypoints": [{ "x": 2460, "y": 1880 }]
+      "from": {
+        "wireId": "w_arg_b6",
+        "waypoint": 0
+      },
+      "to": {
+        "nodeId": "n_pick_6",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 2460,
+          "y": 1880
+        }
+      ]
     },
     "w_arg_a6": {
       "id": "w_arg_a6",
-      "from": { "nodeId": "n_pick_5", "pinId": "out" },
-      "to": { "nodeId": "n_cmp_6", "pinId": "a" },
+      "from": {
+        "nodeId": "n_pick_5",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_cmp_6",
+        "pinId": "a"
+      },
       "waypoints": [
-        { "x": 2590, "y": 1730 },
-        { "x": 2440, "y": 1730 },
-        { "x": 2440, "y": 1760 }
+        {
+          "x": 2590,
+          "y": 1730
+        },
+        {
+          "x": 2440,
+          "y": 1730
+        },
+        {
+          "x": 2440,
+          "y": 1760
+        }
       ]
     },
     "w_arg_a06": {
       "id": "w_arg_a06",
-      "from": { "wireId": "w_arg_a6", "waypoint": 2 },
-      "to": { "nodeId": "n_pick_6", "pinId": "in0" },
-      "waypoints": [{ "x": 2440, "y": 1860 }]
+      "from": {
+        "wireId": "w_arg_a6",
+        "waypoint": 2
+      },
+      "to": {
+        "nodeId": "n_pick_6",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 2440,
+          "y": 1860
+        }
+      ]
     },
     "w_arg_s6": {
       "id": "w_arg_s6",
-      "from": { "nodeId": "n_cmp_6", "pinId": "lt" },
-      "to": { "nodeId": "n_pick_6", "pinId": "sel" },
+      "from": {
+        "nodeId": "n_cmp_6",
+        "pinId": "lt"
+      },
+      "to": {
+        "nodeId": "n_pick_6",
+        "pinId": "sel"
+      },
       "waypoints": [
-        { "x": 2620, "y": 1760 },
-        { "x": 2620, "y": 1920 },
-        { "x": 2550, "y": 1920 }
+        {
+          "x": 2620,
+          "y": 1760
+        },
+        {
+          "x": 2620,
+          "y": 1920
+        },
+        {
+          "x": 2550,
+          "y": 1920
+        }
       ]
     },
     "w_arg_b7": {
       "id": "w_arg_b7",
-      "from": { "nodeId": "n_word_8", "pinId": "out" },
-      "to": { "nodeId": "n_cmp_7", "pinId": "b" },
-      "waypoints": [{ "x": 2460, "y": 1990 }]
+      "from": {
+        "nodeId": "n_word_8",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_cmp_7",
+        "pinId": "b"
+      },
+      "waypoints": [
+        {
+          "x": 2460,
+          "y": 1990
+        }
+      ]
     },
     "w_arg_b17": {
       "id": "w_arg_b17",
-      "from": { "wireId": "w_arg_b7", "waypoint": 0 },
-      "to": { "nodeId": "n_pick_7", "pinId": "in1" },
-      "waypoints": [{ "x": 2460, "y": 2090 }]
+      "from": {
+        "wireId": "w_arg_b7",
+        "waypoint": 0
+      },
+      "to": {
+        "nodeId": "n_pick_7",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 2460,
+          "y": 2090
+        }
+      ]
     },
     "w_arg_a7": {
       "id": "w_arg_a7",
-      "from": { "nodeId": "n_pick_6", "pinId": "out" },
-      "to": { "nodeId": "n_cmp_7", "pinId": "a" },
+      "from": {
+        "nodeId": "n_pick_6",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_cmp_7",
+        "pinId": "a"
+      },
       "waypoints": [
-        { "x": 2590, "y": 1940 },
-        { "x": 2440, "y": 1940 },
-        { "x": 2440, "y": 1970 }
+        {
+          "x": 2590,
+          "y": 1940
+        },
+        {
+          "x": 2440,
+          "y": 1940
+        },
+        {
+          "x": 2440,
+          "y": 1970
+        }
       ]
     },
     "w_arg_a07": {
       "id": "w_arg_a07",
-      "from": { "wireId": "w_arg_a7", "waypoint": 2 },
-      "to": { "nodeId": "n_pick_7", "pinId": "in0" },
-      "waypoints": [{ "x": 2440, "y": 2070 }]
+      "from": {
+        "wireId": "w_arg_a7",
+        "waypoint": 2
+      },
+      "to": {
+        "nodeId": "n_pick_7",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 2440,
+          "y": 2070
+        }
+      ]
     },
     "w_arg_s7": {
       "id": "w_arg_s7",
-      "from": { "nodeId": "n_cmp_7", "pinId": "lt" },
-      "to": { "nodeId": "n_pick_7", "pinId": "sel" },
+      "from": {
+        "nodeId": "n_cmp_7",
+        "pinId": "lt"
+      },
+      "to": {
+        "nodeId": "n_pick_7",
+        "pinId": "sel"
+      },
       "waypoints": [
-        { "x": 2620, "y": 1970 },
-        { "x": 2620, "y": 2130 },
-        { "x": 2550, "y": 2130 }
+        {
+          "x": 2620,
+          "y": 1970
+        },
+        {
+          "x": 2620,
+          "y": 2130
+        },
+        {
+          "x": 2550,
+          "y": 2130
+        }
       ]
     },
     "w_arg_b8": {
       "id": "w_arg_b8",
-      "from": { "nodeId": "n_word_9", "pinId": "out" },
-      "to": { "nodeId": "n_cmp_8", "pinId": "b" },
-      "waypoints": [{ "x": 2460, "y": 2200 }]
+      "from": {
+        "nodeId": "n_word_9",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_cmp_8",
+        "pinId": "b"
+      },
+      "waypoints": [
+        {
+          "x": 2460,
+          "y": 2200
+        }
+      ]
     },
     "w_arg_b18": {
       "id": "w_arg_b18",
-      "from": { "wireId": "w_arg_b8", "waypoint": 0 },
-      "to": { "nodeId": "n_pick_8", "pinId": "in1" },
-      "waypoints": [{ "x": 2460, "y": 2300 }]
+      "from": {
+        "wireId": "w_arg_b8",
+        "waypoint": 0
+      },
+      "to": {
+        "nodeId": "n_pick_8",
+        "pinId": "in1"
+      },
+      "waypoints": [
+        {
+          "x": 2460,
+          "y": 2300
+        }
+      ]
     },
     "w_arg_a8": {
       "id": "w_arg_a8",
-      "from": { "nodeId": "n_pick_7", "pinId": "out" },
-      "to": { "nodeId": "n_cmp_8", "pinId": "a" },
+      "from": {
+        "nodeId": "n_pick_7",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_cmp_8",
+        "pinId": "a"
+      },
       "waypoints": [
-        { "x": 2590, "y": 2150 },
-        { "x": 2440, "y": 2150 },
-        { "x": 2440, "y": 2180 }
+        {
+          "x": 2590,
+          "y": 2150
+        },
+        {
+          "x": 2440,
+          "y": 2150
+        },
+        {
+          "x": 2440,
+          "y": 2180
+        }
       ]
     },
     "w_arg_a08": {
       "id": "w_arg_a08",
-      "from": { "wireId": "w_arg_a8", "waypoint": 2 },
-      "to": { "nodeId": "n_pick_8", "pinId": "in0" },
-      "waypoints": [{ "x": 2440, "y": 2280 }]
+      "from": {
+        "wireId": "w_arg_a8",
+        "waypoint": 2
+      },
+      "to": {
+        "nodeId": "n_pick_8",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 2440,
+          "y": 2280
+        }
+      ]
     },
     "w_arg_s8": {
       "id": "w_arg_s8",
-      "from": { "nodeId": "n_cmp_8", "pinId": "lt" },
-      "to": { "nodeId": "n_pick_8", "pinId": "sel" },
+      "from": {
+        "nodeId": "n_cmp_8",
+        "pinId": "lt"
+      },
+      "to": {
+        "nodeId": "n_pick_8",
+        "pinId": "sel"
+      },
       "waypoints": [
-        { "x": 2620, "y": 2180 },
-        { "x": 2620, "y": 2340 },
-        { "x": 2550, "y": 2340 }
+        {
+          "x": 2620,
+          "y": 2180
+        },
+        {
+          "x": 2620,
+          "y": 2340
+        },
+        {
+          "x": 2550,
+          "y": 2340
+        }
       ]
     },
     "w_winner": {
       "id": "w_winner",
-      "from": { "nodeId": "n_pick_8", "pinId": "out" },
-      "to": { "nodeId": "n_winner", "pinId": "in" }
+      "from": {
+        "nodeId": "n_pick_8",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_winner",
+        "pinId": "in"
+      }
     },
     "w_idx_not": {
       "id": "w_idx_not",
-      "from": { "nodeId": "n_winner", "pinId": "out0" },
-      "to": { "nodeId": "n_idx_not", "pinId": "in" }
+      "from": {
+        "nodeId": "n_winner",
+        "pinId": "out0"
+      },
+      "to": {
+        "nodeId": "n_idx_not",
+        "pinId": "in"
+      }
     },
     "w_dig_net": {
       "id": "w_dig_net",
-      "from": { "nodeId": "n_idx_not", "pinId": "out" },
-      "to": { "nodeId": "t_dig_src", "pinId": "io" }
+      "from": {
+        "nodeId": "n_idx_not",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "t_dig_src",
+        "pinId": "io"
+      }
     },
     "w_top_score": {
       "id": "w_top_score",
-      "from": { "nodeId": "n_winner", "pinId": "out1" },
-      "to": { "nodeId": "n_top_score", "pinId": "in" },
-      "waypoints": [{ "x": 2820, "y": 2300 }, { "x": 2820, "y": 2360 }]
+      "from": {
+        "nodeId": "n_winner",
+        "pinId": "out1"
+      },
+      "to": {
+        "nodeId": "n_top_score",
+        "pinId": "in"
+      },
+      "waypoints": [
+        {
+          "x": 2820,
+          "y": 2300
+        },
+        {
+          "x": 2820,
+          "y": 2360
+        }
+      ]
     },
     "w_sGbpDyXapIQu": {
       "id": "w_sGbpDyXapIQu",
-      "from": { "nodeId": "n_XkDOfndlUEHJ", "pinId": "out" },
-      "to": { "nodeId": "n_clock", "pinId": "en" }
+      "from": {
+        "nodeId": "n_XkDOfndlUEHJ",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_clock",
+        "pinId": "en"
+      }
     },
     "w_rODPVAlJB8V4": {
       "id": "w_rODPVAlJB8V4",
-      "from": { "wireId": "w_done_hold", "waypoint": 0 },
-      "to": { "nodeId": "n_swy3UKUUUel-", "pinId": "io" }
+      "from": {
+        "wireId": "w_done_hold",
+        "waypoint": 0
+      },
+      "to": {
+        "nodeId": "n_swy3UKUUUel-",
+        "pinId": "io"
+      }
     },
     "w_mZ0TVecBv-3b": {
       "id": "w_mZ0TVecBv-3b",
-      "from": { "nodeId": "n_xnprgfcmZDcK", "pinId": "io" },
-      "to": { "nodeId": "n_wYQ0VrAFwh8F", "pinId": "in" }
+      "from": {
+        "nodeId": "n_xnprgfcmZDcK",
+        "pinId": "io"
+      },
+      "to": {
+        "nodeId": "n_wYQ0VrAFwh8F",
+        "pinId": "in"
+      }
     },
     "w_Ebb95n6yAMqq": {
       "id": "w_Ebb95n6yAMqq",
-      "from": { "nodeId": "n_kick", "pinId": "out" },
-      "to": { "nodeId": "n_rst_or", "pinId": "in1" }
+      "from": {
+        "nodeId": "n_kick",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_rst_or",
+        "pinId": "in1"
+      }
     },
     "w_hUDKqHy-L1PA": {
       "id": "w_hUDKqHy-L1PA",
-      "from": { "nodeId": "n_3DlqAoxs1aAF", "pinId": "out" },
-      "to": { "nodeId": "n_rst_or", "pinId": "in0" },
-      "waypoints": [{ "x": 580, "y": 990 }]
+      "from": {
+        "nodeId": "n_3DlqAoxs1aAF",
+        "pinId": "out"
+      },
+      "to": {
+        "nodeId": "n_rst_or",
+        "pinId": "in0"
+      },
+      "waypoints": [
+        {
+          "x": 580,
+          "y": 920
+        },
+        {
+          "x": 580,
+          "y": 990
+        }
+      ]
     }
   },
   "defaultZoom": 0.8

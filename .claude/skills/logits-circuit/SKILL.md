@@ -108,6 +108,7 @@ bun .claude/skills/logits-circuit/scripts/simulate.ts src/example/sr-latch.json 
 Substitute your own circuit and steps file; these are the reference ones.
 
 - `check.ts`: errors = the app would drop elements or the netlist is wrong (width mismatch, multiple drivers, unknown pin). Warnings = unreadable layout. Get to `0 error(s), 0 warning(s)`; exit 1 otherwise with `--strict`.
+- `orthogonalise.ts <circuit.json> [--write]` squares `diagonal-wire` warnings off for you, one elbow or one Z-route per diagonal, scored against the whole board so the fix does not land a run on top of another net. It only inserts waypoints, so the netlist is untouched — but read the before/after counts it prints and re-run `check.ts`: on a crowded board a squared-off route can still end up crossing a body.
 - `simulate.ts --truth` enumerates switch values (≤ 16 input bits) and exits 1 on any `X`/`Z` output. `--steps` runs an ordered list on one engine, so latches and counters keep state; `runNs` advances clocks. With no mode it settles and prints every labelled part's pins.
 
 Steps file (shared by `simulate.ts` and Playwright):
