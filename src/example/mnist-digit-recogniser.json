@@ -1548,7 +1548,7 @@
       "id": "w_bar_r0",
       "from": { "nodeId": "n_bar_0", "pinId": "data" },
       "to": { "nodeId": "n_matrix", "pinId": "row0" },
-      "waypoints": [{ "x": 1270, "y": 330 }, { "x": 1270, "y": 320 }]
+      "waypoints": [{ "x": 1270, "y": 330 }, { "x": 1270, "y": 310 }]
     },
     "w_bar_t1": {
       "id": "w_bar_t1",
@@ -1564,7 +1564,7 @@
       "id": "w_bar_r1",
       "from": { "nodeId": "n_bar_1", "pinId": "data" },
       "to": { "nodeId": "n_matrix", "pinId": "row1" },
-      "waypoints": [{ "x": 1280, "y": 400 }, { "x": 1280, "y": 340 }]
+      "waypoints": [{ "x": 1280, "y": 400 }, { "x": 1280, "y": 330 }]
     },
     "w_bar_t2": {
       "id": "w_bar_t2",
@@ -1580,7 +1580,7 @@
       "id": "w_bar_r2",
       "from": { "nodeId": "n_bar_2", "pinId": "data" },
       "to": { "nodeId": "n_matrix", "pinId": "row2" },
-      "waypoints": [{ "x": 1290, "y": 470 }, { "x": 1290, "y": 360 }]
+      "waypoints": [{ "x": 1290, "y": 470 }, { "x": 1290, "y": 350 }]
     },
     "w_bar_t3": {
       "id": "w_bar_t3",
@@ -1596,7 +1596,7 @@
       "id": "w_bar_r3",
       "from": { "nodeId": "n_bar_3", "pinId": "data" },
       "to": { "nodeId": "n_matrix", "pinId": "row3" },
-      "waypoints": [{ "x": 1300, "y": 540 }, { "x": 1300, "y": 380 }]
+      "waypoints": [{ "x": 1300, "y": 540 }, { "x": 1300, "y": 370 }]
     },
     "w_bar_t4": {
       "id": "w_bar_t4",
@@ -1612,7 +1612,7 @@
       "id": "w_bar_r4",
       "from": { "nodeId": "n_bar_4", "pinId": "data" },
       "to": { "nodeId": "n_matrix", "pinId": "row4" },
-      "waypoints": [{ "x": 1310, "y": 610 }, { "x": 1310, "y": 400 }]
+      "waypoints": [{ "x": 1310, "y": 610 }, { "x": 1310, "y": 390 }]
     },
     "w_bar_t5": {
       "id": "w_bar_t5",
@@ -1628,7 +1628,7 @@
       "id": "w_bar_r5",
       "from": { "nodeId": "n_bar_5", "pinId": "data" },
       "to": { "nodeId": "n_matrix", "pinId": "row5" },
-      "waypoints": [{ "x": 1320, "y": 680 }, { "x": 1320, "y": 420 }]
+      "waypoints": [{ "x": 1320, "y": 680 }, { "x": 1320, "y": 410 }]
     },
     "w_bar_t6": {
       "id": "w_bar_t6",
@@ -1644,7 +1644,7 @@
       "id": "w_bar_r6",
       "from": { "nodeId": "n_bar_6", "pinId": "data" },
       "to": { "nodeId": "n_matrix", "pinId": "row6" },
-      "waypoints": [{ "x": 1330, "y": 750 }, { "x": 1330, "y": 440 }]
+      "waypoints": [{ "x": 1330, "y": 750 }, { "x": 1330, "y": 430 }]
     },
     "w_bar_t7": {
       "id": "w_bar_t7",
@@ -1660,7 +1660,7 @@
       "id": "w_bar_r7",
       "from": { "nodeId": "n_bar_7", "pinId": "data" },
       "to": { "nodeId": "n_matrix", "pinId": "row7" },
-      "waypoints": [{ "x": 1340, "y": 820 }, { "x": 1340, "y": 460 }]
+      "waypoints": [{ "x": 1340, "y": 820 }, { "x": 1340, "y": 450 }]
     },
     "w_bar_t8": {
       "id": "w_bar_t8",
@@ -1676,7 +1676,7 @@
       "id": "w_bar_r8",
       "from": { "nodeId": "n_bar_8", "pinId": "data" },
       "to": { "nodeId": "n_matrix", "pinId": "row8" },
-      "waypoints": [{ "x": 1350, "y": 890 }, { "x": 1350, "y": 480 }]
+      "waypoints": [{ "x": 1350, "y": 890 }, { "x": 1350, "y": 470 }]
     },
     "w_bar_t9": {
       "id": "w_bar_t9",
@@ -1692,7 +1692,7 @@
       "id": "w_bar_r9",
       "from": { "nodeId": "n_bar_9", "pinId": "data" },
       "to": { "nodeId": "n_matrix", "pinId": "row9" },
-      "waypoints": [{ "x": 1360, "y": 960 }, { "x": 1360, "y": 500 }]
+      "waypoints": [{ "x": 1360, "y": 960 }, { "x": 1360, "y": 490 }]
     },
     "w_rst_net": {
       "id": "w_rst_net",

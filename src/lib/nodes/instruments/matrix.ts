@@ -1,5 +1,5 @@
 import { defineNode, type NodeParams } from "@/lib/nodes/define";
-import { boundedParam, stack, stackHeight } from "../shared";
+import { boundedParam, PIN_PITCH, stack } from "../shared";
 
 /**
  * An n × n grid of lamps, wired a row at a time.
@@ -16,6 +16,15 @@ const MAX_SIZE = 16;
 /** Fewest cells across the body, so a 2 × 2 panel is still a panel. */
 const MIN_BODY = 8;
 
+/**
+ * Cells left above the first row pin and below the last.
+ *
+ * One cell, not the half-pitch `stackHeight` would leave: the row pins are the
+ * panel's rows, so the gap at the edge should read as the gap between two
+ * lamps, not as padding the panel does not have.
+ */
+const ROW_MARGIN = 1;
+
 export function matrixSize(params: NodeParams): number {
   return boundedParam(params, "size", 8, MIN_SIZE, MAX_SIZE);
 }
@@ -25,10 +34,17 @@ export function rowPinId(index: number): string {
   return `row${index}`;
 }
 
-/** Square: rows need pin pitch, and the panel should not read as a column. */
+/**
+ * Square: rows need pin pitch, and the panel should not read as a column.
+ *
+ * One side for both dimensions rather than a width floored separately, or a
+ * small panel comes out wider than it is tall and reads as a row of lamps.
+ */
 function bodySize(params: NodeParams) {
-  const height = stackHeight(matrixSize(params));
-  return { width: Math.max(MIN_BODY, height), height };
+  const rows = matrixSize(params);
+  const span = (rows - 1) * PIN_PITCH + ROW_MARGIN * 2;
+  const side = Math.max(MIN_BODY, span);
+  return { width: side, height: side };
 }
 
 export const matrixNode = defineNode({
