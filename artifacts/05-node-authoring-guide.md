@@ -89,6 +89,11 @@ which break tree-shaking and make ordering non-deterministic.
       Without it `buildNetlist` calls a legitimate shared bus a
       `multiple-drivers` short — and it must never learn your node's `type` to
       work that out for itself.
+- [ ] A control input your `evaluate` reads as idle when it is `Z` is marked
+      `idleWhenFloating: true`. Without it every board using your node collects
+      an `undriven-input` warning for a pin nobody was ever meant to wire.
+      Only set it when the pin's idle meaning holds unconditionally: a
+      counter's `D`, read only while `LOAD` is high, does not qualify.
 - [ ] `size()` is in grid units and leaves room for every pin.
 - [ ] Every configurable param has a `paramsSchema` entry, so the inspector can
       offer it. The `kind` picks the control (`int` — a stepper, `bool`, `text`

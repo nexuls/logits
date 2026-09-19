@@ -103,7 +103,16 @@ the next reset.
       side: "left",
       offset: 3,
     },
-    { id: "en", name: "EN", direction: "in", width: 1, side: "top", offset: 4 },
+    {
+      id: "en",
+      name: "EN",
+      direction: "in",
+      width: 1,
+      side: "top",
+      offset: 4,
+      // Unwired the ROM drives, which is the useful default on its own.
+      idleWhenFloating: true,
+    },
     {
       id: "data",
       name: "D",

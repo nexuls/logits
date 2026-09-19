@@ -43,6 +43,10 @@ const definitions = [
     pin({ id: "out", direction: "out", tristate: true }),
   ]),
   def("test.port", [pin({ id: "io", direction: "inout" })]),
+  def("test.controlled", [
+    pin({ id: "in", direction: "in" }),
+    pin({ id: "en", direction: "in", idleWhenFloating: true }),
+  ]),
 ];
 
 const lookup: NodeLookup = (type) =>
@@ -278,6 +282,33 @@ describe("undriven inputs", () => {
     const netlist = buildNetlist(circuit({ a: "test.source" }), lookup);
 
     expect(netlist.diagnostics).toEqual([]);
+  });
+
+  it("says nothing about a pin whose definition declares Z idle", () => {
+    const netlist = buildNetlist(circuit({ c: "test.controlled" }), lookup);
+
+    // `in` still warns; `en` does not, and they are on separate nets.
+    const [diagnostic] = only(netlist.diagnostics, "undriven-input");
+    expect(diagnostic.pins).toEqual([{ nodeId: "c", pinId: "in" }]);
+  });
+
+  it("still names the readers that have no idle meaning on a shared net", () => {
+    const netlist = buildNetlist(
+      circuit({ c: "test.controlled", b: "test.sink" }, [
+        ["c", "en", "b", "in"],
+      ]),
+      lookup,
+    );
+
+    // One net, two readers, neither driven: the warning is about the sink
+    // only, because the control pin being unwired is not a mistake.
+    const [diagnostic] = only(
+      netlist.diagnostics.filter((entry) =>
+        entry.pins?.some((ref) => ref.nodeId === "b"),
+      ),
+      "undriven-input",
+    );
+    expect(diagnostic.pins).toEqual([{ nodeId: "b", pinId: "in" }]);
   });
 });
 

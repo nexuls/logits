@@ -64,6 +64,8 @@ the result does not, which \`comb.alu\` reports on its \`V\` pin.
         width: 1,
         side: "left",
         offset: 6,
+        // `carryInput` reads an unwired carry as 0, which is the usual sum.
+        idleWhenFloating: true,
       },
       {
         id: "sum",

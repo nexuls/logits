@@ -116,6 +116,8 @@ The count is simulation state — a reset, or a structural edit, clears it.`,
         width: 1,
         side: "top" as const,
         offset: offsets[index],
+        // Unwired: not resetting, enabled, counting rather than loading.
+        idleWhenFloating: true,
       })),
       {
         id: "clk",

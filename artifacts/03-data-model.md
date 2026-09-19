@@ -82,12 +82,20 @@ type PinSpec = {
   side: "left" | "right" | "top" | "bottom";
   offset: number;               // position along that side, in grid units
   tristate?: boolean;           // output may drive Z — a bus driver, open drain
+  idleWhenFloating?: boolean;   // input whose unwired Z has a documented meaning
 };
 ```
 
 `tristate` is how `buildNetlist` tells a shared bus from a short without ever
 looking at a node `type`. `inout` pins are tri-state by definition and need not
 set it.
+
+`idleWhenFloating` is its dual on the input side: a flip-flop's `RST`, a ROM's
+`EN`, an adder's `CIN` and a readout's `DP` all read `Z` when nothing drives
+them and all have a documented idle meaning, so leaving one unwired is the
+common case rather than a mistake and earns no `undriven-input`. An input with
+no idle meaning — `gate.tristate`'s `EN`, which reads `X` when undriven — must
+not set it, and a net keeps its warning for whichever readers do not.
 
 `pinId` values are part of the save format. Renaming one is a breaking change
 that needs a migration.

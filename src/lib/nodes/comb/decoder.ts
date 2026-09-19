@@ -85,6 +85,8 @@ does an unresolvable address.
         width: 1,
         side: "top",
         offset: 3,
+        // Only a pin held low blanks the outputs; unwired it decodes.
+        idleWhenFloating: true,
       },
       ...stack(
         Array.from({ length: lines }, (_, index) => ({

@@ -258,6 +258,9 @@ export function registerLike({
             width: 1,
             side: "top",
             offset: offsets[index],
+            // The table above is the whole reason: unwired, each of these
+            // means "not resetting", "not setting", "enabled".
+            idleWhenFloating: true,
           }),
         ),
         {
@@ -372,6 +375,7 @@ export function bitFlop({
           width: 1,
           side: "top",
           offset: BODY_WIDTH / 2,
+          idleWhenFloating: true,
         },
         {
           id: "clk",

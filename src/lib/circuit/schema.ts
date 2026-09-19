@@ -149,6 +149,19 @@ export const pinSpecSchema = z.object({
    * tri-state by definition and need not set it.
    */
   tristate: z.boolean().optional(),
+  /**
+   * True when an unwired pin means something definite rather than a mistake —
+   * a flip-flop's `RST`, a ROM's `EN`, an adder's `CIN`, a readout's `DP`.
+   * Each of those reads `Z` and has a documented idle meaning, so leaving it
+   * unwired is the common case and not worth a diagnostic.
+   *
+   * The dual of `tristate`, and declared here for the same reason: it lets
+   * `buildNetlist` tell a deliberately unwired control from a forgotten input
+   * without ever looking at a node `type`. An input with no idle meaning —
+   * `gate.tristate`'s `EN`, which reads `X` when nobody drives it — must not
+   * set it.
+   */
+  idleWhenFloating: z.boolean().optional(),
 });
 export type PinSpec = z.infer<typeof pinSpecSchema>;
 

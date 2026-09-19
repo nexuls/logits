@@ -237,6 +237,8 @@ every segment rather than guessing a glyph.
         width: 1,
         side: "top",
         offset: blank,
+        // Unwired: neither blanked nor lamp-tested, which is just "display".
+        idleWhenFloating: true,
       },
       {
         id: "lt",
@@ -245,6 +247,8 @@ every segment rather than guessing a glyph.
         width: 1,
         side: "top",
         offset: lamp,
+        // Unwired: neither blanked nor lamp-tested, which is just "display".
+        idleWhenFloating: true,
       },
       ...stack(
         Array.from({ length: digits }, (_, digit) =>

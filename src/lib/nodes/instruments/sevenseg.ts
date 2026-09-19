@@ -152,6 +152,8 @@ one showing an odd glyph.
         width: 1,
         side: "bottom",
         offset: 5,
+        // A floating segment is drawn dark, so an unwired point is simply off.
+        idleWhenFloating: true,
       },
     ];
   },

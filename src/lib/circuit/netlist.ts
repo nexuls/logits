@@ -35,6 +35,8 @@ export type NetlistPin = {
   width: number;
   /** May drive `Z`, so it can share a net with other drivers legitimately. */
   tristate: boolean;
+  /** Reads `Z` as a documented idle, so being unwired is not a diagnostic. */
+  idleWhenFloating: boolean;
 };
 
 export type Net = {
@@ -171,6 +173,7 @@ export function buildNetlist(
         direction: spec.direction,
         width: spec.width,
         tristate: spec.tristate ?? spec.direction === "inout",
+        idleWhenFloating: spec.idleWhenFloating ?? false,
       });
     }
 
@@ -364,15 +367,18 @@ export function buildNetlist(
     }
 
     // A net with neither drivers nor readers is an unwired output, which is
-    // not worth a word. One with readers is an input floating at Z.
-    if (net.drivers.length === 0 && net.readers.length > 0) {
+    // not worth a word. One with readers is an input floating at Z — unless
+    // every reader on it declares an idle meaning for Z, which is a control
+    // pin left unwired on purpose and the commonest thing on a board.
+    const floating = net.readers.filter((pin) => !pin.idleWhenFloating);
+    if (net.drivers.length === 0 && floating.length > 0) {
       diagnostics.push({
         code: "undriven-input",
         severity: "warning",
         message: "Input is not driven; it reads Z.",
         netId: net.id,
-        pins: net.readers.map(toPinRef),
-        nodeIds: dedupe(net.readers.map((pin) => pin.nodeId)),
+        pins: floating.map(toPinRef),
+        nodeIds: dedupe(floating.map((pin) => pin.nodeId)),
       });
     }
   }

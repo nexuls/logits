@@ -91,7 +91,16 @@ timebase reference beside the signals you are actually measuring.
     { key: "startHigh", label: "Start high", kind: "bool" },
   ],
   pins: () => [
-    { id: "en", name: "EN", direction: "in", width: 1, side: "top", offset: 3 },
+    {
+      id: "en",
+      name: "EN",
+      direction: "in",
+      width: 1,
+      side: "top",
+      offset: 3,
+      // Only a pin held low stops the clock; unwired it runs.
+      idleWhenFloating: true,
+    },
     {
       id: "out",
       name: "OUT",

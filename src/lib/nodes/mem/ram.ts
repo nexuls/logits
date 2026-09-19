@@ -124,6 +124,8 @@ put one undo entry on the stack per clock edge.
         width: 1,
         side: "top" as const,
         offset: offsets[index],
+        // Unwired: not writing, and not driving the bus either.
+        idleWhenFloating: true,
       })),
       {
         id: "clk",

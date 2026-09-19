@@ -314,6 +314,8 @@ the reset are gone.
         width: 1,
         side: "top",
         offset: width / 2,
+        // `controlState` reads an unwired CLR as idle — nothing is cleared.
+        idleWhenFloating: true,
       },
       ...(protocolOf(params) === "handshake"
         ? [

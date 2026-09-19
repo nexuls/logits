@@ -178,6 +178,8 @@ is the exercise, or when you want the segment lines themselves visible.
         width: 1,
         side: "top",
         offset: blank,
+        // Unwired: neither blanked nor lamp-tested, which is just "display".
+        idleWhenFloating: true,
       },
       {
         id: "lt",
@@ -186,6 +188,8 @@ is the exercise, or when you want the segment lines themselves visible.
         width: 1,
         side: "top",
         offset: lamp,
+        // Unwired: neither blanked nor lamp-tested, which is just "display".
+        idleWhenFloating: true,
       },
       {
         // One bit per digit rather than one pin per digit: the points are a
@@ -197,6 +201,8 @@ is the exercise, or when you want the segment lines themselves visible.
         width: readoutDigitCount(params),
         side: "bottom",
         offset: width / 2,
+        // A floating point is drawn dark, so an unwired one is simply off.
+        idleWhenFloating: true,
       },
     ];
   },
