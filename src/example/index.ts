@@ -5,6 +5,7 @@ import fullAdder from "./full-adder.json";
 import gateSampler from "./gate-sampler.json";
 import halfAdder from "./half-adder.json";
 import masterSlaveFlipFlop from "./master-slave-flipflop.json";
+import mnistDightRecosnizer from "./mnist-digit-recogniser.json";
 import mod16SyncCounter from "./mod-16-sync-counter.json";
 import mux2to1 from "./mux-2to1.json";
 import snake from "./snake.json";
@@ -59,6 +60,10 @@ const CATALOG: readonly { raw: unknown; summary: string }[] = [
   {
     raw: snake,
     summary: "Snake on a 16×16 matrix: keyboard in, RAM body, LFSR food.",
+  },
+  {
+    raw: mnistDightRecosnizer,
+    summary: "A neural network that recognizes handwritten digits.",
   },
 ];
 

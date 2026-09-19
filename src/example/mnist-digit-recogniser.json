@@ -1,0 +1,2768 @@
+{
+  "version": 4,
+  "id": "d_tY8bGFLGElRm",
+  "name": "MNIST digit recogniser",
+  "nodes": {
+    "n_pad": {
+      "id": "n_pad",
+      "type": "io.drawpad",
+      "position": { "x": 200, "y": 300 },
+      "label": "Digit pad",
+      "labelPosition": "top",
+      "params": {
+        "columns": 28,
+        "rows": 28,
+        "pixelSize": 2,
+        "output": "addressed",
+        "color": "green",
+        "pixels": [
+          "",
+          "",
+          "000000000001111111",
+          "000000000111111111",
+          "0000000011111000111",
+          "0000000011000000011",
+          "0000000000000000011",
+          "0000000000000000011",
+          "0000000000000000111",
+          "000000000000000011",
+          "000000000000000111",
+          "00000000000111111",
+          "000000001111111",
+          "000000001111111",
+          "0000000001111111",
+          "0000000000001111",
+          "0000000000000011",
+          "00000000000000011",
+          "00000000000000011",
+          "00011000000000011",
+          "00011000000000011",
+          "00011100000000011",
+          "00001110000000111",
+          "00001111000111111",
+          "000001111111111",
+          "0000000111111"
+        ]
+      }
+    },
+    "t_cxq_pad": {
+      "id": "t_cxq_pad",
+      "type": "bus.tunnel",
+      "position": { "x": 110, "y": 560 },
+      "rotation": 180,
+      "params": { "name": "CX", "width": 5 }
+    },
+    "t_cyq_pad": {
+      "id": "t_cyq_pad",
+      "type": "bus.tunnel",
+      "position": { "x": 110, "y": 620 },
+      "rotation": 180,
+      "params": { "name": "CY", "width": 5 }
+    },
+    "t_px_pad": {
+      "id": "t_px_pad",
+      "type": "bus.tunnel",
+      "position": { "x": 800, "y": 580 },
+      "params": { "name": "PX", "width": 1 }
+    },
+    "t_dig_disp": {
+      "id": "t_dig_disp",
+      "type": "bus.tunnel",
+      "position": { "x": 140, "y": 970 },
+      "rotation": 180,
+      "params": { "name": "DIG", "width": 4 }
+    },
+    "n_segdrv": {
+      "id": "n_segdrv",
+      "type": "comb.segdriver",
+      "position": { "x": 240, "y": 910 },
+      "label": "Digit decode",
+      "params": {
+        "width": 4,
+        "digits": 1,
+        "radix": "dec",
+        "blankLeading": false,
+        "commonAnode": false
+      }
+    },
+    "n_sevenseg": {
+      "id": "n_sevenseg",
+      "type": "disp.sevenseg",
+      "position": { "x": 370, "y": 910 },
+      "label": "Prediction",
+      "labelPosition": "top",
+      "params": { "mode": "raw", "commonAnode": false, "color": "red" }
+    },
+    "n_matrix": {
+      "id": "n_matrix",
+      "type": "disp.matrix",
+      "position": { "x": 1420, "y": 300 },
+      "label": "Confidence",
+      "labelPosition": "top",
+      "params": { "size": 10, "color": "amber" }
+    },
+    "t_sc_bar_0": {
+      "id": "t_sc_bar_0",
+      "type": "bus.tunnel",
+      "position": { "x": 960, "y": 300 },
+      "rotation": 180,
+      "params": { "name": "SC0", "width": 24 }
+    },
+    "n_barsplit_0": {
+      "id": "n_barsplit_0",
+      "type": "bus.split",
+      "position": { "x": 1050, "y": 290 },
+      "params": { "groups": "16,8" }
+    },
+    "n_bar_0": {
+      "id": "n_bar_0",
+      "type": "mem.rom",
+      "position": { "x": 1160, "y": 300 },
+      "label": "Bar 0",
+      "params": {
+        "addressBits": 8,
+        "width": 10,
+        "contents": "000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 300 380 3e0 3f8 3fc 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff"
+      }
+    },
+    "t_sc_bar_1": {
+      "id": "t_sc_bar_1",
+      "type": "bus.tunnel",
+      "position": { "x": 960, "y": 370 },
+      "rotation": 180,
+      "params": { "name": "SC1", "width": 24 }
+    },
+    "n_barsplit_1": {
+      "id": "n_barsplit_1",
+      "type": "bus.split",
+      "position": { "x": 1050, "y": 360 },
+      "params": { "groups": "16,8" }
+    },
+    "n_bar_1": {
+      "id": "n_bar_1",
+      "type": "mem.rom",
+      "position": { "x": 1160, "y": 370 },
+      "label": "Bar 1",
+      "params": {
+        "addressBits": 8,
+        "width": 10,
+        "contents": "000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 300 380 3e0 3f8 3fc 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff"
+      }
+    },
+    "t_sc_bar_2": {
+      "id": "t_sc_bar_2",
+      "type": "bus.tunnel",
+      "position": { "x": 960, "y": 440 },
+      "rotation": 180,
+      "params": { "name": "SC2", "width": 24 }
+    },
+    "n_barsplit_2": {
+      "id": "n_barsplit_2",
+      "type": "bus.split",
+      "position": { "x": 1050, "y": 430 },
+      "params": { "groups": "16,8" }
+    },
+    "n_bar_2": {
+      "id": "n_bar_2",
+      "type": "mem.rom",
+      "position": { "x": 1160, "y": 440 },
+      "label": "Bar 2",
+      "params": {
+        "addressBits": 8,
+        "width": 10,
+        "contents": "000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 300 380 3e0 3f8 3fc 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff"
+      }
+    },
+    "t_sc_bar_3": {
+      "id": "t_sc_bar_3",
+      "type": "bus.tunnel",
+      "position": { "x": 960, "y": 510 },
+      "rotation": 180,
+      "params": { "name": "SC3", "width": 24 }
+    },
+    "n_barsplit_3": {
+      "id": "n_barsplit_3",
+      "type": "bus.split",
+      "position": { "x": 1050, "y": 500 },
+      "params": { "groups": "16,8" }
+    },
+    "n_bar_3": {
+      "id": "n_bar_3",
+      "type": "mem.rom",
+      "position": { "x": 1160, "y": 510 },
+      "label": "Bar 3",
+      "params": {
+        "addressBits": 8,
+        "width": 10,
+        "contents": "000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 300 380 3e0 3f8 3fc 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff"
+      }
+    },
+    "t_sc_bar_4": {
+      "id": "t_sc_bar_4",
+      "type": "bus.tunnel",
+      "position": { "x": 960, "y": 580 },
+      "rotation": 180,
+      "params": { "name": "SC4", "width": 24 }
+    },
+    "n_barsplit_4": {
+      "id": "n_barsplit_4",
+      "type": "bus.split",
+      "position": { "x": 1050, "y": 570 },
+      "params": { "groups": "16,8" }
+    },
+    "n_bar_4": {
+      "id": "n_bar_4",
+      "type": "mem.rom",
+      "position": { "x": 1160, "y": 580 },
+      "label": "Bar 4",
+      "params": {
+        "addressBits": 8,
+        "width": 10,
+        "contents": "000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 300 380 3e0 3f8 3fc 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff"
+      }
+    },
+    "t_sc_bar_5": {
+      "id": "t_sc_bar_5",
+      "type": "bus.tunnel",
+      "position": { "x": 960, "y": 650 },
+      "rotation": 180,
+      "params": { "name": "SC5", "width": 24 }
+    },
+    "n_barsplit_5": {
+      "id": "n_barsplit_5",
+      "type": "bus.split",
+      "position": { "x": 1050, "y": 640 },
+      "params": { "groups": "16,8" }
+    },
+    "n_bar_5": {
+      "id": "n_bar_5",
+      "type": "mem.rom",
+      "position": { "x": 1160, "y": 650 },
+      "label": "Bar 5",
+      "params": {
+        "addressBits": 8,
+        "width": 10,
+        "contents": "000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 300 380 3e0 3f8 3fc 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff"
+      }
+    },
+    "t_sc_bar_6": {
+      "id": "t_sc_bar_6",
+      "type": "bus.tunnel",
+      "position": { "x": 960, "y": 720 },
+      "rotation": 180,
+      "params": { "name": "SC6", "width": 24 }
+    },
+    "n_barsplit_6": {
+      "id": "n_barsplit_6",
+      "type": "bus.split",
+      "position": { "x": 1050, "y": 710 },
+      "params": { "groups": "16,8" }
+    },
+    "n_bar_6": {
+      "id": "n_bar_6",
+      "type": "mem.rom",
+      "position": { "x": 1160, "y": 720 },
+      "label": "Bar 6",
+      "params": {
+        "addressBits": 8,
+        "width": 10,
+        "contents": "000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 300 380 3e0 3f8 3fc 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff"
+      }
+    },
+    "t_sc_bar_7": {
+      "id": "t_sc_bar_7",
+      "type": "bus.tunnel",
+      "position": { "x": 960, "y": 790 },
+      "rotation": 180,
+      "params": { "name": "SC7", "width": 24 }
+    },
+    "n_barsplit_7": {
+      "id": "n_barsplit_7",
+      "type": "bus.split",
+      "position": { "x": 1050, "y": 780 },
+      "params": { "groups": "16,8" }
+    },
+    "n_bar_7": {
+      "id": "n_bar_7",
+      "type": "mem.rom",
+      "position": { "x": 1160, "y": 790 },
+      "label": "Bar 7",
+      "params": {
+        "addressBits": 8,
+        "width": 10,
+        "contents": "000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 300 380 3e0 3f8 3fc 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff"
+      }
+    },
+    "t_sc_bar_8": {
+      "id": "t_sc_bar_8",
+      "type": "bus.tunnel",
+      "position": { "x": 960, "y": 860 },
+      "rotation": 180,
+      "params": { "name": "SC8", "width": 24 }
+    },
+    "n_barsplit_8": {
+      "id": "n_barsplit_8",
+      "type": "bus.split",
+      "position": { "x": 1050, "y": 850 },
+      "params": { "groups": "16,8" }
+    },
+    "n_bar_8": {
+      "id": "n_bar_8",
+      "type": "mem.rom",
+      "position": { "x": 1160, "y": 860 },
+      "label": "Bar 8",
+      "params": {
+        "addressBits": 8,
+        "width": 10,
+        "contents": "000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 300 380 3e0 3f8 3fc 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff"
+      }
+    },
+    "t_sc_bar_9": {
+      "id": "t_sc_bar_9",
+      "type": "bus.tunnel",
+      "position": { "x": 960, "y": 930 },
+      "rotation": 180,
+      "params": { "name": "SC9", "width": 24 }
+    },
+    "n_barsplit_9": {
+      "id": "n_barsplit_9",
+      "type": "bus.split",
+      "position": { "x": 1050, "y": 920 },
+      "params": { "groups": "16,8" }
+    },
+    "n_bar_9": {
+      "id": "n_bar_9",
+      "type": "mem.rom",
+      "position": { "x": 1160, "y": 930 },
+      "label": "Bar 9",
+      "params": {
+        "addressBits": 8,
+        "width": 10,
+        "contents": "000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 000 300 380 3e0 3f8 3fc 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff 3ff"
+      }
+    },
+    "n_clock": {
+      "id": "n_clock",
+      "type": "time.clock",
+      "position": { "x": 280, "y": 1240 },
+      "label": "Scan clock",
+      "params": { "periodNs": 10, "dutyCycle": 50, "startHigh": false }
+    },
+    "n_kick": {
+      "id": "n_kick",
+      "type": "io.kickstart",
+      "position": { "x": 510, "y": 990 },
+      "label": "Power-on",
+      "labelPosition": "top",
+      "params": { "widthNs": 60, "startDelayNs": 0, "active": "high" }
+    },
+    "n_rst_or": {
+      "id": "n_rst_or",
+      "type": "gate.or",
+      "position": { "x": 620, "y": 980 },
+      "params": { "inputs": 2, "width": 1 }
+    },
+    "t_rst_src": {
+      "id": "t_rst_src",
+      "type": "bus.tunnel",
+      "position": { "x": 720, "y": 980 },
+      "params": { "name": "RST", "width": 1 }
+    },
+    "t_rst_cx": {
+      "id": "t_rst_cx",
+      "type": "bus.tunnel",
+      "position": { "x": 280, "y": 1470 },
+      "rotation": 180,
+      "params": { "name": "RST", "width": 1 }
+    },
+    "n_col_x": {
+      "id": "n_col_x",
+      "type": "seq.counter",
+      "position": { "x": 380, "y": 1500 },
+      "label": "Col X",
+      "labelPosition": "top",
+      "params": { "width": 5, "direction": "up", "modulus": 29 }
+    },
+    "t_clk_cx": {
+      "id": "t_clk_cx",
+      "type": "bus.tunnel",
+      "position": { "x": 280, "y": 1570 },
+      "rotation": 180,
+      "params": { "name": "CLK", "width": 1 }
+    },
+    "t_rst_cy": {
+      "id": "t_rst_cy",
+      "type": "bus.tunnel",
+      "position": { "x": 280, "y": 1630 },
+      "rotation": 180,
+      "params": { "name": "RST", "width": 1 }
+    },
+    "n_row_y": {
+      "id": "n_row_y",
+      "type": "seq.counter",
+      "position": { "x": 380, "y": 1660 },
+      "label": "Row Y",
+      "labelPosition": "bottom",
+      "params": { "width": 5, "direction": "up", "modulus": 29 }
+    },
+    "t_clk_cy": {
+      "id": "t_clk_cy",
+      "type": "bus.tunnel",
+      "position": { "x": 280, "y": 1730 },
+      "rotation": 180,
+      "params": { "name": "CLK", "width": 1 }
+    },
+    "n_addr_merge": {
+      "id": "n_addr_merge",
+      "type": "bus.merge",
+      "position": { "x": 540, "y": 1560 },
+      "params": { "groups": "5,5" }
+    },
+    "t_cx_src": {
+      "id": "t_cx_src",
+      "type": "bus.tunnel",
+      "position": { "x": 660, "y": 1460 },
+      "params": { "name": "CX", "width": 5 }
+    },
+    "t_cy_src": {
+      "id": "t_cy_src",
+      "type": "bus.tunnel",
+      "position": { "x": 740, "y": 1760 },
+      "params": { "name": "CY", "width": 5 }
+    },
+    "n_bias_and": {
+      "id": "n_bias_and",
+      "type": "gate.and",
+      "position": { "x": 540, "y": 1680 },
+      "params": { "inputs": 2, "width": 1 }
+    },
+    "t_px_ctrl": {
+      "id": "t_px_ctrl",
+      "type": "bus.tunnel",
+      "position": { "x": 280, "y": 1680 },
+      "rotation": 180,
+      "params": { "name": "PX", "width": 1 }
+    },
+    "n_pix_or": {
+      "id": "n_pix_or",
+      "type": "gate.or",
+      "position": { "x": 680, "y": 1680 },
+      "params": { "inputs": 2, "width": 1 }
+    },
+    "n_zero_addr": {
+      "id": "n_zero_addr",
+      "type": "io.constant",
+      "position": { "x": 800, "y": 1480 },
+      "label": "Zero cell",
+      "labelPosition": "top",
+      "params": { "width": 10, "value": 1023 }
+    },
+    "n_addr_mux": {
+      "id": "n_addr_mux",
+      "type": "comb.mux",
+      "position": { "x": 700, "y": 1560 },
+      "params": { "selectBits": 1, "width": 10 }
+    },
+    "t_addr_src": {
+      "id": "t_addr_src",
+      "type": "bus.tunnel",
+      "position": { "x": 900, "y": 1560 },
+      "params": { "name": "ADDR", "width": 10 }
+    },
+    "n_done_or": {
+      "id": "n_done_or",
+      "type": "gate.or",
+      "position": { "x": 900, "y": 1680 },
+      "params": { "inputs": 2, "width": 1 }
+    },
+    "n_done_ff": {
+      "id": "n_done_ff",
+      "type": "seq.dff",
+      "position": { "x": 1020, "y": 1680 },
+      "params": { "width": 1, "edge": "rising", "asyncReset": true }
+    },
+    "t_rst_ff": {
+      "id": "t_rst_ff",
+      "type": "bus.tunnel",
+      "position": { "x": 920, "y": 1620 },
+      "rotation": 180,
+      "params": { "name": "RST", "width": 1 }
+    },
+    "t_clk_ff": {
+      "id": "t_clk_ff",
+      "type": "bus.tunnel",
+      "position": { "x": 920, "y": 1800 },
+      "rotation": 180,
+      "params": { "name": "CLK", "width": 1 }
+    },
+    "n_done_not": {
+      "id": "n_done_not",
+      "type": "gate.not",
+      "position": { "x": 1160, "y": 1680 },
+      "params": { "width": 1 }
+    },
+    "n_done_led": {
+      "id": "n_done_led",
+      "type": "io.led",
+      "position": { "x": 1160, "y": 1870 },
+      "label": "Done",
+      "params": { "color": "green" }
+    },
+    "n_clk_and": {
+      "id": "n_clk_and",
+      "type": "gate.and",
+      "position": { "x": 1160, "y": 1600 },
+      "params": { "inputs": 2, "width": 1 }
+    },
+    "t_clk_src": {
+      "id": "t_clk_src",
+      "type": "bus.tunnel",
+      "position": { "x": 1250, "y": 1200 },
+      "params": { "name": "CLK", "width": 1 }
+    },
+    "t_addr_0": {
+      "id": "t_addr_0",
+      "type": "bus.tunnel",
+      "position": { "x": 1780, "y": 280 },
+      "rotation": 180,
+      "params": { "name": "ADDR", "width": 10 }
+    },
+    "n_rom_0": {
+      "id": "n_rom_0",
+      "type": "mem.rom",
+      "position": { "x": 1870, "y": 270 },
+      "label": "W0",
+      "params": {
+        "addressBits": 10,
+        "width": 24,
+        "contents": "000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffff fffff2 00011e 000141 ffffff ffffe8 ffffe7 0001b5 fffff3 fffffa fffff8 fffffb 000000 ffffff ffffff 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffff69 ffff56 ffffcb ffff4f ffff90 ffff36 fffe4a fffdc2 fffcea fffcad fffc76 fffdb0 fffe91 ffff17 ffff4e ffff5f ffffa4 ffffee fffff8 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffff07 fffdd5 fffd77 ffffef fffe1f fffd7b 000348 0001cd 0002eb 0007be 000136 000143 ffff1e fffc62 fff9f1 fffb3f fff973 fffdef fffeef ffff2b ffffd8 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffd1 fffe05 fffbc8 fffdad ffff94 000250 00007b 0004ce fffd32 0001c0 fffe8d 0006b8 fffd3a 00063d fffec9 00000b fffc78 000011 ffffbb fffd80 fffa78 fffe9c ffffc7 000000 000000 000000 000000 000000 000000 000000 000000 fffff9 ffff7e fffb6e fffdea fffdaf 000522 ffff2d 000653 000266 ffff3a 0001b3 0003dd 0007bc 000244 0005e6 000543 fffe53 000255 0000e2 ffff8d fff9f7 fffce8 fffd38 ffff7e 000000 000000 000000 000000 000000 000000 000000 000000 ffffe7 fffeb7 fffdc1 fffdfe ffff49 ffffd3 fff835 00014d fffce6 000079 0004fc 0002aa 000002 000149 000514 0007e9 000258 0003f2 00068d 000622 ffff54 fff6e8 fff96a fffbfd fffed2 000000 000000 000000 000000 000000 fffffe ffffd2 ffffba fffe26 fffe70 0000b3 000282 fffa3b fffed3 fffed9 00050f fffe6e 00039d 000140 000233 000313 00063d 000215 000313 ffff48 ffffde 00044a 000686 fffeec fff6aa fffc9c fffffe 000000 000000 000000 000000 000000 ffffff fffffa ffff71 fffd53 ffff57 fffbef fffb0f 000150 0006ab fffffe fffd83 0003b1 fffe67 0002e4 000728 000d12 0000f8 000702 0002f8 00043a 00048f 000487 00092d 000434 fff776 fffbe5 ffff88 000000 000000 000000 000000 000000 fffffe fffff8 0000ac fffeb8 fffd0e fffe04 fffec4 fffb17 fffd8f 000642 ffffb0 fffc71 000ad1 000098 fff4dd 0006ae 00049c 000758 000645 0003e3 fffd5c fffe40 000844 0009cb fff868 fffdbc 000000 000000 000000 000000 000000 000000 fffffd 0001c7 ffff62 0001e9 000283 00017b fffe94 fffede 00009a 000071 00040d 000351 000341 000683 fffc25 ffff32 000747 000a36 fffcf1 0008c1 0000a3 0008fa 000c6d 000caf fff81e fffc77 fffffe 000000 000000 000000 000000 ffffff fffffd fffff8 0000dc fffcfe fffc4a 000100 0004e2 00032e fffa5e fffc50 ffffdd fff788 0000f0 fff519 fff208 fff061 fffc8d fffc63 ffff90 00045f 00090a 0004c3 000945 000378 fffb5e fffdd7 fffffa 000000 000000 000000 000000 000000 ffffff fffff9 0000c3 fffd5e 000026 000510 fffddd fffdb4 ffffc8 0000c5 00002d 000134 0004d0 fff7e0 ffef36 ffef5c fffda7 000126 ffffda 0000f9 000000 000944 0006d6 000d5c 000048 ffff2e fffffa 000000 000000 000000 000000 000000 000000 fffff7 00016d fffedb ffffe0 00075e 0003c5 0002b6 0001fd 0007f1 0003ef fffdc5 fff31a ffee84 ffea1f fff445 fffaae fffc2b 000151 ffff03 0000e7 00019f 000a43 000713 0004bf ffffd0 ffffec 000000 000000 000000 000000 000000 000000 fffff3 ffff05 fffe81 00064f 0003bc 00092d 0000f0 000414 ffffc2 00019c 0002a2 fffc3a ffeb0b fff3fc ffeced fffdef fffb0f fffb27 fffc4b 00067b 0005de 0006c4 001053 0001bb ffffc2 000000 000000 000000 000000 000000 000000 000000 fffff8 fffe11 00064d 000b18 fffc77 000b2a 000711 0007bd 00075c 000134 000033 fff457 ffe8fe ffee8e fff268 fffb8b 00007b fffd83 0005a8 fffd60 000257 000ac7 000ac1 0001df ffff6b fffffe 000000 000000 000000 000000 000000 000000 fffff5 fffda5 000190 00068b 00024d 0005e4 000782 0004d9 000453 000618 fff5d8 ffed73 fff240 fff59d fff6a4 000138 0001a2 000162 000535 000909 00019a 000528 ffff91 fffbc6 fffee5 ffffa2 000000 000000 000000 000000 000000 000000 ffff35 fffea3 ffff3b 000716 00072e 000143 ffffaf 00073b 0006a7 000371 fffde2 ffeccc fff31c fffb05 ffff11 000061 0001c0 00037b 00003b 000080 0003a3 00023f 000407 000038 ffff7b 000000 000000 000000 000000 000000 000000 000000 fffff8 fffe1a 0000b3 00001e 00049a 0002d0 000930 00075f 000aa8 00003a fffab4 ffef72 fff3a6 fffae3 0000c6 ffff5d fffc63 000254 fff92c fffdfd 0005a5 000343 ffff4b fffe86 ffffa8 ffffb0 000000 000000 000000 000000 000000 000000 ffff9b ffff10 fffc9b 000399 0005de 000351 00058d 000110 000a81 000400 0007b1 fffd3c fffbf7 fffa5d fffd56 000189 0001d7 fffbe6 000820 0004e4 0003b8 ffff74 000039 ffff71 ffffcf fffff3 000000 000000 000000 000000 000000 00006c ffffb0 fffd57 0001a3 00067e 00062d 0001df 000667 0001ac 000980 000573 0008da 0005f6 ffff85 fffba3 fffe7b fffaa7 000312 fff9cd fffcec 00056a 000341 ffff02 fffc3b fffeb2 fffffc 000000 000000 000000 000000 000000 000000 000000 ffff15 fffee7 fffec7 0004f6 00023b 0002ce fffd72 00026c 000112 0007d7 00043d 000139 000161 0003b9 000219 fff682 fffeae fff706 fffa04 ffff4f fffe3a fffe0a fffbd7 ffff86 fffffe 000000 000000 000000 000000 000000 000000 000000 fffff7 ffff08 fff84d fffd21 00054f ffff1b 0004bf 000689 00067e 0001c6 000356 000c84 00016e ffff16 000614 fffd99 fffabc 0003ec fffe2c ffff81 0002f8 0000cb fffc67 ffff99 000002 000000 000000 000000 000000 000000 000000 000000 fffffe ffffe9 fffa82 fffc5f fffd6c ffff0b ffffb0 000205 000c06 0004ba 00090e 0002ae 000833 000249 00036c 0003ce fffa8c fff7a5 fff75f fffd1a fffe6d fffeeb fffe4d ffff9a 000000 000000 000000 000000 000000 000000 000000 000000 ffffff fffff7 000005 000067 fffe93 fffb63 fffc2b 000192 0005ba fffeab 000645 000423 0002c2 ffffa9 fffdbf ffffea fff806 fff6bf fff8b7 fff9aa fffd64 ffff69 ffffef fffffe 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 fffff8 ffffca fffdba fffc5c fffbfd fff669 fff35c fff680 fff586 fff6ad fff232 fff5fe fff86f fff7a0 fff7f9 fffc23 fffa23 fffc1f fffe3b ffffa9 ffffe0 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffff ffffc1 ffff27 fffebe ffff24 fffd65 fffe31 fffe99 fffed7 fffcc7 fffc74 fffe20 fffe56 fffe58 fffea4 ffffa0 fffe67 ffff91 fffea1 fffff9 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffff ffffff fffffe ffffff fffff6 fffffd ffffea ffffda ffffea ffffd9 ffffd6 ffffea ffffe1 ffffe5 fffffb fffff2 fffffc fffea9 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 7fe230"
+      }
+    },
+    "n_add_0": {
+      "id": "n_add_0",
+      "type": "comb.adder",
+      "position": { "x": 1980, "y": 280 },
+      "params": { "width": 24 }
+    },
+    "n_acc_0": {
+      "id": "n_acc_0",
+      "type": "seq.register",
+      "position": { "x": 2090, "y": 280 },
+      "label": "Acc 0",
+      "labelPosition": "top",
+      "params": { "width": 24, "edge": "rising", "asyncReset": true }
+    },
+    "t_rst_acc_0": {
+      "id": "t_rst_acc_0",
+      "type": "bus.tunnel",
+      "position": { "x": 1960, "y": 240 },
+      "rotation": 180,
+      "params": { "name": "RST", "width": 1 }
+    },
+    "n_idx_0": {
+      "id": "n_idx_0",
+      "type": "io.constant",
+      "position": { "x": 2220, "y": 260 },
+      "params": { "width": 4, "value": 15 }
+    },
+    "n_word_0": {
+      "id": "n_word_0",
+      "type": "bus.merge",
+      "position": { "x": 2290, "y": 280 },
+      "params": { "groups": "4,24" }
+    },
+    "t_sc_0": {
+      "id": "t_sc_0",
+      "type": "bus.tunnel",
+      "position": { "x": 2320, "y": 360 },
+      "params": { "name": "SC0", "width": 24 }
+    },
+    "t_clk_acc_0": {
+      "id": "t_clk_acc_0",
+      "type": "bus.tunnel",
+      "position": { "x": 1780, "y": 370 },
+      "rotation": 180,
+      "params": { "name": "CLK", "width": 1 }
+    },
+    "t_addr_1": {
+      "id": "t_addr_1",
+      "type": "bus.tunnel",
+      "position": { "x": 1780, "y": 490 },
+      "rotation": 180,
+      "params": { "name": "ADDR", "width": 10 }
+    },
+    "n_rom_1": {
+      "id": "n_rom_1",
+      "type": "mem.rom",
+      "position": { "x": 1870, "y": 480 },
+      "label": "W1",
+      "params": {
+        "addressBits": 10,
+        "width": 24,
+        "contents": "000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffeb ffffff fffffe fffffb fffffc ffffff 00002d 00004e ffffad ffffff 000000 000000 000000 000000 ffffff ffffff 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 fffffe ffffea ffffc2 fffe3b ffff7c fffde3 ffffaa 000423 0000d7 000541 0000f9 000175 fffe1d 0000de ffff57 ffffe9 ffffe4 fffffc ffffff 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 fffffd fffffc ffff52 fffef2 fffd01 fffc46 fff8e5 fffb11 0001ae fffb02 fffed3 0002da fffa98 fffa3e fffd64 fffcd4 fffdcb fffcd4 fffd9b fffda4 fffffd 000000 000000 000000 000000 000000 000000 000000 000000 000015 000000 ffffb9 000035 000132 fffea4 000051 fffc08 fffae9 fffee8 fffb59 0009ee 0000e7 000025 000152 ffff91 ffff88 0001ec 000301 fffd84 fffc4a fffdc5 fff97c fffde6 ffffe0 000000 000000 000000 000000 000000 000000 000000 000000 fffffe 000004 00036c 0002f2 0001ac fffa98 fff8f5 fffcc2 fff3dd fffc0f fffe7f fffdda 000144 fffda1 fff933 fffeae ffff9d ffff21 0005c0 0002f5 ffff45 fffdd9 fffc74 ffff6a 000000 000000 000000 000000 000000 000000 000000 ffffaa 000011 fffeae 0000b6 fffd79 fffb91 fff7aa fff8a4 fffcb3 ffff96 fff9b5 fffca0 fffbf4 fff7e3 fffe27 fff63f 000039 fffd39 fffff0 0002d1 000166 000141 fffc66 fffbcc fffefa ffffde 000000 000000 000000 000000 000000 ffffff ffff6f ffff89 0000ba fffb52 fff982 fffbe6 fff50f fff515 000136 fffacf fffc3b fffbaa fffcd1 fff686 fffa56 fff959 fffad5 ffffb7 000355 000073 fffb78 fffedb fff2a7 fff9e3 ffffbf 000000 000000 000000 000000 000000 000000 000000 ffff6d ffffdb fffe95 fffa55 fff84f fffd2e fff8fe fff7a6 fff89c fff958 ffffdf ffff82 00029f 000198 fff9e4 00007f fffd00 ffff9b fff962 fffbad fffa3b fff60a fff1fd fffb09 ffffb7 ffffff 000000 000000 000000 000000 ffffff ffffff fffffc ffffdb fffdd1 fff817 fff88a fffc56 fffb93 fff8a4 fffe32 0000ae ffff38 ffffc6 0002cd 000b53 0002e2 000084 fffbf0 fff69d fff645 fff94e fff6b1 fff449 fff917 fffbb5 ffff4e ffffec 000000 000000 000000 000000 ffffff 000015 fffffd fffeef fffd7a fffa5b fff65d fff7f4 0001c9 fff68d fffbde 0001d0 ffffdd 0005e8 000dbd 000f31 00077c 00049c ffff46 fffa97 fff6e0 fff8f4 fff52f fff76c fff90e fffd85 ffff1c 000000 000000 000000 000000 000000 000000 fffffe fffffd fffefe fffee8 fffa8c fff728 fff965 fffbb9 fff7ae fffd92 fffb6e fffad0 000a16 000e03 000d13 000655 fffd43 000183 fffa8c fff8eb fffbee fff9b0 fffc4c fffb4c fffdae fffea1 000000 000000 000000 000000 000000 000000 ffffff fffffe 000009 00009e fffdb8 000111 fffd49 fffbca fffea7 fff98b fff632 fffc4e 00044e 0015a1 000c35 000593 fffcf2 000394 fff800 fff9b6 fffda2 fffbfa fffe46 fffe89 fffec7 ffff15 000000 000000 000000 000000 000000 000000 000000 fffffe fffffc 000279 fffe88 ffffe3 ffffcd fffff1 fffa61 ffef85 ffef9c 0002d9 000444 000ccd 00086e 000053 00050e fffaf6 fff962 fff99e fffd84 fffc1e fffc68 fffc99 fffde6 fffee8 fffffe 000000 000000 000000 000000 000000 000000 000000 0000eb ffffdb fffe8a fffe4d fffd21 00002b fffb93 fff038 fff67a 000252 000513 000bc6 000b36 0005b7 fffd11 fff6c5 fff556 fff969 fffadd fffdd0 fffe28 ffff8c ffff0b ffffc3 000000 000000 000000 000000 000000 000000 000000 000000 fffff0 ffffdc fffded fffa7d fffd5a 0001b6 fffa59 fff371 fffca8 00017a 00095f 001118 0003e5 00016f fff384 fff610 fff1a3 fff78e fffb6f fffc9a fffcdb fffe73 ffff5e ffffcf ffffee 000000 000000 000000 000000 000000 000000 fffffe ffffed ffffba fffde1 fffa0d fffb3a fffa35 fffe6e fffa35 fffde5 fffe34 000976 000c03 fffd90 fffea0 ffecb9 fff329 fff471 fff78f fffb7d fff8d9 fffa1a fffed6 fffe85 ffffd7 fffffc 000000 000000 000000 000000 000000 000000 fffffe ffffd7 ffff16 fff8e3 fff3d5 fff7ea fffaa0 fffe67 fffe90 ffff91 00023f 0008db 000b59 ffff3e fff686 fff13b fff534 fffa30 fff8b5 fffc47 fffd51 fffec0 fffcf2 fffb99 000081 000000 000000 000000 000000 000000 000000 000000 fffffe ffffdd fffe00 fff971 fff0cf fff2ac 00012d fffd55 fffa29 fffd42 000170 000612 0007ea fffaee fff531 fffa9e 0004de fffdbf 000041 0001ae fffc0c ffff95 fffe73 000030 0000e9 000003 000000 000000 000000 000000 000000 000000 fffff2 ffff83 fffd0f fff29c fffc2c fffc92 fffba5 00042f fffe47 ffff88 fffd81 0002f5 ffff25 0001eb 0007a3 ffff15 00029c 0003f1 000189 fffd88 fffcc7 fffb61 00021e 000123 000099 000000 000000 000000 000000 000000 000000 ffffff ffffee ffff28 ffff7e fff3df 000153 0001e0 000478 0003cb 00054e 0003b3 00040d fffedf 000217 ffff1b 00023d 000903 0006e7 000782 00037a 000153 fffe16 000304 000214 000131 0000de 000000 000000 000000 000000 000000 000000 ffffff ffff79 00019d 0005a0 000853 0004cf 000567 00048c 000156 000334 ffff81 fffc18 000221 0000c2 0003e1 000003 ffff56 00075e 000573 000598 000454 fffb78 fffd29 0003cd 0001c7 fffffd 000000 000000 000000 000000 000000 000000 000000 ffff77 ffffa9 000453 00157d 000f02 0002df ffff93 000029 ffff2b fffafb fff3ec fff482 000290 fffec2 00003a 000a90 00051f 00040a 0008db 0001ae fffc6c fffe45 000166 0001b7 00000c 000000 000000 000000 000000 000000 000000 000000 000000 fffe2e ffff74 00057c 0006c9 000386 000224 000282 fffb55 00007d 0001c5 fffef5 fffaa0 0003ce 000249 000474 fffe6c 000262 ffff26 fffa3c fffd57 fffd2a ffffa7 000003 0000b7 000000 000000 000000 000000 000000 000000 000000 000000 fffe0f fffe95 fffcac fffebc fff9e3 fffa23 fffdfe fff9fe fff822 fffa93 fff7dc fff9db fffcd7 fff174 fffd84 ffffac 0002fc fffe0f fffdb6 fffd90 ffff82 ffffb3 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 fffff7 fffe64 fffc9b fffc66 fff9d4 fffb39 fff805 fff09c fff3ac fff6e8 fff390 fff863 fff1fe fff484 fff989 fffc0d fffde7 ffff0d ffffd3 ffffde ffffe1 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffdb ffffe5 ffffc4 ffff1b ffff6d ffff7e fffd74 fffdbc fffc84 fffb04 fffd62 fffe98 fffc92 ffff32 fffd75 ffff67 ffffc0 ffffdf 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 fffffe ffffc9 fffff7 fffff2 fffffa fffff5 fffffd fffff7 ffffee fffe91 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 801c25"
+      }
+    },
+    "n_add_1": {
+      "id": "n_add_1",
+      "type": "comb.adder",
+      "position": { "x": 1980, "y": 490 },
+      "params": { "width": 24 }
+    },
+    "n_acc_1": {
+      "id": "n_acc_1",
+      "type": "seq.register",
+      "position": { "x": 2090, "y": 490 },
+      "label": "Acc 1",
+      "labelPosition": "top",
+      "params": { "width": 24, "edge": "rising", "asyncReset": true }
+    },
+    "t_rst_acc_1": {
+      "id": "t_rst_acc_1",
+      "type": "bus.tunnel",
+      "position": { "x": 1960, "y": 450 },
+      "rotation": 180,
+      "params": { "name": "RST", "width": 1 }
+    },
+    "n_idx_1": {
+      "id": "n_idx_1",
+      "type": "io.constant",
+      "position": { "x": 2220, "y": 470 },
+      "params": { "width": 4, "value": 14 }
+    },
+    "n_word_1": {
+      "id": "n_word_1",
+      "type": "bus.merge",
+      "position": { "x": 2290, "y": 490 },
+      "params": { "groups": "4,24" }
+    },
+    "t_sc_1": {
+      "id": "t_sc_1",
+      "type": "bus.tunnel",
+      "position": { "x": 2320, "y": 570 },
+      "params": { "name": "SC1", "width": 24 }
+    },
+    "t_clk_acc_1": {
+      "id": "t_clk_acc_1",
+      "type": "bus.tunnel",
+      "position": { "x": 1780, "y": 580 },
+      "rotation": 180,
+      "params": { "name": "CLK", "width": 1 }
+    },
+    "t_addr_2": {
+      "id": "t_addr_2",
+      "type": "bus.tunnel",
+      "position": { "x": 1780, "y": 700 },
+      "rotation": 180,
+      "params": { "name": "ADDR", "width": 10 }
+    },
+    "n_rom_2": {
+      "id": "n_rom_2",
+      "type": "mem.rom",
+      "position": { "x": 1870, "y": 690 },
+      "label": "W2",
+      "params": {
+        "addressBits": 10,
+        "width": 24,
+        "contents": "000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffef 000004 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 fffffe fffffd 000018 ffff46 ffff52 ffff48 ffff29 ffff1a 00009c 0001b8 0004ea ffffa5 ffff64 ffffad ffffce fffff7 fffff9 fffffc 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffeb 000000 000003 ffffc9 ffff3c 0002be ffff5e 00036e 000261 0003a3 00038a 0002d2 00088c 000187 fffe45 fffbd3 ffff29 fffffc ffff47 ffffbc 0000ae 0000c9 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffd7 00003e 00015d 000092 00098e 000922 000bbd 00093c 000c7d 000825 00040b 000534 0004af 000133 fffca0 fffc7e fffc01 fffd5b fffd6d ffff71 0000ba 000000 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 fffe57 ffffba 000545 000409 00052a 000b0a 000dd6 000452 000b38 0004ab 00099c 0005a5 000301 0003aa 000340 fffd11 fffeb9 fff5ca fff5c9 fff683 fffb6b 000047 fffffd 000000 000000 000000 000000 000000 000000 000000 000000 ffffb4 0001b5 ffffb2 0000ff 000379 00048d 00012c 00047d 000621 000669 000357 0003e8 0000bd 000678 00045b 0005bb fffe5e 0002fc ffffe9 0002fa fffb37 fffafc fffed0 ffff5e 000000 000000 000000 000000 000000 000000 000000 ffff13 fffff7 0000f5 0004c3 0005eb 0004ef fffe82 0009c5 0001d4 fffecd 0000d7 000502 0005db ffff58 00060f fffe88 000303 fffde6 fffc8a fffd48 fff9fd fff5e8 fffa0f fffdf3 ffff9e ffffdd 000000 000000 000000 000000 000000 ffffee 0001d2 0000bf 0006da 000452 0008d6 fffba2 000650 00001c 0001ad 000274 ffff0f 0002a2 00004f fffcd4 000319 fffa2c fffe8d fffd50 fffee1 00003e 0005cd fff26f fffb39 fffe01 ffffac ffffff 000000 000000 000000 000000 000000 fffff0 000030 000162 000976 0000ac 0002d7 000357 0001ca ffffee 000796 0001c6 ffff2d 0000e9 0003ad 00032f fffe29 0000a1 fffa50 000547 000358 fff960 0001ce 000062 fff410 fffb96 ffff58 ffffe9 000000 000000 000000 000000 000000 fffff4 fffe20 0001ec 0005f9 0008a5 fffdcc fffd64 ffff5e 00006f ffff64 fffec9 0001b2 ffffb7 0004a6 000206 000312 0001b6 00058c 00004b ffff99 fffbfd fffeab ffff5d fff71b fffbd1 ffff1e fffffd 000000 000000 000000 000000 000000 fffff1 ffff54 0001f9 fffde5 000812 000a98 fffaed fffb25 fffefa 0000cc fffc32 fffea2 fff803 fffd63 000052 00019c 0003e1 fffe63 ffffe4 fffe21 000045 ffff4c fff957 fffbe8 ffff62 000153 fffffc 000000 000000 000000 000000 000000 fffffe fffff7 ffff14 fffda3 ffff6c fffc77 fffdbf fff847 fff4ec ffecbc fff425 ffeef7 fff0b9 fff533 fff7fd fff93d fff924 ffffd0 0003bf ffff47 fffd14 00041d fffd9c fffc86 0001b6 ffff90 ffffef 000000 000000 000000 000000 000000 ffffff fffffd fffcfb fff838 fff757 ffef58 ffeabf fff211 fff2f9 fff888 fff1cf fff565 fff531 fff668 fff706 fffa51 fff90d fffb25 000309 0003a8 fffe5b ffff77 fff82d 000412 0009ee 0007d8 ffffef 000000 000000 000000 000000 000000 ffffff fffffe fffc51 fff161 ffe766 ffe83b ffe444 fff96f fff716 fff92d 000013 fffeee 00008f 000019 fffa44 fffb8f fffc4b fffb64 fffdc4 fffa9d fffceb 000184 0002da 000c5e 0010d2 000b0e 00038d 000000 000000 000000 000000 000000 000000 ffffff fffcda fff2f4 fff477 fff96f 000495 ffff4a ffff34 fffcd9 000009 0000a7 000331 000173 fffff0 fffd0f fffa31 ffff0d 00003c 000476 fffda1 fffb21 000524 0005a4 000b29 000944 000000 000000 000000 000000 000000 000000 ffff43 fffefc 000115 0002ef 000353 000840 fffe87 000115 ffff4d 000355 000182 fffe57 0003b6 000108 ffff82 0000b1 fffdeb fffaec 000183 fff69e fffd73 fffc3b fff650 000e69 000e40 000a23 000159 000000 000000 000000 000000 000000 000000 fffec8 000ade 000a8d 0008be 0006a8 0005f9 fffb96 000528 000586 000333 000873 000760 0006bd 000115 ffff94 00089c 000096 ffffb8 ffffb1 0009fc 00087f 0000a0 000cd4 001908 000f17 0003b9 000000 000000 000000 000000 000000 000000 00024f 000a34 00088f 00071f 0006d3 00035a 0002d0 000217 000789 0004e8 000689 0007be fffc76 0003b5 fffe43 fffe9d 0000ec 000173 0001e4 fffd6c 0004f9 000250 000771 001c56 000b2e 000000 000000 000000 000000 000000 000000 000000 00008a ffffc4 000763 000d5b 0006f7 000887 ffffea 0001e8 000714 00049d 0008c3 00074e 000291 ffff54 000595 00065f 0000c1 0003e6 00028c 000084 0004ad 000bb7 0018c6 00124a 0002b3 000243 000000 000000 000000 000000 000000 000000 ffffbf fffd60 000a4e 0000f1 00026a 000822 00061b 000554 00043d 00044c 00008a 000a4e 00037a 000486 0000f6 00065c 0000bb ffffda 000379 00040c 000d6f 0003ff 0002df 000ee1 000579 000099 000000 000000 000000 000000 000000 ffffe6 000096 ffff89 00068d 000a37 000441 000a86 000615 000601 000665 000547 0004cb 0000ce ffffa8 00026a 00014f fffe91 000426 0002b7 000679 000779 00061e 0003a5 000e35 000553 0001b8 000000 000000 000000 000000 000000 000000 000001 0002f3 0005b9 00053f 000269 0004a2 00031d ffff19 00038b 000314 00058f 0001a7 000022 000261 fffdc6 000087 0006d5 000508 0009bb 0003c5 000776 0006f4 00111a 00078d 000534 000044 000000 000000 000000 000000 000000 000000 000000 000118 00048b 0004c5 ffffdd 0009e7 000477 000623 000676 ffffe4 0002d4 00000d fffeec fffc53 000154 fffdb0 ffff82 00071c 0003b1 000806 0001cd 000703 000131 00048b 000225 000004 000000 000000 000000 000000 000000 000000 000000 fffff1 fffe57 000055 000004 00000e 000008 000607 0003a5 0000f4 00031d 000215 00018f fffba2 fffde1 0000be fffc91 000479 00058f 000936 0006f9 000c15 000843 0004ba 0001cc ffffe4 000000 000000 000000 000000 000000 000000 000000 fffffa fffcb9 fffd4d fff986 fff9e9 fff916 fff932 ffffe7 fffa29 fff915 00025c 00020e 000283 fffe46 ffff62 000572 0006d7 ffff20 0001f0 0007d6 000138 fffdee 0003fb 0003d7 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffbc fffe8c fffc95 fffd80 fffbd4 fff6b0 fff4c1 fff809 fff716 fff94b fffc1f fffe07 00010b fffef3 fffead fff9e3 fff898 fffa8b fffbb1 fffc26 fffe8a ffffcc 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 fffffc ffffeb ffffbe ffff5a ffff46 ffff31 ffff76 fffe8a ffff13 fffd54 fffebd fffe98 fffd56 fffcdd fffdcf fffecf fffee5 fffee7 ffffe7 fffffe 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 fffffe fffff9 fffffc fffffb fffffb fffff8 fffff5 fffff6 fffff3 fffff3 000000 ffffe1 fffff2 ffffa6 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 80016c"
+      }
+    },
+    "n_add_2": {
+      "id": "n_add_2",
+      "type": "comb.adder",
+      "position": { "x": 1980, "y": 700 },
+      "params": { "width": 24 }
+    },
+    "n_acc_2": {
+      "id": "n_acc_2",
+      "type": "seq.register",
+      "position": { "x": 2090, "y": 700 },
+      "label": "Acc 2",
+      "labelPosition": "top",
+      "params": { "width": 24, "edge": "rising", "asyncReset": true }
+    },
+    "t_rst_acc_2": {
+      "id": "t_rst_acc_2",
+      "type": "bus.tunnel",
+      "position": { "x": 1960, "y": 660 },
+      "rotation": 180,
+      "params": { "name": "RST", "width": 1 }
+    },
+    "n_idx_2": {
+      "id": "n_idx_2",
+      "type": "io.constant",
+      "position": { "x": 2220, "y": 680 },
+      "params": { "width": 4, "value": 13 }
+    },
+    "n_word_2": {
+      "id": "n_word_2",
+      "type": "bus.merge",
+      "position": { "x": 2290, "y": 700 },
+      "params": { "groups": "4,24" }
+    },
+    "t_sc_2": {
+      "id": "t_sc_2",
+      "type": "bus.tunnel",
+      "position": { "x": 2320, "y": 780 },
+      "params": { "name": "SC2", "width": 24 }
+    },
+    "t_clk_acc_2": {
+      "id": "t_clk_acc_2",
+      "type": "bus.tunnel",
+      "position": { "x": 1780, "y": 790 },
+      "rotation": 180,
+      "params": { "name": "CLK", "width": 1 }
+    },
+    "t_addr_3": {
+      "id": "t_addr_3",
+      "type": "bus.tunnel",
+      "position": { "x": 1780, "y": 910 },
+      "rotation": 180,
+      "params": { "name": "ADDR", "width": 10 }
+    },
+    "n_rom_3": {
+      "id": "n_rom_3",
+      "type": "mem.rom",
+      "position": { "x": 1870, "y": 900 },
+      "label": "W3",
+      "params": {
+        "addressBits": 10,
+        "width": 24,
+        "contents": "000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 fffffe fffffc fffff2 fffff6 fffff1 fffff0 fffff3 fffffe 000000 ffffff fffffe 000000 ffffff ffffff 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 fffff8 ffffed ffffc3 ffffa7 fffecc 0000a0 000087 000104 fffff5 fffca9 ffffbe fffece fffe4a ffff6c ffffc7 ffffb7 ffffb9 fffffc fffffe 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000306 000182 0002ee 00061d ffff56 00065d 000b7c 000e92 0005a4 000c31 0007d5 0005cc 000770 000914 0007ca 0007fe fffc6e fffbe6 fffe6d ffffbe ffffff 000000 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 0000f4 000745 00071c 00058e 0007c8 0006ef 000c27 00099b 0009db 000649 00088e 000647 000915 000110 000873 000278 0000be fff852 fffe15 fffb04 ffff12 fffff1 000000 000000 000000 000000 000000 000000 000000 000000 000000 000255 00053e 000aa8 0008c8 00090c 00007b 0005fb 000306 0003f7 0005f2 00047c 000016 000634 000467 0001a4 ffffb0 0002e3 00008d fff9de fffd74 fffc4b fffcb3 ffff49 fffff7 000000 000000 000000 000000 000000 000000 000000 00012a 000512 000793 0001f6 000966 0000dd 000499 00059b 0005c1 00032c 00018d 00074e 000306 000409 000596 fffe00 000531 000006 00001e fffe9e fffdc7 ffffa7 fffd83 fffec5 ffffe6 000000 000000 000000 000000 000000 000000 000124 ffff3d 0003b6 0007c0 0007be 000611 000272 00067b 0001a3 000105 fffce5 000579 000073 0007ba 000335 ffff31 0004a4 fffdcc 00047a fffc65 fffe03 fffac1 fffaca fffc2f fffe42 ffffea 000000 000000 000000 000000 000000 000000 ffffab 00003c 0002f5 000ada 0003e7 00048c 00015a fffd29 fffeaf 0001e1 000177 fffe83 000477 000489 0001e6 000579 000573 00044f 0001ee 0005ab 000286 00029a fff400 fff65a fffdbb ffffd0 ffffff 000000 000000 000000 000000 ffffff ffffd0 0000e7 0004bd 000da8 00067d fffe4a 00028c 00011a 0004ac fffc76 fffaa5 fffb40 fffd08 0006d6 000a7a ffff20 0001f8 000425 000761 000697 0000de 000dea fffa21 fff44f fffdd0 ffff9a 000000 000000 000000 000000 000000 fffffe ffffa9 ffff5e 0008ec 000320 000100 0002fc 00040f fff743 fff3f2 fff3ed fff4c2 fff4df 0000e5 000337 00041a 00098f 00054b 0003c2 0002c0 0004f5 0003d7 000499 000041 fff939 000054 ffffe9 000000 000000 000000 000000 000000 fffffe ffffb8 fffff0 0008ea 000502 fffdbe fff655 fff266 fff625 fff500 fff7c6 fffd23 fffcdc 00027b 000744 00045f fffdce 00054c 00023d 000558 0004ca fffc65 0001d8 fffac3 fffad1 0000f4 fffff2 000000 000000 000000 000000 000000 ffffff ffffef ffff9c 000252 fffc67 fffb56 fff4b5 fff9e8 fff525 fffc39 000245 fffbd4 000314 0001b2 000618 000590 000296 0001f5 00018b 00026b fffee0 fff6cc fff359 fff938 fffcf2 00014f ffffff 000000 000000 000000 000000 000000 000000 fffff4 ffffe4 ffffde fffe0f fffa3f fff917 fff8ef fff9e6 fffd1a fffa9d ffff8b 000110 0007d9 00066f fffff3 000288 000301 0001c5 00002e fff398 fff5e3 fff1a8 fff7ea fffd50 ffffca fffffb ffffff 000000 000000 000000 000000 000000 fffffe ffffea 0001a8 fffb08 fff5a9 fff9b4 fff3a1 ffffb4 fffca5 ffff2d fffae9 0003f0 ffffcd 000327 0001d4 fffbfe 00013a 000266 fffca9 fffd06 0002dd fff5d6 fffe55 fffd9b ffff10 ffffc5 000000 000000 000000 000000 000000 000000 0000d4 00012b ffffa4 0001bd ffff3e fffc5a fffc0e fff6ca fffb52 fffce2 fffd09 0002d6 00003e 0003a6 00026e ffffe8 0000d3 fffc5a 0001bc 0004f4 000357 000656 0009c5 000275 fffec3 ffffa2 fffffb 000000 000000 000000 000000 000000 000000 00031c 0001c6 0005dc 000364 fff8d2 fff93c fff2c6 ffff63 fffc85 fffe44 fffecb 0005bb ffff5c fffb9f fffc87 00007e 000445 0007f1 0004bd 00016f 0005ec 000c2e 0009ce fffcaf ffffa7 fffffb 000000 000000 000000 000000 000000 000000 0001dc 0009b0 001003 000284 ffff45 0001bb fffc7f fff1a8 fff4a5 fff5f5 fffb3c fff7aa fff8b3 fffafb ffff61 0004cd 0002ac 000610 000005 0005e5 000386 000b1f fff8bc fffb15 ffffdf 000000 000000 000000 000000 000000 000000 000000 000160 000db1 000834 000551 000862 fffd46 fffb28 fff5a2 fff70a fff812 fff691 fff926 fff740 000191 00066e 0005e3 0000b8 0006ba 000182 00060f 000af1 0002ad fffbd0 fffda7 ffffd4 fffffe 000000 000000 000000 000000 000000 000000 fffec6 000e3f 0005c1 000caa 000169 fffeb7 00034b fffee9 fffb02 fff6a6 fffb60 fffce2 000095 000218 0002bf 00087a 0006b0 0002ae ffffb0 0008f6 0003f6 00037d fffe5b fffe44 ffffcc ffffff 000000 000000 000000 000000 000000 fffffc ffff09 000b0c 000b20 000964 0008dc 0004ed 000421 00052b 000070 fffc09 fff9bc fffd9f 000131 0001a2 000157 000513 000237 0004b5 0007cb 00013b fffdd5 000122 ffff50 ffff46 ffffa4 000000 000000 000000 000000 000000 000000 000004 00014e 000783 0007af 0003f2 000543 000860 000330 fffb83 ffff5c ffffcf fff9a7 0001d0 fffdc8 ffff47 0002f2 000086 000432 00060a fffe94 0000f4 00002b fffad9 fffc3f ffff24 ffffcc 000000 000000 000000 000000 000000 000000 000000 0002ee 000706 0005ee 0000b5 000303 000475 fffeaa 000475 fffd3d 0004b2 fffeed fffe5b fffd32 0003f9 000267 000328 0002af 0004bf 000041 fffef2 000222 fffd19 fffcd2 ffff2c 000000 000000 000000 000000 000000 000000 000000 000000 00012b 0007ba 000ab3 000521 0007be 0007a2 000451 0003fe 000499 000401 00001a 0001ae 00004c fffeb4 fffcdc ffff14 0003d9 00027c 0002ee fffc82 fffbf6 fffc52 fffe5a ffff3e ffffff 000000 000000 000000 000000 000000 000000 000000 0000d3 0006fb 000a9f 0005cf 0008d8 000eb7 000358 000294 00045d 000b47 000290 000888 0007a0 000116 0007f6 00030c fffecd fffee6 fffdbf 000346 000025 ffff4a ffff84 ffff99 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffff57 0000cd 00056e 000afd 000979 00137b 0011a3 001063 000b27 0011ee 000bfc 0009eb 000566 000642 00048e 000270 00061d 000094 fffefa 000166 ffffdc 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffc1 ffffe2 000234 00020c 000115 0000f7 0001ce 000121 000179 000331 0000e2 000122 00040c 0003e5 0002f6 000221 0000df 00002a fffff2 fffffc 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffff ffffff ffffff fffff3 ffffba ffffe7 ffffe1 ffffe4 ffffd0 ffffb6 ffffac ffffd6 ffffdb fffff7 ffffed fffffd ffffff 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 7ff0af"
+      }
+    },
+    "n_add_3": {
+      "id": "n_add_3",
+      "type": "comb.adder",
+      "position": { "x": 1980, "y": 910 },
+      "params": { "width": 24 }
+    },
+    "n_acc_3": {
+      "id": "n_acc_3",
+      "type": "seq.register",
+      "position": { "x": 2090, "y": 910 },
+      "label": "Acc 3",
+      "labelPosition": "top",
+      "params": { "width": 24, "edge": "rising", "asyncReset": true }
+    },
+    "t_rst_acc_3": {
+      "id": "t_rst_acc_3",
+      "type": "bus.tunnel",
+      "position": { "x": 1960, "y": 870 },
+      "rotation": 180,
+      "params": { "name": "RST", "width": 1 }
+    },
+    "n_idx_3": {
+      "id": "n_idx_3",
+      "type": "io.constant",
+      "position": { "x": 2220, "y": 890 },
+      "params": { "width": 4, "value": 12 }
+    },
+    "n_word_3": {
+      "id": "n_word_3",
+      "type": "bus.merge",
+      "position": { "x": 2290, "y": 910 },
+      "params": { "groups": "4,24" }
+    },
+    "t_sc_3": {
+      "id": "t_sc_3",
+      "type": "bus.tunnel",
+      "position": { "x": 2320, "y": 990 },
+      "params": { "name": "SC3", "width": 24 }
+    },
+    "t_clk_acc_3": {
+      "id": "t_clk_acc_3",
+      "type": "bus.tunnel",
+      "position": { "x": 1780, "y": 1000 },
+      "rotation": 180,
+      "params": { "name": "CLK", "width": 1 }
+    },
+    "t_addr_4": {
+      "id": "t_addr_4",
+      "type": "bus.tunnel",
+      "position": { "x": 1780, "y": 1120 },
+      "rotation": 180,
+      "params": { "name": "ADDR", "width": 10 }
+    },
+    "n_rom_4": {
+      "id": "n_rom_4",
+      "type": "mem.rom",
+      "position": { "x": 1870, "y": 1110 },
+      "label": "W4",
+      "params": {
+        "addressBits": 10,
+        "width": 24,
+        "contents": "000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffc1 fffffd 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffff6d fffce1 fffdb6 ffff4b fffee3 fffe0d fffbff fffd8b fffeff fffcd0 fffaf3 ffff42 ffff6f fffed3 ffff11 fffe91 fffe59 ffffa1 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 fffffb 000000 fffe93 fffbcb fffc0a fffbcf fff7df fffb31 fff723 fff9cc fffb09 fffbeb fff8f6 fffaf2 fffcad fffea8 fffee3 fffe36 fffe22 ffff6c ffffce ffffff 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffff70 fffd3b fffb16 fff866 fff4f3 fff63a fff3c8 fff0aa ffed2a fff796 fff60f fff68f fff8a3 fff781 0000da fffcee ffffe6 ffff71 000033 fffefc fffffc 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 0000f3 0000a6 fffdb8 ffff62 fffb24 fff9fb fff65e fff909 fff83b fffbd4 fff6ef fff830 ffffe6 fffa72 fff8d2 0001e4 000861 0009a6 000cad 0005aa 000684 fffff3 ffffe8 000000 000000 000000 000000 000000 000000 000000 000000 fffffb 00002b 0001f0 fffe60 0000b1 fffeb8 00025b fffb8d fffde3 fffd65 fff915 00007a fffd32 000114 000278 000153 0006f7 00003a fffe70 0003ec 000b90 000256 fffead ffff4f 000000 000000 000000 000000 000000 000000 000000 fffff7 ffff08 0000e7 00060d 0003b6 ffffe6 00010b 00031c fffcd1 fffa86 fffcbe fff467 fff896 fff70e fff4a9 fffd17 fff4fb fffc8b fffbff fffd77 00025e 000bd2 000215 fffde8 0000eb fffff6 000000 000000 000000 000000 000000 000000 fffff4 fffedd 0001ce 000704 000313 000294 ffff14 fffcfb fffc62 fffabb fff4e7 fffb91 fff61f fff88e fff8fc fffccf fffac9 fffe95 ffff5d 000184 0004e3 0006ae 000377 0004bb 000258 ffffff 000000 000000 000000 000000 000000 ffffb3 000146 ffffb9 0001ca 000755 0003c3 00000b ffff1c 000356 fff9d2 fffffb fff8d3 fff936 fff2fa fff9c9 fff584 fffc48 000080 fffbee fffca3 fffe68 fffb91 00000c 000393 00068a fffd70 ffff73 000000 000000 000000 000000 fffffa ffffab 0000e3 fffc88 fffc8b 000328 fffe47 000060 fffdbd fffc85 fffde6 fffe11 ffff37 ffff5f fff073 fff94a ffffbb fffe27 000123 ffffc6 000213 0003f4 fffdde 0004d2 fffb1d fffb3d fffe2e 000000 000000 000000 000000 000000 fffffa ffffb2 ffff48 fffbe1 fff964 fffbf5 fff767 ffff04 0001ae 000110 000112 000099 000108 fff9d6 ffedef fffe37 fffac2 00027e fffc89 0004a3 fffbdf fffe91 fffdf7 ffed4d fff4c1 fffd01 fffc89 fffff8 000000 000000 000000 000000 000000 fffeef fffc8d fffd2d fff74b 00024e 000652 00017e 0001b6 0008b5 00087b 00034a 000def fff2e2 ffef90 0004f0 000909 0003c3 ffff81 ffff32 ffff63 fffd01 fffce6 fff50f fff7ed fffbb6 ffffa8 000000 000000 000000 000000 000000 000000 ffff17 fffc31 fff971 fff7da fffdc2 0003a9 00085e 0009d3 000603 0009a0 000d45 000f90 00012b fff6fb 000137 000a9d 000488 ffff76 000333 fffd00 0007b7 0003ef fffe6f fffbc9 fffede fffcb9 000000 000000 000000 000000 000000 000000 ffff69 fffc49 fff7da ffff77 0004ed 000650 000bef 0006b5 00081a 000d78 000cec 0007c5 fffdee 0000af 000670 000534 0007ce 0007d5 000173 000ba9 0007a4 0003d7 fffbe8 fff8bf 000009 000146 fffef1 000000 000000 000000 000000 000000 ffff59 ffff53 fffc7f 000b40 000bb1 000860 000734 000567 000857 0004f5 00095c 00079e fff956 00048c 00006a 000b67 0009e5 000667 00083f 000278 000007 0003cc fffac8 fffd7f fffd8b fffd10 000000 000000 000000 000000 000000 000000 000000 fffffe 00017a 0005d7 0000d1 000621 0003fa 00066a 0004e9 000681 0006e8 0005ad fffa5d 0001f5 000887 000c54 000b02 0004b8 0006f6 fffe66 fffeeb 000815 fffda9 ffee43 fff8e7 000020 ffff6b 000000 000000 000000 000000 000000 000000 ffffe9 fff9bd fff75b 000215 000549 000879 000a12 00019d 000436 fffdc6 00017e ffff91 000640 000ab9 000981 0005b4 0005d7 000187 00026a ffff19 fffce6 fffd9c fffc96 fffadb fffc34 fffff6 000000 000000 000000 000000 000000 000000 0000b2 fff8df fff8f7 fff93d fffb45 00010e 0007a0 000444 ffffb6 fffb7e 0001c5 00069e 000adb 00076f 000920 0005ac 0003cb fffee7 000149 0002bb fffdc0 fffb88 fff7de fff963 fffc31 000000 000000 000000 000000 000000 000000 000000 ffff3d fffc34 fffe91 ffff75 0002b8 000393 00002b 000075 fff9a1 fffe8e 00042b 000416 000925 00052a 0004bb fffdd6 fff8d1 fffbf6 000564 00025a fff73d fff89a fff65f fff8ea ffff4f ffffff 000000 000000 000000 000000 000000 000000 00007c 000272 fffc8c 00028a fffd69 fffb9b fff6ca fff526 fff532 000088 fff48c ffff57 000310 fffeae fffdc4 fffac4 fffdf2 fffb32 fff7d2 fffe1b fff25e fff46a fffc27 fffd4a ffffee 000000 000000 000000 000000 000000 000000 ffffff 00007c 00009e fffeda fff6b6 fffc4a fff991 fff027 fff9f9 fff1f6 ffff44 fff7ae fffa11 fffe42 00042e 000382 000364 fffe92 fffbb4 fffc63 fff9b6 fffa1b fff7e9 fffb3c fffd36 ffffee 000000 000000 000000 000000 000000 000000 000000 fffff9 fffe43 fffca3 fffcfd fff4b9 fff35a fffaef 000000 fff93e fff8db fffd2e fff956 fffc2e fffe91 fffb85 000112 fffe34 fffd28 0002a4 00013a fffe47 fffe9a fffccc fffd4b fffffe 000000 000000 000000 000000 000000 000000 000000 fffffd fffeb8 fffe14 fffcb3 fffaf9 fffaa4 fffb39 fff82a fffc5e fffe47 fffa03 fffe65 fffc14 fffa56 fffa87 fffee0 fffbd0 00045a fffcec 0008a4 fffd70 0000ed fffd64 fffdc3 000000 000000 000000 000000 000000 000000 000000 000000 ffffff ffffdf fffe21 fffd06 ffffdb fffcc6 fffbd5 ffffe6 fffb85 fffefc fffc5b fffd3e fffdf1 fffdc7 0005de 000226 0004ff 000496 000551 00071f fffb04 fffebc fffc98 00005b 000000 000000 000000 000000 000000 000000 000000 000000 ffffff fffff9 ffff50 fffe9e ffffab 000032 000058 0000cf 000187 00015c fffcef fffd19 fffe0b fffc21 fffffa fffac4 ffff6b ffff5b 0001e1 fffe61 00020f fffff9 ffff10 fffff6 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffd5 fffe15 fffdb5 fff86c fff469 fff748 ffff02 fff9fc fff409 fffb13 fffc69 fffae1 fff759 fff6c2 fff6c9 fff577 fff9dc fff88f fffd6f fffec4 ffff09 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffff58 ffff6b fffdd2 fffc5a fff949 fff601 fff47e fff1d3 fff4b6 ffef76 ffed5b fff167 fff28d fff111 fff4ad fff62e fffc37 fffbdd fffda0 ffff30 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 fffe58 fffe31 ffff96 fffe13 fffea5 fffec9 ffff9f fffc2f fffdd4 ffff76 ffffa2 ffff32 ffff96 ffffd6 fffeb8 ffffc7 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 800539"
+      }
+    },
+    "n_add_4": {
+      "id": "n_add_4",
+      "type": "comb.adder",
+      "position": { "x": 1980, "y": 1120 },
+      "params": { "width": 24 }
+    },
+    "n_acc_4": {
+      "id": "n_acc_4",
+      "type": "seq.register",
+      "position": { "x": 2090, "y": 1120 },
+      "label": "Acc 4",
+      "labelPosition": "top",
+      "params": { "width": 24, "edge": "rising", "asyncReset": true }
+    },
+    "t_rst_acc_4": {
+      "id": "t_rst_acc_4",
+      "type": "bus.tunnel",
+      "position": { "x": 1960, "y": 1080 },
+      "rotation": 180,
+      "params": { "name": "RST", "width": 1 }
+    },
+    "n_idx_4": {
+      "id": "n_idx_4",
+      "type": "io.constant",
+      "position": { "x": 2220, "y": 1100 },
+      "params": { "width": 4, "value": 11 }
+    },
+    "n_word_4": {
+      "id": "n_word_4",
+      "type": "bus.merge",
+      "position": { "x": 2290, "y": 1120 },
+      "params": { "groups": "4,24" }
+    },
+    "t_sc_4": {
+      "id": "t_sc_4",
+      "type": "bus.tunnel",
+      "position": { "x": 2320, "y": 1200 },
+      "params": { "name": "SC4", "width": 24 }
+    },
+    "t_clk_acc_4": {
+      "id": "t_clk_acc_4",
+      "type": "bus.tunnel",
+      "position": { "x": 1780, "y": 1210 },
+      "rotation": 180,
+      "params": { "name": "CLK", "width": 1 }
+    },
+    "t_addr_5": {
+      "id": "t_addr_5",
+      "type": "bus.tunnel",
+      "position": { "x": 1780, "y": 1330 },
+      "rotation": 180,
+      "params": { "name": "ADDR", "width": 10 }
+    },
+    "n_rom_5": {
+      "id": "n_rom_5",
+      "type": "mem.rom",
+      "position": { "x": 1870, "y": 1320 },
+      "label": "W5",
+      "params": {
+        "addressBits": 10,
+        "width": 24,
+        "contents": "000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffff 000000 fffffc fffffa ffffdb ffffc7 ffffed fffff1 ffffe6 fffff4 ffffdc ffffd5 ffffee 000000 ffffff ffffff 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 fffff9 fffff6 ffff78 ffffb4 fffd9d fffe87 fffd2c fffc51 fffd6d fffefb 0001c8 00027b 000021 fffd1b fffddd fffe97 ffff2a ffff18 ffffd3 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 fffea1 ffffe4 fffef8 fffeff ffff4f fffdd1 fff8a9 fffddd ffff34 fffd31 00015d 0000c5 00021e 000257 0004dd 0007be 000896 0002c4 fffdc0 ffff1a 00030e 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffc8 fffc2f fff94a fffd1e fffc59 fffc0e fffdab 0007ba 0000d9 fffa95 00033c 0002da 0003ac 0004d7 000634 0002ec fffba7 000ae7 0001cb 0008f4 000f6a 00049a 0000a9 000000 000000 000000 000000 000000 000000 000000 000000 fffe9d fff9e5 fff6cf fffb47 fffae5 fffc3d fffe89 000280 0003b0 fffd19 fffe19 fffda7 fffe8e ffff2e 000496 00027c 00003a 0006bd 000360 00054f 0007d5 000764 0007aa 0000ca 000000 000000 000000 000000 000000 000000 000000 fffffb fffbd3 fffab1 fffc47 fffbec 0000e2 fffec1 ffff4a fffe02 0000a8 0004aa fffe21 000192 ffff98 ffffdc 000010 00013f 000661 000238 0005fa 00020b 00046b 001745 000b2d 000657 0000ed 000000 000000 000000 000000 000000 ffffe8 ffff77 fffc9c fff49f fffaa3 fffeb9 ffff45 00078e 000421 0000d3 00030b 000260 ffff05 00002e fffce1 0001e0 000177 000183 00013a 0002f5 000161 0005fd 000a07 001087 001241 00043b ffffd8 000000 000000 000000 000000 000000 fffffb ffff60 fffbc7 ffef31 fffa20 ffff52 fffd9a ffff34 0001fc 000299 0002b1 fffeeb ffff9f fffe36 fff9e6 fffef0 fffee7 fffeca 000267 00067d 000307 00039d 000ee8 001b0f 0014b4 00075a 000074 000000 000000 000000 000000 000000 fffff9 ffffed fffa61 fff3a4 fff9bd 000124 fffeec 000689 0002eb 000344 000693 00038e fffef6 fffd3c fffa6c fff875 fffa40 ffff15 fffc9f 0000be 0006c9 000798 000b4b 001d29 001b7e 0005b3 fffffd 000000 000000 000000 000000 ffffff fffff9 ffffb0 fffc70 fffb26 fff8f9 fffb99 0003a0 000230 000879 00060e 000611 000644 0002ed ffff14 fffd3f fffb4a fff8f2 fff6d6 fff6f7 fffaf1 0000a7 fffdd5 001217 002328 002319 0009a8 000006 000000 000000 000000 000000 fffffe ffff85 ffff73 fff7bf 0000f3 000026 0008c8 0001fc 00067d 0002f8 000341 00035f 000621 000a34 0001e1 fffba7 fff987 fffdac fffc5a fffacf fff04a fff2c2 fff23f 00025e 001352 001741 0005d4 fffffb 000000 000000 000000 000000 000000 ffff99 ffff7a fffde5 0002e4 fffd1b 000883 0002dc 000122 0000bf 0007bf 000342 0003dc 000550 fffe8b 00002c fff7f0 fff8bf fff735 fff74f fff8d6 ffefe0 ffe4c2 ffe5cc ffe7cd 0000b2 00036b fffffb 000000 000000 000000 000000 000000 fffffb ffffed fffefa 0002aa 0005bf 00014b 0001f4 0002d2 0001a9 00027c 000743 000b4e 00054f fffd85 fff961 fff7de fff880 fffe27 ffffd9 fffce9 fffa03 fffe4d ffed81 ffedb9 fff875 fffee3 ffff34 000000 000000 000000 000000 000000 fffffb fffff8 ffffa4 00035a fffc36 fffc2f 00000b ffff73 00030f 000929 0001bd ffffcd 00025c ffff72 fffaf1 fffb1d fffa0a fffa0e fffa0e ffff71 fffaf9 0002f2 fffde9 ffffa8 fff8f9 ffff6f 000000 000000 000000 000000 000000 000000 fffff8 ffffde ffff47 fffd93 fffbbd 0001f9 fffd87 0000a5 000305 00038c 000128 00011c fffca7 fffb5e fffab9 fffb27 fffb05 000308 0000bc ffff52 00004d fff8cf 000310 00046b fffae5 fffe20 ffffd4 000000 000000 000000 000000 000000 000000 ffff17 ffffdc fffe66 fffa90 fff94b fff196 fffafd fff70b fffa3a fffe24 ffff33 fffd7b fff948 fffad5 fffb82 fffcf9 fffd80 000156 ffffd7 0000b3 0007d7 000206 000228 fffcce fffcce fffe37 000000 000000 000000 000000 000000 000000 fffe26 fffec3 ffffb8 0003f3 000aa3 fffccc fff977 fff888 fffab9 fff88c fff2cc fff724 fff907 00019c ffffcd 000514 00062f 00014b 000485 00014c fffefb 0000f4 0005be fff984 fffeed 000000 000000 000000 000000 000000 000000 000000 ffff70 000139 000798 00083c 00098c 000231 00008f fff959 fffbc2 fffd03 fffba1 fffe55 fffe6d fffee9 fffe38 00011a fffcea 0001d5 ffff8b 00011b 0008f5 0002cc 0005d1 fffd78 ffff51 ffff54 000000 000000 000000 000000 000000 000000 00022f 0001ba 000d8d 0007fc 000782 000431 00076d 0001d2 0000ea 0000da 0002a2 0002b7 fffca9 00034e ffffe8 fffe1f 0003a2 000128 0004aa 0000d2 00010f 000595 0003eb ffffa2 fffe39 ffffc0 000000 000000 000000 000000 000000 fffff6 0000e9 0002d8 ffffc4 000799 0004cb fffe79 000545 0004a5 000207 0001bd fffe14 000113 fffef7 fffdc5 0002e8 0002d0 0001f0 00030c 00009e 0004a5 000f0a 0006f8 00032d 0002e8 fffff0 000000 000000 000000 000000 000000 000000 fffffe ffff91 ffffd8 0003ca 0003b1 0003df 0002c6 00054c 000371 ffffd9 0001b7 0002d2 00022a 000189 0003ee fffed4 0003ef 0000fc 0001ef 000600 000410 000a8f 0007f1 0002ca 000231 000016 000000 000000 000000 000000 000000 000000 000000 ffffc7 ffff38 0006b3 fffa60 fffabb 000142 000189 ffff0b fffeb7 000270 0004f3 000316 000466 00016a 000312 ffffd0 000469 fffc20 0001c1 0002f8 0005bc 000464 0002af 0000ef 000000 000000 000000 000000 000000 000000 000000 000000 fffff2 0000d0 0003b1 00054d fffe6b ffff52 0001c0 0002a1 000668 0003a8 0000de 00007d 0004ba ffff13 0002fa ffff78 fffe37 fffe94 000592 0000a2 000277 000399 0003a3 000194 ffffff 000000 000000 000000 000000 000000 000000 000000 ffffff 0000e3 ffffa0 ffff32 000074 ffff8f 0002f9 0007f8 0000c8 000739 0005d6 000861 000691 0008a3 ffffd5 0006f4 000153 0002e1 0000c5 ffffcb 000471 00042a 00017a ffffdb 000000 000000 000000 000000 000000 000000 000000 000000 000000 0000f9 00015f 000008 00012e ffff91 00003b 0005f0 000635 00057d 000b5a 0005f4 ffffef 000823 000549 0007e6 0004f6 0004dd 00031e 0004b3 0006c3 0004c3 00020c 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffc9 ffff75 ffff3b fffc7b fffbdc ffffbe ffffa7 000384 00055c 000330 000002 00057f 00017e fffd92 fffc2a fffe5a 0000c3 000061 0000cf 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 fffffe fffffc fffff8 ffffec 000053 000030 ffffcd ffffbc ffffbe ffffc9 ffff78 ffff01 fffff6 ffffdc ffffd6 fffff1 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 803494"
+      }
+    },
+    "n_add_5": {
+      "id": "n_add_5",
+      "type": "comb.adder",
+      "position": { "x": 1980, "y": 1330 },
+      "params": { "width": 24 }
+    },
+    "n_acc_5": {
+      "id": "n_acc_5",
+      "type": "seq.register",
+      "position": { "x": 2090, "y": 1330 },
+      "label": "Acc 5",
+      "labelPosition": "top",
+      "params": { "width": 24, "edge": "rising", "asyncReset": true }
+    },
+    "t_rst_acc_5": {
+      "id": "t_rst_acc_5",
+      "type": "bus.tunnel",
+      "position": { "x": 1960, "y": 1290 },
+      "rotation": 180,
+      "params": { "name": "RST", "width": 1 }
+    },
+    "n_idx_5": {
+      "id": "n_idx_5",
+      "type": "io.constant",
+      "position": { "x": 2220, "y": 1310 },
+      "params": { "width": 4, "value": 10 }
+    },
+    "n_word_5": {
+      "id": "n_word_5",
+      "type": "bus.merge",
+      "position": { "x": 2290, "y": 1330 },
+      "params": { "groups": "4,24" }
+    },
+    "t_sc_5": {
+      "id": "t_sc_5",
+      "type": "bus.tunnel",
+      "position": { "x": 2320, "y": 1410 },
+      "params": { "name": "SC5", "width": 24 }
+    },
+    "t_clk_acc_5": {
+      "id": "t_clk_acc_5",
+      "type": "bus.tunnel",
+      "position": { "x": 1780, "y": 1420 },
+      "rotation": 180,
+      "params": { "name": "CLK", "width": 1 }
+    },
+    "t_addr_6": {
+      "id": "t_addr_6",
+      "type": "bus.tunnel",
+      "position": { "x": 1780, "y": 1540 },
+      "rotation": 180,
+      "params": { "name": "ADDR", "width": 10 }
+    },
+    "n_rom_6": {
+      "id": "n_rom_6",
+      "type": "mem.rom",
+      "position": { "x": 1870, "y": 1530 },
+      "label": "W6",
+      "params": {
+        "addressBits": 10,
+        "width": 24,
+        "contents": "000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 00005b ffffff 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000096 000324 00026b 00017e 0001ed 000224 0004c4 0003cc 0000a0 000185 ffff90 000165 00016c 0001d1 000151 000186 0001b9 00006c 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 00001b 000000 000210 00055f 0005b2 000548 000c80 0007b7 000c37 00056c 000b44 0008ed 0005c0 000678 000820 000797 0006d7 00058a 000517 0001de 000081 ffff6c 000000 000000 000000 000000 000000 000000 000000 000000 000001 000000 000000 000019 0003d7 000595 000624 000965 00068e 0007b4 0005c7 000870 ffff9b 0009c8 000189 0004bc 00060b 000789 000469 00073a 00075b 0006f2 000504 fffc8b 000000 000000 000000 000000 000000 000000 000000 000000 fffff1 000000 0000a1 ffffb6 0000cc 0001a4 000263 ffffc1 000048 fffd81 fffd29 fffeec fffea5 fffcd4 fffdef 0005f8 fffeab 000279 000284 0002e2 0007af 000656 fff9da fffd47 ffff1e 000000 000000 000000 000000 000000 000000 000000 000000 ffff64 000094 fffcb4 000331 fffc02 ffff00 0001db 0004a3 fff842 fffb6d fffd3e 0002fe fffa81 fffdcb ffff55 000676 000548 00047e 00079e 000280 000498 0004c9 fffe4a 000171 000000 000000 000000 000000 000000 000000 000000 ffffff fffefd ffff55 fffebf fff9fd 000097 fffe40 fffb64 fff711 fff9f1 fff72c fff64a fff676 fffb4d fffac5 fffd6f fff93a fffa94 fffe06 fffb8e ffffcf 000565 000128 ffff54 000011 00011b 000000 000000 000000 000000 000000 000000 ffffae fffd6c ffff04 00007d fff802 0000b2 fffa48 ffff62 fffc25 fffdad fffe1b fff9f9 000031 fffd12 fff615 fffa4b fffd51 fff4ae fff932 fffccc fffc9d fff7d1 00029e fffd49 00006c fffffe 000000 000000 000000 000000 000000 000000 ffffb0 ffff05 fffecd 00007e fff838 fffe77 fffb6a fffde4 fffaf0 fffcac fffd45 fffbd0 fff692 fff7c4 fff56d fff9c3 ffeec7 fff6d4 fff56d fffb4e fff6df fff6d9 fff6ad fff88f fffb70 ffff90 000000 000000 000000 000000 000000 000000 fffffc fffec0 0001cb fffaa2 fff9f6 000339 fffbe7 fffa18 fffaa5 fff93b fff83d fff762 fffaee fff795 fff49e fff13e ffef56 fff3d7 fff768 fffd01 fff6e2 fff8f1 fff704 fff653 fffc9a fffff5 000000 000000 000000 000000 000000 fffffe fffeed ffff80 ffff33 fffa89 fff804 fffeb5 000071 ffff64 fffda7 fffec5 fffbce ffffe4 fff931 fff60b fff357 fff2bb fff716 fff771 fff888 fff800 fff9bd fffbe7 fffb88 fff502 fffc24 fffee8 000000 000000 000000 000000 000000 fffffc fffffa fffe65 0001c9 000219 fffa71 00011f fffe87 000381 ffffde 000016 0003aa 00008a fffe9a fff2cf 000252 fff5f2 fff70c fffdbe fffdef 000085 fff7ee 000582 ffff77 fff2d7 fff961 00001d 000000 000000 000000 000000 000000 fffffe fffffb fffed8 fffe9c ffff43 0000ab 000828 000540 0003de 0000be 0004b0 0003cf 000455 fff7ee fff7b6 fffc29 fffeca fffba9 fffa1e fffa0e 000235 000ab3 0015c9 0009a8 fff63f fff7dc 00001d 000000 000000 000000 000000 000000 000000 fffffc fffeec fffbd0 00055d 000b9e 00017f 00004e 0003da 000536 000137 00017a 000201 ffff1d 000011 fffc9d fffae7 fffbf4 ffffb0 fffe4e 00067c 000717 001507 000b9d fff9bb fff965 fffe9e 000000 000000 000000 000000 000000 000000 ffffff fffeb5 fff9ab 0006f9 0002c5 000332 000403 000675 0006e9 000b0d 000541 fffec7 fffd0f 00043d 000543 fff75f ffff53 fffecf 000145 000407 0009c7 00078b 000380 0000a0 fffb99 000000 000000 000000 000000 000000 000000 000000 000000 fffd5b fff500 0000df 0002a3 000662 0003b7 00036e 0004d3 0007c1 00040a 000370 0005a1 fffe14 fffe7d fffe59 fffc73 0001e1 0000f9 00041b fffd6c 0002c1 0003fa 0005a9 fffb6e ffffe7 000000 000000 000000 000000 000000 000000 ffffff fffcca fff6f6 00025f 000657 00067c 0007ca 00077b 00085f 000dc4 000161 fffe9c 0004db 000531 fffe15 fffe7c 0001bb 0003bb 00024a 00053f fffe20 00002c 0002d3 000036 fffc64 fffe9b 000000 000000 000000 000000 000000 000000 ffffef fffd16 fff583 0001be 000249 000620 0004f3 00074f 000bdc 000d14 000223 0003b6 0002c4 fffbf1 fffe76 0001a0 00013b 000352 0001d8 fffd59 00051e 0001d1 0001d0 0001d0 fffd02 000000 000000 000000 000000 000000 000000 000000 fffffc ffff27 fff63a fff624 fffc60 0008d8 00032a 000930 000812 00034f 001127 0003f0 00011d 0002e2 000360 000475 0006ba fffe3b fffeca 0000e9 fffe25 000396 000278 000223 ffff53 fffec2 000000 000000 000000 000000 000000 000000 fffff9 fffe59 fffa73 fff8d2 000230 0003f0 fffd32 000624 000a5b 000e50 000ea9 000524 00077b 000818 0007bc 00027a 000263 0002a8 00014b 0004df 00059b 00013e ffff1a fffc92 fffe2c ffffb5 000000 000000 000000 000000 000000 ffffed fffffb ffff4d fffbde fffabc fff945 0004ad 00007b 000625 0009a8 000695 000aab 000534 000a43 00072f 0005a1 0000fa 000622 000312 00044e 000276 fffcef 00006e fffaf8 ffff2c ffffef 000000 000000 000000 000000 000000 000000 000000 ffffff ffff0c fffc1f fff877 fff770 0000c3 0002ae 00005c 00087c 0004f9 000dcf 000d0f 000c3d 000520 00067a 000863 000376 0001a6 0002ed fffcb7 000172 fffda0 fffea3 fffe1a 000008 000000 000000 000000 000000 000000 000000 000000 ffffff ffff6c fffe9d fffbb5 fff582 fff84c ffff6b ffffba 0004f1 fffe72 00090b 000365 00030f 000705 000093 ffffa0 00032b fffca0 000233 fffe53 fffbe0 fffb17 fffdd3 ffff60 ffffff 000000 000000 000000 000000 000000 000000 000000 000000 fffff8 ffffb2 fffecf fffc7b fff849 fff97d fffa25 fff71b fffa33 fffc29 fffb69 000027 00053a fff6bf fffc84 000140 00023a 00013e ffff4f fffc88 fffeb9 ffff05 ffffba 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffff fffff8 ffff5d ffff03 fffdb5 fffbb1 fff905 fff8db fff547 fff53e fff20b fff7a1 fffa4c fffe07 fffe10 fffaf7 fffde5 fffddc fffe5b fffeb3 ffff4b fffff5 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 fffffa fffff4 ffffe2 ffffd1 ffff42 fffec6 ffff08 fffeb2 ffff79 fffdb4 fffd9c fffd7e fffe5b fffe51 fffeaa ffff17 ffff92 ffffc8 ffffd7 ffffeb fffff8 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffff ffffff fffffd fffffa ffffe6 ffffe6 ffffe3 ffffdc ffffcb ffff7f ffffba ffffc0 ffffc9 ffffc8 ffffc2 ffffe5 ffffef fffff1 fffffe 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 fffffe fffffe ffffff fffffd fffffc fffff9 fffffb fffffd fffffd fffffc 000000 000000 fffffd 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 7ff7ff"
+      }
+    },
+    "n_add_6": {
+      "id": "n_add_6",
+      "type": "comb.adder",
+      "position": { "x": 1980, "y": 1540 },
+      "params": { "width": 24 }
+    },
+    "n_acc_6": {
+      "id": "n_acc_6",
+      "type": "seq.register",
+      "position": { "x": 2090, "y": 1540 },
+      "label": "Acc 6",
+      "labelPosition": "top",
+      "params": { "width": 24, "edge": "rising", "asyncReset": true }
+    },
+    "t_rst_acc_6": {
+      "id": "t_rst_acc_6",
+      "type": "bus.tunnel",
+      "position": { "x": 1960, "y": 1500 },
+      "rotation": 180,
+      "params": { "name": "RST", "width": 1 }
+    },
+    "n_idx_6": {
+      "id": "n_idx_6",
+      "type": "io.constant",
+      "position": { "x": 2220, "y": 1520 },
+      "params": { "width": 4, "value": 9 }
+    },
+    "n_word_6": {
+      "id": "n_word_6",
+      "type": "bus.merge",
+      "position": { "x": 2290, "y": 1540 },
+      "params": { "groups": "4,24" }
+    },
+    "t_sc_6": {
+      "id": "t_sc_6",
+      "type": "bus.tunnel",
+      "position": { "x": 2320, "y": 1620 },
+      "params": { "name": "SC6", "width": 24 }
+    },
+    "t_clk_acc_6": {
+      "id": "t_clk_acc_6",
+      "type": "bus.tunnel",
+      "position": { "x": 1780, "y": 1630 },
+      "rotation": 180,
+      "params": { "name": "CLK", "width": 1 }
+    },
+    "t_addr_7": {
+      "id": "t_addr_7",
+      "type": "bus.tunnel",
+      "position": { "x": 1780, "y": 1750 },
+      "rotation": 180,
+      "params": { "name": "ADDR", "width": 10 }
+    },
+    "n_rom_7": {
+      "id": "n_rom_7",
+      "type": "mem.rom",
+      "position": { "x": 1870, "y": 1740 },
+      "label": "W7",
+      "params": {
+        "addressBits": 10,
+        "width": 24,
+        "contents": "000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffff ffffe9 fffffc fffffe ffffad ffff82 fffffa fffffe fffffc fffffb ffffff fffffe fffffd fffffe 000000 ffffff ffffff 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 fffffe fffff5 ffffe1 ffffc0 ffffae ffff79 ffff4f ffff80 fffef8 ffff39 ffffbf ffffd8 ffffef fffff7 fffffc fffff2 fffff8 fffffe 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 fffffe ffffee ffffc9 fffe3b fffe60 fffe07 fffbc1 fffd39 fffc95 fffd3b fffcdd fffdad fffeab ffff4f ffff40 ffff10 ffffab ffffe4 fffff7 fffffe 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffde ffff98 ffff40 fffc94 fffca3 fff909 fff73e fff578 fff8cb fff652 fff5d5 fff5ba fff63d fff920 fffae0 fffc5c fffd71 ffff59 fffe70 ffffa7 ffffa0 fffffa ffffff 000000 000000 000000 000000 000000 000000 000000 000000 00000f ffffa6 0003ac 000219 0000f6 000559 00046e fffe5a fffc56 fffba1 fff979 fffa5e fff7cd fffb2d fff3a8 fff72b fff338 fff532 fff8a4 fffbe7 fffdd6 ffff40 ffffb5 ffffd9 000000 000000 000000 000000 000000 000000 000000 000037 000268 00032a 00018d 000a06 00035e 0005f3 0003bd 0008c2 000769 000344 000058 fffcb8 000453 ffff4d 000200 fffd09 fffefe fffe16 0000ce ffffa0 fffaf3 fffc2a fffe4d ffffba fffffe 000000 000000 000000 000000 000000 ffffd4 0000eb 0005c0 0001d9 000438 00058e 000b79 fffff5 000805 0004fb 00054a 000336 00027c ffffae 0003d6 0002d9 000490 0006b8 00035d 00024c 0002b7 fffc4f ffff66 fffe10 fffea9 ffffc9 ffffff 000000 000000 000000 000000 000000 00020e 000193 0008ab 00087d 00062f 000716 000a9d 0007b8 000198 0005f2 0006cc 00093b 00017c 00046e 000680 0005ed 0007b9 00092b 000204 000567 fffe42 000704 000470 ffff05 fffd99 ffff78 ffffd7 000000 000000 000000 000000 000017 00020f 0003b7 000a14 000724 0004c3 0005d6 000340 000401 0001c1 00006d 0003ff 000938 000184 000b9b 0007e6 00088b 000caf 00031c 000648 00023c 0004a5 0002e5 fffc4f fffda3 ffff13 000148 0001d8 000000 000000 000000 000000 00001c 00021b 000552 000849 00096c 000872 00027f 000044 000080 000265 ffff10 fffcb1 000004 00050a 0009ed 00098c 000c04 000494 0006f9 000b9c 00094a 0008d0 000510 ffffed fff95c ffff22 0000e8 000000 000000 000000 000000 000000 00000b 0003f1 000ad0 000845 0008ee 000184 000313 000621 fffce5 000574 000792 000127 0002d6 000008 0008b9 000a33 0009c0 000a1f 000ab2 0001cb 00068a 000433 000906 fffdfb fff944 fffe60 ffffa7 000000 000000 000000 000000 000000 000003 000208 0009ba 0010cc 0009f9 000437 000008 000499 000939 000128 fff8ec 000018 fff4f4 ffea7d fffe77 0005c0 000af4 000601 00068b ffff62 000353 000346 000325 fffb7e fffaea ffff71 0001b3 000000 000000 000000 000000 000000 000000 000128 00084a 000945 00097c 00023c 000229 0004ee fffc91 fffcdb fffebb fff6a6 ffe8aa ffefa7 fff930 00014c 00060a 000272 00030e fffed5 000372 00015a ffffcf fffcc4 0000d3 fffed0 ffff28 ffffde 000000 000000 000000 000000 000000 000129 000226 0004e5 00028b 00025f fffda1 fffe3c fffcb8 fff884 fffd49 fff3e8 ffe74a fff5a4 fffd8d fffa08 0001af 000748 000881 000ee3 000c8d fffec2 000356 0007e5 fffd81 fffe51 fffffe 000000 000000 000000 000000 000000 000000 000000 0000e6 0002c6 fffd70 fffec9 000276 fffac2 fff83c fff7d5 fff97a fff163 fff1cf fff966 fff78f 0001de fffb86 0009ee 000be9 0003a4 000888 000ce9 00077f 0005cc 0000bb fffaa7 ffff36 fffff6 000000 000000 000000 000000 000000 000000 ffff99 ffffbd 00054b fff9a3 ffff91 ffff95 ffff84 fffd34 fff551 ffee78 fff9e0 ffff9b fff65f 00029d 0003ce 00062f 0003fd 000998 0005b8 0002bd ffff13 fffd24 fff9ca fffeae ffff66 ffffff 000000 000000 000000 000000 000000 000000 ffff6d fffcb2 000484 000030 000071 fff9f2 fff9a7 fffacd fff286 fffb6c fffdf0 000429 000440 00009c 000028 00002a 0001e1 fffd75 000462 ffffd5 fffc6a ffff5b 0004d0 000086 ffff02 000000 000000 000000 000000 000000 000000 000000 ffffd9 fffdbf 000264 ffff14 fff433 fff5da fff764 fffd0f fff6c7 fffd15 fff783 000077 0000c7 fffebd fffabb fffd07 0000f8 fffc24 fffcb0 000042 fff9ab fff7ac fff90d fffeec ffffdf ffffff 000000 000000 000000 000000 000000 000000 ffffe2 fffd1b ffff42 fff850 fff461 fff4e8 fffbc3 fffac4 fff5d8 fff885 000054 fff9ab 000129 fffbed fffa1f fff9bf fff6cf fff9e8 fff98a fff6c2 fff703 fff67e 000127 ffff6e ffffd3 000000 000000 000000 000000 000000 000000 fffffe ffffe8 fffd26 fff974 fff79a fff714 fff2cc fff95e fff470 fff7da fffc98 000030 ffff60 0001a1 fffbb8 fff729 fff6ee ffee0c fffaf2 fff0f5 fff284 fff2cd fff97f 000006 fffe10 ffffd5 000000 000000 000000 000000 000000 000000 fffffe fffe92 fffc77 fff8f2 fff709 fff712 fff3cd fffc10 fffa20 fffeb3 fffb95 ffff9b fff871 fffa27 fffbde 0000e0 fffc64 fff577 fff4bd fff5b9 fff267 fff2e7 fff7f6 fffdc9 fffebf ffffff 000000 000000 000000 000000 000000 000000 000000 fffdb4 fffb96 fffa67 000341 fffbfc 0000cb fffdb9 fffe39 fff9ec fff869 ffff8a fffba7 ffff5d fffc3e fffce8 fffac6 fff70f fffca4 fff3bc fff439 fff6c8 fff8cb ffff04 ffff8a 000000 000000 000000 000000 000000 000000 000000 000000 ffff21 fffac1 fffebc 000306 000610 000a8d fff4be fffd15 fffdde fffa3b fff7df fff8e5 fffcd8 0001d9 fffc7a fffde1 fffc12 fff569 fff338 fff531 fff637 fff859 fffe2e ffff8c 000000 000000 000000 000000 000000 000000 000000 000000 ffff48 fffffd ffffec 000b00 0005b3 0007f8 0007fc fffc13 00022b 0000aa ffff62 0004e2 fffdb1 fffe5a 000039 fffe97 fff739 fffae1 fffb3b fffaf6 fff8ec fffa28 fffe18 fffec6 000000 000000 000000 000000 000000 000000 000000 000000 000000 00002b 0003c8 0001b7 fffe94 0004d5 0009ff 000ad7 00045d 000cd5 000895 0006a5 000817 0007dc 00031c 00034a 000978 00020d fffdbf 000173 000087 fffe2c ffffcf 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 fffe5a fffbf3 fffb79 0000a2 000269 000636 0006a7 000660 000064 000ae8 000bc7 000b79 000982 000c5a 000621 000702 ffffdd ffff58 0001a7 ffffa8 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000015 000022 000042 000081 fffff3 00023f ffff93 00019f 00046c 0003aa 00022e 000285 0004b2 0004a7 0000ed 000079 0000bd 0000b4 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 80243a"
+      }
+    },
+    "n_add_7": {
+      "id": "n_add_7",
+      "type": "comb.adder",
+      "position": { "x": 1980, "y": 1750 },
+      "params": { "width": 24 }
+    },
+    "n_acc_7": {
+      "id": "n_acc_7",
+      "type": "seq.register",
+      "position": { "x": 2090, "y": 1750 },
+      "label": "Acc 7",
+      "labelPosition": "top",
+      "params": { "width": 24, "edge": "rising", "asyncReset": true }
+    },
+    "t_rst_acc_7": {
+      "id": "t_rst_acc_7",
+      "type": "bus.tunnel",
+      "position": { "x": 1960, "y": 1710 },
+      "rotation": 180,
+      "params": { "name": "RST", "width": 1 }
+    },
+    "n_idx_7": {
+      "id": "n_idx_7",
+      "type": "io.constant",
+      "position": { "x": 2220, "y": 1730 },
+      "params": { "width": 4, "value": 8 }
+    },
+    "n_word_7": {
+      "id": "n_word_7",
+      "type": "bus.merge",
+      "position": { "x": 2290, "y": 1750 },
+      "params": { "groups": "4,24" }
+    },
+    "t_sc_7": {
+      "id": "t_sc_7",
+      "type": "bus.tunnel",
+      "position": { "x": 2320, "y": 1830 },
+      "params": { "name": "SC7", "width": 24 }
+    },
+    "t_clk_acc_7": {
+      "id": "t_clk_acc_7",
+      "type": "bus.tunnel",
+      "position": { "x": 1780, "y": 1840 },
+      "rotation": 180,
+      "params": { "name": "CLK", "width": 1 }
+    },
+    "t_addr_8": {
+      "id": "t_addr_8",
+      "type": "bus.tunnel",
+      "position": { "x": 1780, "y": 1960 },
+      "rotation": 180,
+      "params": { "name": "ADDR", "width": 10 }
+    },
+    "n_rom_8": {
+      "id": "n_rom_8",
+      "type": "mem.rom",
+      "position": { "x": 1870, "y": 1950 },
+      "label": "W8",
+      "params": {
+        "addressBits": 10,
+        "width": 24,
+        "contents": "000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 fffffe 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 fffffd fffffd fffffc fffff6 fffff7 fffff9 ffffe6 fffff6 ffffe7 ffffe5 fffff7 fffffb fffffd fffff7 fffffe ffffff 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffff fffff8 fffff3 ffffd6 ffff5d ffff47 fffedf fffe64 fffe28 fffe38 fffdef fffe12 00002a fffef1 ffffa7 ffff9d ffffb9 ffffee fffff7 fffff9 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 fffff8 ffffa7 ffff93 fffee5 00004b ffff2c fffec2 fffd78 fffc91 fffd5e fffc7a ffff89 ffff83 000001 fff9bc fffcf1 000192 0002ab 0002d4 0000f0 ffffdc 000000 000000 000000 000000 000000 000000 000000 000000 fffffb 000000 fffff3 fffecc ffffdb 00003e fffe3b 0004d7 0005cd 000198 0007a5 0004a5 00080d 0006de 0009c0 0001bf 0004c3 000375 000352 000250 fffe3b ffff8f 000270 00018a 0000ba 000000 000000 000000 000000 000000 000000 000000 000000 fffff6 ffff59 fffe6f fff862 0000f4 00008d ffffe6 fffdec 0004af 0004ea 000528 0002f9 000336 00045c 0004e0 fffdb4 00039f 0003a4 000332 fffe13 fffe7a 000212 0004ad 00006c 000000 000000 000000 000000 000000 000000 000000 fffffa ffff50 fffdb9 fffec8 fffc42 fffe95 0002c4 fffea8 ffff9a 0000ee 0003d7 00034c 000120 00079f 000009 000484 fffccd 000598 000355 ffff25 00022f 0002fd 000402 000815 ffff21 ffff84 000000 000000 000000 000000 000000 fffff0 ffffec ffff5c 00017c ffff15 fffa77 fffd25 000706 ffff22 ffff25 fffd9c 00001b fffe5a fff8ea 000518 0001e2 fffd8c 0002b6 000127 ffff7a 0001b5 ffffce 00084b 00088c 00042a fffee9 000034 000000 000000 000000 000000 000000 fffff2 ffffdd 000007 00010e 00001e 0004fc 000554 ffffa9 00029b 0002af fffea3 00049a 00038a fffce2 fffdc3 0001b2 fffc33 00048c 000151 000013 0004c0 00030c 000826 000ca0 000714 0006fe 000151 000000 000000 000000 000000 000000 fffff1 ffff58 fffe5a fffd22 0003b5 000654 ffffb5 0004cb 0007a8 000156 0003d7 ffff77 fffec2 fffc2c fff89e fffd45 ffff4b ffff0d 000350 0001a2 0002cb 000391 00096c 0007c1 0009f5 0003c6 fffe54 000000 000000 000000 000000 000000 fffff5 ffffbc fffdb8 000887 000077 000504 0007a3 0002c5 000804 0005a1 0005b6 0004a0 0000de fffdda fff692 fffa17 fffb93 00026d 0004b1 000319 00048e 000293 000619 fffffc fffa3c 00013c 00014c 000000 000000 000000 000000 ffffff fffff7 ffffb9 ffffe2 00033b 00039e 000533 000398 000724 00060c 0004a2 0003c2 000327 000652 0008ea 0000ee fffd75 fffc50 fffd61 000012 ffff91 0003a6 0008b9 000c1c 000bb2 00026a 000634 000000 000000 000000 000000 000000 000000 fffffb ffffed 00011e 000511 000816 ffffec 00053e 000154 000245 ffff15 00022b 0002d9 000831 000366 000315 fffdd2 0001c8 fffef9 0004de 00073a 0007cc 0007a4 000bef 001127 000365 000157 000000 000000 000000 000000 000000 000000 000000 fffff7 00027d fffc08 000284 fffe07 000073 fffe47 000114 fffe17 000088 000799 0009b2 0001f9 000955 00015e fffbff fffe8c 0002aa 00048c fffd90 0002db 0008f5 000799 0001fb ffff75 ffffee 000000 000000 000000 000000 000000 000000 ffffff ffff4c fffe3a 0000f5 0001db fff723 fff900 fff958 000080 00022e 000692 000959 0004b4 000343 ffffa7 fffecd fffd0f fffe10 fff7e2 fffe29 fff612 fff6a9 fffb03 0001df ffff8e 000000 000000 000000 000000 000000 000000 fffff2 ffffed ffff62 fffc1d fff7a1 fff376 fff8cb fffbb1 ffff6a fffe41 00009a 000429 000b6d 00093e 00031c 00016a fffe30 fffefb ffffe6 fffcfc fff949 fffc9a fffa36 fff8e6 000181 ffff95 fffff4 000000 000000 000000 000000 000000 000000 ffffdb 000056 fffc11 fff42b ffff3e ffffd7 fffe6f fffdcb 00016f 0002b0 0008bb 0004b4 00047a 000271 0000af fffdb0 fffb4c fff546 fff6a9 fff53a fff6fe 000226 fff9c3 fffd03 fffe97 ffffe9 000000 000000 000000 000000 000000 000000 ffffd8 ffff11 fffdc7 fffcf4 fffd6a 0004ad 000210 000856 0004a2 000593 000875 00041c 0000cb fffca0 0003b8 fffe52 fff8e4 ffff41 fff9d6 fffe0c fffc21 fffe16 000491 fff9fa fffe83 000000 000000 000000 000000 000000 000000 000000 ffffec fffd6a fff8c4 ffff26 fffe62 0000fb 000341 000481 000696 000676 0004ad 000561 ffff8c 000151 fffe65 fffb9b fffea1 000088 0002c5 fffb28 0002f3 0003ac fffde0 fffad6 ffff1f fffffb 000000 000000 000000 000000 000000 000000 ffffc6 fffaa1 fff989 000686 000106 fffe84 000133 00042f 0005f8 ffff7a ffff83 fffc2e fffc5f fffcb2 fffc35 00013a 000177 0001f4 fffcbe fffe3c 000594 000c39 ffff30 fffafb fffee7 000000 000000 000000 000000 000000 000000 fffff2 ffffc2 fffb0c fffc77 000227 000175 0006b5 00023e ffffb1 0004a0 fffc2a ffffd0 000244 fff9b8 000093 fffc67 fffda2 fffebe fffea3 0004b5 00096b 000313 000380 fff84c fffc71 fffee0 000000 000000 000000 000000 000000 000000 000000 ffffa0 fffbb8 fffb9d 00004b 0005fa 00052d 00029b 0003b9 fffbd0 000136 fffe08 000248 ffff96 000005 fffd79 0000b4 ffff2d 00019b 00005b fffec6 0006b4 fffefd fffba1 fffd87 ffffe3 000000 000000 000000 000000 000000 000000 000000 ffffb0 fffdaf fffc2e fffd74 fffe78 00074e fffd16 fffb92 0001aa 0002fe 00029e 0004ea 0001f2 00037d 0000cb fffee8 000320 fffe96 fffdb0 00049a fffe50 00037a fffec3 ffff94 fffff2 000000 000000 000000 000000 000000 000000 000000 fffff7 ffff62 ffff09 fff9cc fff8c6 fffa75 0003d6 000434 0000aa 00021c 00057e 0009c9 000345 0002ef 00087e 000133 0000d7 00070d 000334 000300 000083 000340 fffdf3 ffff88 ffff68 000000 000000 000000 000000 000000 000000 000000 fffffe fffe60 fffac9 fff9c8 fff8e2 fffa3c 00020d 00036d 000001 00073d 00064b 00030c 0006e5 000711 000b3b fffc35 000c9c 000b1f 000238 00002b fffc5b ffff7b ffff50 ffff98 000000 000000 000000 000000 000000 000000 000000 000000 000000 fffff0 fffd3e fff9c5 fffbd1 fffe82 fffb73 fffbda 000494 000177 fffd67 000115 0004c4 0004c0 0007e4 000615 00042e 0001ea 00019d fffec1 ffff1c fffef5 ffffea 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffa7 ffff1a fffe42 ffff60 fffe99 fffde6 fffc1f fffcaa fffd05 fffd61 fffadd fff97f fffb9f fffe2f fffec5 fffdba fffed2 ffff85 ffffb6 fffffd 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffff ffffff fffffe fffffe fffffa ffff3f fffff2 ffffc4 fffff1 ffffc7 ffffcf ffffef ffffec ffffc8 fffffb fffff2 fffff8 fffffc 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 7fc369"
+      }
+    },
+    "n_add_8": {
+      "id": "n_add_8",
+      "type": "comb.adder",
+      "position": { "x": 1980, "y": 1960 },
+      "params": { "width": 24 }
+    },
+    "n_acc_8": {
+      "id": "n_acc_8",
+      "type": "seq.register",
+      "position": { "x": 2090, "y": 1960 },
+      "label": "Acc 8",
+      "labelPosition": "top",
+      "params": { "width": 24, "edge": "rising", "asyncReset": true }
+    },
+    "t_rst_acc_8": {
+      "id": "t_rst_acc_8",
+      "type": "bus.tunnel",
+      "position": { "x": 1960, "y": 1920 },
+      "rotation": 180,
+      "params": { "name": "RST", "width": 1 }
+    },
+    "n_idx_8": {
+      "id": "n_idx_8",
+      "type": "io.constant",
+      "position": { "x": 2220, "y": 1940 },
+      "params": { "width": 4, "value": 7 }
+    },
+    "n_word_8": {
+      "id": "n_word_8",
+      "type": "bus.merge",
+      "position": { "x": 2290, "y": 1960 },
+      "params": { "groups": "4,24" }
+    },
+    "t_sc_8": {
+      "id": "t_sc_8",
+      "type": "bus.tunnel",
+      "position": { "x": 2320, "y": 2040 },
+      "params": { "name": "SC8", "width": 24 }
+    },
+    "t_clk_acc_8": {
+      "id": "t_clk_acc_8",
+      "type": "bus.tunnel",
+      "position": { "x": 1780, "y": 2050 },
+      "rotation": 180,
+      "params": { "name": "CLK", "width": 1 }
+    },
+    "t_addr_9": {
+      "id": "t_addr_9",
+      "type": "bus.tunnel",
+      "position": { "x": 1780, "y": 2170 },
+      "rotation": 180,
+      "params": { "name": "ADDR", "width": 10 }
+    },
+    "n_rom_9": {
+      "id": "n_rom_9",
+      "type": "mem.rom",
+      "position": { "x": 1870, "y": 2160 },
+      "label": "W9",
+      "params": {
+        "addressBits": 10,
+        "width": 24,
+        "contents": "000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 fffffa 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffff fffff8 fffffa fffffb ffffd4 ffff90 ffffe1 ffffed ffffeb ffff77 ffffea fffff8 ffffec ffffee fffffc fffffc fffffe 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffff fffff8 fffff1 ffffeb ffffad ffff96 ffff15 ffff2d ffff02 fffee1 fffee8 ffff6a ffff61 ffff83 fffff1 ffffda fffff5 fffffd 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffff ffffe5 ffffed ffffc8 ffffaa fffef4 fffdf2 fffc56 fffb52 fff9ef fff98d fffad0 fffc80 ffffe6 fffe05 fffe5b ffff60 ffffe0 ffffeb fffffa 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 fffffd ffffd8 ffffbc ffff22 fffe6c fffc04 fff943 fff909 fffbb6 fff911 fff7b0 fff8c2 fff3e0 fff559 fff8a8 fff768 fff9c2 fffb37 fffd49 ffff08 ffffb6 ffffee fffff5 000000 000000 000000 000000 000000 000000 000000 000000 ffffff ffffe7 ffff3f fffe0a fffa9f fffb61 fff9a6 fff672 0004cc 0001e5 0004ee fffbd4 fffecb fff7a7 fffbfc fff782 fffd7f fff6b6 fffa53 fff75c fffaf4 fffdba ffff39 fffff5 000000 000000 000000 000000 000000 000000 000000 fffff8 ffff6f fffe42 fff969 fff552 fffc08 fffea4 ffff98 00002b 000416 0003be 00059c 000a0b 0006d5 00064b 00070c 000661 00006b 0001cf fffbca fffaae fff649 fffa72 ffff46 ffff57 fffff3 000000 000000 000000 000000 000000 ffff46 ffffbf fffe46 fff9c0 fff4bc fffd10 fff85b fffc07 0002b5 ffffc6 000271 00081c 000840 000ad1 000bce 000aa0 0006ed 0003b1 00026b 0004d3 fffd51 fffc15 fffd2f fff9cd fffc17 fffe5e fffffb 000000 000000 000000 000000 000000 fffeb8 fffe68 fff926 fff675 fff97f fffd00 fff704 0005a3 fffba8 fffdf4 00011f fffbe8 00030c 000936 000273 0003e7 ffff96 000197 fffdbb fffb59 00041f fffcb8 fffa04 fffe71 fffbb4 fffe8c fffff4 000000 000000 000000 000000 fffff1 fffe9a fffd2b fffab9 fff997 fffbbc 0007d2 ffff7c ffffe5 0001c1 000220 00007f 0003b5 0002ad 0000bc 000781 0001a0 000192 00014f 00019e 000191 fffd4d fffbac fffb2b fffd06 fffc2d fffeb5 fffffb 000000 000000 000000 000000 ffffee fffe9a fffc97 fff8f9 fff9e7 0001b0 00080d 00013d 00055d 000297 000580 000158 000194 fffb61 fffd2b fffe9e fffea8 fffca0 000085 00027c 00018d fffdb7 0000c6 00013d fff859 fffc2e fffeb9 ffffd4 000000 000000 000000 000000 fffffb fffdf8 fff9a2 fffcaf fffb45 000251 00033b 000340 0007eb 000958 0009ce 0007c5 00041e fffdcd fffebf 000602 000628 0009f0 000512 000330 000aee 00096f 0002c5 fffb0a fffa38 fffdb1 ffff4f 000000 000000 000000 000000 000000 ffffff ffff63 fffb22 fff7cf 000501 000907 000907 0002f9 000489 000452 0000c4 000486 fffafd 000281 0006ae 00060f 0006ae 00068b 0006bd 0009d2 000858 000859 0009c5 00080e fff9c8 fffd0f fffedd 000000 000000 000000 000000 000000 000000 ffff82 fffbb4 0000e6 000bc9 000b2a 000403 000a7a 000558 0003e6 0002c2 000042 fffa94 0001a3 0005ad 0008b9 000c3a 000751 00082c 0004e0 000a4d 0007ba 000332 fffa67 fff824 fff9bb fffe15 fffffa 000000 000000 000000 000000 000000 ffff86 fffeb6 000286 000a9d fffed3 000404 0001ab 000153 0000c7 000130 0000bd fffbee 000240 000146 000228 000733 000832 000762 00048f 000134 000238 00016e fff8d0 fff3b9 fffdaf ffffcf 000000 000000 000000 000000 000000 000000 000000 ffff31 000101 000335 000093 0003c8 000177 0000a5 0000b0 fffe61 0001cc fffc5c ffff10 fffd7c 00054d 0008a7 0005b5 000319 00007e 000304 fffce3 fffc15 fff4cb fff5a6 fffc22 fffe89 ffffb0 000000 000000 000000 000000 000000 000000 ffffb5 ffff53 000039 00029f 000073 ffffb6 00051f fffd0d 0001de ffffb7 00000a fffc03 fffc69 000052 00070c 0003ed 000200 fffd0e fffde1 fff30f fffe35 fff4d8 fff5d9 fffc6e ffff23 fffffe 000000 000000 000000 000000 000000 000000 fffe97 fffd26 fff89e fffa53 fff8da ffff25 0004a2 ffff62 000129 000005 000101 000135 0000b1 0004d4 000180 00001d ffff7a fffa97 ffff49 0000a7 fffc29 fff5d4 fff60c fffd8d ffff52 000000 000000 000000 000000 000000 000000 000000 ffffb2 fffcd6 fffa2b fff7b7 000005 ffff45 fffc08 ffff34 00023e 00036a fff765 fffdd6 00019d 000247 fffe93 fffdbc 000139 fffc9b ffff58 fff9fb fff3bb fff470 fff818 ffff12 fffff7 fffffd 000000 000000 000000 000000 000000 000000 ffffa1 fffb8c fff8f1 fffa01 fffda1 00021d fffd09 fffa76 fffbb2 fff9d5 fff937 fffb93 fffc1b fffa66 fffb94 fffa35 fff7e5 0002c2 ffff20 fff7c9 fff87d ffffbb fffced fffe60 ffff47 000000 000000 000000 000000 000000 000000 ffffe0 ffffb8 fffdf7 fffccc ffff3c fff880 fff697 fff968 fff678 fff03d fff530 fff425 fffac3 fffab7 fffbc9 fffd08 fffcf4 fffc3c fffbde fffa5d fff3cf fffec2 fffce5 00027b 0001b8 ffff46 000000 000000 000000 000000 000000 000000 ffffff ffff76 fffcea fffd8f fffbe3 0001fd fffc70 fffa26 fffb8d fffd33 fff6f4 fff8ea fff76c fffa03 fff7d6 fffb3e fff851 fff96f fffcae fffc65 0000c6 fffb4c fffdbb 0004ee 00007e fffff8 000000 000000 000000 000000 000000 000000 000000 ffff65 ffff1d fffeb5 fff955 fff91c fff8cf ffffe6 fffda9 00019a 000129 ffff9a fffc41 fffda4 fffa5b fffdbc fffd2f fff8c6 fff746 fffe66 fffb51 000352 0005fa 000528 00002f fffffd 000000 000000 000000 000000 000000 000000 000000 ffffdd 00010d fffbb8 fffb0b fffa68 fffc61 00042f fff5e1 fffb88 fffa7c fffc3f ffff4e fffe50 fff679 fff822 fffee2 fffd58 fffc12 fffacc 0005ee 000b73 0002ad 000396 fffe9d 000000 000000 000000 000000 000000 000000 000000 000000 fffff0 ffff0d ffffdd 0001a3 000239 000344 00041c fffca7 00046c ffff14 fffc8c fff9f8 fff86c ffffa9 00002a ffff81 000320 00021f 000b96 0005dc 000936 0006cc fffef7 fffe63 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffe2 000018 00080c 000438 000960 000547 000880 00066c 000721 000381 000733 0006aa 000475 0007db 000544 000799 0009df 000fc9 000c25 0000af 00017e ffff8f 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000349 0006a0 00085d 0007f0 000b07 000934 000c49 000bc3 000cd2 000d41 0012cf 0007ef 000ac0 0008bf 000da3 0006df 00067d 000673 0001be 000137 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 ffffed ffffe2 00016e 000157 0000a1 00010d 0001c0 fffffe fffc78 000115 0000f7 fffecb fffcb2 ffff1f ffff9c 000022 0000d5 00014b 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 000000 7ff621"
+      }
+    },
+    "n_add_9": {
+      "id": "n_add_9",
+      "type": "comb.adder",
+      "position": { "x": 1980, "y": 2170 },
+      "params": { "width": 24 }
+    },
+    "n_acc_9": {
+      "id": "n_acc_9",
+      "type": "seq.register",
+      "position": { "x": 2090, "y": 2170 },
+      "label": "Acc 9",
+      "labelPosition": "top",
+      "params": { "width": 24, "edge": "rising", "asyncReset": true }
+    },
+    "t_rst_acc_9": {
+      "id": "t_rst_acc_9",
+      "type": "bus.tunnel",
+      "position": { "x": 1960, "y": 2130 },
+      "rotation": 180,
+      "params": { "name": "RST", "width": 1 }
+    },
+    "n_idx_9": {
+      "id": "n_idx_9",
+      "type": "io.constant",
+      "position": { "x": 2220, "y": 2150 },
+      "params": { "width": 4, "value": 6 }
+    },
+    "n_word_9": {
+      "id": "n_word_9",
+      "type": "bus.merge",
+      "position": { "x": 2290, "y": 2170 },
+      "params": { "groups": "4,24" }
+    },
+    "t_sc_9": {
+      "id": "t_sc_9",
+      "type": "bus.tunnel",
+      "position": { "x": 2320, "y": 2250 },
+      "params": { "name": "SC9", "width": 24 }
+    },
+    "t_clk_acc_9": {
+      "id": "t_clk_acc_9",
+      "type": "bus.tunnel",
+      "position": { "x": 1780, "y": 2260 },
+      "rotation": 180,
+      "params": { "name": "CLK", "width": 1 }
+    },
+    "n_cmp_0": {
+      "id": "n_cmp_0",
+      "type": "comb.comparator",
+      "position": { "x": 2520, "y": 480 },
+      "params": { "width": 28, "signed": false }
+    },
+    "n_pick_0": {
+      "id": "n_pick_0",
+      "type": "comb.mux",
+      "position": { "x": 2520, "y": 580 },
+      "params": { "selectBits": 1, "width": 28 }
+    },
+    "n_cmp_1": {
+      "id": "n_cmp_1",
+      "type": "comb.comparator",
+      "position": { "x": 2520, "y": 690 },
+      "params": { "width": 28, "signed": false }
+    },
+    "n_pick_1": {
+      "id": "n_pick_1",
+      "type": "comb.mux",
+      "position": { "x": 2520, "y": 790 },
+      "params": { "selectBits": 1, "width": 28 }
+    },
+    "n_cmp_2": {
+      "id": "n_cmp_2",
+      "type": "comb.comparator",
+      "position": { "x": 2520, "y": 900 },
+      "params": { "width": 28, "signed": false }
+    },
+    "n_pick_2": {
+      "id": "n_pick_2",
+      "type": "comb.mux",
+      "position": { "x": 2520, "y": 1000 },
+      "params": { "selectBits": 1, "width": 28 }
+    },
+    "n_cmp_3": {
+      "id": "n_cmp_3",
+      "type": "comb.comparator",
+      "position": { "x": 2520, "y": 1110 },
+      "params": { "width": 28, "signed": false }
+    },
+    "n_pick_3": {
+      "id": "n_pick_3",
+      "type": "comb.mux",
+      "position": { "x": 2520, "y": 1210 },
+      "params": { "selectBits": 1, "width": 28 }
+    },
+    "n_cmp_4": {
+      "id": "n_cmp_4",
+      "type": "comb.comparator",
+      "position": { "x": 2520, "y": 1320 },
+      "params": { "width": 28, "signed": false }
+    },
+    "n_pick_4": {
+      "id": "n_pick_4",
+      "type": "comb.mux",
+      "position": { "x": 2520, "y": 1420 },
+      "params": { "selectBits": 1, "width": 28 }
+    },
+    "n_cmp_5": {
+      "id": "n_cmp_5",
+      "type": "comb.comparator",
+      "position": { "x": 2520, "y": 1530 },
+      "params": { "width": 28, "signed": false }
+    },
+    "n_pick_5": {
+      "id": "n_pick_5",
+      "type": "comb.mux",
+      "position": { "x": 2520, "y": 1630 },
+      "params": { "selectBits": 1, "width": 28 }
+    },
+    "n_cmp_6": {
+      "id": "n_cmp_6",
+      "type": "comb.comparator",
+      "position": { "x": 2520, "y": 1740 },
+      "params": { "width": 28, "signed": false }
+    },
+    "n_pick_6": {
+      "id": "n_pick_6",
+      "type": "comb.mux",
+      "position": { "x": 2520, "y": 1840 },
+      "params": { "selectBits": 1, "width": 28 }
+    },
+    "n_cmp_7": {
+      "id": "n_cmp_7",
+      "type": "comb.comparator",
+      "position": { "x": 2520, "y": 1950 },
+      "params": { "width": 28, "signed": false }
+    },
+    "n_pick_7": {
+      "id": "n_pick_7",
+      "type": "comb.mux",
+      "position": { "x": 2520, "y": 2050 },
+      "params": { "selectBits": 1, "width": 28 }
+    },
+    "n_cmp_8": {
+      "id": "n_cmp_8",
+      "type": "comb.comparator",
+      "position": { "x": 2520, "y": 2160 },
+      "params": { "width": 28, "signed": false }
+    },
+    "n_pick_8": {
+      "id": "n_pick_8",
+      "type": "comb.mux",
+      "position": { "x": 2520, "y": 2260 },
+      "params": { "selectBits": 1, "width": 28 }
+    },
+    "n_winner": {
+      "id": "n_winner",
+      "type": "bus.split",
+      "position": { "x": 2720, "y": 2260 },
+      "params": { "groups": "4,24" }
+    },
+    "n_idx_not": {
+      "id": "n_idx_not",
+      "type": "gate.not",
+      "position": { "x": 2840, "y": 2260 },
+      "params": { "width": 4 }
+    },
+    "t_dig_src": {
+      "id": "t_dig_src",
+      "type": "bus.tunnel",
+      "position": { "x": 2940, "y": 2260 },
+      "params": { "name": "DIG", "width": 4 }
+    },
+    "n_top_score": {
+      "id": "n_top_score",
+      "type": "io.probe",
+      "position": { "x": 2840, "y": 2340 },
+      "label": "Top score",
+      "params": { "width": 24, "radix": "decimal" }
+    },
+    "g_outer": {
+      "id": "g_outer",
+      "type": "deco.group",
+      "position": { "x": 80, "y": 140 },
+      "params": {
+        "title": "MNIST digit recogniser",
+        "subtitle": "A 784 to 10 linear classifier evaluated one pixel at a time, with the weights in ROM",
+        "color": "teal",
+        "style": "filled",
+        "fontSize": 16,
+        "carry": true,
+        "width": 302,
+        "height": 238
+      }
+    },
+    "g_console": {
+      "id": "g_console",
+      "type": "deco.group",
+      "position": { "x": 100, "y": 220 },
+      "params": {
+        "title": "Draw & read",
+        "subtitle": "Draw a digit here; the prediction appears below it",
+        "color": "blue",
+        "style": "filled",
+        "fontSize": 11,
+        "carry": true,
+        "width": 78,
+        "height": 90
+      }
+    },
+    "g_conf": {
+      "id": "g_conf",
+      "type": "deco.group",
+      "position": { "x": 920, "y": 220 },
+      "params": {
+        "title": "Confidence",
+        "subtitle": "One bar per digit, from the top byte of that digit's score",
+        "color": "purple",
+        "style": "filled",
+        "fontSize": 11,
+        "carry": true,
+        "width": 80,
+        "height": 83
+      }
+    },
+    "g_ctrl": {
+      "id": "g_ctrl",
+      "type": "deco.group",
+      "position": { "x": 140, "y": 1140 },
+      "params": {
+        "title": "Scan & control",
+        "subtitle": "Walks all 784 pixels, adds the bias, then stops the clock",
+        "color": "pink",
+        "style": "filled",
+        "fontSize": 11,
+        "carry": true,
+        "width": 120,
+        "height": 82
+      }
+    },
+    "g_lanes": {
+      "id": "g_lanes",
+      "type": "deco.group",
+      "position": { "x": 1740, "y": 200 },
+      "params": {
+        "title": "Weighted sums",
+        "subtitle": "Ten identical lanes: weight ROM, adder, accumulator",
+        "color": "amber",
+        "style": "filled",
+        "fontSize": 11,
+        "carry": true,
+        "width": 68,
+        "height": 214
+      }
+    },
+    "g_arg": {
+      "id": "g_arg",
+      "type": "deco.group",
+      "position": { "x": 2430, "y": 240 },
+      "params": {
+        "title": "Argmax",
+        "subtitle": "A running maximum over score-and-index words picks the winner",
+        "color": "green",
+        "style": "filled",
+        "fontSize": 11,
+        "carry": true,
+        "width": 65,
+        "height": 222
+      }
+    },
+    "note_try": {
+      "id": "note_try",
+      "type": "deco.text",
+      "position": { "x": 160, "y": 2020 },
+      "params": {
+        "text": "## Try it\n\n- Draw a digit on the pad with the mouse.\n- Flip Reset up, then down again.\n- Wait for the Done lamp to light.\n- The 7-segment shows the prediction.",
+        "format": "markdown",
+        "fontSize": 12,
+        "align": "left",
+        "color": "default",
+        "background": "none",
+        "width": 31,
+        "height": 20
+      }
+    },
+    "note_how": {
+      "id": "note_how",
+      "type": "deco.text",
+      "position": { "x": 500, "y": 2020 },
+      "params": {
+        "text": "### One pixel per clock\n\nTwo counters walk x and y from 0 to 28. Each lane adds that pixel's weight to its own total. A dark pixel reads a cell that holds zero, so nothing is added.",
+        "format": "markdown",
+        "fontSize": 12,
+        "align": "left",
+        "color": "default",
+        "background": "none",
+        "width": 33,
+        "height": 20
+      }
+    },
+    "note_bias": {
+      "id": "note_bias",
+      "type": "deco.text",
+      "position": { "x": 860, "y": 2020 },
+      "params": {
+        "text": "### The bias rides along\n\nOn the last cycle both counters read 28, the pixel is forced high, and every lane adds the word at that address: its bias, plus the offset that keeps scores positive.",
+        "format": "markdown",
+        "fontSize": 12,
+        "align": "left",
+        "color": "default",
+        "background": "none",
+        "width": 33,
+        "height": 20
+      }
+    },
+    "note_weights": {
+      "id": "note_weights",
+      "type": "deco.text",
+      "position": { "x": 1220, "y": 2020 },
+      "params": {
+        "text": "### Loading your own weights\n\nEach lane's ROM holds one row of the weight matrix at address y*32+x. Run train_mnist.py to train the same model on MNIST and write the ROM images back into this file.",
+        "format": "markdown",
+        "fontSize": 12,
+        "align": "left",
+        "color": "default",
+        "background": "none",
+        "width": 36,
+        "height": 20
+      }
+    },
+    "n_3DlqAoxs1aAF": {
+      "id": "n_3DlqAoxs1aAF",
+      "type": "io.button",
+      "position": { "x": 520, "y": 900 },
+      "label": "Reset",
+      "params": { "pressed": false }
+    },
+    "n_XkDOfndlUEHJ": {
+      "id": "n_XkDOfndlUEHJ",
+      "type": "io.switch",
+      "position": { "x": 240, "y": 1210 },
+      "params": { "width": 1, "value": 1 }
+    },
+    "n_swy3UKUUUel-": {
+      "id": "n_swy3UKUUUel-",
+      "type": "bus.tunnel",
+      "position": { "x": 1160, "y": 1810 },
+      "params": { "name": "DONE", "width": 1 }
+    },
+    "n_xnprgfcmZDcK": {
+      "id": "n_xnprgfcmZDcK",
+      "type": "bus.tunnel",
+      "position": { "x": 620, "y": 900 },
+      "rotation": 180,
+      "params": { "name": "DONE", "width": 1 }
+    },
+    "n_wYQ0VrAFwh8F": {
+      "id": "n_wYQ0VrAFwh8F",
+      "type": "io.led",
+      "position": { "x": 720, "y": 900 },
+      "label": "Done",
+      "params": { "color": "green" }
+    }
+  },
+  "wires": {
+    "w_pad_x": {
+      "id": "w_pad_x",
+      "from": { "nodeId": "t_cxq_pad", "pinId": "io" },
+      "to": { "nodeId": "n_pad", "pinId": "x" }
+    },
+    "w_pad_y": {
+      "id": "w_pad_y",
+      "from": { "nodeId": "t_cyq_pad", "pinId": "io" },
+      "to": { "nodeId": "n_pad", "pinId": "y" },
+      "waypoints": [{ "x": 180, "y": 600 }]
+    },
+    "w_pad_px": {
+      "id": "w_pad_px",
+      "from": { "nodeId": "n_pad", "pinId": "px" },
+      "to": { "nodeId": "t_px_pad", "pinId": "io" }
+    },
+    "w_dig_seg": {
+      "id": "w_dig_seg",
+      "from": { "nodeId": "t_dig_disp", "pinId": "io" },
+      "to": { "nodeId": "n_segdrv", "pinId": "value" }
+    },
+    "w_seg_a": {
+      "id": "w_seg_a",
+      "from": { "nodeId": "n_segdrv", "pinId": "d0a" },
+      "to": { "nodeId": "n_sevenseg", "pinId": "a" }
+    },
+    "w_seg_b": {
+      "id": "w_seg_b",
+      "from": { "nodeId": "n_segdrv", "pinId": "d0b" },
+      "to": { "nodeId": "n_sevenseg", "pinId": "b" }
+    },
+    "w_seg_c": {
+      "id": "w_seg_c",
+      "from": { "nodeId": "n_segdrv", "pinId": "d0c" },
+      "to": { "nodeId": "n_sevenseg", "pinId": "c" }
+    },
+    "w_seg_d": {
+      "id": "w_seg_d",
+      "from": { "nodeId": "n_segdrv", "pinId": "d0d" },
+      "to": { "nodeId": "n_sevenseg", "pinId": "d" }
+    },
+    "w_seg_e": {
+      "id": "w_seg_e",
+      "from": { "nodeId": "n_segdrv", "pinId": "d0e" },
+      "to": { "nodeId": "n_sevenseg", "pinId": "e" }
+    },
+    "w_seg_f": {
+      "id": "w_seg_f",
+      "from": { "nodeId": "n_segdrv", "pinId": "d0f" },
+      "to": { "nodeId": "n_sevenseg", "pinId": "f" }
+    },
+    "w_seg_g": {
+      "id": "w_seg_g",
+      "from": { "nodeId": "n_segdrv", "pinId": "d0g" },
+      "to": { "nodeId": "n_sevenseg", "pinId": "g" }
+    },
+    "w_bar_t0": {
+      "id": "w_bar_t0",
+      "from": { "nodeId": "t_sc_bar_0", "pinId": "io" },
+      "to": { "nodeId": "n_barsplit_0", "pinId": "in" }
+    },
+    "w_bar_s0": {
+      "id": "w_bar_s0",
+      "from": { "nodeId": "n_barsplit_0", "pinId": "out1" },
+      "to": { "nodeId": "n_bar_0", "pinId": "addr" }
+    },
+    "w_bar_r0": {
+      "id": "w_bar_r0",
+      "from": { "nodeId": "n_bar_0", "pinId": "data" },
+      "to": { "nodeId": "n_matrix", "pinId": "row0" },
+      "waypoints": [{ "x": 1270, "y": 330 }, { "x": 1270, "y": 320 }]
+    },
+    "w_bar_t1": {
+      "id": "w_bar_t1",
+      "from": { "nodeId": "t_sc_bar_1", "pinId": "io" },
+      "to": { "nodeId": "n_barsplit_1", "pinId": "in" }
+    },
+    "w_bar_s1": {
+      "id": "w_bar_s1",
+      "from": { "nodeId": "n_barsplit_1", "pinId": "out1" },
+      "to": { "nodeId": "n_bar_1", "pinId": "addr" }
+    },
+    "w_bar_r1": {
+      "id": "w_bar_r1",
+      "from": { "nodeId": "n_bar_1", "pinId": "data" },
+      "to": { "nodeId": "n_matrix", "pinId": "row1" },
+      "waypoints": [{ "x": 1280, "y": 400 }, { "x": 1280, "y": 340 }]
+    },
+    "w_bar_t2": {
+      "id": "w_bar_t2",
+      "from": { "nodeId": "t_sc_bar_2", "pinId": "io" },
+      "to": { "nodeId": "n_barsplit_2", "pinId": "in" }
+    },
+    "w_bar_s2": {
+      "id": "w_bar_s2",
+      "from": { "nodeId": "n_barsplit_2", "pinId": "out1" },
+      "to": { "nodeId": "n_bar_2", "pinId": "addr" }
+    },
+    "w_bar_r2": {
+      "id": "w_bar_r2",
+      "from": { "nodeId": "n_bar_2", "pinId": "data" },
+      "to": { "nodeId": "n_matrix", "pinId": "row2" },
+      "waypoints": [{ "x": 1290, "y": 470 }, { "x": 1290, "y": 360 }]
+    },
+    "w_bar_t3": {
+      "id": "w_bar_t3",
+      "from": { "nodeId": "t_sc_bar_3", "pinId": "io" },
+      "to": { "nodeId": "n_barsplit_3", "pinId": "in" }
+    },
+    "w_bar_s3": {
+      "id": "w_bar_s3",
+      "from": { "nodeId": "n_barsplit_3", "pinId": "out1" },
+      "to": { "nodeId": "n_bar_3", "pinId": "addr" }
+    },
+    "w_bar_r3": {
+      "id": "w_bar_r3",
+      "from": { "nodeId": "n_bar_3", "pinId": "data" },
+      "to": { "nodeId": "n_matrix", "pinId": "row3" },
+      "waypoints": [{ "x": 1300, "y": 540 }, { "x": 1300, "y": 380 }]
+    },
+    "w_bar_t4": {
+      "id": "w_bar_t4",
+      "from": { "nodeId": "t_sc_bar_4", "pinId": "io" },
+      "to": { "nodeId": "n_barsplit_4", "pinId": "in" }
+    },
+    "w_bar_s4": {
+      "id": "w_bar_s4",
+      "from": { "nodeId": "n_barsplit_4", "pinId": "out1" },
+      "to": { "nodeId": "n_bar_4", "pinId": "addr" }
+    },
+    "w_bar_r4": {
+      "id": "w_bar_r4",
+      "from": { "nodeId": "n_bar_4", "pinId": "data" },
+      "to": { "nodeId": "n_matrix", "pinId": "row4" },
+      "waypoints": [{ "x": 1310, "y": 610 }, { "x": 1310, "y": 400 }]
+    },
+    "w_bar_t5": {
+      "id": "w_bar_t5",
+      "from": { "nodeId": "t_sc_bar_5", "pinId": "io" },
+      "to": { "nodeId": "n_barsplit_5", "pinId": "in" }
+    },
+    "w_bar_s5": {
+      "id": "w_bar_s5",
+      "from": { "nodeId": "n_barsplit_5", "pinId": "out1" },
+      "to": { "nodeId": "n_bar_5", "pinId": "addr" }
+    },
+    "w_bar_r5": {
+      "id": "w_bar_r5",
+      "from": { "nodeId": "n_bar_5", "pinId": "data" },
+      "to": { "nodeId": "n_matrix", "pinId": "row5" },
+      "waypoints": [{ "x": 1320, "y": 680 }, { "x": 1320, "y": 420 }]
+    },
+    "w_bar_t6": {
+      "id": "w_bar_t6",
+      "from": { "nodeId": "t_sc_bar_6", "pinId": "io" },
+      "to": { "nodeId": "n_barsplit_6", "pinId": "in" }
+    },
+    "w_bar_s6": {
+      "id": "w_bar_s6",
+      "from": { "nodeId": "n_barsplit_6", "pinId": "out1" },
+      "to": { "nodeId": "n_bar_6", "pinId": "addr" }
+    },
+    "w_bar_r6": {
+      "id": "w_bar_r6",
+      "from": { "nodeId": "n_bar_6", "pinId": "data" },
+      "to": { "nodeId": "n_matrix", "pinId": "row6" },
+      "waypoints": [{ "x": 1330, "y": 750 }, { "x": 1330, "y": 440 }]
+    },
+    "w_bar_t7": {
+      "id": "w_bar_t7",
+      "from": { "nodeId": "t_sc_bar_7", "pinId": "io" },
+      "to": { "nodeId": "n_barsplit_7", "pinId": "in" }
+    },
+    "w_bar_s7": {
+      "id": "w_bar_s7",
+      "from": { "nodeId": "n_barsplit_7", "pinId": "out1" },
+      "to": { "nodeId": "n_bar_7", "pinId": "addr" }
+    },
+    "w_bar_r7": {
+      "id": "w_bar_r7",
+      "from": { "nodeId": "n_bar_7", "pinId": "data" },
+      "to": { "nodeId": "n_matrix", "pinId": "row7" },
+      "waypoints": [{ "x": 1340, "y": 820 }, { "x": 1340, "y": 460 }]
+    },
+    "w_bar_t8": {
+      "id": "w_bar_t8",
+      "from": { "nodeId": "t_sc_bar_8", "pinId": "io" },
+      "to": { "nodeId": "n_barsplit_8", "pinId": "in" }
+    },
+    "w_bar_s8": {
+      "id": "w_bar_s8",
+      "from": { "nodeId": "n_barsplit_8", "pinId": "out1" },
+      "to": { "nodeId": "n_bar_8", "pinId": "addr" }
+    },
+    "w_bar_r8": {
+      "id": "w_bar_r8",
+      "from": { "nodeId": "n_bar_8", "pinId": "data" },
+      "to": { "nodeId": "n_matrix", "pinId": "row8" },
+      "waypoints": [{ "x": 1350, "y": 890 }, { "x": 1350, "y": 480 }]
+    },
+    "w_bar_t9": {
+      "id": "w_bar_t9",
+      "from": { "nodeId": "t_sc_bar_9", "pinId": "io" },
+      "to": { "nodeId": "n_barsplit_9", "pinId": "in" }
+    },
+    "w_bar_s9": {
+      "id": "w_bar_s9",
+      "from": { "nodeId": "n_barsplit_9", "pinId": "out1" },
+      "to": { "nodeId": "n_bar_9", "pinId": "addr" }
+    },
+    "w_bar_r9": {
+      "id": "w_bar_r9",
+      "from": { "nodeId": "n_bar_9", "pinId": "data" },
+      "to": { "nodeId": "n_matrix", "pinId": "row9" },
+      "waypoints": [{ "x": 1360, "y": 960 }, { "x": 1360, "y": 500 }]
+    },
+    "w_rst_net": {
+      "id": "w_rst_net",
+      "from": { "nodeId": "n_rst_or", "pinId": "out" },
+      "to": { "nodeId": "t_rst_src", "pinId": "io" }
+    },
+    "w_rst_cx": {
+      "id": "w_rst_cx",
+      "from": { "nodeId": "t_rst_cx", "pinId": "io" },
+      "to": { "nodeId": "n_col_x", "pinId": "rst" }
+    },
+    "w_clk_cx": {
+      "id": "w_clk_cx",
+      "from": { "nodeId": "t_clk_cx", "pinId": "io" },
+      "to": { "nodeId": "n_col_x", "pinId": "clk" }
+    },
+    "w_rst_cy": {
+      "id": "w_rst_cy",
+      "from": { "nodeId": "t_rst_cy", "pinId": "io" },
+      "to": { "nodeId": "n_row_y", "pinId": "rst" }
+    },
+    "w_clk_cy": {
+      "id": "w_clk_cy",
+      "from": { "nodeId": "t_clk_cy", "pinId": "io" },
+      "to": { "nodeId": "n_row_y", "pinId": "clk" }
+    },
+    "w_cx_q": {
+      "id": "w_cx_q",
+      "from": { "nodeId": "n_col_x", "pinId": "q" },
+      "to": { "nodeId": "n_addr_merge", "pinId": "in0" },
+      "waypoints": [{ "x": 470, "y": 1540 }, { "x": 470, "y": 1580 }]
+    },
+    "w_cy_q": {
+      "id": "w_cy_q",
+      "from": { "nodeId": "n_row_y", "pinId": "q" },
+      "to": { "nodeId": "n_addr_merge", "pinId": "in1" },
+      "waypoints": [{ "x": 490, "y": 1690 }, { "x": 490, "y": 1600 }]
+    },
+    "w_cx_net": {
+      "id": "w_cx_net",
+      "from": { "wireId": "w_cx_q", "waypoint": 0 },
+      "to": { "nodeId": "t_cx_src", "pinId": "io" },
+      "waypoints": [{ "x": 650, "y": 1540 }]
+    },
+    "w_cy_net": {
+      "id": "w_cy_net",
+      "from": { "wireId": "w_cy_q", "waypoint": 0 },
+      "to": { "nodeId": "t_cy_src", "pinId": "io" },
+      "waypoints": [{ "x": 490, "y": 1780 }]
+    },
+    "w_cx_co": {
+      "id": "w_cx_co",
+      "from": { "nodeId": "n_col_x", "pinId": "carry" },
+      "to": { "nodeId": "n_row_y", "pinId": "en" },
+      "waypoints": [
+        { "x": 500, "y": 1550 },
+        { "x": 500, "y": 1630 },
+        { "x": 420, "y": 1630 }
+      ]
+    },
+    "w_bias_a": {
+      "id": "w_bias_a",
+      "from": { "wireId": "w_cx_co", "waypoint": 1 },
+      "to": { "nodeId": "n_bias_and", "pinId": "in0" },
+      "waypoints": [{ "x": 500, "y": 1690 }]
+    },
+    "w_bias_b": {
+      "id": "w_bias_b",
+      "from": { "nodeId": "n_row_y", "pinId": "carry" },
+      "to": { "nodeId": "n_bias_and", "pinId": "in1" }
+    },
+    "w_px_or": {
+      "id": "w_px_or",
+      "from": { "nodeId": "t_px_ctrl", "pinId": "io" },
+      "to": { "nodeId": "n_pix_or", "pinId": "in0" },
+      "waypoints": [{ "x": 350, "y": 1820 }, { "x": 670, "y": 1820 }]
+    },
+    "w_bias_or": {
+      "id": "w_bias_or",
+      "from": { "nodeId": "n_bias_and", "pinId": "out" },
+      "to": { "nodeId": "n_pix_or", "pinId": "in1" },
+      "waypoints": [{ "x": 640, "y": 1700 }, { "x": 640, "y": 1710 }]
+    },
+    "w_zero_addr": {
+      "id": "w_zero_addr",
+      "from": { "nodeId": "n_zero_addr", "pinId": "out" },
+      "to": { "nodeId": "n_addr_mux", "pinId": "in0" },
+      "waypoints": [
+        { "x": 870, "y": 1500 },
+        { "x": 870, "y": 1540 },
+        { "x": 690, "y": 1540 }
+      ]
+    },
+    "w_addr_in": {
+      "id": "w_addr_in",
+      "from": { "nodeId": "n_addr_merge", "pinId": "out" },
+      "to": { "nodeId": "n_addr_mux", "pinId": "in1" },
+      "waypoints": [{ "x": 660, "y": 1590 }, { "x": 660, "y": 1600 }]
+    },
+    "w_addr_sel": {
+      "id": "w_addr_sel",
+      "from": { "nodeId": "n_pix_or", "pinId": "out" },
+      "to": { "nodeId": "n_addr_mux", "pinId": "sel" },
+      "waypoints": [{ "x": 780, "y": 1700 }, { "x": 780, "y": 1630 }]
+    },
+    "w_addr_net": {
+      "id": "w_addr_net",
+      "from": { "nodeId": "n_addr_mux", "pinId": "out" },
+      "to": { "nodeId": "t_addr_src", "pinId": "io" },
+      "waypoints": [{ "x": 820, "y": 1590 }, { "x": 820, "y": 1580 }]
+    },
+    "w_done_d": {
+      "id": "w_done_d",
+      "from": { "nodeId": "n_done_or", "pinId": "out" },
+      "to": { "nodeId": "n_done_ff", "pinId": "d" },
+      "waypoints": [{ "x": 990, "y": 1700 }, { "x": 990, "y": 1710 }]
+    },
+    "w_done_set": {
+      "id": "w_done_set",
+      "from": { "wireId": "w_bias_or", "waypoint": 0 },
+      "to": { "nodeId": "n_done_or", "pinId": "in0" },
+      "waypoints": [{ "x": 640, "y": 1650 }, { "x": 890, "y": 1650 }]
+    },
+    "w_rst_ff": {
+      "id": "w_rst_ff",
+      "from": { "nodeId": "t_rst_ff", "pinId": "io" },
+      "to": { "nodeId": "n_done_ff", "pinId": "rst" },
+      "waypoints": [{ "x": 1040, "y": 1640 }]
+    },
+    "w_clk_ff": {
+      "id": "w_clk_ff",
+      "from": { "nodeId": "t_clk_ff", "pinId": "io" },
+      "to": { "nodeId": "n_done_ff", "pinId": "clk" },
+      "waypoints": [{ "x": 1060, "y": 1820 }]
+    },
+    "w_done_q": {
+      "id": "w_done_q",
+      "from": { "nodeId": "n_done_ff", "pinId": "q" },
+      "to": { "nodeId": "n_done_not", "pinId": "in" },
+      "waypoints": [{ "x": 1130, "y": 1700 }]
+    },
+    "w_done_hold": {
+      "id": "w_done_hold",
+      "from": { "wireId": "w_done_q", "waypoint": 0 },
+      "to": { "nodeId": "n_done_or", "pinId": "in1" },
+      "waypoints": [
+        { "x": 1130, "y": 1830 },
+        { "x": 1130, "y": 1890 },
+        { "x": 880, "y": 1890 },
+        { "x": 880, "y": 1710 }
+      ]
+    },
+    "w_done_led": {
+      "id": "w_done_led",
+      "from": { "wireId": "w_done_hold", "waypoint": 1 },
+      "to": { "nodeId": "n_done_led", "pinId": "in" }
+    },
+    "w_clk_src": {
+      "id": "w_clk_src",
+      "from": { "nodeId": "n_clock", "pinId": "out" },
+      "to": { "nodeId": "n_clk_and", "pinId": "in0" },
+      "waypoints": [
+        { "x": 350, "y": 1280 },
+        { "x": 1280, "y": 1280 },
+        { "x": 1280, "y": 1540 },
+        { "x": 1130, "y": 1540 },
+        { "x": 1130, "y": 1610 }
+      ]
+    },
+    "w_clk_gate": {
+      "id": "w_clk_gate",
+      "from": { "nodeId": "n_done_not", "pinId": "out" },
+      "to": { "nodeId": "n_clk_and", "pinId": "in1" },
+      "waypoints": [
+        { "x": 1250, "y": 1700 },
+        { "x": 1250, "y": 1560 },
+        { "x": 1150, "y": 1560 }
+      ]
+    },
+    "w_clk_net": {
+      "id": "w_clk_net",
+      "from": { "nodeId": "n_clk_and", "pinId": "out" },
+      "to": { "nodeId": "t_clk_src", "pinId": "io" },
+      "waypoints": [{ "x": 1230, "y": 1220 }]
+    },
+    "w_addr_0": {
+      "id": "w_addr_0",
+      "from": { "nodeId": "t_addr_0", "pinId": "io" },
+      "to": { "nodeId": "n_rom_0", "pinId": "addr" }
+    },
+    "w_w_0": {
+      "id": "w_w_0",
+      "from": { "nodeId": "n_rom_0", "pinId": "data" },
+      "to": { "nodeId": "n_add_0", "pinId": "a" }
+    },
+    "w_sum_0": {
+      "id": "w_sum_0",
+      "from": { "nodeId": "n_add_0", "pinId": "sum" },
+      "to": { "nodeId": "n_acc_0", "pinId": "d" }
+    },
+    "w_accrst_0": {
+      "id": "w_accrst_0",
+      "from": { "nodeId": "t_rst_acc_0", "pinId": "io" },
+      "to": { "nodeId": "n_acc_0", "pinId": "rst" },
+      "waypoints": [{ "x": 2030, "y": 270 }]
+    },
+    "w_accclk_0": {
+      "id": "w_accclk_0",
+      "from": { "nodeId": "t_clk_acc_0", "pinId": "io" },
+      "to": { "nodeId": "n_acc_0", "pinId": "clk" },
+      "waypoints": [{ "x": 2130, "y": 390 }]
+    },
+    "w_q_0": {
+      "id": "w_q_0",
+      "from": { "nodeId": "n_acc_0", "pinId": "q" },
+      "to": { "nodeId": "n_word_0", "pinId": "in1" },
+      "waypoints": [{ "x": 2180, "y": 380 }, { "x": 2280, "y": 380 }]
+    },
+    "w_fb_0": {
+      "id": "w_fb_0",
+      "from": { "wireId": "w_q_0", "waypoint": 0 },
+      "to": { "nodeId": "n_add_0", "pinId": "b" },
+      "waypoints": [{ "x": 1970, "y": 380 }]
+    },
+    "w_scnet_0": {
+      "id": "w_scnet_0",
+      "from": { "wireId": "w_q_0", "waypoint": 1 },
+      "to": { "nodeId": "t_sc_0", "pinId": "io" }
+    },
+    "w_idx_0": {
+      "id": "w_idx_0",
+      "from": { "nodeId": "n_idx_0", "pinId": "out" },
+      "to": { "nodeId": "n_word_0", "pinId": "in0" },
+      "waypoints": [{ "x": 2270, "y": 300 }]
+    },
+    "w_addr_1": {
+      "id": "w_addr_1",
+      "from": { "nodeId": "t_addr_1", "pinId": "io" },
+      "to": { "nodeId": "n_rom_1", "pinId": "addr" }
+    },
+    "w_w_1": {
+      "id": "w_w_1",
+      "from": { "nodeId": "n_rom_1", "pinId": "data" },
+      "to": { "nodeId": "n_add_1", "pinId": "a" }
+    },
+    "w_sum_1": {
+      "id": "w_sum_1",
+      "from": { "nodeId": "n_add_1", "pinId": "sum" },
+      "to": { "nodeId": "n_acc_1", "pinId": "d" }
+    },
+    "w_accrst_1": {
+      "id": "w_accrst_1",
+      "from": { "nodeId": "t_rst_acc_1", "pinId": "io" },
+      "to": { "nodeId": "n_acc_1", "pinId": "rst" },
+      "waypoints": [{ "x": 2030, "y": 480 }]
+    },
+    "w_accclk_1": {
+      "id": "w_accclk_1",
+      "from": { "nodeId": "t_clk_acc_1", "pinId": "io" },
+      "to": { "nodeId": "n_acc_1", "pinId": "clk" },
+      "waypoints": [{ "x": 2130, "y": 600 }]
+    },
+    "w_q_1": {
+      "id": "w_q_1",
+      "from": { "nodeId": "n_acc_1", "pinId": "q" },
+      "to": { "nodeId": "n_word_1", "pinId": "in1" },
+      "waypoints": [{ "x": 2180, "y": 590 }, { "x": 2280, "y": 590 }]
+    },
+    "w_fb_1": {
+      "id": "w_fb_1",
+      "from": { "wireId": "w_q_1", "waypoint": 0 },
+      "to": { "nodeId": "n_add_1", "pinId": "b" },
+      "waypoints": [{ "x": 1970, "y": 590 }]
+    },
+    "w_scnet_1": {
+      "id": "w_scnet_1",
+      "from": { "wireId": "w_q_1", "waypoint": 1 },
+      "to": { "nodeId": "t_sc_1", "pinId": "io" }
+    },
+    "w_idx_1": {
+      "id": "w_idx_1",
+      "from": { "nodeId": "n_idx_1", "pinId": "out" },
+      "to": { "nodeId": "n_word_1", "pinId": "in0" },
+      "waypoints": [{ "x": 2270, "y": 510 }]
+    },
+    "w_addr_2": {
+      "id": "w_addr_2",
+      "from": { "nodeId": "t_addr_2", "pinId": "io" },
+      "to": { "nodeId": "n_rom_2", "pinId": "addr" }
+    },
+    "w_w_2": {
+      "id": "w_w_2",
+      "from": { "nodeId": "n_rom_2", "pinId": "data" },
+      "to": { "nodeId": "n_add_2", "pinId": "a" }
+    },
+    "w_sum_2": {
+      "id": "w_sum_2",
+      "from": { "nodeId": "n_add_2", "pinId": "sum" },
+      "to": { "nodeId": "n_acc_2", "pinId": "d" }
+    },
+    "w_accrst_2": {
+      "id": "w_accrst_2",
+      "from": { "nodeId": "t_rst_acc_2", "pinId": "io" },
+      "to": { "nodeId": "n_acc_2", "pinId": "rst" },
+      "waypoints": [{ "x": 2030, "y": 690 }]
+    },
+    "w_accclk_2": {
+      "id": "w_accclk_2",
+      "from": { "nodeId": "t_clk_acc_2", "pinId": "io" },
+      "to": { "nodeId": "n_acc_2", "pinId": "clk" },
+      "waypoints": [{ "x": 2130, "y": 810 }]
+    },
+    "w_q_2": {
+      "id": "w_q_2",
+      "from": { "nodeId": "n_acc_2", "pinId": "q" },
+      "to": { "nodeId": "n_word_2", "pinId": "in1" },
+      "waypoints": [{ "x": 2180, "y": 800 }, { "x": 2280, "y": 800 }]
+    },
+    "w_fb_2": {
+      "id": "w_fb_2",
+      "from": { "wireId": "w_q_2", "waypoint": 0 },
+      "to": { "nodeId": "n_add_2", "pinId": "b" },
+      "waypoints": [{ "x": 1970, "y": 800 }]
+    },
+    "w_scnet_2": {
+      "id": "w_scnet_2",
+      "from": { "wireId": "w_q_2", "waypoint": 1 },
+      "to": { "nodeId": "t_sc_2", "pinId": "io" }
+    },
+    "w_idx_2": {
+      "id": "w_idx_2",
+      "from": { "nodeId": "n_idx_2", "pinId": "out" },
+      "to": { "nodeId": "n_word_2", "pinId": "in0" },
+      "waypoints": [{ "x": 2270, "y": 720 }]
+    },
+    "w_addr_3": {
+      "id": "w_addr_3",
+      "from": { "nodeId": "t_addr_3", "pinId": "io" },
+      "to": { "nodeId": "n_rom_3", "pinId": "addr" }
+    },
+    "w_w_3": {
+      "id": "w_w_3",
+      "from": { "nodeId": "n_rom_3", "pinId": "data" },
+      "to": { "nodeId": "n_add_3", "pinId": "a" }
+    },
+    "w_sum_3": {
+      "id": "w_sum_3",
+      "from": { "nodeId": "n_add_3", "pinId": "sum" },
+      "to": { "nodeId": "n_acc_3", "pinId": "d" }
+    },
+    "w_accrst_3": {
+      "id": "w_accrst_3",
+      "from": { "nodeId": "t_rst_acc_3", "pinId": "io" },
+      "to": { "nodeId": "n_acc_3", "pinId": "rst" },
+      "waypoints": [{ "x": 2030, "y": 900 }]
+    },
+    "w_accclk_3": {
+      "id": "w_accclk_3",
+      "from": { "nodeId": "t_clk_acc_3", "pinId": "io" },
+      "to": { "nodeId": "n_acc_3", "pinId": "clk" },
+      "waypoints": [{ "x": 2130, "y": 1020 }]
+    },
+    "w_q_3": {
+      "id": "w_q_3",
+      "from": { "nodeId": "n_acc_3", "pinId": "q" },
+      "to": { "nodeId": "n_word_3", "pinId": "in1" },
+      "waypoints": [{ "x": 2180, "y": 1010 }, { "x": 2280, "y": 1010 }]
+    },
+    "w_fb_3": {
+      "id": "w_fb_3",
+      "from": { "wireId": "w_q_3", "waypoint": 0 },
+      "to": { "nodeId": "n_add_3", "pinId": "b" },
+      "waypoints": [{ "x": 1970, "y": 1010 }]
+    },
+    "w_scnet_3": {
+      "id": "w_scnet_3",
+      "from": { "wireId": "w_q_3", "waypoint": 1 },
+      "to": { "nodeId": "t_sc_3", "pinId": "io" }
+    },
+    "w_idx_3": {
+      "id": "w_idx_3",
+      "from": { "nodeId": "n_idx_3", "pinId": "out" },
+      "to": { "nodeId": "n_word_3", "pinId": "in0" },
+      "waypoints": [{ "x": 2270, "y": 930 }]
+    },
+    "w_addr_4": {
+      "id": "w_addr_4",
+      "from": { "nodeId": "t_addr_4", "pinId": "io" },
+      "to": { "nodeId": "n_rom_4", "pinId": "addr" }
+    },
+    "w_w_4": {
+      "id": "w_w_4",
+      "from": { "nodeId": "n_rom_4", "pinId": "data" },
+      "to": { "nodeId": "n_add_4", "pinId": "a" }
+    },
+    "w_sum_4": {
+      "id": "w_sum_4",
+      "from": { "nodeId": "n_add_4", "pinId": "sum" },
+      "to": { "nodeId": "n_acc_4", "pinId": "d" }
+    },
+    "w_accrst_4": {
+      "id": "w_accrst_4",
+      "from": { "nodeId": "t_rst_acc_4", "pinId": "io" },
+      "to": { "nodeId": "n_acc_4", "pinId": "rst" },
+      "waypoints": [{ "x": 2030, "y": 1110 }]
+    },
+    "w_accclk_4": {
+      "id": "w_accclk_4",
+      "from": { "nodeId": "t_clk_acc_4", "pinId": "io" },
+      "to": { "nodeId": "n_acc_4", "pinId": "clk" },
+      "waypoints": [{ "x": 2130, "y": 1230 }]
+    },
+    "w_q_4": {
+      "id": "w_q_4",
+      "from": { "nodeId": "n_acc_4", "pinId": "q" },
+      "to": { "nodeId": "n_word_4", "pinId": "in1" },
+      "waypoints": [{ "x": 2180, "y": 1220 }, { "x": 2280, "y": 1220 }]
+    },
+    "w_fb_4": {
+      "id": "w_fb_4",
+      "from": { "wireId": "w_q_4", "waypoint": 0 },
+      "to": { "nodeId": "n_add_4", "pinId": "b" },
+      "waypoints": [{ "x": 1970, "y": 1220 }]
+    },
+    "w_scnet_4": {
+      "id": "w_scnet_4",
+      "from": { "wireId": "w_q_4", "waypoint": 1 },
+      "to": { "nodeId": "t_sc_4", "pinId": "io" }
+    },
+    "w_idx_4": {
+      "id": "w_idx_4",
+      "from": { "nodeId": "n_idx_4", "pinId": "out" },
+      "to": { "nodeId": "n_word_4", "pinId": "in0" },
+      "waypoints": [{ "x": 2270, "y": 1140 }]
+    },
+    "w_addr_5": {
+      "id": "w_addr_5",
+      "from": { "nodeId": "t_addr_5", "pinId": "io" },
+      "to": { "nodeId": "n_rom_5", "pinId": "addr" }
+    },
+    "w_w_5": {
+      "id": "w_w_5",
+      "from": { "nodeId": "n_rom_5", "pinId": "data" },
+      "to": { "nodeId": "n_add_5", "pinId": "a" }
+    },
+    "w_sum_5": {
+      "id": "w_sum_5",
+      "from": { "nodeId": "n_add_5", "pinId": "sum" },
+      "to": { "nodeId": "n_acc_5", "pinId": "d" }
+    },
+    "w_accrst_5": {
+      "id": "w_accrst_5",
+      "from": { "nodeId": "t_rst_acc_5", "pinId": "io" },
+      "to": { "nodeId": "n_acc_5", "pinId": "rst" },
+      "waypoints": [{ "x": 2030, "y": 1320 }]
+    },
+    "w_accclk_5": {
+      "id": "w_accclk_5",
+      "from": { "nodeId": "t_clk_acc_5", "pinId": "io" },
+      "to": { "nodeId": "n_acc_5", "pinId": "clk" },
+      "waypoints": [{ "x": 2130, "y": 1440 }]
+    },
+    "w_q_5": {
+      "id": "w_q_5",
+      "from": { "nodeId": "n_acc_5", "pinId": "q" },
+      "to": { "nodeId": "n_word_5", "pinId": "in1" },
+      "waypoints": [{ "x": 2180, "y": 1430 }, { "x": 2280, "y": 1430 }]
+    },
+    "w_fb_5": {
+      "id": "w_fb_5",
+      "from": { "wireId": "w_q_5", "waypoint": 0 },
+      "to": { "nodeId": "n_add_5", "pinId": "b" },
+      "waypoints": [{ "x": 1970, "y": 1430 }]
+    },
+    "w_scnet_5": {
+      "id": "w_scnet_5",
+      "from": { "wireId": "w_q_5", "waypoint": 1 },
+      "to": { "nodeId": "t_sc_5", "pinId": "io" }
+    },
+    "w_idx_5": {
+      "id": "w_idx_5",
+      "from": { "nodeId": "n_idx_5", "pinId": "out" },
+      "to": { "nodeId": "n_word_5", "pinId": "in0" },
+      "waypoints": [{ "x": 2270, "y": 1350 }]
+    },
+    "w_addr_6": {
+      "id": "w_addr_6",
+      "from": { "nodeId": "t_addr_6", "pinId": "io" },
+      "to": { "nodeId": "n_rom_6", "pinId": "addr" }
+    },
+    "w_w_6": {
+      "id": "w_w_6",
+      "from": { "nodeId": "n_rom_6", "pinId": "data" },
+      "to": { "nodeId": "n_add_6", "pinId": "a" }
+    },
+    "w_sum_6": {
+      "id": "w_sum_6",
+      "from": { "nodeId": "n_add_6", "pinId": "sum" },
+      "to": { "nodeId": "n_acc_6", "pinId": "d" }
+    },
+    "w_accrst_6": {
+      "id": "w_accrst_6",
+      "from": { "nodeId": "t_rst_acc_6", "pinId": "io" },
+      "to": { "nodeId": "n_acc_6", "pinId": "rst" },
+      "waypoints": [{ "x": 2030, "y": 1530 }]
+    },
+    "w_accclk_6": {
+      "id": "w_accclk_6",
+      "from": { "nodeId": "t_clk_acc_6", "pinId": "io" },
+      "to": { "nodeId": "n_acc_6", "pinId": "clk" },
+      "waypoints": [{ "x": 2130, "y": 1650 }]
+    },
+    "w_q_6": {
+      "id": "w_q_6",
+      "from": { "nodeId": "n_acc_6", "pinId": "q" },
+      "to": { "nodeId": "n_word_6", "pinId": "in1" },
+      "waypoints": [{ "x": 2180, "y": 1640 }, { "x": 2280, "y": 1640 }]
+    },
+    "w_fb_6": {
+      "id": "w_fb_6",
+      "from": { "wireId": "w_q_6", "waypoint": 0 },
+      "to": { "nodeId": "n_add_6", "pinId": "b" },
+      "waypoints": [{ "x": 1970, "y": 1640 }]
+    },
+    "w_scnet_6": {
+      "id": "w_scnet_6",
+      "from": { "wireId": "w_q_6", "waypoint": 1 },
+      "to": { "nodeId": "t_sc_6", "pinId": "io" }
+    },
+    "w_idx_6": {
+      "id": "w_idx_6",
+      "from": { "nodeId": "n_idx_6", "pinId": "out" },
+      "to": { "nodeId": "n_word_6", "pinId": "in0" },
+      "waypoints": [{ "x": 2270, "y": 1560 }]
+    },
+    "w_addr_7": {
+      "id": "w_addr_7",
+      "from": { "nodeId": "t_addr_7", "pinId": "io" },
+      "to": { "nodeId": "n_rom_7", "pinId": "addr" }
+    },
+    "w_w_7": {
+      "id": "w_w_7",
+      "from": { "nodeId": "n_rom_7", "pinId": "data" },
+      "to": { "nodeId": "n_add_7", "pinId": "a" }
+    },
+    "w_sum_7": {
+      "id": "w_sum_7",
+      "from": { "nodeId": "n_add_7", "pinId": "sum" },
+      "to": { "nodeId": "n_acc_7", "pinId": "d" }
+    },
+    "w_accrst_7": {
+      "id": "w_accrst_7",
+      "from": { "nodeId": "t_rst_acc_7", "pinId": "io" },
+      "to": { "nodeId": "n_acc_7", "pinId": "rst" },
+      "waypoints": [{ "x": 2030, "y": 1740 }]
+    },
+    "w_accclk_7": {
+      "id": "w_accclk_7",
+      "from": { "nodeId": "t_clk_acc_7", "pinId": "io" },
+      "to": { "nodeId": "n_acc_7", "pinId": "clk" },
+      "waypoints": [{ "x": 2130, "y": 1860 }]
+    },
+    "w_q_7": {
+      "id": "w_q_7",
+      "from": { "nodeId": "n_acc_7", "pinId": "q" },
+      "to": { "nodeId": "n_word_7", "pinId": "in1" },
+      "waypoints": [{ "x": 2180, "y": 1850 }, { "x": 2280, "y": 1850 }]
+    },
+    "w_fb_7": {
+      "id": "w_fb_7",
+      "from": { "wireId": "w_q_7", "waypoint": 0 },
+      "to": { "nodeId": "n_add_7", "pinId": "b" },
+      "waypoints": [{ "x": 1970, "y": 1850 }]
+    },
+    "w_scnet_7": {
+      "id": "w_scnet_7",
+      "from": { "wireId": "w_q_7", "waypoint": 1 },
+      "to": { "nodeId": "t_sc_7", "pinId": "io" }
+    },
+    "w_idx_7": {
+      "id": "w_idx_7",
+      "from": { "nodeId": "n_idx_7", "pinId": "out" },
+      "to": { "nodeId": "n_word_7", "pinId": "in0" },
+      "waypoints": [{ "x": 2270, "y": 1770 }]
+    },
+    "w_addr_8": {
+      "id": "w_addr_8",
+      "from": { "nodeId": "t_addr_8", "pinId": "io" },
+      "to": { "nodeId": "n_rom_8", "pinId": "addr" }
+    },
+    "w_w_8": {
+      "id": "w_w_8",
+      "from": { "nodeId": "n_rom_8", "pinId": "data" },
+      "to": { "nodeId": "n_add_8", "pinId": "a" }
+    },
+    "w_sum_8": {
+      "id": "w_sum_8",
+      "from": { "nodeId": "n_add_8", "pinId": "sum" },
+      "to": { "nodeId": "n_acc_8", "pinId": "d" }
+    },
+    "w_accrst_8": {
+      "id": "w_accrst_8",
+      "from": { "nodeId": "t_rst_acc_8", "pinId": "io" },
+      "to": { "nodeId": "n_acc_8", "pinId": "rst" },
+      "waypoints": [{ "x": 2030, "y": 1950 }]
+    },
+    "w_accclk_8": {
+      "id": "w_accclk_8",
+      "from": { "nodeId": "t_clk_acc_8", "pinId": "io" },
+      "to": { "nodeId": "n_acc_8", "pinId": "clk" },
+      "waypoints": [{ "x": 2130, "y": 2070 }]
+    },
+    "w_q_8": {
+      "id": "w_q_8",
+      "from": { "nodeId": "n_acc_8", "pinId": "q" },
+      "to": { "nodeId": "n_word_8", "pinId": "in1" },
+      "waypoints": [{ "x": 2180, "y": 2060 }, { "x": 2280, "y": 2060 }]
+    },
+    "w_fb_8": {
+      "id": "w_fb_8",
+      "from": { "wireId": "w_q_8", "waypoint": 0 },
+      "to": { "nodeId": "n_add_8", "pinId": "b" },
+      "waypoints": [{ "x": 1970, "y": 2060 }]
+    },
+    "w_scnet_8": {
+      "id": "w_scnet_8",
+      "from": { "wireId": "w_q_8", "waypoint": 1 },
+      "to": { "nodeId": "t_sc_8", "pinId": "io" }
+    },
+    "w_idx_8": {
+      "id": "w_idx_8",
+      "from": { "nodeId": "n_idx_8", "pinId": "out" },
+      "to": { "nodeId": "n_word_8", "pinId": "in0" },
+      "waypoints": [{ "x": 2270, "y": 1980 }]
+    },
+    "w_addr_9": {
+      "id": "w_addr_9",
+      "from": { "nodeId": "t_addr_9", "pinId": "io" },
+      "to": { "nodeId": "n_rom_9", "pinId": "addr" }
+    },
+    "w_w_9": {
+      "id": "w_w_9",
+      "from": { "nodeId": "n_rom_9", "pinId": "data" },
+      "to": { "nodeId": "n_add_9", "pinId": "a" }
+    },
+    "w_sum_9": {
+      "id": "w_sum_9",
+      "from": { "nodeId": "n_add_9", "pinId": "sum" },
+      "to": { "nodeId": "n_acc_9", "pinId": "d" }
+    },
+    "w_accrst_9": {
+      "id": "w_accrst_9",
+      "from": { "nodeId": "t_rst_acc_9", "pinId": "io" },
+      "to": { "nodeId": "n_acc_9", "pinId": "rst" },
+      "waypoints": [{ "x": 2030, "y": 2160 }]
+    },
+    "w_accclk_9": {
+      "id": "w_accclk_9",
+      "from": { "nodeId": "t_clk_acc_9", "pinId": "io" },
+      "to": { "nodeId": "n_acc_9", "pinId": "clk" },
+      "waypoints": [{ "x": 2130, "y": 2280 }]
+    },
+    "w_q_9": {
+      "id": "w_q_9",
+      "from": { "nodeId": "n_acc_9", "pinId": "q" },
+      "to": { "nodeId": "n_word_9", "pinId": "in1" },
+      "waypoints": [{ "x": 2180, "y": 2270 }, { "x": 2280, "y": 2270 }]
+    },
+    "w_fb_9": {
+      "id": "w_fb_9",
+      "from": { "wireId": "w_q_9", "waypoint": 0 },
+      "to": { "nodeId": "n_add_9", "pinId": "b" },
+      "waypoints": [{ "x": 1970, "y": 2270 }]
+    },
+    "w_scnet_9": {
+      "id": "w_scnet_9",
+      "from": { "wireId": "w_q_9", "waypoint": 1 },
+      "to": { "nodeId": "t_sc_9", "pinId": "io" }
+    },
+    "w_idx_9": {
+      "id": "w_idx_9",
+      "from": { "nodeId": "n_idx_9", "pinId": "out" },
+      "to": { "nodeId": "n_word_9", "pinId": "in0" },
+      "waypoints": [{ "x": 2270, "y": 2190 }]
+    },
+    "w_arg_b0": {
+      "id": "w_arg_b0",
+      "from": { "nodeId": "n_word_1", "pinId": "out" },
+      "to": { "nodeId": "n_cmp_0", "pinId": "b" },
+      "waypoints": [{ "x": 2460, "y": 520 }]
+    },
+    "w_arg_b10": {
+      "id": "w_arg_b10",
+      "from": { "wireId": "w_arg_b0", "waypoint": 0 },
+      "to": { "nodeId": "n_pick_0", "pinId": "in1" },
+      "waypoints": [{ "x": 2460, "y": 620 }]
+    },
+    "w_arg_a0": {
+      "id": "w_arg_a0",
+      "from": { "nodeId": "n_word_0", "pinId": "out" },
+      "to": { "nodeId": "n_cmp_0", "pinId": "a" },
+      "waypoints": [{ "x": 2440, "y": 310 }, { "x": 2440, "y": 500 }]
+    },
+    "w_arg_a00": {
+      "id": "w_arg_a00",
+      "from": { "wireId": "w_arg_a0", "waypoint": 1 },
+      "to": { "nodeId": "n_pick_0", "pinId": "in0" },
+      "waypoints": [{ "x": 2440, "y": 600 }]
+    },
+    "w_arg_s0": {
+      "id": "w_arg_s0",
+      "from": { "nodeId": "n_cmp_0", "pinId": "lt" },
+      "to": { "nodeId": "n_pick_0", "pinId": "sel" },
+      "waypoints": [
+        { "x": 2620, "y": 500 },
+        { "x": 2620, "y": 660 },
+        { "x": 2550, "y": 660 }
+      ]
+    },
+    "w_arg_b1": {
+      "id": "w_arg_b1",
+      "from": { "nodeId": "n_word_2", "pinId": "out" },
+      "to": { "nodeId": "n_cmp_1", "pinId": "b" },
+      "waypoints": [{ "x": 2460, "y": 730 }]
+    },
+    "w_arg_b11": {
+      "id": "w_arg_b11",
+      "from": { "wireId": "w_arg_b1", "waypoint": 0 },
+      "to": { "nodeId": "n_pick_1", "pinId": "in1" },
+      "waypoints": [{ "x": 2460, "y": 830 }]
+    },
+    "w_arg_a1": {
+      "id": "w_arg_a1",
+      "from": { "nodeId": "n_pick_0", "pinId": "out" },
+      "to": { "nodeId": "n_cmp_1", "pinId": "a" },
+      "waypoints": [
+        { "x": 2590, "y": 680 },
+        { "x": 2440, "y": 680 },
+        { "x": 2440, "y": 710 }
+      ]
+    },
+    "w_arg_a01": {
+      "id": "w_arg_a01",
+      "from": { "wireId": "w_arg_a1", "waypoint": 2 },
+      "to": { "nodeId": "n_pick_1", "pinId": "in0" },
+      "waypoints": [{ "x": 2440, "y": 810 }]
+    },
+    "w_arg_s1": {
+      "id": "w_arg_s1",
+      "from": { "nodeId": "n_cmp_1", "pinId": "lt" },
+      "to": { "nodeId": "n_pick_1", "pinId": "sel" },
+      "waypoints": [
+        { "x": 2620, "y": 710 },
+        { "x": 2620, "y": 870 },
+        { "x": 2550, "y": 870 }
+      ]
+    },
+    "w_arg_b2": {
+      "id": "w_arg_b2",
+      "from": { "nodeId": "n_word_3", "pinId": "out" },
+      "to": { "nodeId": "n_cmp_2", "pinId": "b" },
+      "waypoints": [{ "x": 2460, "y": 940 }]
+    },
+    "w_arg_b12": {
+      "id": "w_arg_b12",
+      "from": { "wireId": "w_arg_b2", "waypoint": 0 },
+      "to": { "nodeId": "n_pick_2", "pinId": "in1" },
+      "waypoints": [{ "x": 2460, "y": 1040 }]
+    },
+    "w_arg_a2": {
+      "id": "w_arg_a2",
+      "from": { "nodeId": "n_pick_1", "pinId": "out" },
+      "to": { "nodeId": "n_cmp_2", "pinId": "a" },
+      "waypoints": [
+        { "x": 2590, "y": 890 },
+        { "x": 2440, "y": 890 },
+        { "x": 2440, "y": 920 }
+      ]
+    },
+    "w_arg_a02": {
+      "id": "w_arg_a02",
+      "from": { "wireId": "w_arg_a2", "waypoint": 2 },
+      "to": { "nodeId": "n_pick_2", "pinId": "in0" },
+      "waypoints": [{ "x": 2440, "y": 1020 }]
+    },
+    "w_arg_s2": {
+      "id": "w_arg_s2",
+      "from": { "nodeId": "n_cmp_2", "pinId": "lt" },
+      "to": { "nodeId": "n_pick_2", "pinId": "sel" },
+      "waypoints": [
+        { "x": 2620, "y": 920 },
+        { "x": 2620, "y": 1080 },
+        { "x": 2550, "y": 1080 }
+      ]
+    },
+    "w_arg_b3": {
+      "id": "w_arg_b3",
+      "from": { "nodeId": "n_word_4", "pinId": "out" },
+      "to": { "nodeId": "n_cmp_3", "pinId": "b" },
+      "waypoints": [{ "x": 2460, "y": 1150 }]
+    },
+    "w_arg_b13": {
+      "id": "w_arg_b13",
+      "from": { "wireId": "w_arg_b3", "waypoint": 0 },
+      "to": { "nodeId": "n_pick_3", "pinId": "in1" },
+      "waypoints": [{ "x": 2460, "y": 1250 }]
+    },
+    "w_arg_a3": {
+      "id": "w_arg_a3",
+      "from": { "nodeId": "n_pick_2", "pinId": "out" },
+      "to": { "nodeId": "n_cmp_3", "pinId": "a" },
+      "waypoints": [
+        { "x": 2590, "y": 1100 },
+        { "x": 2440, "y": 1100 },
+        { "x": 2440, "y": 1130 }
+      ]
+    },
+    "w_arg_a03": {
+      "id": "w_arg_a03",
+      "from": { "wireId": "w_arg_a3", "waypoint": 2 },
+      "to": { "nodeId": "n_pick_3", "pinId": "in0" },
+      "waypoints": [{ "x": 2440, "y": 1230 }]
+    },
+    "w_arg_s3": {
+      "id": "w_arg_s3",
+      "from": { "nodeId": "n_cmp_3", "pinId": "lt" },
+      "to": { "nodeId": "n_pick_3", "pinId": "sel" },
+      "waypoints": [
+        { "x": 2620, "y": 1130 },
+        { "x": 2620, "y": 1290 },
+        { "x": 2550, "y": 1290 }
+      ]
+    },
+    "w_arg_b4": {
+      "id": "w_arg_b4",
+      "from": { "nodeId": "n_word_5", "pinId": "out" },
+      "to": { "nodeId": "n_cmp_4", "pinId": "b" },
+      "waypoints": [{ "x": 2460, "y": 1360 }]
+    },
+    "w_arg_b14": {
+      "id": "w_arg_b14",
+      "from": { "wireId": "w_arg_b4", "waypoint": 0 },
+      "to": { "nodeId": "n_pick_4", "pinId": "in1" },
+      "waypoints": [{ "x": 2460, "y": 1460 }]
+    },
+    "w_arg_a4": {
+      "id": "w_arg_a4",
+      "from": { "nodeId": "n_pick_3", "pinId": "out" },
+      "to": { "nodeId": "n_cmp_4", "pinId": "a" },
+      "waypoints": [
+        { "x": 2590, "y": 1310 },
+        { "x": 2440, "y": 1310 },
+        { "x": 2440, "y": 1340 }
+      ]
+    },
+    "w_arg_a04": {
+      "id": "w_arg_a04",
+      "from": { "wireId": "w_arg_a4", "waypoint": 2 },
+      "to": { "nodeId": "n_pick_4", "pinId": "in0" },
+      "waypoints": [{ "x": 2440, "y": 1440 }]
+    },
+    "w_arg_s4": {
+      "id": "w_arg_s4",
+      "from": { "nodeId": "n_cmp_4", "pinId": "lt" },
+      "to": { "nodeId": "n_pick_4", "pinId": "sel" },
+      "waypoints": [
+        { "x": 2620, "y": 1340 },
+        { "x": 2620, "y": 1500 },
+        { "x": 2550, "y": 1500 }
+      ]
+    },
+    "w_arg_b5": {
+      "id": "w_arg_b5",
+      "from": { "nodeId": "n_word_6", "pinId": "out" },
+      "to": { "nodeId": "n_cmp_5", "pinId": "b" },
+      "waypoints": [{ "x": 2460, "y": 1570 }]
+    },
+    "w_arg_b15": {
+      "id": "w_arg_b15",
+      "from": { "wireId": "w_arg_b5", "waypoint": 0 },
+      "to": { "nodeId": "n_pick_5", "pinId": "in1" },
+      "waypoints": [{ "x": 2460, "y": 1670 }]
+    },
+    "w_arg_a5": {
+      "id": "w_arg_a5",
+      "from": { "nodeId": "n_pick_4", "pinId": "out" },
+      "to": { "nodeId": "n_cmp_5", "pinId": "a" },
+      "waypoints": [
+        { "x": 2590, "y": 1520 },
+        { "x": 2440, "y": 1520 },
+        { "x": 2440, "y": 1550 }
+      ]
+    },
+    "w_arg_a05": {
+      "id": "w_arg_a05",
+      "from": { "wireId": "w_arg_a5", "waypoint": 2 },
+      "to": { "nodeId": "n_pick_5", "pinId": "in0" },
+      "waypoints": [{ "x": 2440, "y": 1650 }]
+    },
+    "w_arg_s5": {
+      "id": "w_arg_s5",
+      "from": { "nodeId": "n_cmp_5", "pinId": "lt" },
+      "to": { "nodeId": "n_pick_5", "pinId": "sel" },
+      "waypoints": [
+        { "x": 2620, "y": 1550 },
+        { "x": 2620, "y": 1710 },
+        { "x": 2550, "y": 1710 }
+      ]
+    },
+    "w_arg_b6": {
+      "id": "w_arg_b6",
+      "from": { "nodeId": "n_word_7", "pinId": "out" },
+      "to": { "nodeId": "n_cmp_6", "pinId": "b" },
+      "waypoints": [{ "x": 2460, "y": 1780 }]
+    },
+    "w_arg_b16": {
+      "id": "w_arg_b16",
+      "from": { "wireId": "w_arg_b6", "waypoint": 0 },
+      "to": { "nodeId": "n_pick_6", "pinId": "in1" },
+      "waypoints": [{ "x": 2460, "y": 1880 }]
+    },
+    "w_arg_a6": {
+      "id": "w_arg_a6",
+      "from": { "nodeId": "n_pick_5", "pinId": "out" },
+      "to": { "nodeId": "n_cmp_6", "pinId": "a" },
+      "waypoints": [
+        { "x": 2590, "y": 1730 },
+        { "x": 2440, "y": 1730 },
+        { "x": 2440, "y": 1760 }
+      ]
+    },
+    "w_arg_a06": {
+      "id": "w_arg_a06",
+      "from": { "wireId": "w_arg_a6", "waypoint": 2 },
+      "to": { "nodeId": "n_pick_6", "pinId": "in0" },
+      "waypoints": [{ "x": 2440, "y": 1860 }]
+    },
+    "w_arg_s6": {
+      "id": "w_arg_s6",
+      "from": { "nodeId": "n_cmp_6", "pinId": "lt" },
+      "to": { "nodeId": "n_pick_6", "pinId": "sel" },
+      "waypoints": [
+        { "x": 2620, "y": 1760 },
+        { "x": 2620, "y": 1920 },
+        { "x": 2550, "y": 1920 }
+      ]
+    },
+    "w_arg_b7": {
+      "id": "w_arg_b7",
+      "from": { "nodeId": "n_word_8", "pinId": "out" },
+      "to": { "nodeId": "n_cmp_7", "pinId": "b" },
+      "waypoints": [{ "x": 2460, "y": 1990 }]
+    },
+    "w_arg_b17": {
+      "id": "w_arg_b17",
+      "from": { "wireId": "w_arg_b7", "waypoint": 0 },
+      "to": { "nodeId": "n_pick_7", "pinId": "in1" },
+      "waypoints": [{ "x": 2460, "y": 2090 }]
+    },
+    "w_arg_a7": {
+      "id": "w_arg_a7",
+      "from": { "nodeId": "n_pick_6", "pinId": "out" },
+      "to": { "nodeId": "n_cmp_7", "pinId": "a" },
+      "waypoints": [
+        { "x": 2590, "y": 1940 },
+        { "x": 2440, "y": 1940 },
+        { "x": 2440, "y": 1970 }
+      ]
+    },
+    "w_arg_a07": {
+      "id": "w_arg_a07",
+      "from": { "wireId": "w_arg_a7", "waypoint": 2 },
+      "to": { "nodeId": "n_pick_7", "pinId": "in0" },
+      "waypoints": [{ "x": 2440, "y": 2070 }]
+    },
+    "w_arg_s7": {
+      "id": "w_arg_s7",
+      "from": { "nodeId": "n_cmp_7", "pinId": "lt" },
+      "to": { "nodeId": "n_pick_7", "pinId": "sel" },
+      "waypoints": [
+        { "x": 2620, "y": 1970 },
+        { "x": 2620, "y": 2130 },
+        { "x": 2550, "y": 2130 }
+      ]
+    },
+    "w_arg_b8": {
+      "id": "w_arg_b8",
+      "from": { "nodeId": "n_word_9", "pinId": "out" },
+      "to": { "nodeId": "n_cmp_8", "pinId": "b" },
+      "waypoints": [{ "x": 2460, "y": 2200 }]
+    },
+    "w_arg_b18": {
+      "id": "w_arg_b18",
+      "from": { "wireId": "w_arg_b8", "waypoint": 0 },
+      "to": { "nodeId": "n_pick_8", "pinId": "in1" },
+      "waypoints": [{ "x": 2460, "y": 2300 }]
+    },
+    "w_arg_a8": {
+      "id": "w_arg_a8",
+      "from": { "nodeId": "n_pick_7", "pinId": "out" },
+      "to": { "nodeId": "n_cmp_8", "pinId": "a" },
+      "waypoints": [
+        { "x": 2590, "y": 2150 },
+        { "x": 2440, "y": 2150 },
+        { "x": 2440, "y": 2180 }
+      ]
+    },
+    "w_arg_a08": {
+      "id": "w_arg_a08",
+      "from": { "wireId": "w_arg_a8", "waypoint": 2 },
+      "to": { "nodeId": "n_pick_8", "pinId": "in0" },
+      "waypoints": [{ "x": 2440, "y": 2280 }]
+    },
+    "w_arg_s8": {
+      "id": "w_arg_s8",
+      "from": { "nodeId": "n_cmp_8", "pinId": "lt" },
+      "to": { "nodeId": "n_pick_8", "pinId": "sel" },
+      "waypoints": [
+        { "x": 2620, "y": 2180 },
+        { "x": 2620, "y": 2340 },
+        { "x": 2550, "y": 2340 }
+      ]
+    },
+    "w_winner": {
+      "id": "w_winner",
+      "from": { "nodeId": "n_pick_8", "pinId": "out" },
+      "to": { "nodeId": "n_winner", "pinId": "in" }
+    },
+    "w_idx_not": {
+      "id": "w_idx_not",
+      "from": { "nodeId": "n_winner", "pinId": "out0" },
+      "to": { "nodeId": "n_idx_not", "pinId": "in" }
+    },
+    "w_dig_net": {
+      "id": "w_dig_net",
+      "from": { "nodeId": "n_idx_not", "pinId": "out" },
+      "to": { "nodeId": "t_dig_src", "pinId": "io" }
+    },
+    "w_top_score": {
+      "id": "w_top_score",
+      "from": { "nodeId": "n_winner", "pinId": "out1" },
+      "to": { "nodeId": "n_top_score", "pinId": "in" },
+      "waypoints": [{ "x": 2820, "y": 2300 }, { "x": 2820, "y": 2360 }]
+    },
+    "w_sGbpDyXapIQu": {
+      "id": "w_sGbpDyXapIQu",
+      "from": { "nodeId": "n_XkDOfndlUEHJ", "pinId": "out" },
+      "to": { "nodeId": "n_clock", "pinId": "en" }
+    },
+    "w_rODPVAlJB8V4": {
+      "id": "w_rODPVAlJB8V4",
+      "from": { "wireId": "w_done_hold", "waypoint": 0 },
+      "to": { "nodeId": "n_swy3UKUUUel-", "pinId": "io" }
+    },
+    "w_mZ0TVecBv-3b": {
+      "id": "w_mZ0TVecBv-3b",
+      "from": { "nodeId": "n_xnprgfcmZDcK", "pinId": "io" },
+      "to": { "nodeId": "n_wYQ0VrAFwh8F", "pinId": "in" }
+    },
+    "w_Ebb95n6yAMqq": {
+      "id": "w_Ebb95n6yAMqq",
+      "from": { "nodeId": "n_kick", "pinId": "out" },
+      "to": { "nodeId": "n_rst_or", "pinId": "in1" }
+    },
+    "w_hUDKqHy-L1PA": {
+      "id": "w_hUDKqHy-L1PA",
+      "from": { "nodeId": "n_3DlqAoxs1aAF", "pinId": "out" },
+      "to": { "nodeId": "n_rst_or", "pinId": "in0" },
+      "waypoints": [{ "x": 580, "y": 990 }]
+    }
+  },
+  "defaultZoom": 0.8
+}
