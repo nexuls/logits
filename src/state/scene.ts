@@ -295,7 +295,10 @@ export function isEnclosure(resolved: ResolvedNode): boolean {
  * over it would hide what it is labelling — largest first, so a group nested
  * in another is drawn over its parent. Every other node follows in id order.
  */
-export function paintOrder(scene: Scene): string[] {
+export function paintOrder(scene: Scene): readonly string[] {
+  const hit = paintOrderCache.get(scene);
+  if (hit) return hit;
+
   const enclosures: string[] = [];
   const rest: string[] = [];
 
@@ -310,8 +313,19 @@ export function paintOrder(scene: Scene): string[] {
   // `sort` is stable and the ids went in sorted, so equal areas keep id order.
   enclosures.sort((a, b) => area(b) - area(a));
 
-  return [...enclosures, ...rest];
+  const order = [...enclosures, ...rest];
+  paintOrderCache.set(scene, order);
+  return order;
 }
+
+/**
+ * Memoised per scene, because a scene is immutable — it is rebuilt whenever
+ * the document changes — and this sorts every node id. One pointer move asks
+ * for it four or five times over (`pinAt`, `nodeAt`, `wireAt`, `waypointAt`
+ * through `solidNodeAt`), and the node layer asks again on every render, which
+ * at 2,000 nodes was 0.4 ms a call for an answer that cannot have changed.
+ */
+const paintOrderCache = new WeakMap<Scene, readonly string[]>();
 
 /**
  * Test seam — the caches are process-global and otherwise never cleared.

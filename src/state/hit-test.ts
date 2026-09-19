@@ -95,9 +95,24 @@ export function pinAt(
   let bestDistance = Infinity;
 
   const nodeIds = paintOrder(scene);
-  for (const [order, nodeId] of nodeIds.entries()) {
-    const node = scene.nodes[nodeId];
-    if (coveredAbove(scene, nodeIds, order, world)) continue;
+
+  // The highest-painted node whose interior covers `world`. Everything below
+  // it is hidden at this point, so its pins are out of reach — and the node
+  // itself is not, because nothing above *it* covers.
+  //
+  // One backwards pass rather than asking "is anything above me covering?" per
+  // node, which was quadratic: at 2,000 nodes it made a single pointer move
+  // cost 37 ms, so hovering ran at 24 moves a second.
+  let cover = 0;
+  for (let order = nodeIds.length - 1; order >= 0; order--) {
+    if (interiorContains(scene.nodes[nodeIds[order]].bounds, world)) {
+      cover = order;
+      break;
+    }
+  }
+
+  for (let order = cover; order < nodeIds.length; order++) {
+    const node = scene.nodes[nodeIds[order]];
     for (const pin of node.pins) {
       const distance = Math.hypot(pin.world.x - world.x, pin.world.y - world.y);
       // Strictly nearer, so an exact tie keeps the earlier id and the walk
@@ -394,24 +409,15 @@ function encloses(outer: Rect, inner: Rect): boolean {
  * Does a node painted after `nodeIds[order]` have `world` strictly inside its
  * body? `nodeIds` is `paintOrder`, the same one `nodeAt` walks.
  */
-function coveredAbove(
-  scene: Scene,
-  nodeIds: readonly string[],
-  order: number,
-  world: Point,
-): boolean {
-  for (let above = order + 1; above < nodeIds.length; above++) {
-    const { x, y, width, height } = scene.nodes[nodeIds[above]].bounds;
-    if (
-      world.x > x &&
-      world.x < x + width &&
-      world.y > y &&
-      world.y < y + height
-    ) {
-      return true;
-    }
-  }
-  return false;
+/**
+ * Strictly inside, edges excluded — which is what makes two nodes that merely
+ * abut still expose each other's edge pins.
+ */
+function interiorContains(bounds: Rect, world: Point): boolean {
+  const { x, y, width, height } = bounds;
+  return (
+    world.x > x && world.x < x + width && world.y > y && world.y < y + height
+  );
 }
 
 /** The point of segment `a → b` nearest `point`, endpoints included. */

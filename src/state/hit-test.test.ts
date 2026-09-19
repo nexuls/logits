@@ -8,6 +8,7 @@ import { lookupNode } from "@/lib/nodes/registry";
 import {
   elementsInRect,
   nodeAt,
+  PIN_HIT_RADIUS,
   pinAt,
   pinsCompatible,
   pinsMatchExactly,
@@ -15,7 +16,7 @@ import {
   waypointAt,
   wireAt,
 } from "./hit-test";
-import { buildScene, clearSceneCaches } from "./scene";
+import { buildScene, clearSceneCaches, paintOrder, type Scene } from "./scene";
 
 function requireNode(type: string): NodeDefinition {
   const definition = lookupNode(type);
@@ -326,6 +327,78 @@ describe("occlusion by a node body", () => {
 
     const covered = buildScene(withCover(bent, handle, "cover"), lookupNode);
     expect(waypointAt(covered, handle, [wireId])).toBeNull();
+  });
+
+  /**
+   * `pinAt` as it read before the covering test was turned inside out: ask, per
+   * node, whether anything painted above it covers the point. Quadratic, which
+   * is why it is only here — the fast version must agree with it everywhere,
+   * including the strict-interior rule that keeps two abutting nodes from
+   * hiding each other's edge pins.
+   */
+  function pinAtReference(built: Scene, world: { x: number; y: number }) {
+    const ids = paintOrder(built);
+    let best: { id: string; pinId: string } | null = null;
+    let bestDistance = Infinity;
+
+    for (let order = 0; order < ids.length; order++) {
+      const covered = ids.slice(order + 1).some((id) => {
+        const { x, y, width, height } = built.nodes[id].bounds;
+        return (
+          world.x > x &&
+          world.x < x + width &&
+          world.y > y &&
+          world.y < y + height
+        );
+      });
+      if (covered) continue;
+
+      for (const pin of built.nodes[ids[order]].pins) {
+        const distance = Math.hypot(
+          pin.world.x - world.x,
+          pin.world.y - world.y,
+        );
+        if (distance <= PIN_HIT_RADIUS && distance < bestDistance) {
+          best = { id: ids[order], pinId: pin.spec.id };
+          bestDistance = distance;
+        }
+      }
+    }
+    return best;
+  }
+
+  it("agrees with the quadratic original at every point on a crowded board", () => {
+    // Four gates overlapping each other and the fixture's two nodes, with ids
+    // spanning the paint order so covering happens in both directions.
+    let crowded = doc;
+    for (const [index, id] of ["!a", "!b", "~a", "~b"].entries()) {
+      crowded = withCover(
+        crowded,
+        { x: 20 + index * 25, y: 10 + index * 15 },
+        id,
+      );
+    }
+    const built = buildScene(crowded, lookupNode);
+
+    let compared = 0;
+    let hits = 0;
+    for (let x = -40; x <= 260; x += 5) {
+      for (let y = -40; y <= 120; y += 5) {
+        const world = { x, y };
+        const fast = pinAt(built, world);
+        const slow = pinAtReference(built, world);
+        expect(
+          fast && { id: fast.node.node.id, pinId: fast.pin.spec.id },
+        ).toEqual(slow);
+        compared++;
+        if (slow) hits++;
+      }
+    }
+
+    // The sweep is worthless if it never lands on a pin, or never misses.
+    expect(compared).toBeGreaterThan(1000);
+    expect(hits).toBeGreaterThan(0);
+    expect(hits).toBeLessThan(compared);
   });
 
   it("hides a pin under a node painted above its own, not below", () => {
