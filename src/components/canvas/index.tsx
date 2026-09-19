@@ -194,12 +194,23 @@ export default function Canvas({
     };
   }, []);
 
-  const canvasVars = useMemo(
+  /**
+   * The pan/zoom transform, written straight onto the layer that carries it.
+   *
+   * It used to travel as three inherited custom properties on the container
+   * (`--canvas-x`, `--canvas-y`, `--canvas-zoom`) which this layer read back
+   * through `var()`. That is what a changing custom property costs: the
+   * browser cannot know the value only feeds a `transform`, so every change
+   * invalidates the whole inheriting subtree and relayouts it. Measured at the
+   * 2,000-node target, one frame of panning was 220 ms of layout; the same
+   * frames writing `transform` here directly are 0.2 ms. See
+   * artifacts/decisions/0013-the-transform-is-a-style-not-a-variable.md.
+   */
+  const transform = useMemo(
     () =>
       ({
-        "--canvas-x": `${offset.x}px`,
-        "--canvas-y": `${offset.y}px`,
-        "--canvas-zoom": String(scale),
+        transformOrigin: "top left",
+        transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
       }) as CSSProperties,
     [offset.x, offset.y, scale],
   );
@@ -220,12 +231,7 @@ export default function Canvas({
     // canvas has to fit the *canvas*, and the two sidebars change how wide that
     // is without the viewport changing at all. Everything inside sizes itself
     // with `@min-[…]/canvas` / `@max-[…]/canvas`.
-    <div
-      className="@container/canvas relative w-full h-full overflow-hidden"
-      style={{
-        ...canvasVars,
-      }}
-    >
+    <div className="@container/canvas relative w-full h-full overflow-hidden">
       <div
         ref={viewportRef}
         className={cn(
@@ -295,14 +301,7 @@ export default function Canvas({
         aria-label="Canvas with pan and zoom"
       >
         {showGrid && <CanvasGrid scale={scale} offset={offset} />}
-        <div
-          className="absolute inset-0 select-none"
-          style={{
-            transformOrigin: "top left",
-            transform:
-              "translate(var(--canvas-x), var(--canvas-y)) scale(var(--canvas-zoom))",
-          }}
-        >
+        <div className="absolute inset-0 select-none" style={transform}>
           {children}
         </div>
       </div>

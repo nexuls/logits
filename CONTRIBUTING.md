@@ -92,7 +92,9 @@ it works. The full list lives in [AGENTS.md](AGENTS.md); the short version:
 5. **Signals are four-valued** (`0`/`1`/`X`/`Z`) — never booleans, never number
    bitmasks. See [ADR 0002](artifacts/decisions/0002-four-valued-logic.md).
 6. **One pan/zoom implementation**, the one in `src/components/canvas/`. Build
-   on its `--canvas-x` / `--canvas-y` / `--canvas-zoom` transform.
+   on the `transform` it writes on its own layer — a style, never a CSS variable
+   ([ADR 0013](artifacts/decisions/0013-the-transform-is-a-style-not-a-variable.md)),
+   and read the live value from `onViewportChange`.
 7. **World and screen coordinates never mix implicitly.** Name variables
    `worldX` / `screenX` and convert through the shared helpers.
 8. **The simulation never drives React state per event.** One notification per

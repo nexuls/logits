@@ -9,8 +9,11 @@ The canvas could be drawn entirely with `<canvas>` (fastest, but every control,
 label and focus ring must be reimplemented), entirely with SVG, or as DOM nodes
 over a shared transform.
 
-The viewport already establishes a single transformed layer driven by
-`--canvas-x`, `--canvas-y`, `--canvas-zoom`.
+The viewport already establishes a single transformed layer. (It was driven by
+`--canvas-x`, `--canvas-y`, `--canvas-zoom` at the time; the layer now carries
+its own `transform` style —
+[ADR 0013](0013-the-transform-is-a-style-not-a-variable.md) — which changes
+nothing about this decision.)
 
 ## Decision
 
@@ -27,5 +30,7 @@ own a private `<canvas>` inside their DOM body.
 - One SVG for all wires keeps the element count proportional to wires, not
   wires × segments, and lets hit-testing use a single spatial index.
 - Cost: DOM node count grows with circuit size. Mitigation is viewport culling
-  of rendering (never of simulation), if a profile shows it is needed.
+  of rendering (never of simulation), if a profile shows it is needed. Profiled
+  at 2,000 nodes: it is not — see
+  [ADR 0013](0013-the-transform-is-a-style-not-a-variable.md).
 - Rules out a second, independent pan/zoom implementation anywhere in the app.

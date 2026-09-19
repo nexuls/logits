@@ -52,7 +52,11 @@ reverses a decision, add an ADR. Do not leave the two disagreeing.
 5. **Signals are four-valued** (`0`/`1`/`X`/`Z`), never booleans or number
    bitmasks. See [ADR 0002](artifacts/decisions/0002-four-valued-logic.md).
 6. **One pan/zoom implementation**, the one in `src/components/canvas/`. Build on
-   its `--canvas-x` / `--canvas-y` / `--canvas-zoom` transform; do not add a second.
+   the `transform` it writes on its own layer; do not add a second. It is a style,
+   not a CSS variable, and must stay one — an inherited custom property that
+   changes every frame relayouts the whole subtree
+   ([ADR 0013](artifacts/decisions/0013-the-transform-is-a-style-not-a-variable.md)).
+   Take the live transform from `onViewportChange`, never from CSS.
 7. **World and screen coordinates never mix implicitly.** Name variables
    `worldX` / `screenX` and convert through the shared helpers.
 8. **The simulation never drives React state per event.** One notification per

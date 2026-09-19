@@ -49,9 +49,12 @@ one, that is a design error — pass it in as an argument.
 ## Rendering model
 
 The canvas already establishes the world→screen transform: a single transformed
-layer using `--canvas-x`, `--canvas-y`, `--canvas-zoom`
+layer carrying its own `transform` style
 ([canvas/index.tsx](../src/components/canvas/index.tsx)). Build on it, do not
-introduce a second transform scheme.
+introduce a second transform scheme, and do not move it back into an inherited
+CSS variable — that relayouts the whole subtree on every frame of a pan
+([ADR 0013](decisions/0013-the-transform-is-a-style-not-a-variable.md)). The
+live transform is published through `onViewportChange`.
 
 - **Nodes** render from the derived scene ([scene.ts](../src/state/scene.ts),
   [ADR 0004](decisions/0004-derived-scene-graph.md)) as absolutely-positioned
