@@ -75,6 +75,22 @@ function invalidate() {
   for (const listener of listeners) listener();
 }
 
+/**
+ * True once this client has read storage.
+ *
+ * `useProjects` cannot tell "there are no projects" from "storage has not been
+ * read yet" — both are an empty array — and the difference decides whether the
+ * app may pick a project on the user's behalf. Anything that would overwrite
+ * the project named in the URL has to wait for this.
+ */
+export function useProjectsHydrated(): boolean {
+  return useSyncExternalStore(
+    subscribe,
+    () => true,
+    () => false,
+  );
+}
+
 /** Sorted pinned-first, then newest first. Empty until hydration. */
 export function useProjects(): ProjectMeta[] {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);

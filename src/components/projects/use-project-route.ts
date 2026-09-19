@@ -44,6 +44,12 @@ function writeLocation(id: string, mode: "push" | "replace") {
 export type ProjectRoute = {
   /** "" until the first effect runs, so the server and client agree. */
   activeId: string;
+  /**
+   * False until that first effect has read the URL. Nothing may decide which
+   * project to open before it flips, because `activeId` is still empty and
+   * deciding would `replaceState` the id straight out of the link.
+   */
+  ready: boolean;
   /** The user chose this project: a history entry, so Back undoes it. */
   select: (id: string) => void;
   /**
@@ -57,9 +63,11 @@ export function useProjectRoute(): ProjectRoute {
   // Empty on the first render even when the URL has an id, because the server
   // rendered it empty and a mismatch here would be a hydration error.
   const [activeId, setActiveId] = useState("");
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     setActiveId(idFromLocation());
+    setReady(true);
 
     // Back and forward move between projects, so the app has to follow.
     const onPopState = () => setActiveId(idFromLocation());
@@ -77,6 +85,7 @@ export function useProjectRoute(): ProjectRoute {
 
   return {
     activeId,
+    ready,
     select: useCallback((id: string) => go(id, "push"), [go]),
     settle: useCallback((id: string) => go(id, "replace"), [go]),
   };

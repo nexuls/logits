@@ -9,12 +9,13 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getExample } from "@/example";
 import { MAX_PLACEMENT_COUNT } from "@/lib/circuit/geometry";
 import { useAppliedTheme, useEditorSettings } from "@/state/editor-settings";
-import { useProjects } from "@/state/projects-store";
+import { useProjects, useProjectsHydrated } from "@/state/projects-store";
 
 export default function Home() {
   const projects = useProjects();
+  const projectsHydrated = useProjectsHydrated();
   const settings = useEditorSettings();
-  const { activeId, select, settle } = useProjectRoute();
+  const { activeId, ready, select, settle } = useProjectRoute();
   // The node type armed for placement, and how many copies the next canvas
   // click drops. The palette owns the choice and the canvas consumes it, so
   // neither has to know about the other; a count of zero *is* disarmed, which
@@ -29,13 +30,19 @@ export default function Home() {
   // with the mobile sidebar sheet, and the theme must outlive that.
   const theme = useAppliedTheme();
 
-  // The list is empty until hydration reads storage, so the opening project can
-  // only be settled once it arrives — and settled again if the open one is
-  // deleted from under us. An example is a valid selection that is deliberately
-  // not in the list, so it has to survive this too. A `?p=` naming a project
-  // this browser does not have falls through to the first one, which is what a
-  // link from another machine does.
+  // Picks the opening project, and picks again if the open one is deleted from
+  // under us. An example is a valid selection that is deliberately not in the
+  // list, so it has to survive this too. A `?p=` naming a project this browser
+  // does not have falls through to the first one, which is what a link from
+  // another machine is.
+  //
+  // Both guards are load-bearing, and each one on its own is a bug. Until
+  // `ready`, `activeId` is still "" whatever the URL says, so this would settle
+  // over the id in the link. Until `projectsHydrated`, an empty list means
+  // "storage not read yet" rather than "no projects", so this would settle to
+  // nothing at all and clear the URL on the way.
   useEffect(() => {
+    if (!ready || !projectsHydrated) return;
     if (
       getExample(activeId) ||
       projects.some((project) => project.id === activeId)
@@ -43,7 +50,7 @@ export default function Home() {
       return;
     }
     settle(projects[0]?.id ?? "");
-  }, [projects, activeId, settle]);
+  }, [ready, projectsHydrated, projects, activeId, settle]);
 
   return (
     <SidebarProvider className="h-svh min-h-0">
