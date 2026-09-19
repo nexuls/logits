@@ -8,6 +8,7 @@ import masterSlaveFlipFlop from "./master-slave-flipflop.json";
 import mnistDightRecosnizer from "./mnist-digit-recogniser.json";
 import mod16SyncCounter from "./mod-16-sync-counter.json";
 import mux2to1 from "./mux-2to1.json";
+import sameInstantOrdering from "./same-instant-ordering.json";
 import snake from "./snake.json";
 import srLatch from "./sr-latch.json";
 import tristateBus from "./tristate-bus.json";
@@ -44,6 +45,10 @@ const CATALOG: readonly { raw: unknown; summary: string }[] = [
   { raw: fullAdder, summary: "Two half adders and an OR, carry chained." },
   { raw: mux2to1, summary: "Select picks which input reaches the output." },
   { raw: srLatch, summary: "Cross-coupled NOR gates that remember a bit." },
+  {
+    raw: sameInstantOrdering,
+    summary: "Two NOR latches released at once: one oscillates, one latches.",
+  },
   { raw: tristateBus, summary: "Two drivers sharing one net, with Z and X." },
   {
     raw: masterSlaveFlipFlop,
