@@ -115,13 +115,40 @@ export function createProjectFrom(source: CircuitDocument): CreateResult {
 }
 
 /**
+ * How to rename the document the editor has open, if it is this one.
+ *
+ * Registered by `document.ts` at import rather than called from here: that
+ * store already imports this one for `refreshProjects`, and reaching back
+ * directly would make the two circular. It is the inversion that lets
+ * `renameProject` stay the single entry point — see the comment on it.
+ */
+type OpenRename = (id: string, name: string) => StorageResult | null;
+let renameIfOpen: OpenRename = () => null;
+
+export function registerOpenDocumentRename(rename: OpenRename): void {
+  renameIfOpen = rename;
+}
+
+/**
  * Renames through the document, so the file and the index cannot disagree.
  * An index entry whose document has gone missing is still renamed, because a
  * list that refuses to change is worse than one pointing at a lost circuit.
+ *
+ * The open project goes through the editor's own store instead. Reading the
+ * stored copy and writing it back would take the document as it was at the
+ * last autosave and drop every edit made since — renaming a circuit you are
+ * working on would quietly undo the last few seconds of work. One entry point
+ * rather than two, so no caller has to know which case it is in.
  */
 export function renameProject(id: string, name: string): StorageResult {
   const trimmed = name.trim();
   if (trimmed.length === 0) return { ok: false, error: "Name cannot be empty" };
+
+  const open = renameIfOpen(id, trimmed);
+  if (open) {
+    invalidate();
+    return open;
+  }
 
   const loaded = readDocument(id);
   const result = loaded?.ok

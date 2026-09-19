@@ -63,7 +63,7 @@ import {
   redo as historyRedo,
   undo as historyUndo,
 } from "./history";
-import { refreshProjects } from "./projects-store";
+import { refreshProjects, registerOpenDocumentRename } from "./projects-store";
 import { clearSelection } from "./selection";
 import { readDocument, writeDocument } from "./storage";
 
@@ -687,6 +687,15 @@ export function updateNodeLabelPosition(
 export function renameOpenDocument(name: string): boolean {
   return apply("rename", (document) => renameDocument(document, name));
 }
+
+// So `renameProject` can be the one entry point without importing this store
+// back — it is imported from here, and the cycle would be real.
+registerOpenDocumentRename((id, name) => {
+  if (getRootDocument()?.id !== id) return null;
+  return renameOpenDocument(name)
+    ? { ok: true }
+    : { ok: false, error: "Name cannot be empty" };
+});
 
 /**
  * Sets the zoom the open circuit opens at, and that "reset view" returns to.

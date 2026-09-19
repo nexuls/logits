@@ -18,6 +18,7 @@ import {
   updateNodeLabel,
   updateNodeParams,
 } from "./document";
+import { renameProject } from "./projects-store";
 
 /**
  * The store is exercised through its command API, not its hooks: everything
@@ -217,5 +218,38 @@ describe("params, labels and the document name", () => {
 
     expect(renameOpenDocument("  ")).toBe(false);
     expect(getDocument()?.name).toBe("Half adder");
+  });
+
+  it("renames the open project in place, keeping edits made since the save", () => {
+    const id = getDocument()?.id as string;
+    // An edit the stored copy has not seen. Renaming through the projects
+    // store used to read that copy back and write it out again, taking the
+    // circuit to what it was at the last autosave.
+    const nodeId = placeNode(and, { x: 40, y: 40 }) as string;
+
+    expect(renameProject(id, "Renamed from the sidebar")).toEqual({ ok: true });
+
+    expect(getDocument()?.name).toBe("Renamed from the sidebar");
+    expect(getDocument()?.nodes[nodeId]).toBeDefined();
+  });
+
+  it("still refuses an empty name through the projects store", () => {
+    const id = getDocument()?.id as string;
+    const before = getDocument()?.name;
+
+    expect(renameProject(id, "   ").ok).toBe(false);
+    expect(getDocument()?.name).toBe(before);
+  });
+
+  it("leaves a project that is not open to the stored path", () => {
+    // Nothing is open under this id, so the registered hook declines and the
+    // store falls through to reading and rewriting the file. There is no
+    // storage in the node environment, so what matters is that the open
+    // document is untouched.
+    const openName = getDocument()?.name;
+
+    renameProject("d_not_open", "Someone else");
+
+    expect(getDocument()?.name).toBe(openName);
   });
 });

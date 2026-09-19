@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Editor from "@/components/editor/editor";
 import ElementsSidebar from "@/components/editor/elements-sidebar";
 import ProjectsSidebar from "@/components/projects/projects-sidebar";
+import { useProjectRoute } from "@/components/projects/use-project-route";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getExample } from "@/example";
 import { MAX_PLACEMENT_COUNT } from "@/lib/circuit/geometry";
@@ -13,7 +14,7 @@ import { useProjects } from "@/state/projects-store";
 export default function Home() {
   const projects = useProjects();
   const settings = useEditorSettings();
-  const [activeId, setActiveId] = useState("");
+  const { activeId, select, settle } = useProjectRoute();
   // The node type armed for placement, and how many copies the next canvas
   // click drops. The palette owns the choice and the canvas consumes it, so
   // neither has to know about the other; a count of zero *is* disarmed, which
@@ -29,23 +30,24 @@ export default function Home() {
   const theme = useAppliedTheme();
 
   // The list is empty until hydration reads storage, so the opening project can
-  // only be picked once it arrives — and picked again if the open one is
+  // only be settled once it arrives — and settled again if the open one is
   // deleted from under us. An example is a valid selection that is deliberately
-  // not in the list, so it has to survive this too.
+  // not in the list, so it has to survive this too. A `?p=` naming a project
+  // this browser does not have falls through to the first one, which is what a
+  // link from another machine does.
   useEffect(() => {
-    setActiveId((current) =>
-      getExample(current) || projects.some((project) => project.id === current)
-        ? current
-        : (projects[0]?.id ?? ""),
-    );
-  }, [projects]);
+    if (
+      getExample(activeId) ||
+      projects.some((project) => project.id === activeId)
+    ) {
+      return;
+    }
+    settle(projects[0]?.id ?? "");
+  }, [projects, activeId, settle]);
 
   return (
     <SidebarProvider className="h-svh min-h-0">
-      <ProjectsSidebar
-        activeProjectId={activeId}
-        onSelectProject={setActiveId}
-      />
+      <ProjectsSidebar activeProjectId={activeId} onSelectProject={select} />
       <SidebarInset className="min-w-0 flex-row overflow-hidden">
         <div className="relative min-w-0 flex-1">
           <Editor
@@ -59,7 +61,7 @@ export default function Home() {
             armedType={pendingType}
             armedCount={pending.count}
             onDisarm={() => setPending({ type: "", count: 0 })}
-            onSelectProject={setActiveId}
+            onSelectProject={select}
           />
         </div>
 
