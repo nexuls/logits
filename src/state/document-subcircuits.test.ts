@@ -134,7 +134,9 @@ describe("createSubcircuitFromSelection", () => {
   });
 
   it("refuses an empty selection", () => {
-    expect(createSubcircuitFromSelection({ nodeIds: [] }, "Nothing")).toBeNull();
+    expect(
+      createSubcircuitFromSelection({ nodeIds: [] }, "Nothing"),
+    ).toBeNull();
   });
 
   it("makes the instance's pins resolvable to the editor", () => {
@@ -215,8 +217,9 @@ describe("editing inside a chip", () => {
     expect(lamp).not.toBeNull();
 
     // In the chip, and only in the chip.
-    expect(getRootDocument()?.subcircuits?.[key]?.nodes[lamp as string])
-      .toBeDefined();
+    expect(
+      getRootDocument()?.subcircuits?.[key]?.nodes[lamp as string],
+    ).toBeDefined();
     expect(getRootDocument()?.nodes[lamp as string]).toBeUndefined();
   });
 
@@ -400,9 +403,7 @@ describe("managing chips", () => {
 
     expect(renameSubcircuitByKey(key, "Conjunction")).toBe(true);
     expect(getRootDocument()?.subcircuits?.[key]?.name).toBe("Conjunction");
-    expect(getRootDocument()?.nodes[instanceId].type).toBe(
-      subcircuitType(key),
-    );
+    expect(getRootDocument()?.nodes[instanceId].type).toBe(subcircuitType(key));
   });
 
   it("counts the instances of a chip", () => {

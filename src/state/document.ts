@@ -988,7 +988,9 @@ export function useDocumentLookup(): NodeLookup {
   const library = useRootDocument()?.subcircuits;
   return useMemo(
     () =>
-      library ? subcircuitLookup({ subcircuits: library }, lookupNode) : lookupNode,
+      library
+        ? subcircuitLookup({ subcircuits: library }, lookupNode)
+        : lookupNode,
     [library],
   );
 }

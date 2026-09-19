@@ -7,7 +7,6 @@ import { clampScale, DEFAULT_SCALE } from "./coords";
 import {
   GRID_SIZE,
   nodeBounds,
-  pinOffsets,
   rotateSize,
   snapPointToGrid,
   snapToGrid,

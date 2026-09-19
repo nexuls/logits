@@ -491,7 +491,9 @@ function describeGroup(
   group: BoundaryGroup,
 ): { direction: "in" | "out"; width: number; name: string; y: number } {
   const insidePins = group.inside
-    .map((end) => (isWireAnchor(end) ? null : resolvePin(document, lookup, end)))
+    .map((end) =>
+      isWireAnchor(end) ? null : resolvePin(document, lookup, end),
+    )
     .filter((pin) => pin !== null);
   const outsidePins = group.outside
     .map((ref) => resolvePin(document, lookup, ref))

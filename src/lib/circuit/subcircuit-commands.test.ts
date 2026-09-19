@@ -74,12 +74,7 @@ function make(
   nodeIds: readonly string[],
   name = "Chip",
 ) {
-  const result = createSubcircuit(
-    document,
-    lookupNode,
-    { nodeIds },
-    { name },
-  );
+  const result = createSubcircuit(document, lookupNode, { nodeIds }, { name });
   if (!result) throw new Error("expected a subcircuit");
   return result;
 }
@@ -385,8 +380,7 @@ describe("renameSubcircuitPort", () => {
     // rename both and check the result compiles.
     const chip = renamed.subcircuits?.[key] as CircuitDocument;
     const port = Object.values(chip.nodes).find(
-      (node) =>
-        node.type === "sub.port" && node.params.name === output.name,
+      (node) => node.type === "sub.port" && node.params.name === output.name,
     );
     if (!port) throw new Error("expected the port");
 

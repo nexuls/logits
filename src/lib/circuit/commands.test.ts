@@ -28,8 +28,8 @@ import {
 import { DEFAULT_SCALE, MAX_SCALE, MIN_SCALE } from "./coords";
 import { createEmptyDocument } from "./io";
 import {
-  isWireAnchor,
   type CircuitDocument,
+  isWireAnchor,
   type PinRef,
   type Wire,
 } from "./schema";
