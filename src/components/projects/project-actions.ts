@@ -70,14 +70,37 @@ export function copyProjectLink(id: string): Promise<CopyLinkResult> {
  * The data rides in the fragment, not the query: servers refuse a request line
  * past about 16 KB (HTTP 431), and a fragment is never sent to the server.
  */
-export async function copyCircuitLink(
+export function copyCircuitLink(
   document: CircuitDocument,
 ): Promise<CopyLinkResult> {
-  const url = encodeShareParam(document).then(
-    (data) => `${window.location.origin}/preview#data=${data}`,
+  // Handed over unawaited, so the clipboard write starts inside the click —
+  // see `writeClipboardText`.
+  return copyLink(
+    encodeShareParam(document).then(
+      (data) => `${window.location.origin}/preview#data=${data}`,
+    ),
   );
+}
+
+/**
+ * Puts a shipped example's `/preview/example/<id>` link on the clipboard.
+ *
+ * Nothing to encode, because the example is in the bundle and its id is the
+ * whole address. That also makes this the one share link that keeps following
+ * the shipped circuit: `copyCircuitLink` freezes a copy of the document into
+ * the URL, so a later fix to an example would never reach a link already sent.
+ */
+export function copyExampleLink(exampleId: string): Promise<CopyLinkResult> {
+  return copyLink(
+    `${window.location.origin}/preview/example/${encodeURIComponent(exampleId)}`,
+  );
+}
+
+async function copyLink(
+  url: Promise<string> | string,
+): Promise<CopyLinkResult> {
   try {
-    await writeClipboardText(url);
+    await writeClipboardText(Promise.resolve(url));
     return { ok: true, message: "Link copied." };
   } catch {
     // No clipboard outside a secure context, or permission refused.

@@ -1,6 +1,12 @@
 "use client";
 
-import { DownloadIcon, SparklesIcon, XIcon } from "lucide-react";
+import {
+  CheckIcon,
+  DownloadIcon,
+  Share2Icon,
+  SparklesIcon,
+  XIcon,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import CircuitPreview from "@/components/preview/circuit-preview";
@@ -17,6 +23,7 @@ import { lookupNode } from "@/lib/nodes/registry";
 import { cn } from "@/lib/utils";
 import type { CreateResult } from "@/state/projects-store";
 import ExampleThumbnail from "./example-thumbnail";
+import { copyExampleLink } from "./project-actions";
 import { formatNodeCount } from "./projects";
 
 type Props = {
@@ -183,6 +190,13 @@ export default function ExamplesDialog({
                     <XIcon />
                     Close preview
                   </Button>
+                  {/* Keyed, so the copied confirmation below does not carry
+                      over to the next example the way the button would. */}
+                  <ShareExampleButton
+                    key={selected.id}
+                    exampleId={selected.id}
+                    onError={setError}
+                  />
                   <Button size="sm" onClick={() => importExample(selected)}>
                     <DownloadIcon />
                     Import
@@ -211,5 +225,50 @@ export default function ExamplesDialog({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+type ShareProps = {
+  exampleId: string;
+  /** The dialog's own error line, which sits right under this button. */
+  onError: (message: string) => void;
+};
+
+/**
+ * Copies the example's `/preview/example/<id>` link — the same link the
+ * preview page's Share button offers, so a circuit picked here and one opened
+ * from a link are shared as the same address.
+ *
+ * It confirms on itself rather than with a toast: the toast viewport is
+ * portalled before the dialog and shares its `z-50`, so a toast raised from in
+ * here comes up behind the overlay. A failure has the dialog's error line,
+ * which is already directly below these buttons.
+ */
+function ShareExampleButton({ exampleId, onError }: ShareProps) {
+  const [copied, setCopied] = useState(false);
+
+  // One timer, restarted by each copy, as the editor's notice does it.
+  useEffect(() => {
+    if (!copied) return;
+    const handle = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(handle);
+  }, [copied]);
+
+  return (
+    <Button
+      variant="secondary"
+      size="sm"
+      onClick={() =>
+        copyExampleLink(exampleId).then((result) => {
+          if (result.ok) setCopied(true);
+          else onError(result.message);
+        })
+      }
+    >
+      {copied ? <CheckIcon /> : <Share2Icon />}
+      {/* Announced, not just recoloured: the confirmation is the only thing
+          that tells you the copy worked. */}
+      <span aria-live="polite">{copied ? "Copied" : "Share"}</span>
+    </Button>
   );
 }

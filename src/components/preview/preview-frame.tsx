@@ -1,5 +1,6 @@
 import type { LoadResult } from "@/lib/circuit/io";
 import CircuitPreview from "./circuit-preview";
+import OpenInEditorButton from "./open-in-editor-button";
 
 type Props = {
   /** Null when the URL carries no circuit at all. */
@@ -36,6 +37,11 @@ export default function PreviewFrame({ result }: Props) {
         fitView={false}
         autoPlay
       />
+      {/* Level with the toolbar, where the editor puts Share. A linked circuit
+          lives nowhere but its URL, so this is the only way to keep one. */}
+      <div className="absolute top-2 right-2 z-30">
+        <OpenInEditorButton document={result.document} />
+      </div>
     </main>
   );
 }
