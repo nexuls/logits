@@ -3,6 +3,7 @@
 import { boolParam } from "@/lib/nodes/define";
 import { cn } from "@/lib/utils";
 import type { NodeViewProps } from "./node-views";
+import { useHeldActivation } from "./use-held-activation";
 
 /**
  * A momentary button: high while held, low the instant it is let go.
@@ -28,6 +29,8 @@ export default function PushButtonView({
     if (pressed) setParams({ pressed: false });
   };
 
+  const keyboard = useHeldActivation(press, release);
+
   return (
     <button
       type="button"
@@ -39,12 +42,12 @@ export default function PushButtonView({
       onPointerUp={release}
       onPointerCancel={release}
       onPointerLeave={release}
-      // Keyboard parity: space and enter fire click, which has no "held"
-      // phase, so a key press is one full press-and-release pulse.
+      // Space and Enter are held, not pulsed — see `use-held-activation`.
+      onKeyDown={(event) => keyboard.onKeyDown(event, undefined)}
+      onKeyUp={keyboard.onKeyUp}
+      onBlur={keyboard.onBlur}
       onClick={() => {
-        if (!interactive) return;
-        setParams({ pressed: true });
-        setParams({ pressed: false });
+        if (interactive) keyboard.pulse(undefined);
       }}
       aria-pressed={pressed}
       aria-label={`${node.label ?? "Button"}: ${pressed ? "pressed" : "released"}`}

@@ -9,6 +9,7 @@ import {
 } from "@/lib/nodes/io/keypad";
 import { cn } from "@/lib/utils";
 import type { NodeViewProps } from "./node-views";
+import { useHeldActivation } from "./use-held-activation";
 
 /**
  * A grid of momentary keys.
@@ -49,6 +50,10 @@ export default function KeypadView({
     if (pressed !== NO_KEY) setParams({ pressed: NO_KEY });
   };
 
+  // One instance for the whole pad: `pressed` is a single index, so only one
+  // key is ever down, and the index is what each handler passes in.
+  const keyboard = useHeldActivation<number>(press, release);
+
   return (
     <div
       className="grid h-full w-full gap-0.5 p-0.5"
@@ -69,12 +74,12 @@ export default function KeypadView({
           onPointerUp={release}
           onPointerCancel={release}
           onPointerLeave={release}
-          // Keyboard parity: space and enter fire click, which has no held
-          // phase, so a key press is one full press-and-release pulse.
+          // Space and Enter are held, not pulsed — see `use-held-activation`.
+          onKeyDown={(event) => keyboard.onKeyDown(event, index)}
+          onKeyUp={keyboard.onKeyUp}
+          onBlur={keyboard.onBlur}
           onClick={() => {
-            if (!interactive) return;
-            setParams({ pressed: index, value: key.value });
-            setParams({ pressed: NO_KEY });
+            if (interactive) keyboard.pulse(index);
           }}
           style={{ fontSize }}
           aria-pressed={pressed === index}
