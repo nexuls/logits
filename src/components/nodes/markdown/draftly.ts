@@ -223,13 +223,24 @@ export const noteTheme = createTheme({
       },
     ".cm-draftly-paragraph": { paddingTop: "0em", paddingBottom: "0em" },
     ".cm-draftly-preview": { paddingLeft: "1.3em", margin: "0.35em 0" },
-    ".draftly-preview ul, .cm-draftly-preview ol": {
-      margin: "0",
-      padding: "0",
-      listStylePosition: "inside",
+    // Both wrappers and both list types: the preview's root carries
+    // `draftly-preview` and each list carries `cm-draftly-preview`, so a
+    // nested list is reached through the second.
+    ".draftly-preview ul, .draftly-preview ol, .cm-draftly-preview ul, .cm-draftly-preview ol":
+      {
+        margin: "0",
+        paddingLeft: "1.3em",
+        listStylePosition: "outside",
+      },
+    ".draftly-preview li, .cm-draftly-preview li": { marginBottom: "0" },
+    // A list item's text arrives wrapped in a paragraph, which would take a
+    // line of its own. `inline`, not `inline-block`: an inline-block cannot
+    // break across lines, so an item too long for one line moved below the
+    // marker whole and left an empty bullet behind. Only a direct paragraph,
+    // so a nested list stays a block and still indents.
+    ".draftly-preview li > p, .cm-draftly-preview li > p": {
+      display: "inline",
     },
-    ".draftly-preview li": { marginBottom: "0" },
-    ".draftly-preview li > *": { display: "inline-block" },
     ".cm-draftly-quote-line": {
       borderLeft:
         "0.2em solid color-mix(in oklch, currentColor 30%, transparent)",
