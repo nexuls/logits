@@ -3,6 +3,7 @@
 import {
   ArrowUpDownIcon,
   CircuitBoardIcon,
+  CompassIcon,
   CopyIcon,
   DownloadIcon,
   KeyboardIcon,
@@ -47,6 +48,8 @@ type Props = {
   onCopyLink: () => void;
   onOpenSettings: (section: SettingsSection) => void;
   onOpenShortcuts: () => void;
+  /** Replays the first-run welcome and the tour that follows it. */
+  onOpenWelcome: () => void;
   onDelete: () => void;
 };
 
@@ -63,6 +66,7 @@ export default function ProjectMenu({
   onCopyLink,
   onOpenSettings,
   onOpenShortcuts,
+  onOpenWelcome,
   onDelete,
 }: Props) {
   // New and Rename put focus in the title editor. The menu would hand focus
@@ -162,6 +166,11 @@ export default function ProjectMenu({
           <KeyboardIcon />
           Keyboard shortcuts
           <DropdownMenuShortcut>?</DropdownMenuShortcut>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem onClick={onOpenWelcome}>
+          <CompassIcon />
+          Welcome &amp; tour
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />

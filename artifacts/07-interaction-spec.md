@@ -147,6 +147,7 @@ open circuit; items that need one are disabled when none is open.
 | Copy link | Copies the open circuit's embeddable `/preview#data=` link, unsaved edits included. A snapshot: later edits need a new link. Same as the **Share** button |
 | Settings → Preferences… / Project settings… | Opens the settings dialog on that tab |
 | Keyboard shortcuts | Opens the shortcuts dialog (also `?`) |
+| Welcome & tour | Replays the first-run welcome, and the guided tour from its last page |
 | Delete project | Asks for confirmation, then deletes. Disabled on an example |
 
 The toolbar's import and export buttons use the same code
@@ -314,6 +315,21 @@ without also clearing the selection behind it.
 - Deleting a wire deletes the branches hanging off it, and theirs in turn. A tap
   on a wire that is gone has no position at all, so there is nothing to leave
   behind for the user to reattach.
+
+## Onboarding (built)
+
+First run on a screen the editor is written for (`min-width: 768px` and
+`hover: hover` — the complement of the device warning's own queries, so the two
+never claim the screen together) opens the welcome dialog
+([onboarding/](../src/components/onboarding/)). Both it and the tour are
+replayable from the canvas header menu, and what has been seen is remembered in
+`editor-settings.ts` as `welcomeSeen` / `tourSeen`.
+
+| Surface | Behaviour |
+| --- | --- |
+| Welcome dialog | Five pages on a sliding track with a dot indicator. `←` / `→` move, the dots jump, **Skip** / Esc / a press outside end it. The demonstrations are live `CircuitPreview`s of shipped examples, mounted only while their page is the one on screen; the others draw the same circuit as a still |
+| Guided tour | Six steps, each dimming the app and cutting one piece of chrome out of the dim. `←` / `→` move, Esc or a press outside ends it, and every other unmodified key is swallowed so the editor's single-key shortcuts do not fire behind the dim |
+| Tour targets | Found by `data-tour`, looked up *inside the app shell* — a `CircuitPreview` renders the same canvas, toolbar and minimap into a portal and must not be mistaken for the editor's. A step whose target is not on screen is dropped when the tour opens, so the step count matches what the user can see |
 
 ## Feedback
 

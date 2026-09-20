@@ -82,6 +82,11 @@ type Props = {
   onDisarm: () => void;
   /** Opens another project — what New, Duplicate and Import end on. */
   onSelectProject: (projectId: string) => void;
+  /**
+   * Replays the first-run welcome. The onboarding itself is mounted by the
+   * page, which is the only thing above both sidebars the tour points at.
+   */
+  onOpenWelcome: () => void;
 };
 
 /**
@@ -104,6 +109,7 @@ export default function Editor({
   armedCount,
   onDisarm,
   onSelectProject,
+  onOpenWelcome,
 }: Props) {
   const document = useDocument();
   // The project, and the trail of chips into it. `document` is the chip while
@@ -438,6 +444,7 @@ export default function Editor({
             onCopyLink={shareOpen}
             onOpenSettings={openSettings}
             onOpenShortcuts={() => setShortcutsOpen(true)}
+            onOpenWelcome={onOpenWelcome}
             onDelete={() =>
               document &&
               setPendingDelete({ id: document.id, name: document.name })

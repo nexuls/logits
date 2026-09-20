@@ -27,6 +27,18 @@ const settingsSchema = z.object({
    * acknowledgement, not a preference anyone would go looking for.
    */
   deviceWarningDismissed: z.boolean(),
+  /**
+   * Whether the welcome dialog has been through to the end on this browser,
+   * and whether the guided tour that follows it has run.
+   *
+   * Two flags rather than one because they end independently: closing the
+   * welcome early should not also burn the tour, and the tour is re-runnable
+   * from the project menu without replaying the whole welcome. Neither is in
+   * the settings panel — like `deviceWarningDismissed` they are a record of
+   * what has happened, not a preference anyone would go looking for.
+   */
+  welcomeSeen: z.boolean(),
+  tourSeen: z.boolean(),
 });
 
 export type EditorSettings = z.infer<typeof settingsSchema>;
@@ -45,6 +57,8 @@ const DEFAULTS: EditorSettings = {
   showCompoundPinLabels: true,
   showBusValues: true,
   deviceWarningDismissed: false,
+  welcomeSeen: false,
+  tourSeen: false,
 };
 
 /** `useLayoutEffect` warns when it runs during SSR, where there is no layout. */

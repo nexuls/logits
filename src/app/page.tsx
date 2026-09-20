@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Editor from "@/components/editor/editor";
 import ElementsSidebar from "@/components/editor/elements-sidebar";
+import Onboarding from "@/components/onboarding";
 import ProjectsSidebar from "@/components/projects/projects-sidebar";
 import { useProjectRoute } from "@/components/projects/use-project-route";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -24,6 +25,18 @@ export default function Home() {
     type: "",
     count: 0,
   });
+  /**
+   * Bumped by the project menu's "Welcome & tour" to replay the onboarding.
+   * A counter rather than a boolean, so asking twice works the second time.
+   */
+  const [welcomeReplays, setWelcomeReplays] = useState(0);
+  /**
+   * The app shell. The tour reveals chrome from both sidebars and the canvas
+   * between them, so the element it searches has to be the one above all
+   * three — and scoping the search to it keeps a `CircuitPreview` portalled
+   * into a dialog, which renders the same toolbar and minimap, out of it.
+   */
+  const shellRef = useRef<HTMLDivElement>(null);
   const pendingType = pending.count > 0 ? pending.type : null;
 
   // Applied here rather than inside the settings panel: the panel unmounts
@@ -53,7 +66,7 @@ export default function Home() {
   }, [ready, projectsHydrated, projects, activeId, settle]);
 
   return (
-    <SidebarProvider className="h-svh min-h-0">
+    <SidebarProvider ref={shellRef} className="h-svh min-h-0">
       <ProjectsSidebar activeProjectId={activeId} onSelectProject={select} />
       <SidebarInset className="min-w-0 flex-row overflow-hidden">
         <div data-tour="canvas" className="relative min-w-0 flex-1">
@@ -69,6 +82,7 @@ export default function Home() {
             armedCount={pending.count}
             onDisarm={() => setPending({ type: "", count: 0 })}
             onSelectProject={select}
+            onOpenWelcome={() => setWelcomeReplays((count) => count + 1)}
           />
         </div>
 
@@ -93,6 +107,12 @@ export default function Home() {
           }
         />
       </SidebarInset>
+
+      <Onboarding
+        rootRef={shellRef}
+        themeKey={theme}
+        replayToken={welcomeReplays}
+      />
     </SidebarProvider>
   );
 }
