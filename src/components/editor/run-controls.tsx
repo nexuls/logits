@@ -59,7 +59,7 @@ export default function RunControls({
   const save = useSaveState();
 
   return (
-    <Toolbar>
+    <Toolbar data-tour="toolbar">
       <SimulationControls />
 
       <ToolbarSeparator />

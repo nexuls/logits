@@ -56,7 +56,7 @@ export default function Home() {
     <SidebarProvider className="h-svh min-h-0">
       <ProjectsSidebar activeProjectId={activeId} onSelectProject={select} />
       <SidebarInset className="min-w-0 flex-row overflow-hidden">
-        <div className="relative min-w-0 flex-1">
+        <div data-tour="canvas" className="relative min-w-0 flex-1">
           <Editor
             projectId={activeId}
             showGrid={settings.showGrid}

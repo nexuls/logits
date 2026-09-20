@@ -186,7 +186,7 @@ function Body({ selectedType, selectedCount = 0, onAdjustCount }: Props) {
 
   return (
     <>
-      <Sidebar side="right" collapsible="icon">
+      <Sidebar side="right" collapsible="icon" data-tour="elements">
         <SidebarHeader className="gap-3">
           <div className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
             <Button

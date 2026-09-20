@@ -187,7 +187,9 @@ export default function ProjectsSidebar({
   };
 
   return (
-    <Sidebar side="left" collapsible="offcanvas">
+    // `data-tour` marks this panel for the onboarding walkthrough to
+    // reveal. `Sidebar` spreads it onto the visible container.
+    <Sidebar side="left" collapsible="offcanvas" data-tour="projects">
       <SidebarHeader className="gap-3">
         <div className="flex items-center gap-2 px-1">
           <span className="text-sm font-semibold">Logits</span>

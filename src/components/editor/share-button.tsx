@@ -19,7 +19,10 @@ type Props = {
 export default function ShareButton({ disabled, onShare }: Props) {
   return (
     // Clear of the elements-sidebar trigger, which takes this corner below `md`.
-    <div className="pointer-events-auto absolute top-2 right-12 z-20 rounded-lg px-1.5 py-1 md:right-2">
+    <div
+      data-tour="share"
+      className="pointer-events-auto absolute top-2 right-12 z-20 rounded-lg px-1.5 py-1 md:right-2"
+    >
       <ToolbarTooltip label="Copy an embeddable link">
         <Button
           type="button"

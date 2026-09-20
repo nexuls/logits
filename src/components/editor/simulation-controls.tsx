@@ -212,9 +212,12 @@ const ToolbarOrientation = createContext<"horizontal" | "vertical">(
 export function Toolbar({
   children,
   className,
+  /** Marks the bar for the onboarding walkthrough. Unset in a preview. */
+  "data-tour": dataTour,
 }: {
   children: ReactNode;
   className?: string;
+  "data-tour"?: string;
 }) {
   const barRef = useRef<HTMLDivElement>(null);
   const [orientation, setOrientation] = useState<"horizontal" | "vertical">(
@@ -246,6 +249,7 @@ export function Toolbar({
     <ToolbarOrientation value={orientation}>
       <div
         ref={barRef}
+        data-tour={dataTour}
         className={cn(
           "pointer-events-auto absolute top-2 left-1/2 z-20 flex max-w-[calc(100%-1rem)] -translate-x-1/2 items-center gap-1 rounded-lg bg-sidebar px-1.5 py-1 shadow-chrome border border-border",
           // The bar is ~26rem of buttons, which no longer fits across the top of
