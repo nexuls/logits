@@ -65,6 +65,31 @@ describe("registry", () => {
 
     // The handles write these two params and nothing else, so a `size` that
     // derived its footprint from anything more would fight the drag.
+    // Anything that joins two widths trusts this declaration without looking
+    // at the node, so the pins it names must be the pins the params produce.
+    it("re-shapes a bus exactly as its `reshape` declaration says", () => {
+      const { reshape } = definition;
+      if (!reshape) return;
+
+      const lanes = [3, 5, 8];
+      const pins = definition.pins({
+        ...definition.defaultParams,
+        ...reshape.params(lanes),
+      });
+      const pin = (id: string) => pins.find((entry) => entry.id === id);
+
+      expect(pin(reshape.wide)?.width).toBe(16);
+      expect(pin(reshape.wide)?.direction).toBe(
+        reshape.kind === "split" ? "in" : "out",
+      );
+      lanes.forEach((width, index) => {
+        expect(pin(reshape.lane(index))?.width).toBe(width);
+        expect(pin(reshape.lane(index))?.direction).toBe(
+          reshape.kind === "split" ? "out" : "in",
+        );
+      });
+    });
+
     it("edits in place only a multiline text param it declares", () => {
       const key = definition.editInPlace;
       if (key === undefined) return;

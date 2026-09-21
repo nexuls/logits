@@ -17,7 +17,9 @@ Two things will save you a rewrite.
 **Check the scope.** [artifacts/01-product-spec.md](artifacts/01-product-spec.md)
 says what Logits is and — just as important — what it says no to. Analog and
 transistor-level simulation, HDL import/export, real-time collaboration,
-accounts and a backend are all deliberately out. A PR that adds one of those
+accounts and a backend are all deliberately out (the optional assistant's one
+route is the exception, and nothing else may depend on it — see
+[ADR 0014](artifacts/decisions/0014-an-optional-online-assistant.md)). A PR that adds one of those
 will be declined no matter how good the code is.
 
 **Read the doc for the area you are touching.** Design docs live in

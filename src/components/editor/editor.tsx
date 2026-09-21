@@ -87,6 +87,12 @@ type Props = {
    * page, which is the only thing above both sidebars the tour points at.
    */
   onOpenWelcome: () => void;
+  /**
+   * The live transform, for chrome outside the editor that has to convert
+   * between screen and world — the assistant places parts at the view's
+   * centre. The same object the canvas publishes, never a second transform.
+   */
+  onViewportChange?: (viewport: CanvasViewport) => void;
 };
 
 /**
@@ -110,6 +116,7 @@ export default function Editor({
   onDisarm,
   onSelectProject,
   onOpenWelcome,
+  onViewportChange: publishViewport,
 }: Props) {
   const document = useDocument();
   // The project, and the trail of chips into it. `document` is the chip while
@@ -218,8 +225,9 @@ export default function Editor({
     (next: CanvasViewport) => {
       setViewport(next);
       saveView({ scale: next.scale, offset: next.offset });
+      publishViewport?.(next);
     },
-    [saveView],
+    [saveView, publishViewport],
   );
 
   const gestures = useEditorGestures({

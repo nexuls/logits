@@ -34,12 +34,15 @@ one, that is a design error — pass it in as an argument.
 | `src/app/` | Next.js App Router entry. The editor is one route; `/preview` (a `CircuitPreview` of a circuit carried in the link) and `/preview/example/[exampleId]` (one of the bundled examples, prerendered) are the others. Keep page files thin. | Built |
 | `src/components/canvas/` | Viewport only: pan, zoom, grid, minimap. Knows nothing about logic. | Built |
 | `src/components/editor/` | Palette, toolbar, inspector (a popover on the canvas, anchored to the selection), node layer, wire layer, gestures, command menu, diagnostics, performance monitor, the palette's per-element info dialog. | Built |
+| `src/components/assistant/` | The assistant chat docked under the palette, and `use-assistant.ts`, which sends a message, runs the plan that comes back and reports what it did. Optional: nothing else imports it ([ADR 0014](decisions/0014-an-optional-online-assistant.md)). | Built |
+| `src/app/api/assistant/` | The app's only server route: holds the TypeSafe key and turns a message into a plan with Jev. Stateless; never sees a whole document. | Built |
 | `src/components/preview/` | `CircuitPreview`: a circuit that runs and can be operated but not edited, for embedding. Reuses the canvas, both layers, the simulation controls, diagnostics and the performance monitor; owns its own simulation and its own copy of the circuit. Every chrome element and gesture is a prop. | Built |
 | `src/components/onboarding/` | The first-run welcome dialog and the guided tour that follows it. Reads nothing but `editor-settings.ts`; the tour finds the chrome it reveals by `data-tour` attributes, looked up inside the app shell the page passes it. | Built |
 | `src/components/nodes/` | React views for nodes that need custom rendering (scope, displays), and the palette icon set. | Built — `node-icons.tsx` plus `node-views.tsx` and the switch/button/lamp/readout views; the instrument views arrive in phase 4 |
 | `src/components/ui/` | shadcn primitives. Generated — see AGENTS.md. | Built |
 | `src/example/` | The circuits shipped with the app: one `.logits.json` per example plus an `index.ts` that validates them through `fromJson`. Pure data — no React, no storage. | Built — see [ADR 0008](decisions/0008-examples-are-ephemeral.md) |
 | `src/hooks/` | Generic React hooks (`use-mobile`, `use-debounced-callback`). | Built |
+| `src/lib/assistant/` | The assistant's pure half: the request/plan schemas (`protocol.ts`), cutting a message into segments and finding its numbers (`segment.ts`), the Jev questions built from the registry (`questions.ts`), the interpreter (`interpret.ts`, given an injected `Ask`), and the executor, pin matcher and layout that run a plan through `commands.ts`. | Built |
 | `src/lib/circuit/` | Document model, ids, geometry, wire routing, netlist derivation, serialize/migrate. Editor commands are `commands.ts`; the chip library's own commands are `subcircuit-commands.ts`, kept separate because nothing in them is reachable from `buildNetlist`. | Built |
 | `src/lib/perf/` | Allocation-free measurement primitives (`RollingWindow`: mean, nearest-rank percentile, history). Pure — no clock of its own; callers push samples. | Built |
 | `src/lib/sim/` | Event queue, engine, four-valued logic, runner, waveform buffer. | Partial — `logic.ts`, `queue.ts`, `engine.ts` and `runner.ts` built; the waveform ring buffer arrives with the instruments in phase 4 |
@@ -227,6 +230,50 @@ The commands themselves are pure functions in
 `connect`, `deleteElements`, …); [document.ts](../src/state/document.ts) owns
 the open document and is the only caller. Do not mutate the document from a
 component.
+
+## Assistant
+
+The chat under the palette turns words into edits
+([ADR 0014](decisions/0014-an-optional-online-assistant.md)). It is layered
+like everything else, with the network call injected at the top:
+
+```
+AssistantPanel ─ send(text) ─► POST /api/assistant ─► interpret(request, { ask })
+      ▲                                                   │  ≤ 2 Jev requests
+      │ notes                                             ▼
+applyAssistantSteps(plan) ◄──────────── plan: place / connect / set / delete / …
+  └ executeSteps → commands.ts, one apply(), one undo step
+```
+
+- **Jev picks, code decides.** `interpret` asks Choice questions and nothing
+  else. The first request reads every segment of the message speculatively
+  (what it asks, which element it names, what "it" refers to, how many); a
+  second is sent only when an answer needs details whose options depend on it
+  — an element's settings, which of several matching elements, which pin.
+- **Nothing names a node type.** The element options are the registry's
+  titles, docs and keywords; settings questions come from `paramsSchema`; pin
+  matching reads names, directions and widths. A new node is placeable,
+  configurable and wireable by the assistant with no change in this folder.
+- **Values are found, then chosen.** `segment.ts` finds the numbers and quoted
+  strings; Jev picks among them. It cannot make a value up.
+- **Whole or nothing.** Below the confidence floors in `interpret.ts` the reply
+  asks back and the plan is empty — except where the doubt is harmless (torn
+  between "continuation" and the previous instruction's own action, which
+  mean the same). A step that turns out impossible when it runs (nothing to
+  wire, pins that cannot tile) makes `executeSteps` return the document it was
+  given and a `problems` list, so a half-built request is never applied.
+- **Wiring through an element in between.** One message-level question asks
+  whether the wires pass through something that splits or merges buses; the
+  options are whichever definitions declare `reshape`. When they do, the
+  message's wiring is one `connect` with `via`, and `planBridge` in
+  `wiring.ts` tiles the wide side's buses onto the narrow side's elements as a
+  picture — rows in order, lanes most significant first — with one adapter
+  per bus. The layout puts those elements in the grid the picture needs.
+- **Checked at run time.** `executeSteps` resolves every target against the
+  document as it is when the plan arrives, clamps settings to the inspector's
+  limits, and lays new parts out in dataflow order at the view's centre,
+  clear of what is there. The view centre comes from `onViewportChange`, the
+  one transform.
 
 ## Performance guardrails
 

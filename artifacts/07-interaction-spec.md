@@ -55,6 +55,36 @@ The two sidebars are independent — separate providers, separate cookies,
 separate shortcuts. Both are also reachable by pointer: the left one from the
 canvas header, the right one from the panel button in its own header.
 
+## Assistant (built)
+
+The **Assistant** section sits under the palette in the elements sidebar and
+collapses by its header. It is hidden while the sidebar is an icon rail.
+
+| Input | Action |
+| --- | --- |
+| `Enter` in the message box | Send |
+| `Shift + Enter` | New line |
+| An example in the empty conversation | Fills the box; it is not sent until `Enter` |
+| The bin in the header | Clears the conversation (not the canvas) |
+
+- One request is one undo step, however many parts and wires it made, and
+  what it placed is selected afterwards. A reply lists what was done, in the
+  inspector's words; **How Jev read it** shows each judgment and its
+  confidence.
+- Below the confidence floors nothing changes and the reply asks back — "Hex
+  display or 7-segment readout?". A step that cannot be done when it runs
+  ("these pins don't tile") also changes nothing, and the reply says why.
+- "Take each row of the pad into a split and on to the four matrices" places
+  one split per row and tiles the picture across the matrices, which are laid
+  out as the grid they show.
+- "It", "them" and "the pins" mean what this message added, then what the
+  previous reply added, then the selection.
+- The status beside the header is a dot *and* a word (online, connecting,
+  unavailable). Offline, or with no key on the server, the box is disabled with
+  the reason under it; the rest of the editor is unaffected.
+- The message box is a text input, so the editor's single-key shortcuts do not
+  fire while typing in it.
+
 ## Narrow canvases (built)
 
 The floating chrome sizes itself against the **canvas**, not the viewport: both

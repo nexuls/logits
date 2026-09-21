@@ -43,6 +43,12 @@ stays an \`X\`. Nothing here has a propagation delay worth thinking about.
   category: "bus",
   keywords: ["split", "bus", "fan out", "slice", "bits", "structure"],
   defaultParams: { groups: "1,1,1,1" },
+  reshape: {
+    kind: "split",
+    params: (lanes) => ({ groups: lanes.join(",") }),
+    wide: "in",
+    lane: (index) => `out${index}`,
+  },
   paramsSchema: [GROUPS_PARAM],
   pins: (params) => {
     const groups = parseGroups(params.groups);

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { type CSSProperties, useMemo, useState } from "react";
 
+import AssistantPanel from "@/components/assistant/assistant-panel";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -31,6 +32,7 @@ import {
   SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar";
+import type { Point } from "@/lib/circuit/schema";
 import { subcircuitDefinitions } from "@/lib/circuit/subcircuit";
 import { canInstantiate } from "@/lib/circuit/subcircuit-commands";
 import type { NodeDefinition } from "@/lib/nodes/define";
@@ -65,6 +67,11 @@ type Props = {
    * needs no separate "select" path.
    */
   onAdjustCount?: (type: string, delta: number) => void;
+  /**
+   * The centre of the canvas view, in world coordinates, for the assistant
+   * to place parts at. Without it the assistant is not shown.
+   */
+  getViewCenter?: () => Point;
 };
 
 const OTHER_CATEGORY = { id: "other", label: "Other" } as const;
@@ -79,7 +86,12 @@ function matches(definition: NodeDefinition, needle: string): boolean {
   );
 }
 
-function Body({ selectedType, selectedCount = 0, onAdjustCount }: Props) {
+function Body({
+  selectedType,
+  selectedCount = 0,
+  onAdjustCount,
+  getViewCenter,
+}: Props) {
   const { open, openMobile, isMobile, toggleSidebar } = useSidebar();
   const isOpen = isMobile ? openMobile : open;
   const [query, setQuery] = useState("");
@@ -307,6 +319,8 @@ function Body({ selectedType, selectedCount = 0, onAdjustCount }: Props) {
           )}
         </SidebarContent>
 
+        {getViewCenter && <AssistantPanel getViewCenter={getViewCenter} />}
+
         <SidebarFooter>
           <p className="px-1 text-center text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
             <Kbd>⌘J</Kbd> to toggle
@@ -354,7 +368,7 @@ function Body({ selectedType, selectedCount = 0, onAdjustCount }: Props) {
 }
 
 /**
- * The right-hand dock: the node palette and the selection inspector.
+ * The right-hand dock: the node palette, and the assistant chat under it.
  *
  * It carries its own `SidebarProvider` because the page already has one for
  * the projects sidebar and the two open and close independently — hence the

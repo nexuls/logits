@@ -30,7 +30,8 @@ It is not a picture of a circuit. It is the circuit.
 | **Four-valued logic** | `0`, `1`, `X` (unknown or conflict) and `Z` (floating). Tri-state buses, uninitialised flip-flops and driver conflicts are things you can see rather than things that silently become zero. |
 | **Wires that behave** | Free-angle routing drawn click by click, bends you can grab and move, branches pulled off an existing wire. Each lands as one undo step. |
 | **Deterministic** | No `Math.random`, no wall-clock reads in the engine. The same circuit and the same inputs produce the same waveform every single run. |
-| **Local-first** | A circuit is a plain JSON document. It round-trips through `localStorage`, export and import. There is no backend and no account. |
+| **Local-first** | A circuit is a plain JSON document. It round-trips through `localStorage`, export and import. The editor needs no backend and no account. |
+| **Ask for it** | An optional assistant under the palette: type "place a 16×16 matrix display, a 16×16 draw pad, and connect the pins" and it happens, as one undo step. It uses Jev, TypeSafe's System One model, and needs the internet and a `TYPESAFE_API_KEY` on the server. Without them it says so and nothing else changes. |
 | **Help where you are** | Every element carries its own Markdown docs, and the pin and setting tables in the help dialog are *derived* from the definition, so they cannot drift from what the node actually does. |
 
 ## Signals
@@ -82,6 +83,13 @@ Requires [Bun](https://bun.sh). Use `bun`, not npm or pnpm.
 ```bash
 bun install
 bun run dev      # http://localhost:3000
+```
+
+The assistant is optional. To turn it on, put a TypeSafe key in `.env`
+(git-ignored); `TYPESAFE_MODEL` is optional and defaults to `jev-latest`:
+
+```bash
+TYPESAFE_API_KEY=...
 ```
 
 ```bash
@@ -147,7 +155,7 @@ broken, so fix that instead. Start with
 ## Deliberately out of scope
 
 Analog and transistor-level simulation. HDL import/export. Real-time
-collaboration. Accounts, a backend, a database. Logits is a logic canvas, not a
+collaboration. Accounts, a database, or a backend the editor depends on (the optional assistant's one stateless route is the only server code). Logits is a logic canvas, not a
 schematic-capture tool and not a teaching platform.
 
 ## Documentation

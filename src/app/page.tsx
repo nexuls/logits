@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { CanvasViewport } from "@/components/canvas/canvas-viewport";
 import Editor from "@/components/editor/editor";
 import ElementsSidebar from "@/components/editor/elements-sidebar";
 import Onboarding from "@/components/onboarding";
@@ -37,6 +38,25 @@ export default function Home() {
    * into a dialog, which renders the same toolbar and minimap, out of it.
    */
   const shellRef = useRef<HTMLDivElement>(null);
+  /**
+   * The canvas's live transform and its box, so the assistant in the other
+   * sidebar can place parts where the user is looking. Refs, not state: they
+   * change every frame of a pan and nothing here renders from them.
+   */
+  const viewportRef = useRef<CanvasViewport | null>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const trackViewport = useCallback((viewport: CanvasViewport) => {
+    viewportRef.current = viewport;
+  }, []);
+  const getViewCenter = useCallback(() => {
+    const bounds = canvasRef.current?.getBoundingClientRect();
+    const viewport = viewportRef.current;
+    if (!bounds || !viewport) return { x: 0, y: 0 };
+    return viewport.toWorld({
+      x: bounds.left + bounds.width / 2,
+      y: bounds.top + bounds.height / 2,
+    });
+  }, []);
   const pendingType = pending.count > 0 ? pending.type : null;
 
   // Applied here rather than inside the settings panel: the panel unmounts
@@ -69,7 +89,11 @@ export default function Home() {
     <SidebarProvider ref={shellRef} className="h-svh min-h-0">
       <ProjectsSidebar activeProjectId={activeId} onSelectProject={select} />
       <SidebarInset className="min-w-0 flex-row overflow-hidden">
-        <div data-tour="canvas" className="relative min-w-0 flex-1">
+        <div
+          ref={canvasRef}
+          data-tour="canvas"
+          className="relative min-w-0 flex-1"
+        >
           <Editor
             projectId={activeId}
             showGrid={settings.showGrid}
@@ -83,10 +107,12 @@ export default function Home() {
             onDisarm={() => setPending({ type: "", count: 0 })}
             onSelectProject={select}
             onOpenWelcome={() => setWelcomeReplays((count) => count + 1)}
+            onViewportChange={trackViewport}
           />
         </div>
 
         <ElementsSidebar
+          getViewCenter={getViewCenter}
           selectedType={pendingType}
           selectedCount={pending.count}
           onAdjustCount={(type, delta) =>

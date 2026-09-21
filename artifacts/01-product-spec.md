@@ -60,7 +60,10 @@ for a node the catalog already specifies.
 - Analog simulation, transistor-level modelling, SPICE.
 - HDL import/export (Verilog/VHDL) — may be reconsidered after v1.
 - Real-time multiplayer collaboration.
-- Accounts, a backend, or anything that requires a database.
+- Accounts, a backend, or anything that requires a database. The one
+  exception is the optional assistant's single stateless route, which the
+  editor never depends on — see
+  [ADR 0014](decisions/0014-an-optional-online-assistant.md).
 
 ## Non-goals worth stating
 

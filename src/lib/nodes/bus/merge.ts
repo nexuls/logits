@@ -41,6 +41,12 @@ through rather than normalised.
   category: "bus",
   keywords: ["merge", "bus", "join", "concat", "bits", "structure"],
   defaultParams: { groups: "1,1,1,1" },
+  reshape: {
+    kind: "merge",
+    params: (lanes) => ({ groups: lanes.join(",") }),
+    wide: "out",
+    lane: (index) => `in${index}`,
+  },
   paramsSchema: [GROUPS_PARAM],
   pins: (params) => {
     const groups = parseGroups(params.groups);

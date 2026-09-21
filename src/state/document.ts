@@ -3,6 +3,12 @@
 import { useMemo, useSyncExternalStore } from "react";
 import { getExample } from "@/example";
 import {
+  type ExecutionContext,
+  type ExecutionResult,
+  executeSteps,
+  type IndexedStep,
+} from "@/lib/assistant/execute";
+import {
   type AddNodeOptions,
   addNode,
   branchWireAt,
@@ -836,6 +842,59 @@ export function deleteSelection(selection: Selection): boolean {
             root,
           ),
   });
+}
+
+/**
+ * Runs the document steps of an assistant plan against the open document as
+ * one edit, so "place two things and wire them" is one `Ctrl+Z`.
+ *
+ * The plan is executed here, against the document as it is now, rather than
+ * trusted as it was when the request left — see `executeSteps`. Null with
+ * nothing open.
+ */
+export function applyAssistantSteps(
+  steps: readonly IndexedStep[],
+  context: ExecutionContext,
+): ExecutionResult | null {
+  const open = getDocument();
+  if (!open) return null;
+
+  const key = openSubcircuitKey();
+  const result = executeSteps(open, documentLookup(), steps, context);
+  if (result.problems.length > 0 || result.document === open) return result;
+
+  // Inside a chip, a port the plan removed or renamed is a pin on every
+  // instance outside it — the same follow-through `deleteSelection` and
+  // `updateNodeParams` give an edit made by hand, in the same undo step.
+  const ports = key === null ? [] : portChanges(open, result.document);
+  apply("assistant", () => result.document, {
+    root: (root) =>
+      key === null
+        ? root
+        : ports.reduce(
+            (next, { from, to }) =>
+              to === null
+                ? dropSubcircuitPort(next, key, from)
+                : renameSubcircuitPort(next, key, from, to),
+            root,
+          ),
+  });
+  return result;
+}
+
+/** Boundary ports whose pin an edit took away (`to` null) or renamed. */
+function portChanges(
+  before: CircuitDocument,
+  after: CircuitDocument,
+): { from: string; to: string | null }[] {
+  const changes: { from: string; to: string | null }[] = [];
+  for (const node of Object.values(before.nodes)) {
+    const from = boundaryPortName(node);
+    if (from === null) continue;
+    const to = boundaryPortName(after.nodes[node.id]);
+    if (from !== to) changes.push({ from, to });
+  }
+  return changes;
 }
 
 /** The selection as standalone data, for the clipboard. Null with nothing open. */

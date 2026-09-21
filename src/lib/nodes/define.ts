@@ -216,6 +216,24 @@ export type NodeDefinition = {
     noun: string;
   };
   /**
+   * How this node re-shapes a bus: one wide pin on one side, narrower *lanes*
+   * on the other, least significant lane first.
+   *
+   * It lets a tool that has to join two widths — the assistant feeding a
+   * 32-bit row into two 16-bit panels — find a node that does it, configure
+   * it and name its pins, without learning a `type`. `"split"` means the wide
+   * pin is the input and the lanes are outputs; `"merge"` the reverse.
+   */
+  reshape?: {
+    kind: "split" | "merge";
+    /** Params that give the node these lane widths, least significant first. */
+    params: (lanes: readonly number[]) => NodeParams;
+    /** Pin id of the wide side. */
+    wide: string;
+    /** Pin id of lane `index`, counted from the least significant. */
+    lane: (index: number) => string;
+  };
+  /**
    * Key into the document's `subcircuits` that this node instantiates, if it
    * is an instance at all.
    *

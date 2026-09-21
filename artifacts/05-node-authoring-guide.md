@@ -212,7 +212,7 @@ run of literal backticks and is invisible until someone opens the dialog.
 
 ## When a node is more than pins and an `evaluate`
 
-Seven optional hooks on `NodeDefinition` let a node do something structural
+Eight optional hooks on `NodeDefinition` let a node do something structural
 without any other file learning its `type`. Each is answered by exactly one
 family today, and each is the reason a rule in `AGENTS.md` still holds:
 
@@ -226,6 +226,14 @@ family today, and each is the reason a rule in `AGENTS.md` still holds:
   one member writes all of them in one undo step (`setLinkedNodeParams`), and
   the canvas highlights a selected member's peers. `bus.tunnel` is the only
   user: a network is the group, `width` is shared.
+- **`reshape`** — `{ kind, params(lanes), wide, lane(index) }`: the node joins
+  one wide bus to narrower *lanes*, least significant first — `"split"` when
+  the wide pin is the input, `"merge"` when it is the output. `params` says how
+  to configure it for given lane widths and `wide` / `lane` name its pins. The
+  assistant uses it to put one splitter per row between a 32-bit draw pad and
+  four 16-bit matrices without learning a type; `registry.test.ts` checks the
+  named pins are what the params produce. `bus.split` and `bus.merge` declare
+  it.
 - **`subcircuit(params)`** — "which chip am I an instance of". Only the
   definitions synthesized by
   [circuit/subcircuit.ts](../src/lib/circuit/subcircuit.ts) answer.
